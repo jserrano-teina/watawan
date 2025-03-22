@@ -69,15 +69,29 @@ export function CreateItemDialog({
     }
   }, [open, editItem, form]);
 
-  const handleSubmit = form.handleSubmit((data) => {
-    await onSubmit({
-      ...data,
-      wishlistId
-    });
-    
-    // Limpiamos el formulario y cerramos el diálogo
-    form.reset();
-    setOpen(false);
+  const handleSubmit = form.handleSubmit(async (data) => {
+    try {
+      await onSubmit({
+        ...data,
+        wishlistId
+      });
+      
+      // Limpiamos el formulario con valores por defecto
+      form.reset({
+        name: "",
+        description: "",
+        price: "",
+        link: "",
+        store: "",
+        imageUrl: "",
+        isPriority: false
+      });
+      
+      // Cerramos el diálogo
+      setOpen(false);
+    } catch (error) {
+      console.error("Error al guardar:", error);
+    }
   });
 
   return (
