@@ -99,7 +99,7 @@ export function CreateItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="w-full h-[100dvh] sm:h-auto sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>{editItem ? "Editar artículo" : "Añadir artículo"}</DialogTitle>
         </DialogHeader>
