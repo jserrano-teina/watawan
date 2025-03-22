@@ -23,7 +23,7 @@ export function useWishlist() {
 
   // Get wish items for the user's wishlist
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: ['/api/wishlist', wishlist?.id, 'items'],
+    queryKey: [`/api/wishlist/${wishlist?.id}/items`],
     enabled: !!wishlist?.id,
   });
 
@@ -36,7 +36,7 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
     },
   });
 
@@ -47,7 +47,7 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
     },
   });
 
@@ -57,7 +57,7 @@ export function useWishlist() {
       await apiRequest('DELETE', `/api/wishlist/items/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
     },
   });
 
@@ -89,7 +89,7 @@ export function useSharedWishlist(shareableLink: string) {
 
   // Get wish items for the shared wishlist
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: ['/api/wishlist', sharedWishlistData?.wishlist?.id, 'items'],
+    queryKey: [`/api/wishlist/${sharedWishlistData?.wishlist?.id}/items`],
     enabled: !!sharedWishlistData?.wishlist?.id,
   });
 
@@ -100,7 +100,7 @@ export function useSharedWishlist(shareableLink: string) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist', sharedWishlistData?.wishlist?.id, 'items'] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${sharedWishlistData?.wishlist?.id}/items`] });
     },
   });
 

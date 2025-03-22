@@ -22,7 +22,7 @@ const Home: React.FC = () => {
   const [showAddWishModal, setShowAddWishModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
-  const [toast, setToast] = useState({ visible: false, message: '', variant: 'success' as const });
+  const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
   const myWishItems = Array.isArray(items) ? items : [];
   // In a real app, reserved items would come from another API endpoint
