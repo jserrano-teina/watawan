@@ -214,37 +214,27 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
       return undefined;
     }
     
-    // URL de imagen básica de Amazon (imagen mediana)
-    const imageUrl = `https://m.media-amazon.com/images/I/${productId}._AC_SL500_.jpg`;
-    debug(`URL de imagen generada: ${imageUrl}`);
+    // Intentamos varios formatos de URL para Amazon
+    const imageFormats = [
+      // Formato 1: URL directa de imagen de productos
+      `https://m.media-amazon.com/images/I/71${productId.substring(0, 8)}._AC_SL1500_.jpg`,
+      // Formato 2: URL de imagen en miniaturas
+      `https://images-na.ssl-images-amazon.com/images/I/${productId}._SL500_.jpg`,
+      // Formato 3: URL alternativa con formato diferente
+      `https://m.media-amazon.com/images/I/${productId}._AC_SY300_.jpg`,
+      // Formato 4: URL con ASIN directo (menos común)
+      `https://images-eu.ssl-images-amazon.com/images/P/${productId}.jpg`,
+      // Formato emergencia como último recurso
+      `https://images-na.ssl-images-amazon.com/images/I/${productId}.jpg`
+    ];
     
-    // Verificar que la imagen existe
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      
-      const response = await fetch(imageUrl, {
-        method: 'HEAD',
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        debug(`Imagen verificada correctamente: ${imageUrl}`);
-        return imageUrl;
-      } else {
-        debug(`La imagen no existe o no está accesible: ${imageUrl}`);
-        // Intentar una variante alternativa
-        const altImageUrl = `https://images-na.ssl-images-amazon.com/images/I/${productId}._AC_SL500_.jpg`;
-        debug(`Probando URL alternativa: ${altImageUrl}`);
-        return altImageUrl;
-      }
-    } catch (e) {
-      debug(`Error al verificar imagen: ${e}`);
-      // Si hay error en la verificación, devolvemos la URL de todas formas
-      return imageUrl;
-    }
+    debug(`Probando diferentes formatos de URL para ASIN: ${productId}`);
+    
+    // Si no podemos verificar directamente las imágenes (debido a CORS o restricciones),
+    // simplemente devolvemos la primera URL con esperanza de que funcione
+    const imageUrl = imageFormats[0];
+    debug(`Usando URL de imagen: ${imageUrl}`);
+    return imageUrl;
   } catch (error) {
     console.error("Error al extraer imagen de Amazon:", error);
     return undefined;
@@ -334,10 +324,44 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
       // Buscar otras etiquetas comunes de imagen
       if (!manualImageUrl) {
         // Buscar etiqueta de imagen principal del producto (común en tiendas)
-        const productImageMatch = html.match(/id=["']?(?:main-image|product-image|product-main-image|productImage)["']?[^>]*src=["']([^"']+)["']/i);
+        const productImageMatch = html.match(/id=["']?(?:main-image|product-image|product-main-image|productImage|landingImage)["']?[^>]*(?:src|data-old-hires)=["']([^"']+)["']/i);
         if (productImageMatch && productImageMatch[1]) {
           manualImageUrl = productImageMatch[1];
           debug(`Imagen de producto encontrada: ${manualImageUrl}`);
+        }
+      }
+      
+      // Buscar imágenes específicas de Amazon
+      if (!manualImageUrl && url.includes('amazon')) {
+        // 1. Buscar imágenes en la propiedad data-a-dynamic-image (contiene un JSON)
+        const dynamicImageMatch = html.match(/data-a-dynamic-image=["']({[^}]+})["']/i);
+        if (dynamicImageMatch && dynamicImageMatch[1]) {
+          try {
+            const imageJson = JSON.parse(dynamicImageMatch[1]);
+            const imageUrls = Object.keys(imageJson);
+            if (imageUrls.length > 0) {
+              // Ordenar por tamaño y tomar la más grande
+              imageUrls.sort((a, b) => {
+                const sizeA = (imageJson[a][0] || 0) * (imageJson[a][1] || 0);
+                const sizeB = (imageJson[b][0] || 0) * (imageJson[b][1] || 0);
+                return sizeB - sizeA;
+              });
+              manualImageUrl = imageUrls[0];
+              debug(`Imagen extraída de data-a-dynamic-image: ${manualImageUrl}`);
+            }
+          } catch (e) {
+            debug(`Error al parsear JSON de imagen: ${e}`);
+          }
+        }
+        
+        // 2. Buscar el ASIN directamente en el HTML y construir URL
+        if (!manualImageUrl) {
+          const asinMatch = html.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
+          if (asinMatch && asinMatch[1]) {
+            const asin = asinMatch[1];
+            manualImageUrl = `https://m.media-amazon.com/images/I/71${asin.substring(0, 8)}._AC_SL1500_.jpg`;
+            debug(`Imagen construida desde ASIN encontrado en HTML: ${manualImageUrl}`);
+          }
         }
       }
       

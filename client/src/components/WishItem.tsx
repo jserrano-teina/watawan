@@ -32,7 +32,16 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
       <div className="flex md:items-center flex-col md:flex-row">
         <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
           {item.imageUrl ? (
-            <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
+            <img 
+              src={item.imageUrl} 
+              alt={item.title} 
+              className="w-full h-full object-cover" 
+              onError={(e) => {
+                // Si la imagen no carga, mostramos el icono por defecto
+                e.currentTarget.style.display = 'none';
+                e.currentTarget.parentElement!.innerHTML = '<i class="fas fa-gift text-neutral-400 text-4xl"></i>';
+              }}
+            />
           ) : (
             <i className="fas fa-gift text-neutral-400 text-4xl"></i>
           )}
