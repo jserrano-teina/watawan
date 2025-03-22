@@ -136,10 +136,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Importar dinámicamente para evitar problemas de dependencia circular
       if (itemData.purchaseLink) {
         try {
+          console.log(`Intentando extraer imagen de: ${itemData.purchaseLink}`);
           const { getUrlMetadata } = await import('./metascraper');
           const metadata = await getUrlMetadata(itemData.purchaseLink);
           if (metadata.imageUrl) {
+            console.log(`Imagen extraída correctamente: ${metadata.imageUrl}`);
             itemData.imageUrl = metadata.imageUrl;
+          } else {
+            console.log(`No se pudo extraer imagen para: ${itemData.purchaseLink}`);
           }
         } catch (metaError) {
           console.error('Error al extraer metadatos:', metaError);
@@ -196,10 +200,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Eliminamos cualquier URL de imagen previa para siempre intentar extraerla de nuevo
       updateData.imageUrl = undefined;
       try {
+        console.log(`Intentando extraer imagen para actualización de: ${updateData.purchaseLink}`);
         const { getUrlMetadata } = await import('./metascraper');
         const metadata = await getUrlMetadata(updateData.purchaseLink);
         if (metadata.imageUrl) {
+          console.log(`Imagen extraída correctamente en actualización: ${metadata.imageUrl}`);
           updateData.imageUrl = metadata.imageUrl;
+        } else {
+          console.log(`No se pudo extraer imagen para actualización: ${updateData.purchaseLink}`);
         }
       } catch (metaError) {
         console.error('Error al extraer metadatos durante actualización:', metaError);
