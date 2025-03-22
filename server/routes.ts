@@ -259,10 +259,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       // Validate the reservation data
-      const { reserverName } = insertReservationSchema.parse({ 
+      const parsedData = insertReservationSchema.parse({ 
         ...req.body, 
         wishItemId: itemId 
       });
+      
+      // Nos aseguramos de que reserverName sea string o undefined, no null
+      const reserverName = parsedData.reserverName === null ? undefined : parsedData.reserverName;
       
       const reservation = await storage.reserveWishItem(itemId, reserverName);
       res.status(201).json(reservation);

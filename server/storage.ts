@@ -190,7 +190,7 @@ export class MemStorage implements IStorage {
     const reservation: Reservation = {
       id,
       wishItemId,
-      reserverName: reserverName || null,
+      reserverName, // Puede ser undefined, lo cual es válido para el tipo text
       reservedAt: new Date(),
     };
     this.reservations.set(id, reservation);

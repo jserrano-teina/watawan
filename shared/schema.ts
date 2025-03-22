@@ -67,14 +67,43 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
 });
 
 // Export types
-export type User = typeof users.$inferSelect;
+// Cuando estamos usando MemStorage en lugar de una base de datos real, 
+// necesitamos ajustar los tipos para manejar undefined en lugar de null
+export type User = {
+  id: number;
+  username: string;
+  password: string;
+  displayName?: string;
+  initials?: string;
+};
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
-export type Wishlist = typeof wishlists.$inferSelect;
+export type Wishlist = {
+  id: number;
+  userId: number;
+  shareableLink: string;
+  createdAt: Date;
+};
 export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
 
-export type WishItem = typeof wishItems.$inferSelect;
+export type WishItem = {
+  id: number;
+  wishlistId: number;
+  title: string;
+  description?: string;
+  purchaseLink: string;
+  imageUrl?: string;
+  isReserved: boolean;
+  reservedBy?: string;
+  reserverName?: string;
+  createdAt: Date;
+};
 export type InsertWishItem = z.infer<typeof insertWishItemSchema>;
 
-export type Reservation = typeof reservations.$inferSelect;
+export type Reservation = {
+  id: number;
+  wishItemId: number;
+  reserverName?: string;
+  reservedAt: Date;
+};
 export type InsertReservation = z.infer<typeof insertReservationSchema>;
