@@ -129,11 +129,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Si no se proporciona una imagen, intentar extraerla de la URL de compra
+      // Intentar extraer la imagen automáticamente del enlace de compra
       let itemData = { ...req.body };
+      delete itemData.imageUrl; // Eliminamos cualquier URL proporcionada para usar extracción automática
       
       // Importar dinámicamente para evitar problemas de dependencia circular
-      if (!itemData.imageUrl && itemData.purchaseLink) {
+      if (itemData.purchaseLink) {
         try {
           const { getUrlMetadata } = await import('./metascraper');
           const metadata = await getUrlMetadata(itemData.purchaseLink);
@@ -187,12 +188,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Don't allow updating reserved status through this endpoint
     const { isReserved, reservedBy, ...updateData } = req.body;
     
-    // Si se actualizó la URL de compra y no se proporcionó una nueva imagen, intentar extraerla
+    // Si se actualizó la URL de compra, intentar extraer la imagen automáticamente
     if (
       updateData.purchaseLink && 
-      updateData.purchaseLink !== item.purchaseLink && 
-      !updateData.imageUrl
+      updateData.purchaseLink !== item.purchaseLink
     ) {
+      // Eliminamos cualquier URL de imagen previa para siempre intentar extraerla de nuevo
+      updateData.imageUrl = undefined;
       try {
         const { getUrlMetadata } = await import('./metascraper');
         const metadata = await getUrlMetadata(updateData.purchaseLink);

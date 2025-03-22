@@ -6,7 +6,7 @@ interface WishFormData {
   title: string;
   description?: string;
   purchaseLink: string;
-  imageUrl?: string;
+  // imageUrl se obtiene automáticamente del enlace de compra
 }
 
 export function useWishlist() {

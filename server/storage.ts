@@ -77,7 +77,16 @@ export class MemStorage implements IStorage {
     const now = new Date();
     
     // Create user
-    const user: User = { ...insertUser, id };
+    // Aseguramos que displayName e initials sean string o undefined, nunca null
+    const displayName = insertUser.displayName || undefined;
+    const initials = insertUser.initials || undefined;
+    
+    const user: User = { 
+      ...insertUser, 
+      id,
+      displayName,
+      initials
+    };
     this.users.set(id, user);
     
     // Create default wishlist for the user
@@ -134,9 +143,16 @@ export class MemStorage implements IStorage {
 
   async createWishItem(item: InsertWishItem): Promise<WishItem> {
     const id = this.currentWishItemId++;
+    
+    // Aseguramos que description e imageUrl sean string o undefined, nunca null
+    const description = item.description || undefined;
+    const imageUrl = item.imageUrl || undefined;
+    
     const newItem: WishItem = { 
       ...item, 
       id,
+      description,
+      imageUrl,
       isReserved: false,
       createdAt: new Date(),
     };
