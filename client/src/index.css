@@ -12,14 +12,22 @@
   }
 
   h1, h2, h3, h4 {
-    @apply font-medium tracking-tight;
+    @apply font-semibold tracking-tight text-foreground;
+  }
+
+  p, span, label {
+    @apply text-foreground/90;
   }
 
   input, textarea {
-    @apply transition-colors duration-200;
+    @apply transition-colors duration-200 text-foreground placeholder:text-muted-foreground/70;
   }
 
   button {
     @apply transition-all duration-200 active:scale-95;
+  }
+
+  a {
+    @apply text-primary hover:text-primary/90;
   }
 }
