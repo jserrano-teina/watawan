@@ -129,8 +129,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      const itemData = insertWishItemSchema.parse({ ...req.body, wishlistId });
-      const newItem = await storage.createWishItem(itemData);
+      // Si no se proporciona una imagen, intentar extraerla de la URL de compra
+      let itemData = { ...req.body };
+      
+      // Importar dinámicamente para evitar problemas de dependencia circular
+      if (!itemData.imageUrl && itemData.purchaseLink) {
+        try {
+          const { getUrlMetadata } = await import('./metascraper');
+          const metadata = await getUrlMetadata(itemData.purchaseLink);
+          if (metadata.imageUrl) {
+            itemData.imageUrl = metadata.imageUrl;
+          }
+        } catch (metaError) {
+          console.error('Error al extraer metadatos:', metaError);
+          // Continuar sin la imagen
+        }
+      }
+      
+      // Validar y crear el item
+      const validatedItemData = insertWishItemSchema.parse({ ...itemData, wishlistId });
+      const newItem = await storage.createWishItem(validatedItemData);
       res.status(201).json(newItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -168,6 +186,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Don't allow updating reserved status through this endpoint
     const { isReserved, reservedBy, ...updateData } = req.body;
+    
+    // Si se actualizó la URL de compra y no se proporcionó una nueva imagen, intentar extraerla
+    if (
+      updateData.purchaseLink && 
+      updateData.purchaseLink !== item.purchaseLink && 
+      !updateData.imageUrl
+    ) {
+      try {
+        const { getUrlMetadata } = await import('./metascraper');
+        const metadata = await getUrlMetadata(updateData.purchaseLink);
+        if (metadata.imageUrl) {
+          updateData.imageUrl = metadata.imageUrl;
+        }
+      } catch (metaError) {
+        console.error('Error al extraer metadatos durante actualización:', metaError);
+        // Continuar sin la imagen
+      }
+    }
     
     const updatedItem = await storage.updateWishItem(itemId, updateData);
     res.json(updatedItem);
