@@ -70,19 +70,14 @@ export function CreateItemDialog({
   }, [open, editItem, form]);
 
   const handleSubmit = form.handleSubmit((data) => {
-    onSubmit({
+    await onSubmit({
       ...data,
       wishlistId
     });
-    form.reset({
-      name: "",
-      description: "",
-      price: "",
-      link: "",
-      store: "",
-      imageUrl: "",
-      isPriority: false,
-    });
+    
+    // Limpiamos el formulario y cerramos el diálogo
+    form.reset();
+    setOpen(false);
   });
 
   return (
