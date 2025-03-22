@@ -1,53 +1,48 @@
-import { useLocation } from "wouter";
+import React from 'react';
 
 interface BottomNavigationProps {
-  onCreateClick: () => void;
+  activeTab: 'wishes' | 'reserved';
+  onTabChange: (tab: 'wishes' | 'reserved') => void;
+  onAddWishClick: () => void;
 }
 
-export function BottomNavigation({ onCreateClick }: BottomNavigationProps) {
-  const [location, setLocation] = useLocation();
-
+const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
+  activeTab, 
+  onTabChange,
+  onAddWishClick 
+}) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-10">
-      <div className="max-w-screen-sm mx-auto px-2">
-        <div className="flex justify-around">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-20 md:hidden">
+      <div className="flex justify-around items-center h-16">
+        <button 
+          onClick={() => onTabChange('wishes')}
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            activeTab === 'wishes' ? 'text-primary' : 'text-neutral-500'
+          }`}
+        >
+          <i className="fas fa-gift text-xl"></i>
+          <span className="text-xs mt-1">Mis deseos</span>
+        </button>
+        <div className="relative flex items-center justify-center">
           <button 
-            className={`flex flex-col items-center p-2 flex-1 ${location === "/" ? "text-primary" : "text-gray-500"}`}
-            onClick={() => setLocation("/")}
+            onClick={onAddWishClick}
+            className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg absolute -top-7"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            <span className="text-xs mt-1">Inicio</span>
-          </button>
-          <button 
-            className="flex flex-col items-center p-2 flex-1 text-gray-500"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
-            <span className="text-xs mt-1">Buscar</span>
-          </button>
-          <div className="flex-1 flex justify-center">
-            <button 
-              className="bg-primary text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg relative -top-5"
-              onClick={onCreateClick}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
-            </button>
-          </div>
-          <button 
-            className="flex flex-col items-center p-2 flex-1 text-gray-500"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
-            <span className="text-xs mt-1">Avisos</span>
-          </button>
-          <button 
-            className="flex flex-col items-center p-2 flex-1 text-gray-500"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            <span className="text-xs mt-1">Perfil</span>
+            <i className="fas fa-plus text-xl"></i>
           </button>
         </div>
+        <button 
+          onClick={() => onTabChange('reserved')}
+          className={`flex flex-col items-center justify-center w-full h-full ${
+            activeTab === 'reserved' ? 'text-primary' : 'text-neutral-500'
+          }`}
+        >
+          <i className="fas fa-gift text-xl"></i>
+          <span className="text-xs mt-1">Reservados</span>
+        </button>
       </div>
     </nav>
   );
-}
+};
 
 export default BottomNavigation;

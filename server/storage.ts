@@ -1,70 +1,67 @@
 import { 
-  users, type User, type InsertUser,
-  wishlists, type Wishlist, type InsertWishlist,
-  wishlistItems, type WishlistItem, type InsertWishlistItem,
-  reservations, type Reservation, type InsertReservation
+  User, InsertUser, 
+  Wishlist, InsertWishlist, 
+  WishItem, InsertWishItem, 
+  Reservation, InsertReservation
 } from "@shared/schema";
+import { nanoid } from "nanoid";
 
-// Storage interface
 export interface IStorage {
-  // User methods
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  
-  // Wishlist methods
-  createWishlist(wishlist: InsertWishlist): Promise<Wishlist>;
+
+  // Wishlist operations
   getWishlist(id: number): Promise<Wishlist | undefined>;
-  getWishlistByShareableId(shareableId: string): Promise<Wishlist | undefined>;
-  updateWishlist(id: number, wishlist: Partial<InsertWishlist>): Promise<Wishlist>;
-  deleteWishlist(id: number): Promise<boolean>;
-  getWishlistsByUserId(userId: number): Promise<Wishlist[]>;
+  getWishlistByShareableLink(link: string): Promise<Wishlist | undefined>;
+  getUserWishlists(userId: number): Promise<Wishlist[]>;
+  createWishlist(wishlist: InsertWishlist): Promise<Wishlist>;
   
-  // Wishlist item methods
-  createWishlistItem(item: InsertWishlistItem): Promise<WishlistItem>;
-  getWishlistItem(id: number): Promise<WishlistItem | undefined>;
-  updateWishlistItem(id: number, item: Partial<InsertWishlistItem>): Promise<WishlistItem>;
-  deleteWishlistItem(id: number): Promise<boolean>;
-  getWishlistItemsByWishlistId(wishlistId: number): Promise<WishlistItem[]>;
+  // WishItem operations
+  getWishItemsForWishlist(wishlistId: number): Promise<WishItem[]>;
+  getWishItem(id: number): Promise<WishItem | undefined>;
+  createWishItem(item: InsertWishItem): Promise<WishItem>;
+  updateWishItem(id: number, item: Partial<WishItem>): Promise<WishItem>;
+  deleteWishItem(id: number): Promise<boolean>;
   
-  // Reservation methods
-  createReservation(reservation: InsertReservation): Promise<Reservation>;
-  getReservation(id: number): Promise<Reservation | undefined>;
-  getReservationByItemId(itemId: number): Promise<Reservation | undefined>;
-  deleteReservation(id: number): Promise<boolean>;
-  getReservationsByVisitorId(visitorId: string): Promise<Reservation[]>;
+  // Reservation operations
+  reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation>;
+  getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
 }
 
 export class MemStorage implements IStorage {
   private users: Map<number, User>;
   private wishlists: Map<number, Wishlist>;
-  private wishlistItems: Map<number, WishlistItem>;
+  private wishItems: Map<number, WishItem>;
   private reservations: Map<number, Reservation>;
   
-  private userId: number;
-  private wishlistId: number;
-  private wishlistItemId: number;
-  private reservationId: number;
+  currentUserId: number;
+  currentWishlistId: number;
+  currentWishItemId: number;
+  currentReservationId: number;
 
   constructor() {
     this.users = new Map();
     this.wishlists = new Map();
-    this.wishlistItems = new Map();
+    this.wishItems = new Map();
     this.reservations = new Map();
     
-    this.userId = 1;
-    this.wishlistId = 1;
-    this.wishlistItemId = 1;
-    this.reservationId = 1;
+    this.currentUserId = 1;
+    this.currentWishlistId = 1;
+    this.currentWishItemId = 1;
+    this.currentReservationId = 1;
     
     // Create a default user
     this.createUser({
       username: "demo",
-      password: "demo123"
+      password: "password",
+      displayName: "Demo User",
+      initials: "DU"
     });
   }
 
-  // User methods
+  // User operations
   async getUser(id: number): Promise<User | undefined> {
     return this.users.get(id);
   }
@@ -76,181 +73,153 @@ export class MemStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
+    const id = this.currentUserId++;
+    const now = new Date();
+    
+    // Create user
     const user: User = { ...insertUser, id };
     this.users.set(id, user);
+    
+    // Create default wishlist for the user
+    const shareableLink = nanoid(10);
+    const wishlist: Wishlist = {
+      id: this.currentWishlistId++,
+      userId: id,
+      shareableLink,
+      createdAt: now,
+    };
+    this.wishlists.set(wishlist.id, wishlist);
+    
     return user;
   }
-  
-  // Wishlist methods
-  async createWishlist(insertWishlist: InsertWishlist): Promise<Wishlist> {
-    const id = this.wishlistId++;
-    const now = new Date();
-    const wishlist: Wishlist = { 
-      ...insertWishlist, 
-      id,
-      createdAt: now,
-      updatedAt: now
-    };
-    this.wishlists.set(id, wishlist);
-    return wishlist;
-  }
-  
+
+  // Wishlist operations
   async getWishlist(id: number): Promise<Wishlist | undefined> {
     return this.wishlists.get(id);
   }
-  
-  async getWishlistByShareableId(shareableId: string): Promise<Wishlist | undefined> {
+
+  async getWishlistByShareableLink(link: string): Promise<Wishlist | undefined> {
     return Array.from(this.wishlists.values()).find(
-      (wishlist) => wishlist.shareableId === shareableId,
+      (wishlist) => wishlist.shareableLink === link
     );
   }
-  
-  async updateWishlist(id: number, wishlistUpdate: Partial<InsertWishlist>): Promise<Wishlist> {
-    const wishlist = this.wishlists.get(id);
-    if (!wishlist) {
-      throw new Error(`Wishlist with id ${id} not found`);
-    }
-    
-    const updatedWishlist: Wishlist = {
-      ...wishlist,
-      ...wishlistUpdate,
-      updatedAt: new Date()
-    };
-    
-    this.wishlists.set(id, updatedWishlist);
-    return updatedWishlist;
-  }
-  
-  async deleteWishlist(id: number): Promise<boolean> {
-    // First delete all items in the wishlist
-    const items = await this.getWishlistItemsByWishlistId(id);
-    for (const item of items) {
-      await this.deleteWishlistItem(item.id);
-    }
-    
-    return this.wishlists.delete(id);
-  }
-  
-  async getWishlistsByUserId(userId: number): Promise<Wishlist[]> {
+
+  async getUserWishlists(userId: number): Promise<Wishlist[]> {
     return Array.from(this.wishlists.values()).filter(
-      (wishlist) => wishlist.userId === userId,
+      (wishlist) => wishlist.userId === userId
     );
   }
-  
-  // Wishlist item methods
-  async createWishlistItem(insertItem: InsertWishlistItem): Promise<WishlistItem> {
-    const id = this.wishlistItemId++;
-    const now = new Date();
-    const item: WishlistItem = {
-      ...insertItem,
+
+  async createWishlist(wishlist: InsertWishlist): Promise<Wishlist> {
+    const id = this.currentWishlistId++;
+    const newWishlist: Wishlist = { 
+      ...wishlist, 
       id,
-      createdAt: now
+      createdAt: new Date(),
     };
-    this.wishlistItems.set(id, item);
-    
-    // Update the wishlist's updatedAt time
-    const wishlist = this.wishlists.get(insertItem.wishlistId);
-    if (wishlist) {
-      wishlist.updatedAt = now;
-      this.wishlists.set(wishlist.id, wishlist);
-    }
-    
-    return item;
+    this.wishlists.set(id, newWishlist);
+    return newWishlist;
   }
-  
-  async getWishlistItem(id: number): Promise<WishlistItem | undefined> {
-    return this.wishlistItems.get(id);
+
+  // WishItem operations
+  async getWishItemsForWishlist(wishlistId: number): Promise<WishItem[]> {
+    return Array.from(this.wishItems.values()).filter(
+      (item) => item.wishlistId === wishlistId
+    );
   }
-  
-  async updateWishlistItem(id: number, itemUpdate: Partial<InsertWishlistItem>): Promise<WishlistItem> {
-    const item = this.wishlistItems.get(id);
-    if (!item) {
-      throw new Error(`Wishlist item with id ${id} not found`);
-    }
-    
-    const updatedItem: WishlistItem = {
-      ...item,
-      ...itemUpdate
+
+  async getWishItem(id: number): Promise<WishItem | undefined> {
+    return this.wishItems.get(id);
+  }
+
+  async createWishItem(item: InsertWishItem): Promise<WishItem> {
+    const id = this.currentWishItemId++;
+    const newItem: WishItem = { 
+      ...item, 
+      id,
+      isReserved: false,
+      createdAt: new Date(),
     };
-    
-    this.wishlistItems.set(id, updatedItem);
-    
-    // Update the wishlist's updatedAt time
-    const wishlist = this.wishlists.get(item.wishlistId);
-    if (wishlist) {
-      wishlist.updatedAt = new Date();
-      this.wishlists.set(wishlist.id, wishlist);
+    this.wishItems.set(id, newItem);
+    return newItem;
+  }
+
+  async updateWishItem(id: number, itemUpdate: Partial<WishItem>): Promise<WishItem> {
+    const existingItem = this.wishItems.get(id);
+    if (!existingItem) {
+      throw new Error(`Wish item with ID ${id} not found`);
     }
     
+    const updatedItem = { ...existingItem, ...itemUpdate };
+    this.wishItems.set(id, updatedItem);
     return updatedItem;
   }
-  
-  async deleteWishlistItem(id: number): Promise<boolean> {
-    // First check if there's a reservation for this item
-    const item = this.wishlistItems.get(id);
-    if (item) {
-      // Delete any reservations for this item
-      const reservation = await this.getReservationByItemId(id);
-      if (reservation) {
-        await this.deleteReservation(reservation.id);
-      }
-      
-      // Update the wishlist's updatedAt time
-      const wishlist = this.wishlists.get(item.wishlistId);
-      if (wishlist) {
-        wishlist.updatedAt = new Date();
-        this.wishlists.set(wishlist.id, wishlist);
-      }
-    }
-    
-    return this.wishlistItems.delete(id);
-  }
-  
-  async getWishlistItemsByWishlistId(wishlistId: number): Promise<WishlistItem[]> {
-    return Array.from(this.wishlistItems.values()).filter(
-      (item) => item.wishlistId === wishlistId,
+
+  async deleteWishItem(id: number): Promise<boolean> {
+    const existingReservation = Array.from(this.reservations.values()).find(
+      (reservation) => reservation.wishItemId === id
     );
-  }
-  
-  // Reservation methods
-  async createReservation(insertReservation: InsertReservation): Promise<Reservation> {
-    // Check if item already has a reservation
-    const existingReservation = await this.getReservationByItemId(insertReservation.itemId);
+    
+    // Delete any associated reservation
     if (existingReservation) {
-      throw new Error(`Item with id ${insertReservation.itemId} is already reserved`);
+      this.reservations.delete(existingReservation.id);
     }
     
-    const id = this.reservationId++;
-    const now = new Date();
-    const reservation: Reservation = {
-      ...insertReservation,
-      id,
-      reservedAt: now
-    };
+    return this.wishItems.delete(id);
+  }
+
+  // Reservation operations
+  async reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation> {
+    const wishItem = await this.getWishItem(wishItemId);
+    if (!wishItem) {
+      throw new Error(`Wish item with ID ${wishItemId} not found`);
+    }
     
+    if (wishItem.isReserved) {
+      throw new Error("This item is already reserved");
+    }
+    
+    // Update wish item to reserved status
+    await this.updateWishItem(wishItemId, { 
+      isReserved: true,
+      reserverName,
+    });
+    
+    // Create reservation
+    const id = this.currentReservationId++;
+    const reservation: Reservation = {
+      id,
+      wishItemId,
+      reserverName: reserverName || null,
+      reservedAt: new Date(),
+    };
     this.reservations.set(id, reservation);
+    
     return reservation;
   }
-  
-  async getReservation(id: number): Promise<Reservation | undefined> {
-    return this.reservations.get(id);
-  }
-  
-  async getReservationByItemId(itemId: number): Promise<Reservation | undefined> {
-    return Array.from(this.reservations.values()).find(
-      (reservation) => reservation.itemId === itemId,
+
+  async getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {
+    // Get all user's wishlists
+    const userWishlists = await this.getUserWishlists(userId);
+    const wishlistIds = userWishlists.map(wl => wl.id);
+    
+    // Find all wish items from these wishlists that are reserved
+    const reservedItems = Array.from(this.wishItems.values()).filter(
+      item => wishlistIds.includes(item.wishlistId) && item.isReserved
     );
-  }
-  
-  async deleteReservation(id: number): Promise<boolean> {
-    return this.reservations.delete(id);
-  }
-  
-  async getReservationsByVisitorId(visitorId: string): Promise<Reservation[]> {
-    return Array.from(this.reservations.values()).filter(
-      (reservation) => reservation.visitorId === visitorId,
-    );
+    
+    // Get the corresponding reservations
+    const result: {item: WishItem, reservation: Reservation}[] = [];
+    for (const item of reservedItems) {
+      const reservation = Array.from(this.reservations.values()).find(
+        r => r.wishItemId === item.id
+      );
+      if (reservation) {
+        result.push({ item, reservation });
+      }
+    }
+    
+    return result;
   }
 }
 

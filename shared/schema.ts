@@ -7,82 +7,74 @@ export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
+  displayName: text("display_name"),
+  initials: text("initials"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
+  displayName: true,
+  initials: true,
 });
 
 // Wishlist schema
 export const wishlists = pgTable("wishlists", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull(),
-  name: text("name").notNull(),
-  description: text("description"),
-  isPublic: boolean("is_public").default(true).notNull(),
-  shareableId: text("shareable_id").notNull().unique(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  shareableLink: text("shareable_link").notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertWishlistSchema = createInsertSchema(wishlists).pick({
   userId: true,
-  name: true,
-  description: true,
-  isPublic: true,
-  shareableId: true,
+  shareableLink: true,
 });
 
-// Wishlist item schema
-export const wishlistItems = pgTable("wishlist_items", {
+// Wish item schema
+export const wishItems = pgTable("wish_items", {
   id: serial("id").primaryKey(),
   wishlistId: integer("wishlist_id").notNull(),
-  name: text("name").notNull(),
+  title: text("title").notNull(),
   description: text("description"),
-  price: text("price"),
-  link: text("link").notNull(),
+  purchaseLink: text("purchase_link").notNull(),
   imageUrl: text("image_url"),
-  store: text("store"),
-  isPriority: boolean("is_priority").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+  isReserved: boolean("is_reserved").default(false),
+  reservedBy: text("reserved_by"),
+  reserverName: text("reserver_name"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertWishlistItemSchema = createInsertSchema(wishlistItems).pick({
+export const insertWishItemSchema = createInsertSchema(wishItems).pick({
   wishlistId: true,
-  name: true,
+  title: true,
   description: true,
-  price: true,
-  link: true,
+  purchaseLink: true,
   imageUrl: true,
-  store: true,
-  isPriority: true,
 });
 
 // Reservation schema
 export const reservations = pgTable("reservations", {
   id: serial("id").primaryKey(),
-  itemId: integer("item_id").notNull().unique(),
-  visitorId: text("visitor_id").notNull(),
-  visitorName: text("visitor_name"),
-  reservedAt: timestamp("reserved_at").defaultNow().notNull(),
+  wishItemId: integer("wish_item_id").notNull().unique(),
+  reserverName: text("reserver_name"),
+  reservedAt: timestamp("reserved_at").defaultNow(),
 });
 
 export const insertReservationSchema = createInsertSchema(reservations).pick({
-  itemId: true,
-  visitorId: true,
-  visitorName: true,
+  wishItemId: true,
+  reserverName: true,
 });
 
-// Types
+// Export types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Wishlist = typeof wishlists.$inferSelect;
 export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
 
-export type WishlistItem = typeof wishlistItems.$inferSelect;
-export type InsertWishlistItem = z.infer<typeof insertWishlistItemSchema>;
+export type WishItem = typeof wishItems.$inferSelect;
+export type InsertWishItem = z.infer<typeof insertWishItemSchema>;
 
 export type Reservation = typeof reservations.$inferSelect;
 export type InsertReservation = z.infer<typeof insertReservationSchema>;
