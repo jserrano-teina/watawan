@@ -8,7 +8,6 @@ const wishFormSchema = z.object({
   title: z.string().min(1, 'El título es obligatorio'),
   description: z.string().optional(),
   purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
-  imageUrl: z.string().url('Debe ser una URL válida').optional().or(z.literal('')),
 });
 
 type WishFormValues = z.infer<typeof wishFormSchema>;
@@ -34,7 +33,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       title: itemToEdit?.title || '',
       description: itemToEdit?.description || '',
       purchaseLink: itemToEdit?.purchaseLink || '',
-      imageUrl: itemToEdit?.imageUrl || '',
     }
   });
 
@@ -45,14 +43,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         title: itemToEdit.title,
         description: itemToEdit.description || '',
         purchaseLink: itemToEdit.purchaseLink,
-        imageUrl: itemToEdit.imageUrl || '',
       });
     } else {
       reset({
         title: '',
         description: '',
         purchaseLink: '',
-        imageUrl: '',
       });
     }
   }, [itemToEdit, reset]);
@@ -135,20 +131,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             )}
           </div>
           
-          <div className="mb-4">
-            <label htmlFor="imageUrl" className="block text-neutral-700 font-medium mb-1">
-              URL de la imagen (opcional)
-            </label>
-            <input 
-              type="url" 
-              id="imageUrl" 
-              className="w-full px-3 py-2 border border-neutral-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent" 
-              placeholder="https://ejemplo.com/imagen.jpg"
-              {...register('imageUrl')}
-            />
-            {errors.imageUrl && (
-              <p className="text-error text-sm mt-1">{errors.imageUrl.message}</p>
-            )}
+          {/* El campo de imagen ha sido eliminado, ahora se obtiene automáticamente del enlace de compra */}
+          <div className="mb-4 px-3 py-2 bg-neutral-50 rounded-lg border border-neutral-200">
+            <p className="text-sm text-neutral-600">
+              <i className="fas fa-info-circle mr-1"></i>
+              La imagen se extraerá automáticamente del enlace de compra
+            </p>
           </div>
           
           <div className="flex justify-end gap-3 mt-6">
