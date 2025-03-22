@@ -69,37 +69,16 @@ export function CreateItemDialog({
     }
   }, [open, editItem, form]);
 
-  const handleSubmit = form.handleSubmit(async (data) => {
-    try {
-      await onSubmit({
-        ...data,
-        wishlistId
-      });
-      
-      // Primero cerramos el diálogo
-      setOpen(false);
-      
-      // Después de un pequeño delay, limpiamos el formulario
-      setTimeout(() => {
-        form.reset({
-          name: "",
-          description: "",
-          price: "",
-          link: "",
-          store: "",
-          imageUrl: "",
-          isPriority: false
-        });
-      }, 100);
-      
-    } catch (error) {
-      console.error("Error al guardar:", error);
-    }
+  const handleSubmit = form.handleSubmit((data) => {
+    onSubmit({
+      ...data,
+      wishlistId
+    });
   });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-full h-[100dvh] sm:h-auto sm:max-w-[600px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{editItem ? "Editar artículo" : "Añadir artículo"}</DialogTitle>
         </DialogHeader>
