@@ -74,6 +74,15 @@ export function CreateItemDialog({
       ...data,
       wishlistId
     });
+    form.reset({
+      name: "",
+      description: "",
+      price: "",
+      link: "",
+      store: "",
+      imageUrl: "",
+      isPriority: false,
+    });
   });
 
   return (
