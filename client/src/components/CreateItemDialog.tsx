@@ -76,19 +76,22 @@ export function CreateItemDialog({
         wishlistId
       });
       
-      // Limpiamos el formulario con valores por defecto
-      form.reset({
-        name: "",
-        description: "",
-        price: "",
-        link: "",
-        store: "",
-        imageUrl: "",
-        isPriority: false
-      });
-      
-      // Cerramos el diálogo
+      // Primero cerramos el diálogo
       setOpen(false);
+      
+      // Después de un pequeño delay, limpiamos el formulario
+      setTimeout(() => {
+        form.reset({
+          name: "",
+          description: "",
+          price: "",
+          link: "",
+          store: "",
+          imageUrl: "",
+          isPriority: false
+        });
+      }, 100);
+      
     } catch (error) {
       console.error("Error al guardar:", error);
     }
