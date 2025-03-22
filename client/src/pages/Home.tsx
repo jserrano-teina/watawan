@@ -65,7 +65,7 @@ const Home: React.FC = () => {
     }
   };
 
-  const showToast = (message: string, variant: 'success' | 'error' = 'success') => {
+  const showToast = (message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ visible: true, message, variant });
     
     setTimeout(() => {
