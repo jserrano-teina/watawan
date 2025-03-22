@@ -3,6 +3,7 @@ import { User, WishItem } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ReservationModal from './modals/ReservationModal';
+import ProductImage from './ProductImage';
 
 interface SharedWishlistViewProps {
   owner: User;
@@ -20,6 +21,26 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   
   const availableItems = items.filter(item => !item.isReserved);
   const reservedItems = items.filter(item => item.isReserved);
+  
+  // Extraer ASIN/ID de producto de URLs de Amazon
+  const getProductId = (url?: string): string | undefined => {
+    if (!url) return undefined;
+    
+    // Extraer ASIN de URLs de Amazon
+    if (url.includes('amazon')) {
+      const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
+      if (asinMatch && asinMatch[1]) {
+        return asinMatch[1];
+      }
+      
+      // Intentar otro formato de URL de Amazon
+      const altMatch = url.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
+      if (altMatch && altMatch[1]) {
+        return altMatch[1];
+      }
+    }
+    return undefined;
+  };
   
   const handleReserveClick = (item: WishItem) => {
     setSelectedItem(item);
@@ -65,11 +86,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             <div key={item.id} className="bg-white rounded-lg border border-neutral-200 p-4 my-4 relative">
               <div className="flex md:items-center flex-col md:flex-row">
                 <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
-                  {item.imageUrl ? (
-                    <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                  ) : (
-                    <i className="fas fa-gift text-neutral-400 text-4xl"></i>
-                  )}
+                  <ProductImage 
+                    imageUrl={item.imageUrl} 
+                    productId={getProductId(item.purchaseLink)}
+                    title={item.title}
+                  />
                 </div>
                 <div className="flex-grow">
                   <h3 className="font-medium text-lg">{item.title}</h3>
@@ -108,11 +129,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 </div>
                 <div className="flex md:items-center flex-col md:flex-row">
                   <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
-                    {item.imageUrl ? (
-                      <img src={item.imageUrl} alt={item.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <i className="fas fa-gift text-neutral-400 text-4xl"></i>
-                    )}
+                    <ProductImage 
+                      imageUrl={item.imageUrl} 
+                      productId={getProductId(item.purchaseLink)}
+                      title={item.title}
+                    />
                   </div>
                   <div className="flex-grow">
                     <h3 className="font-medium text-lg">{item.title}</h3>

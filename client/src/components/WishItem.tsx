@@ -2,6 +2,7 @@ import React from 'react';
 import { WishItem as WishItemType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ProductImage from './ProductImage';
 
 interface WishItemProps {
   item: WishItemType;
@@ -14,6 +15,22 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
     addSuffix: true,
     locale: es
   });
+  
+  // Extraer ASIN de Amazon si está disponible
+  const getProductId = (): string | undefined => {
+    if (!item.purchaseLink) return undefined;
+    
+    // Extraer ASIN de URLs de Amazon
+    if (item.purchaseLink.includes('amazon')) {
+      const asinMatch = item.purchaseLink.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
+      if (asinMatch && asinMatch[1]) {
+        return asinMatch[1];
+      }
+    }
+    return undefined;
+  };
+
+  const productId = getProductId();
 
   return (
     <div className="bg-white rounded-lg border border-neutral-200 p-4 my-4 relative">
@@ -31,20 +48,11 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
       
       <div className="flex md:items-center flex-col md:flex-row">
         <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
-          {item.imageUrl ? (
-            <img 
-              src={item.imageUrl} 
-              alt={item.title} 
-              className="w-full h-full object-cover" 
-              onError={(e) => {
-                // Si la imagen no carga, mostramos el icono por defecto
-                e.currentTarget.style.display = 'none';
-                e.currentTarget.parentElement!.innerHTML = '<i class="fas fa-gift text-neutral-400 text-4xl"></i>';
-              }}
-            />
-          ) : (
-            <i className="fas fa-gift text-neutral-400 text-4xl"></i>
-          )}
+          <ProductImage 
+            imageUrl={item.imageUrl} 
+            productId={productId}
+            title={item.title}
+          />
         </div>
         <div className="flex-grow">
           <div className="flex justify-between items-start">
