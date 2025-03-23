@@ -139,7 +139,12 @@ const ProductImage: React.FC<ProductImageProps> = ({
       }
     }
     
-    return urls;
+    // Agregar URLs con proxy para evitar CORS
+    const proxiedUrls = urls.map(url => 
+      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(url)}`
+    );
+    
+    return [...urls, ...proxiedUrls];
   };
   
   // Generar URLs alternativas para productos de PCComponentes
@@ -154,16 +159,26 @@ const ProductImage: React.FC<ProductImageProps> = ({
       `https://img.pccomponentes.com/articles/42/${slug}.jpg`
     );
     
-    return urls;
+    // Agregar URLs con proxy para evitar CORS
+    const proxiedUrls = urls.map(url => 
+      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(url)}`
+    );
+    
+    return [...urls, ...proxiedUrls];
   };
   
   // Generar todas las URLs alternativas para intentar
   const generateImageUrls = (): string[] => {
     const urls: string[] = [];
     
-    // Siempre intentar primero con la URL principal si existe
+    // Si tenemos una URL de imagen, intentamos con ella primero
     if (imageUrl) {
       urls.push(imageUrl);
+      
+      // También añadimos versión con proxy para evitar CORS si la URL parece externa
+      if (imageUrl.startsWith('http')) {
+        urls.push(`https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(imageUrl)}`);
+      }
     }
     
     // Determinar el tipo de tienda y generar URLs específicas

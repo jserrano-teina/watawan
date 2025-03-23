@@ -177,21 +177,13 @@ async function extractZaraImage(url: string): Promise<string | undefined> {
       const productSubcategory = productId.substring(2, 4);
       const specificCode = productId.substring(4);
       
-      // Generar diferentes posibles URLs de imágenes para Zara
-      // Estas URL son inferidas basándose en patrones observados
-      const imageUrls = [
-        // Patrón 1: Formato actual más común
-        `https://static.zara.net/photos//2023/I/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`,
-        
-        // Patrón 2: Formato alternativo (más común para 2023)
-        `https://static.zara.net/photos//2023/I/0/2/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_6_1_1.jpg`,
-        
-        // Patrón 3: Formato general simple
-        `https://static.zara.net/photos//items/images/product/${productId}_1_1_1.jpg?ts=${Date.now()}`
-      ];
+      // Patrón más común para productos actuales (2024)
+      const baseUrl = `https://static.zara.net/photos//2024/V/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`;
       
-      // Devolver la primera URL, el componente ProductImage se encargará de probar alternativas
-      return imageUrls[0];
+      // Añadir proxy para evitar CORS
+      const imageUrl = `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(baseUrl)}`;
+      
+      return imageUrl;
     }
     
     return undefined;
@@ -216,8 +208,17 @@ async function extractPCComponentesImage(url: string): Promise<string | undefine
     const slug = slugMatch[1];
     debug(`Slug de producto PCComponentes: ${slug}`);
     
-    // Intentar generar URL de imagen basado en patrones comunes de PCComponentes
-    const imageUrl = `https://img.pccomponentes.com/articles/${slug}.jpg`;
+    // PCComponentes usa diferentes patrones para las imágenes dependiendo de la categoría
+    // Probamos múltiples patrones posibles
+    const possibleUrls = [
+      `https://img.pccomponentes.com/articles/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/43/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/44/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/45/${slug}.jpg`
+    ];
+    
+    // Usando una URL con proxy para evitar CORS
+    const imageUrl = `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(possibleUrls[0])}`;
     
     return imageUrl;
   } catch (error) {
