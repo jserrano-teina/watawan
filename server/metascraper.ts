@@ -73,15 +73,17 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
     let fullUrl = url;
     let productId;
     
-    // Maneja las URLs cortas de Amazon (amzn.to, amzn.eu, etc)
-    if (url.match(/amzn\.(to|eu)/i)) {
+    // Maneja las URLs cortas de Amazon (amzn.to, amzn.eu, a.co, etc)
+    if (url.match(/amzn\.(to|eu)/i) || url.match(/a\.co\//i)) {
       debug(`Intentando resolver URL corta de Amazon: ${url}`);
       
       // Para enlaces cortos de Amazon, vamos a probar un método alternativo
       // Si el enlace es de formato amzn.eu/d/XXXX, intentamos extraer el código directamente
-      const shortCodeMatch = url.match(/amzn\.(to|eu)\/d\/([A-Za-z0-9]+)/i);
-      if (shortCodeMatch && shortCodeMatch[2]) {
-        const shortCode = shortCodeMatch[2];
+      const shortCodeMatch = url.match(/\/d\/([A-Za-z0-9]+)/i) || 
+                             url.match(/\/([A-Za-z0-9]{10})$/i);
+      
+      if (shortCodeMatch && shortCodeMatch[1]) {
+        const shortCode = shortCodeMatch[1];
         debug(`Código corto extraído: ${shortCode}`);
         
         // Para enlaces de Amazon, podemos intentar generar directamente la URL de la imagen
@@ -89,115 +91,145 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
         const possibleProductId = shortCode.toUpperCase();
         if (possibleProductId.length === 10 && /^[A-Z0-9]{10}$/.test(possibleProductId)) {
           debug(`Código parece ser un ASIN válido, probando directamente`);
-          return `https://m.media-amazon.com/images/I/${possibleProductId}._AC_SL500_.jpg`;
+          // En lugar de devolver directamente, almacenamos el ID para generar múltiples formatos
+          productId = possibleProductId;
         }
       }
       
-      try {
-        // Utilizamos GET en lugar de HEAD para asegurarnos de obtener la redirección
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout más largo para redirecciones
-        
-        debug(`Haciendo petición GET a URL corta: ${url}`);
-        const response = await fetch(url, {
-          method: 'GET',
-          redirect: 'follow',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9,es;q=0.8'
-          },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.url && response.url !== url) {
-          fullUrl = response.url; // Obtenemos la URL real después de redirecciones
-          debug(`URL corta resuelta a: ${fullUrl}`);
+      // Si no pudimos extraer el ID directamente, intentamos resolver la URL corta
+      if (!productId) {
+        try {
+          // Utilizamos GET en lugar de HEAD para asegurarnos de obtener la redirección
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout más largo para redirecciones
           
-          // Si podemos obtener el HTML, buscaremos la imagen directamente
-          try {
-            const html = await response.text();
+          debug(`Haciendo petición GET a URL corta: ${url}`);
+          const response = await fetch(url, {
+            method: 'GET',
+            redirect: 'follow',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9,es;q=0.8'
+            },
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
+          if (response.url && response.url !== url) {
+            fullUrl = response.url; // Obtenemos la URL real después de redirecciones
+            debug(`URL corta resuelta a: ${fullUrl}`);
             
-            // Buscar tag de Open Graph para imagen
-            const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-            if (ogImageMatch && ogImageMatch[1]) {
-              const imageUrl = ogImageMatch[1];
-              debug(`Imagen OG encontrada directamente: ${imageUrl}`);
-              return imageUrl;
-            }
-            
-            // Buscar etiqueta de imagen de producto de Amazon
-            const amazonImageMatch = html.match(/id="landingImage"[^>]*data-old-hires="([^"]+)"/i) || 
-                                    html.match(/id="imgBlkFront"[^>]*data-a-dynamic-image="([^"]+)"/i);
-            
-            if (amazonImageMatch && amazonImageMatch[1]) {
-              let imageUrl = amazonImageMatch[1];
+            // Si podemos obtener el HTML, buscaremos la imagen directamente
+            try {
+              const html = await response.text();
               
-              // Si es JSON (data-a-dynamic-image), extraer la primera URL
-              if (imageUrl.startsWith('{')) {
-                try {
-                  const imageJson = JSON.parse(imageUrl);
-                  const imageUrls = Object.keys(imageJson);
-                  if (imageUrls.length > 0) {
-                    imageUrl = imageUrls[0]; // Tomamos la primera URL
-                    debug(`Imagen extraída de JSON: ${imageUrl}`);
-                    return imageUrl;
-                  }
-                } catch (e) {
-                  debug(`Error al parsear JSON de imagen: ${e}`);
-                }
-              } else {
-                debug(`Imagen extraída directamente del HTML: ${imageUrl}`);
+              // Buscar tag de Open Graph para imagen
+              const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+              if (ogImageMatch && ogImageMatch[1]) {
+                const imageUrl = ogImageMatch[1];
+                debug(`Imagen OG encontrada directamente: ${imageUrl}`);
                 return imageUrl;
               }
+              
+              // Buscar etiqueta de imagen de producto de Amazon
+              const amazonImageMatch = html.match(/id="landingImage"[^>]*data-old-hires="([^"]+)"/i) || 
+                                      html.match(/id="imgBlkFront"[^>]*data-a-dynamic-image="([^"]+)"/i) ||
+                                      html.match(/id="imgTagWrapperId"[^>]*data-a-dynamic-image="([^"]+)"/i);
+              
+              if (amazonImageMatch && amazonImageMatch[1]) {
+                let imageUrl = amazonImageMatch[1];
+                
+                // Si es JSON (data-a-dynamic-image), extraer la primera URL
+                if (imageUrl.startsWith('{')) {
+                  try {
+                    const imageJson = JSON.parse(imageUrl);
+                    const imageUrls = Object.keys(imageJson);
+                    if (imageUrls.length > 0) {
+                      // Ordenar por tamaño y tomar la más grande
+                      imageUrls.sort((a, b) => {
+                        const sizeA = (imageJson[a][0] || 0) * (imageJson[a][1] || 0);
+                        const sizeB = (imageJson[b][0] || 0) * (imageJson[b][1] || 0);
+                        return sizeB - sizeA;
+                      });
+                      imageUrl = imageUrls[0];
+                      debug(`Imagen extraída de JSON: ${imageUrl}`);
+                      return imageUrl;
+                    }
+                  } catch (e) {
+                    debug(`Error al parsear JSON de imagen: ${e}`);
+                  }
+                } else {
+                  debug(`Imagen extraída directamente del HTML: ${imageUrl}`);
+                  return imageUrl;
+                }
+              }
+              
+              // Buscar directamente el ASIN en la página
+              if (!productId) {
+                const asinMatch = html.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
+                if (asinMatch && asinMatch[1]) {
+                  productId = asinMatch[1];
+                  debug(`ASIN encontrado en el HTML: ${productId}`);
+                }
+              }
+            } catch (e) {
+              debug(`Error al procesar HTML: ${e}`);
             }
-          } catch (e) {
-            debug(`Error al procesar HTML: ${e}`);
           }
+        } catch (error) {
+          debug(`No se pudo resolver la URL corta de Amazon: ${error}`);
+          // En caso de error, intentaremos usar nuestra lógica de fallback
         }
-      } catch (error) {
-        debug(`No se pudo resolver la URL corta de Amazon: ${error}`);
-        // En caso de error, intentaremos usar nuestra lógica de fallback
       }
     }
     
-    // Patrones comunes de IDs de productos de Amazon
-    const patterns = [
-      /\/dp\/([A-Z0-9]{10})/, // Patrón /dp/XXXXXXXXXX
-      /\/product\/([A-Z0-9]{10})/, // Patrón /product/XXXXXXXXXX
-      /\/([A-Z0-9]{10})(\?|\/|$)/, // Patrón general XXXXXXXXXX
-      /gp\/product\/([A-Z0-9]{10})/, // Patrón gp/product/XXXXXXXXXX
-      /Amazon\.[\w.]+\/.*?\/([A-Z0-9]{10})/ // Patrón general para dominios de Amazon
-    ];
-    
-    // Intentamos cada patrón hasta encontrar coincidencia
-    for (const pattern of patterns) {
-      const match = fullUrl.match(pattern);
-      if (match && match[1]) {
-        productId = match[1];
-        debug(`ID de producto extraído con patrón: ${productId}`);
-        break;
-      }
-    }
-    
-    // Si no encontramos un ID, buscamos en los segmentos de la URL
+    // Si todavía no tenemos un productId, buscamos en la URL original o la URL resuelta
     if (!productId) {
-      debug(`No se pudo extraer el ID del producto con patrones regulares. URL: ${fullUrl}`);
+      // Patrones comunes de IDs de productos de Amazon (ampliados)
+      const patterns = [
+        /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/, // Patrón /dp/XXXXXXXXXX
+        /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/, // Patrón /product/XXXXXXXXXX
+        /\/([A-Z0-9]{10})(?:\/|\?|$)/, // Patrón general XXXXXXXXXX
+        /gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/, // Patrón gp/product/XXXXXXXXXX
+        /Amazon\.[\w.]+\/.*?\/([A-Z0-9]{10})(?:\/|\?|$)/, // Patrón general para dominios de Amazon
+        /ASIN=([A-Z0-9]{10})(?:&|$)/, // Patrón ASIN= en URL
+        /ref=([A-Z0-9]{10})(?:\/|\?|&|$)/, // Patrón ref= en URL
+        /\/([A-Z0-9]{10})(?:\/|\?|$)/ // Patrón general para cualquier parte del path
+      ];
       
-      try {
-        // Intentamos extraer el ASIN del path de la URL
-        const pathSegments = new URL(fullUrl).pathname.split('/').filter(Boolean);
-        for (const segment of pathSegments) {
-          if (segment.length === 10 && /^[A-Z0-9]{10}$/.test(segment)) {
-            productId = segment;
-            debug(`ASIN encontrado en segmentos de URL: ${productId}`);
+      // Intentamos cada patrón hasta encontrar coincidencia
+      for (const pattern of patterns) {
+        const match = fullUrl.match(pattern);
+        if (match && match[1]) {
+          const possibleId = match[1];
+          // Verificar formato de ASIN
+          if (possibleId.length === 10 && /^[A-Z0-9]{10}$/.test(possibleId)) {
+            productId = possibleId;
+            debug(`ID de producto extraído con patrón: ${productId}`);
             break;
           }
         }
-      } catch (e) {
-        debug(`Error al procesar URL para segmentos: ${e}`);
+      }
+      
+      // Si no encontramos un ID, buscamos en los segmentos de la URL
+      if (!productId) {
+        debug(`No se pudo extraer el ID del producto con patrones regulares. URL: ${fullUrl}`);
+        
+        try {
+          // Intentamos extraer el ASIN del path de la URL
+          const pathSegments = new URL(fullUrl).pathname.split('/').filter(Boolean);
+          for (const segment of pathSegments) {
+            if (segment.length === 10 && /^[A-Z0-9]{10}$/.test(segment)) {
+              productId = segment;
+              debug(`ASIN encontrado en segmentos de URL: ${productId}`);
+              break;
+            }
+          }
+        } catch (e) {
+          debug(`Error al procesar URL para segmentos: ${e}`);
+        }
       }
       
       if (!productId) {
@@ -214,26 +246,45 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
       return undefined;
     }
     
+    // Generamos formatos alternativos para aumentar posibilidades de éxito
+    // Intentar extraer los primeros caracteres para el formato de imagen común de Amazon
+    const firstPart = productId.substring(0, 1);
+    
     // Intentamos varios formatos de URL para Amazon
     const imageFormats = [
-      // Formato 1: URL directa de imagen de productos
-      `https://m.media-amazon.com/images/I/71${productId.substring(0, 8)}._AC_SL1500_.jpg`,
-      // Formato 2: URL de imagen en miniaturas
+      // Formato 1: URL directa de imagen de productos (más común)
+      `https://m.media-amazon.com/images/I/${firstPart}${productId}._AC_SL1500_.jpg`,
+      
+      // Formato 2: Variante de URL común 
+      `https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`,
+      
+      // Formato 3: URL de imagen en miniaturas
       `https://images-na.ssl-images-amazon.com/images/I/${productId}._SL500_.jpg`,
-      // Formato 3: URL alternativa con formato diferente
+      
+      // Formato 4: URL alternativa con formato diferente
       `https://m.media-amazon.com/images/I/${productId}._AC_SY300_.jpg`,
-      // Formato 4: URL con ASIN directo (menos común)
+      
+      // Formato 5: URL con ASIN directo (menos común)
       `https://images-eu.ssl-images-amazon.com/images/P/${productId}.jpg`,
-      // Formato emergencia como último recurso
-      `https://images-na.ssl-images-amazon.com/images/I/${productId}.jpg`
+      
+      // Formato 6: URL simple como último recurso
+      `https://images-na.ssl-images-amazon.com/images/I/${productId}.jpg`,
+      
+      // Formato 7: Con proxy para evitar CORS
+      `https://images-na.ssl-images-amazon.com/images/I/${productId}._AC_UL600_SR600,400_.jpg`,
+      
+      // Formato 8: Con proxy para evitar CORS (alternativo)
+      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(`https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`)}`
     ];
     
-    debug(`Probando diferentes formatos de URL para ASIN: ${productId}`);
+    debug(`Generados ${imageFormats.length} formatos de URL para ASIN: ${productId}`);
     
     // Si no podemos verificar directamente las imágenes (debido a CORS o restricciones),
-    // simplemente devolvemos la primera URL con esperanza de que funcione
+    // devolvemos la primera URL con esperanza de que funcione en el componente ProductImage
     const imageUrl = imageFormats[0];
-    debug(`Usando URL de imagen: ${imageUrl}`);
+    debug(`Usando URL de imagen principal: ${imageUrl}`);
+    
+    // Añadimos un campo extra para ayudar al componente ProductImage a generar alternativas
     return imageUrl;
   } catch (error) {
     console.error("Error al extraer imagen de Amazon:", error);
@@ -248,8 +299,22 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
     // Validar el formato de la URL
     const urlRegex = /^(http|https):\/\/[^ "]+$/;
     if (!urlRegex.test(url)) {
-      debug(`URL con formato inválido: ${url}`);
-      return { imageUrl: undefined };
+      debug(`URL con formato inválido: ${url}, intentando corregir...`);
+      
+      // Intentar corregir URLs comunes que puedan estar mal formateadas
+      if (url.startsWith('www.')) {
+        url = 'https://' + url;
+        debug(`URL corregida a: ${url}`);
+      } else if (!url.startsWith('http')) {
+        url = 'https://' + url;
+        debug(`URL corregida a: ${url}`);
+      }
+      
+      // Verificar de nuevo
+      if (!urlRegex.test(url)) {
+        debug(`URL sigue con formato inválido después de corrección: ${url}`);
+        return { imageUrl: undefined };
+      }
     }
 
     // Comprobar si tenemos un extractor específico para este sitio
