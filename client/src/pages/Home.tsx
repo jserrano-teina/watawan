@@ -9,6 +9,7 @@ import FloatingActionButton from '../components/FloatingActionButton';
 import BottomNavigation from '../components/BottomNavigation';
 import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
+import WishDetailModal from '../components/modals/WishDetailModal';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
@@ -18,6 +19,8 @@ const Home: React.FC = () => {
   const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem } = useWishlist();
   const [showAddWishModal, setShowAddWishModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<WishItemType | null>(null);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
@@ -59,6 +62,11 @@ const Home: React.FC = () => {
       showToast('Error al guardar el deseo', 'error');
     }
   };
+  
+  const handleItemClick = (item: WishItemType) => {
+    setSelectedItem(item);
+    setShowDetailModal(true);
+  };
 
   const showToast = (message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ visible: true, message, variant });
@@ -97,7 +105,8 @@ const Home: React.FC = () => {
                   key={item.id} 
                   item={item} 
                   onEdit={handleEditWish} 
-                  onDelete={handleDeleteWish} 
+                  onDelete={handleDeleteWish}
+                  onClick={handleItemClick}
                 />
               ))}
             </div>
@@ -120,6 +129,14 @@ const Home: React.FC = () => {
         isOpen={showShareModal}
         onClose={() => setShowShareModal(false)}
         shareableLink={wishlist?.shareableLink || ''}
+      />
+
+      <WishDetailModal
+        isOpen={showDetailModal}
+        onClose={() => setShowDetailModal(false)}
+        item={selectedItem}
+        onEdit={handleEditWish}
+        onDelete={handleDeleteWish}
       />
       
       <ToastContainer>

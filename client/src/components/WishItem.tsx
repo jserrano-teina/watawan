@@ -8,9 +8,10 @@ interface WishItemProps {
   item: WishItemType;
   onEdit: (item: WishItemType) => void;
   onDelete: (item: WishItemType) => void;
+  onClick?: (item: WishItemType) => void;
 }
 
-const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
+const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) => {
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
     locale: es
@@ -32,8 +33,26 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
 
   const productId = getProductId();
 
+  // Función para manejar el clic en el ítem
+  const handleItemClick = (e: React.MouseEvent) => {
+    // Evitar que se abra el modal si se hace clic en los botones o en el enlace
+    if (
+      (e.target as HTMLElement).closest('button') || 
+      (e.target as HTMLElement).closest('a')
+    ) {
+      return;
+    }
+    
+    if (onClick) {
+      onClick(item);
+    }
+  };
+
   return (
-    <div className="card-airbnb p-4 my-2 relative">
+    <div 
+      className="card-airbnb p-4 my-2 relative cursor-pointer hover:bg-[#202020] transition-colors"
+      onClick={handleItemClick}
+    >
       {item.isReserved && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10 rounded-xl">
           <div className="bg-[#1e1e1e]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
