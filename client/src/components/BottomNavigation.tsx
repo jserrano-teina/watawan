@@ -12,12 +12,12 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
   onAddWishClick 
 }) => {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-neutral-200 z-20 md:hidden">
+    <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#333] z-20 md:hidden shadow-lg">
       <div className="flex justify-around items-center h-16">
         <button 
           onClick={() => onTabChange('wishes')}
           className={`flex flex-col items-center justify-center w-full h-full ${
-            activeTab === 'wishes' ? 'text-primary' : 'text-neutral-500'
+            activeTab === 'wishes' ? 'text-primary' : 'text-gray-400'
           }`}
         >
           <i className="fas fa-gift text-xl"></i>
@@ -26,7 +26,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
         <div className="relative flex items-center justify-center">
           <button 
             onClick={onAddWishClick}
-            className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg absolute -top-7"
+            className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-xl absolute -top-7 hover:bg-primary/90 transition-all duration-300"
           >
             <i className="fas fa-plus text-xl"></i>
           </button>
@@ -34,7 +34,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
         <button 
           onClick={() => onTabChange('reserved')}
           className={`flex flex-col items-center justify-center w-full h-full ${
-            activeTab === 'reserved' ? 'text-primary' : 'text-neutral-500'
+            activeTab === 'reserved' ? 'text-primary' : 'text-gray-400'
           }`}
         >
           <i className="fas fa-gift text-xl"></i>

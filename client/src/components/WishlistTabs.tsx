@@ -8,14 +8,14 @@ interface WishlistTabsProps {
 
 const WishlistTabs: React.FC<WishlistTabsProps> = ({ activeTab, onTabChange }) => {
   return (
-    <div className="border-b border-neutral-200 mt-4">
+    <div className="border-b border-[#333] mt-4">
       <div className="flex space-x-8">
         <button 
           className={cn(
-            "py-2 font-medium", 
+            "py-3 font-medium text-sm", 
             activeTab === 'wishes' 
               ? "border-b-2 border-primary text-primary" 
-              : "text-neutral-500"
+              : "text-gray-400 hover:text-white/80 transition-colors"
           )}
           onClick={() => onTabChange('wishes')}
         >
@@ -23,10 +23,10 @@ const WishlistTabs: React.FC<WishlistTabsProps> = ({ activeTab, onTabChange }) =
         </button>
         <button 
           className={cn(
-            "py-2 font-medium", 
+            "py-3 font-medium text-sm", 
             activeTab === 'reserved' 
               ? "border-b-2 border-primary text-primary" 
-              : "text-neutral-500"
+              : "text-gray-400 hover:text-white/80 transition-colors"
           )}
           onClick={() => onTabChange('reserved')}
         >
