@@ -57,6 +57,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   const submitForm = (data: WishFormValues) => {
     onSubmit(data);
+    // Limpiar el formulario antes de cerrarlo
+    reset({
+      title: '',
+      description: '',
+      purchaseLink: '',
+    });
     onClose();
   };
 
@@ -77,7 +83,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           <h2 className="text-lg font-semibold">
             {itemToEdit ? 'Editar deseo' : 'Añadir nuevo deseo'}
           </h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-700">
+          <button 
+            onClick={() => {
+              // Limpiar el formulario al cerrar el modal
+              reset({
+                title: '',
+                description: '',
+                purchaseLink: '',
+              });
+              onClose();
+            }} 
+            className="text-neutral-500 hover:text-neutral-700"
+          >
             <i className="fas fa-times text-xl"></i>
           </button>
         </div>
