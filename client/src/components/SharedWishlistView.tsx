@@ -83,9 +83,10 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           </div>
         ) : (
           availableItems.map(item => (
-            <div key={item.id} className="bg-white rounded-lg border border-neutral-200 p-4 my-4 relative">
-              <div className="flex md:items-center flex-col md:flex-row">
-                <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
+            <div key={item.id} className="bg-white rounded-lg border border-neutral-200 p-3 my-2 relative">
+              <div className="flex items-center">
+                {/* Imagen a la izquierda */}
+                <div className="w-16 h-16 bg-neutral-100 rounded-lg overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center">
                   <ProductImage 
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
@@ -93,22 +94,29 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     purchaseLink={item.purchaseLink}
                   />
                 </div>
-                <div className="flex-grow">
-                  <h3 className="font-medium text-lg">{item.title}</h3>
-                  <p className="text-neutral-600 text-sm mt-1">{item.description}</p>
-                  <div className="mt-3 flex flex-col sm:flex-row items-start sm:items-center justify-between">
+                
+                {/* Contenido a la derecha */}
+                <div className="flex-grow min-w-0">
+                  <h3 className="font-medium text-base truncate">{item.title}</h3>
+                  
+                  {/* Descripción solo si existe */}
+                  {item.description && (
+                    <p className="text-neutral-600 text-xs mt-0.5 line-clamp-1">{item.description}</p>
+                  )}
+                  
+                  <div className="mt-2 flex items-center justify-between">
                     <a 
                       href={item.purchaseLink} 
                       target="_blank" 
                       rel="noopener noreferrer"
-                      className="text-secondary hover:underline text-sm"
+                      className="text-secondary hover:underline text-xs flex items-center"
                     >
-                      <i className="fas fa-external-link-alt mr-1"></i>
-                      Ver enlace de compra
+                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                      Ver enlace
                     </a>
                     <button 
                       onClick={() => handleReserveClick(item)}
-                      className="bg-primary text-white px-4 py-2 rounded-lg text-sm mt-3 sm:mt-0"
+                      className="bg-primary text-white px-3 py-1 rounded text-xs flex-shrink-0"
                     >
                       Lo regalaré yo
                     </button>
@@ -124,12 +132,13 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             <h2 className="text-xl font-semibold mt-8 mb-4">Ya reservados</h2>
             
             {reservedItems.map(item => (
-              <div key={item.id} className="bg-white rounded-lg border border-neutral-200 p-4 my-4 relative opacity-75">
-                <div className="absolute top-0 right-0 bg-success text-white text-xs px-2 py-1 rounded-bl-lg">
+              <div key={item.id} className="bg-white rounded-lg border border-neutral-200 p-3 my-2 relative opacity-75">
+                <div className="absolute top-0 right-0 bg-success text-white text-xs px-2 py-0.5 rounded-bl-lg">
                   Reservado
                 </div>
-                <div className="flex md:items-center flex-col md:flex-row">
-                  <div className="w-full md:w-24 h-24 bg-neutral-100 rounded-lg overflow-hidden mr-0 md:mr-4 mb-4 md:mb-0 flex-shrink-0 flex items-center justify-center">
+                <div className="flex items-center">
+                  {/* Imagen a la izquierda */}
+                  <div className="w-16 h-16 bg-neutral-100 rounded-lg overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center">
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
@@ -137,12 +146,19 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                       purchaseLink={item.purchaseLink}
                     />
                   </div>
-                  <div className="flex-grow">
-                    <h3 className="font-medium text-lg">{item.title}</h3>
-                    <p className="text-neutral-600 text-sm mt-1">{item.description}</p>
-                    <div className="mt-3">
-                      <p className="text-neutral-500 text-sm italic">
-                        <i className="fas fa-check-circle text-success mr-1"></i>
+                  
+                  {/* Contenido a la derecha */}
+                  <div className="flex-grow min-w-0">
+                    <h3 className="font-medium text-base truncate">{item.title}</h3>
+                    
+                    {/* Descripción solo si existe */}
+                    {item.description && (
+                      <p className="text-neutral-600 text-xs mt-0.5 line-clamp-1">{item.description}</p>
+                    )}
+                    
+                    <div className="mt-2">
+                      <p className="text-success text-xs flex items-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                         Alguien ya se encargará de este regalo
                       </p>
                     </div>
