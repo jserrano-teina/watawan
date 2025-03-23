@@ -52,6 +52,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
             imageUrl={item.imageUrl} 
             productId={productId}
             title={item.title}
+            purchaseLink={item.purchaseLink}
           />
         </div>
         <div className="flex-grow">

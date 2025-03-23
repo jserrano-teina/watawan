@@ -147,6 +147,85 @@ async function extractWalmartImage(url: string): Promise<string | undefined> {
   }
 }
 
+// Función para extraer imágenes de Zara
+async function extractZaraImage(url: string): Promise<string | undefined> {
+  try {
+    debug(`Extrayendo imagen de Zara: ${url}`);
+    
+    // Los URLs de producto de Zara suelen tener este formato:
+    // https://www.zara.com/es/es/camisa-estampada-bordados-limited-edition-p03789900.html
+    
+    // Extraemos el código de producto de la URL (formato pXXXXXXX.html)
+    const productCodeMatch = url.match(/[p]([0-9]+)\.html/i);
+    
+    if (!productCodeMatch || !productCodeMatch[1]) {
+      debug(`No se pudo extraer código de producto de URL de Zara: ${url}`);
+      return undefined;
+    }
+    
+    const productId = productCodeMatch[1];
+    debug(`Código de producto Zara: ${productId}`);
+    
+    // Extraer los componentes individuales del código
+    // Normalmente, los códigos de Zara tienen formato XXYYZZZ donde:
+    // XX: categoría (37 = camisa en este caso)
+    // YY: subcategoría (89 en este caso)
+    // ZZZ: código específico del producto (900 en este caso)
+    
+    if (productId.length >= 7) {
+      const productCategory = productId.substring(0, 2);
+      const productSubcategory = productId.substring(2, 4);
+      const specificCode = productId.substring(4);
+      
+      // Generar diferentes posibles URLs de imágenes para Zara
+      // Estas URL son inferidas basándose en patrones observados
+      const imageUrls = [
+        // Patrón 1: Formato actual más común
+        `https://static.zara.net/photos//2023/I/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`,
+        
+        // Patrón 2: Formato alternativo (más común para 2023)
+        `https://static.zara.net/photos//2023/I/0/2/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_6_1_1.jpg`,
+        
+        // Patrón 3: Formato general simple
+        `https://static.zara.net/photos//items/images/product/${productId}_1_1_1.jpg?ts=${Date.now()}`
+      ];
+      
+      // Devolver la primera URL, el componente ProductImage se encargará de probar alternativas
+      return imageUrls[0];
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error(`Error al extraer imagen de Zara: ${error}`);
+    return undefined;
+  }
+}
+
+// Función para extraer imágenes de PCComponentes
+async function extractPCComponentesImage(url: string): Promise<string | undefined> {
+  try {
+    debug(`Extrayendo imagen de PCComponentes: ${url}`);
+    
+    // Extraer el slug del producto del URL
+    const slugMatch = url.match(/\/([^\/]+)(?:\?|$)/);
+    if (!slugMatch || !slugMatch[1]) {
+      debug(`No se pudo extraer slug de PCComponentes: ${url}`);
+      return undefined;
+    }
+    
+    const slug = slugMatch[1];
+    debug(`Slug de producto PCComponentes: ${slug}`);
+    
+    // Intentar generar URL de imagen basado en patrones comunes de PCComponentes
+    const imageUrl = `https://img.pccomponentes.com/articles/${slug}.jpg`;
+    
+    return imageUrl;
+  } catch (error) {
+    console.error(`Error al extraer imagen de PCComponentes: ${error}`);
+    return undefined;
+  }
+}
+
 // URLs específicas para sitios populares
 const SITE_PATTERNS = [
   {
@@ -171,6 +250,14 @@ const SITE_PATTERNS = [
   {
     pattern: /walmart\.(com|ca)/i,
     handler: extractWalmartImage
+  },
+  {
+    pattern: /zara\.com/i,
+    handler: extractZaraImage
+  },
+  {
+    pattern: /pccomponentes\.com/i,
+    handler: extractPCComponentesImage
   }
   // Más sitios pueden ser añadidos aquí
 ];

@@ -7,31 +7,33 @@ interface ProductImageProps {
   productId?: string;
   title: string;
   className?: string;
+  purchaseLink?: string; // Añadido para extraer información adicional
 }
 
 /**
- * Componente para mostrar imágenes de productos con fallbacks
- * Si la imagen principal falla, intenta con diferentes formatos de URLs
+ * Componente mejorado para mostrar imágenes de productos con múltiples fallbacks
+ * Soporta diversas tiendas online con protección anti-scraping
  */
 const ProductImage: React.FC<ProductImageProps> = ({ 
   imageUrl, 
   productId, 
   title, 
-  className = "w-full h-full object-cover" 
+  className = "w-full h-full object-cover",
+  purchaseLink 
 }) => {
   const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
   const [currentUrl, setCurrentUrl] = useState<string | undefined>(imageUrl);
   const [urlIndex, setUrlIndex] = useState(0);
   
-  // Extraer ID de producto de la URL
-  const getProductIdFromUrl = (url: string): string | null => {
+  // Extraer ID de producto de la URL de Amazon
+  const getAmazonProductId = (url: string): string | null => {
     // Patrones comunes para URLs de Amazon
     const amazonPatterns = [
       /amazon\.com.*\/dp\/([A-Z0-9]{10})/i,
       /amazon\.es.*\/dp\/([A-Z0-9]{10})/i,
       /\/gp\/product\/([A-Z0-9]{10})/i,
       /\/dp\/([A-Z0-9]{10})/i,
-      /\/([A-Z0-9]{10})(?:\/|\?|$)/
+      /\/([B][0-9A-Z]{9})(?:\/|\?|$)/i
     ];
     
     for (const pattern of amazonPatterns) {
@@ -44,15 +46,41 @@ const ProductImage: React.FC<ProductImageProps> = ({
     return null;
   };
   
-  // Verificar si una URL es de Amazon
-  const isAmazonUrl = (url?: string): boolean => {
-    if (!url) return false;
-    return (
-      url.includes('amazon.com') || 
-      url.includes('amazon.es') || 
-      url.includes('amzn.') || 
-      url.includes('a.co/')
-    );
+  // Extraer código de producto de Zara
+  const getZaraProductCode = (url: string): string | null => {
+    const productCodeMatch = url.match(/[p]([0-9]+)\.html/i);
+    if (productCodeMatch && productCodeMatch[1]) {
+      return productCodeMatch[1];
+    }
+    return null;
+  };
+
+  // Extraer slug de PCComponentes
+  const getPCComponentesSlug = (url: string): string | null => {
+    const slugMatch = url.match(/\/([^\/]+)(?:\?|$)/);
+    if (slugMatch && slugMatch[1]) {
+      return slugMatch[1];
+    }
+    return null;
+  };
+  
+  // Determinar tipo de tienda
+  const getStoreType = (url?: string): 'amazon' | 'zara' | 'pccomponentes' | 'other' => {
+    if (!url) return 'other';
+    
+    if (url.includes('amazon.') || url.includes('amzn.') || url.includes('a.co/')) {
+      return 'amazon';
+    }
+    
+    if (url.includes('zara.com')) {
+      return 'zara';
+    }
+    
+    if (url.includes('pccomponentes.com')) {
+      return 'pccomponentes';
+    }
+    
+    return 'other';
   };
   
   // Generar URLs alternativas para productos de Amazon
@@ -78,26 +106,100 @@ const ProductImage: React.FC<ProductImageProps> = ({
     return urls;
   };
   
+  // Generar URLs alternativas para productos de Zara
+  const getZaraImageUrls = (productCode: string): string[] => {
+    if (productCode.length < 7) return [];
+    
+    const urls: string[] = [];
+    
+    // Extraer los componentes del código
+    const productCategory = productCode.substring(0, 2);
+    const productSubcategory = productCode.substring(2, 4);
+    const specificCode = productCode.substring(4);
+    
+    // Patrones comunes para imágenes de Zara
+    urls.push(
+      // Patrón 1: Formato actual más común
+      `https://static.zara.net/photos//2023/I/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productCode}_1_1_1.jpg`,
+      
+      // Patrón 2: Formato alternativo
+      `https://static.zara.net/photos//2023/I/0/2/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productCode}_6_1_1.jpg`,
+      
+      // Patrón 3: Formato simple
+      `https://static.zara.net/photos//items/images/product/${productCode}_1_1_1.jpg?ts=${Date.now()}`
+    );
+    
+    // Alternar las temporadas
+    const seasons = ['I', 'V'];
+    const years = ['2023', '2024', '2022'];
+    
+    for (const year of years) {
+      for (const season of seasons) {
+        urls.push(`https://static.zara.net/photos//${year}/${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productCode}_1_1_1.jpg`);
+      }
+    }
+    
+    return urls;
+  };
+  
+  // Generar URLs alternativas para productos de PCComponentes
+  const getPCComponentesImageUrls = (slug: string): string[] => {
+    const urls: string[] = [];
+    
+    // Diferentes formatos conocidos para imágenes de PCComponentes
+    urls.push(
+      `https://img.pccomponentes.com/articles/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/45/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/43/${slug}.jpg`,
+      `https://img.pccomponentes.com/articles/42/${slug}.jpg`
+    );
+    
+    return urls;
+  };
+  
   // Generar todas las URLs alternativas para intentar
   const generateImageUrls = (): string[] => {
     const urls: string[] = [];
     
-    // Si tenemos una URL de imagen, siempre la intentamos primero
+    // Siempre intentar primero con la URL principal si existe
     if (imageUrl) {
       urls.push(imageUrl);
+    }
+    
+    // Determinar el tipo de tienda y generar URLs específicas
+    const storeType = getStoreType(purchaseLink || imageUrl);
+    
+    if (storeType === 'amazon') {
+      const amazonUrl = purchaseLink || imageUrl;
+      if (amazonUrl) {
+        const asin = getAmazonProductId(amazonUrl);
+        if (asin) {
+          urls.push(...getAmazonImageUrls(asin));
+        }
+      }
       
-      // Si es una URL de Amazon, extraemos el ID y generamos alternativas
-      if (isAmazonUrl(imageUrl)) {
-        const extractedId = getProductIdFromUrl(imageUrl);
-        if (extractedId) {
-          urls.push(...getAmazonImageUrls(extractedId));
+      // Si tenemos un ID de producto directo (probablemente ASIN)
+      if (productId && productId.length === 10) {
+        urls.push(...getAmazonImageUrls(productId));
+      }
+    } 
+    else if (storeType === 'zara') {
+      const zaraUrl = purchaseLink || imageUrl;
+      if (zaraUrl) {
+        const productCode = getZaraProductCode(zaraUrl);
+        if (productCode) {
+          urls.push(...getZaraImageUrls(productCode));
         }
       }
     }
-    
-    // Si nos proporcionaron un ID de producto directamente
-    if (productId && productId.length === 10) {
-      urls.push(...getAmazonImageUrls(productId));
+    else if (storeType === 'pccomponentes') {
+      const pcUrl = purchaseLink || imageUrl;
+      if (pcUrl) {
+        const slug = getPCComponentesSlug(pcUrl);
+        if (slug) {
+          urls.push(...getPCComponentesImageUrls(slug));
+        }
+      }
     }
     
     // Eliminar duplicados manualmente
@@ -129,27 +231,31 @@ const ProductImage: React.FC<ProductImageProps> = ({
     setCurrentUrl(imageUrl);
     setUrlIndex(0);
     setImgState(imageUrl ? 'loading' : 'error');
-  }, [imageUrl, productId]);
+  }, [imageUrl, productId, purchaseLink]);
   
   if (imgState === 'error' || !currentUrl) {
     // Icono de fallback cuando no hay imagen
     return (
-      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
-        <svg 
-          xmlns="http://www.w3.org/2000/svg" 
-          width="64" 
-          height="64" 
-          viewBox="0 0 24 24" 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="1.5" 
-          strokeLinecap="round" 
-          strokeLinejoin="round" 
-          className="text-gray-400"
-        >
-          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-          <line x1="7" y1="7" x2="7.01" y2="7"></line>
-        </svg>
+      <div className={`flex items-center justify-center bg-gray-100 rounded ${className}`}>
+        <div className="text-center p-4">
+          <svg 
+            xmlns="http://www.w3.org/2000/svg" 
+            width="48" 
+            height="48" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            strokeWidth="1.5" 
+            strokeLinecap="round" 
+            strokeLinejoin="round" 
+            className="text-gray-400 mx-auto mb-2"
+          >
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <circle cx="8.5" cy="8.5" r="1.5"></circle>
+            <polyline points="21 15 16 10 5 21"></polyline>
+          </svg>
+          <p className="text-xs text-gray-500 mt-1 line-clamp-1">{title}</p>
+        </div>
       </div>
     );
   }
