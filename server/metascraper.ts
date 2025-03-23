@@ -250,29 +250,25 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
     
     // Intentamos varios formatos de URL para Amazon
     const imageFormats = [
-      // Formato 1: URL directa de imagen de productos (más común)
-      `https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`,
+      // Amazon utiliza diferentes patrones para las imágenes de productos
       
-      // Formato 2: Variante de URL común 
-      `https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`,
+      // Formato directo con ASIN
+      `https://images-na.ssl-images-amazon.com/images/P/${productId}.jpg`,
       
-      // Formato 3: URL de imagen en miniaturas
-      `https://images-na.ssl-images-amazon.com/images/I/${productId}._SL500_.jpg`,
+      // Formato con estructura de carpetas I
+      `https://m.media-amazon.com/images/I/61${productId.substring(0, 8)}._AC_SL1500_.jpg`,
+      `https://m.media-amazon.com/images/I/71${productId.substring(0, 8)}._AC_SL1500_.jpg`,
+      `https://m.media-amazon.com/images/I/81${productId.substring(0, 8)}._AC_SL1500_.jpg`,
       
-      // Formato 4: URL alternativa con formato diferente
-      `https://m.media-amazon.com/images/I/${productId}._AC_SY300_.jpg`,
+      // Formato con estructura de carpetas I - variaciones
+      `https://images-na.ssl-images-amazon.com/images/I/71${productId.substring(0, 8)}._SL1500_.jpg`,
+      `https://images-na.ssl-images-amazon.com/images/I/81${productId.substring(0, 8)}._SL1500_.jpg`,
       
-      // Formato 5: URL con ASIN directo (menos común)
-      `https://images-eu.ssl-images-amazon.com/images/P/${productId}.jpg`,
+      // Formato simple
+      `https://images-na.ssl-images-amazon.com/images/I/91${productId.substring(0, 8)}.jpg`,
       
-      // Formato 6: URL simple como último recurso
-      `https://images-na.ssl-images-amazon.com/images/I/${productId}.jpg`,
-      
-      // Formato 7: Con proxy para evitar CORS
-      `https://images-na.ssl-images-amazon.com/images/I/${productId}._AC_UL600_SR600,400_.jpg`,
-      
-      // Formato 8: Con proxy para evitar CORS (alternativo)
-      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(`https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`)}`
+      // Con proxy para evitar CORS (alternativo)
+      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(`https://images-na.ssl-images-amazon.com/images/P/${productId}.jpg`)}`
     ];
     
     debug(`Generados ${imageFormats.length} formatos de URL para ASIN: ${productId}`);

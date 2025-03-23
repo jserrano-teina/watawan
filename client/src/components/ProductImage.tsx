@@ -67,23 +67,23 @@ const ProductImage: React.FC<ProductImageProps> = ({
     // Si tenemos un ASIN/ID de producto, generamos URLs alternativas
     if (extractedProductId && extractedProductId.length === 10) {
       
-      // Formatos comunes de Amazon
-      urls.push(
-        // Formato más común
-        `https://m.media-amazon.com/images/I/${extractedProductId}._AC_SL1500_.jpg`,
-        
-        // Formato alternativo
-        `https://images-na.ssl-images-amazon.com/images/I/${extractedProductId}._SL500_.jpg`,
-        
-        // Formato más simple
-        `https://images-na.ssl-images-amazon.com/images/I/${extractedProductId}.jpg`,
-        
-        // Formato con tamaño específico
-        `https://images-na.ssl-images-amazon.com/images/I/${extractedProductId}._AC_UL600_SR600,400_.jpg`,
-        
-        // Formato alternativo P
-        `https://images-eu.ssl-images-amazon.com/images/P/${extractedProductId}.jpg`
-      );
+      // Formato directo con ASIN
+      urls.push(`https://images-na.ssl-images-amazon.com/images/P/${extractedProductId}.jpg`);
+      
+      // Formatos con estructura de carpetas I y variaciones de prefijos
+      // Los prefijos 61, 71, 81, 91 son comunes en las URLs de imágenes de Amazon
+      if (extractedProductId.length >= 8) {
+        const idPart = extractedProductId.substring(0, 8);
+        urls.push(
+          // Variaciones con prefijos numéricos comunes
+          `https://m.media-amazon.com/images/I/61${idPart}._AC_SL1500_.jpg`,
+          `https://m.media-amazon.com/images/I/71${idPart}._AC_SL1500_.jpg`,
+          `https://m.media-amazon.com/images/I/81${idPart}._AC_SL1500_.jpg`,
+          `https://images-na.ssl-images-amazon.com/images/I/71${idPart}._SL1500_.jpg`,
+          `https://images-na.ssl-images-amazon.com/images/I/81${idPart}._SL1500_.jpg`,
+          `https://images-na.ssl-images-amazon.com/images/I/91${idPart}.jpg`
+        );
+      }
       
       // Si la URL original es de Amazon, intentamos con un proxy para evitar CORS
       if (imageUrl && (
