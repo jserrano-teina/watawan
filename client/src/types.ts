@@ -19,6 +19,7 @@ export interface WishItem {
   description?: string;
   purchaseLink: string;
   imageUrl?: string;
+  price?: string;
   isReserved: boolean;
   reservedBy?: string;
   reserverName?: string;

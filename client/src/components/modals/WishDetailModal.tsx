@@ -102,9 +102,17 @@ const WishDetailModal: React.FC<WishDetailModalProps> = ({
             )}
             
             {/* Información adicional */}
-            <div className="flex items-center text-xs text-white/60 mb-5">
-              <Calendar size={14} className="mr-1" />
-              <span>{formattedDate}</span>
+            <div className="flex items-center justify-between text-xs text-white/60 mb-5">
+              <div className="flex items-center">
+                <Calendar size={14} className="mr-1" />
+                <span>{formattedDate}</span>
+              </div>
+              
+              {item.price && (
+                <div className="px-3 py-1 bg-primary/20 rounded-full text-primary font-medium">
+                  {item.price}
+                </div>
+              )}
             </div>
             
             {/* Botones de acción */}
