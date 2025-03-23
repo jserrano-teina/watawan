@@ -39,6 +39,7 @@ export const wishItems = pgTable("wish_items", {
   description: text("description"),
   purchaseLink: text("purchase_link").notNull(),
   imageUrl: text("image_url"),
+  price: text("price"),
   isReserved: boolean("is_reserved").default(false),
   reservedBy: text("reserved_by"),
   reserverName: text("reserver_name"),
@@ -51,6 +52,7 @@ export const insertWishItemSchema = createInsertSchema(wishItems).pick({
   description: true,
   purchaseLink: true,
   imageUrl: true,
+  price: true,
 });
 
 // Reservation schema
@@ -93,6 +95,7 @@ export type WishItem = {
   description?: string;
   purchaseLink: string;
   imageUrl?: string;
+  price?: string;
   isReserved: boolean;
   reservedBy?: string;
   reserverName?: string;

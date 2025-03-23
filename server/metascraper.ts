@@ -263,7 +263,101 @@ const SITE_PATTERNS = [
   // Más sitios pueden ser añadidos aquí
 ];
 
-export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | undefined }> {
+// Función para extraer precio de Amazon
+async function extractAmazonPrice(url: string, html?: string): Promise<string | undefined> {
+  try {
+    let productHtml = html;
+    
+    // Si no tenemos el HTML, lo obtenemos
+    if (!productHtml) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        productHtml = await response.text();
+      } else {
+        return undefined;
+      }
+    }
+    
+    if (!productHtml) return undefined;
+    
+    // Patrones para extraer precios de Amazon
+    const pricePatterns = [
+      /price_inside_buybox['"]\s*:\s*['"]([^'"]+)['"]/i,
+      /a-price-whole[^>]*>([^<]+).*a-price-fraction[^>]*>([^<]+)/i,
+      /priceblock_ourprice[^>]*>([^<]+)/i,
+      /priceblock_dealprice[^>]*>([^<]+)/i,
+      /data-a-color=['"]price['"][^>]*>([^<]+)/i
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match) {
+        if (match.length === 3) {
+          // Formato con entero y decimales separados
+          return `${match[1]},${match[2]}€`.trim();
+        } else if (match.length === 2) {
+          // Formato completo
+          let price = match[1].trim();
+          // Asegurarse de que tiene símbolo de moneda
+          if (!price.includes('€') && !price.includes('$')) {
+            price += '€'; // Añadir € por defecto
+          }
+          return price;
+        }
+      }
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error extrayendo precio de Amazon:", error);
+    return undefined;
+  }
+}
+
+// Función para extraer precio de sitios genéricos
+async function extractGenericPrice(html: string): Promise<string | undefined> {
+  try {
+    // Patrones comunes para precios
+    const pricePatterns = [
+      /<meta[^>]*property=["']product:price:amount["'][^>]*content=["']([^"']+)["'][^>]*>/i, // OpenGraph
+      /<meta[^>]*itemprop=["']price["'][^>]*content=["']([^"']+)["'][^>]*>/i, // Schema.org microdata
+      /<div[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Div con clase que contiene "price"
+      /<span[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Span con clase que contiene "price"
+      /<span[^>]*id=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Span con id que contiene "price"
+      /price["']\s*:\s*["']?([\d.,]+)["']?/i // JSON en Javascript
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = html.match(pattern);
+      if (match && match[1]) {
+        let price = match[1].trim();
+        // Asegurarse de que tiene símbolo de moneda
+        if (!price.includes('€') && !price.includes('$')) {
+          price += '€'; // Añadir € por defecto
+        }
+        return price;
+      }
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error extrayendo precio genérico:", error);
+    return undefined;
+  }
+}
+
+export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | undefined, price: string | undefined }> {
   try {
     debug(`Procesando URL para extraer imagen: ${url}`);
     
@@ -284,32 +378,17 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
       // Verificar de nuevo
       if (!urlRegex.test(url)) {
         debug(`URL sigue con formato inválido después de corrección: ${url}`);
-        return { imageUrl: undefined };
+        return { imageUrl: undefined, price: undefined };
       }
     }
 
-    // Comprobar si tenemos un extractor específico para este sitio
-    for (const site of SITE_PATTERNS) {
-      if (url.match(site.pattern)) {
-        debug(`Usando extractor específico para: ${url}`);
-        const specificImage = await site.handler(url);
-        if (specificImage) {
-          debug(`Imagen extraída con handler específico: ${specificImage}`);
-          // Validar URL de la imagen obtenida
-          try {
-            new URL(specificImage);
-            return { imageUrl: specificImage };
-          } catch (e) {
-            debug(`URL de imagen inválida del handler específico: ${specificImage}`);
-          }
-        }
-        break; // Si el handler específico no encuentra imagen, continuamos con el método genérico
-      }
-    }
+    let productHtml: string | undefined;
+    let price: string | undefined;
+    let imageUrl: string | undefined;
 
     // Método genérico de extracción
     try {
-      debug(`Usando método genérico para: ${url}`);
+      debug(`Obteniendo contenido para: ${url}`);
       // Obtener el contenido de la página
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
@@ -328,36 +407,69 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
 
       if (!response.ok) {
         debug(`No se pudo obtener el contenido de ${url}. Código de estado: ${response.status}`);
-        return { imageUrl: undefined };
+        return { imageUrl: undefined, price: undefined };
       }
 
-      const html = await response.text();
-      debug(`Contenido obtenido para ${url} (${html.length} bytes)`);
+      productHtml = await response.text();
+      debug(`Contenido obtenido para ${url} (${productHtml.length} bytes)`);
       
-      // Buscar etiqueta OG:Image
-      const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-      if (ogImageMatch && ogImageMatch[1]) {
-        const imageUrl = ogImageMatch[1];
-        debug(`Imagen OG encontrada: ${imageUrl}`);
-        return { imageUrl };
+      // Extraer precio según el sitio
+      if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
+        price = await extractAmazonPrice(url, productHtml);
+        debug(`Precio de Amazon extraído: ${price}`);
+      } else {
+        price = await extractGenericPrice(productHtml);
+        debug(`Precio genérico extraído: ${price}`);
       }
       
-      // Usar metascraper como último recurso
-      const metadata = await scraper({ html, url });
-      if (metadata.image) {
-        const imageUrl = String(metadata.image);
-        debug(`Imagen extraída con metascraper: ${imageUrl}`);
-        return { imageUrl };
+      // Comprobar si tenemos un extractor específico para imágenes en este sitio
+      for (const site of SITE_PATTERNS) {
+        if (url.match(site.pattern)) {
+          debug(`Usando extractor específico de imágenes para: ${url}`);
+          const specificImage = await site.handler(url);
+          if (specificImage) {
+            debug(`Imagen extraída con handler específico: ${specificImage}`);
+            // Validar URL de la imagen obtenida
+            try {
+              new URL(specificImage);
+              imageUrl = specificImage;
+              break;
+            } catch (e) {
+              debug(`URL de imagen inválida del handler específico: ${specificImage}`);
+            }
+          }
+          break; // Si el handler específico no encuentra imagen, continuamos con el método genérico
+        }
       }
       
-      debug(`No se encontró ninguna imagen para ${url}`);
-      return { imageUrl: undefined };
+      // Si no tenemos imagen de un handler específico, buscamos en el HTML
+      if (!imageUrl) {
+        // Buscar etiqueta OG:Image
+        const ogImageMatch = productHtml.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+        if (ogImageMatch && ogImageMatch[1]) {
+          imageUrl = ogImageMatch[1];
+          debug(`Imagen OG encontrada: ${imageUrl}`);
+        } else {
+          // Usar metascraper como último recurso
+          const metadata = await scraper({ html: productHtml, url });
+          if (metadata.image) {
+            imageUrl = String(metadata.image);
+            debug(`Imagen extraída con metascraper: ${imageUrl}`);
+          }
+        }
+      }
+      
+      if (!imageUrl) {
+        debug(`No se encontró ninguna imagen para ${url}`);
+      }
+      
+      return { imageUrl, price };
     } catch (error) {
-      debug(`Error en el método genérico para ${url}: ${error}`);
-      return { imageUrl: undefined };
+      debug(`Error en el método de extracción para ${url}: ${error}`);
+      return { imageUrl: undefined, price: undefined };
     }
   } catch (error) {
     console.error(`Error al obtener metadata para ${url}:`, error);
-    return { imageUrl: undefined };
+    return { imageUrl: undefined, price: undefined };
   }
 }
