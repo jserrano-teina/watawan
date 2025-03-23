@@ -325,6 +325,135 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
   }
 }
 
+// Función para extraer precio de PCComponentes
+async function extractPCComponentesPrice(url: string, html?: string): Promise<string | undefined> {
+  try {
+    let productHtml = html;
+    
+    // Si no tenemos el HTML, lo obtenemos
+    if (!productHtml) {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (response.ok) {
+        productHtml = await response.text();
+      } else {
+        return undefined;
+      }
+    }
+    
+    if (!productHtml) return undefined;
+    
+    // Patrones para extraer precios de PCComponentes
+    const pricePatterns = [
+      /<div[^>]*class=["'].*?precioMain.*?["'][^>]*>([\d.,]+)[ \t]*€/i,
+      /"price":[ \t]*([\d.,]+)/i,
+      /<meta[^>]*itemprop=["']price["'][^>]*content=["']([\d.,]+)["'][^>]*>/i
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match && match[1]) {
+        return `${match[1]}€`.trim();
+      }
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error extrayendo precio de PCComponentes:", error);
+    return undefined;
+  }
+}
+
+// Función para extraer precio de Zara
+async function extractZaraPrice(url: string, html?: string): Promise<string | undefined> {
+  try {
+    let productHtml = html;
+    
+    // Si no tenemos el HTML, lo obtenemos
+    if (!productHtml) {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (response.ok) {
+        productHtml = await response.text();
+      } else {
+        return undefined;
+      }
+    }
+    
+    if (!productHtml) return undefined;
+    
+    // Patrones para extraer precios de Zara
+    const pricePatterns = [
+      /<span[^>]*class=["']price._product-price.*?["'][^>]*><span[^>]*>([\d.,]+)[^<]*<\/span>/i,
+      /<meta[^>]*property=["']product:price:amount["'][^>]*content=["']([\d.,]+)["'][^>]*>/i,
+      /"price":[ \t]*"([\d.,]+)"/i
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match && match[1]) {
+        return `${match[1]}€`.trim();
+      }
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error extrayendo precio de Zara:", error);
+    return undefined;
+  }
+}
+
+// Función para extraer precio de Nike
+async function extractNikePrice(url: string, html?: string): Promise<string | undefined> {
+  try {
+    let productHtml = html;
+    
+    // Si no tenemos el HTML, lo obtenemos
+    if (!productHtml) {
+      const response = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+        }
+      });
+      
+      if (response.ok) {
+        productHtml = await response.text();
+      } else {
+        return undefined;
+      }
+    }
+    
+    if (!productHtml) return undefined;
+    
+    // Patrones para extraer precios de Nike
+    const pricePatterns = [
+      /<div[^>]*class=["'].*?product-price.*?["'][^>]*>([\d.,]+)[^<]*<\/div>/i,
+      /"currentPrice":\s*{\s*"value":\s*([\d.,]+)/i,
+      /<meta[^>]*property=["']og:price:amount["'][^>]*content=["']([\d.,]+)["'][^>]*>/i
+    ];
+    
+    for (const pattern of pricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match && match[1]) {
+        return `${match[1]}€`.trim();
+      }
+    }
+    
+    return undefined;
+  } catch (error) {
+    console.error("Error extrayendo precio de Nike:", error);
+    return undefined;
+  }
+}
+
 // Función para extraer precio de sitios genéricos
 async function extractGenericPrice(html: string): Promise<string | undefined> {
   try {
@@ -335,7 +464,10 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
       /<div[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Div con clase que contiene "price"
       /<span[^>]*class=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Span con clase que contiene "price"
       /<span[^>]*id=["'][^"']*price[^"']*["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i, // Span con id que contiene "price"
-      /price["']\s*:\s*["']?([\d.,]+)["']?/i // JSON en Javascript
+      /price["']\s*:\s*["']?([\d.,]+)["']?/i, // JSON en Javascript
+      /"price":\s*([\d.,]+)/i, // JSON simple
+      /"price":\s*"([\d.,]+)"/i, // JSON con string
+      /<span[^>]*class=["'].*?amount.*?["'][^>]*>([\d.,]+)(?:€|\$|&euro;)?/i // Clase 'amount'
     ];
     
     for (const pattern of pricePatterns) {
@@ -417,6 +549,15 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
       if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
         price = await extractAmazonPrice(url, productHtml);
         debug(`Precio de Amazon extraído: ${price}`);
+      } else if (url.match(/pccomponentes\.com/i)) {
+        price = await extractPCComponentesPrice(url, productHtml);
+        debug(`Precio de PCComponentes extraído: ${price}`);
+      } else if (url.match(/zara\.com/i)) {
+        price = await extractZaraPrice(url, productHtml);
+        debug(`Precio de Zara extraído: ${price}`);
+      } else if (url.match(/nike\.(com|es)/i)) {
+        price = await extractNikePrice(url, productHtml);
+        debug(`Precio de Nike extraído: ${price}`);
       } else {
         price = await extractGenericPrice(productHtml);
         debug(`Precio genérico extraído: ${price}`);
