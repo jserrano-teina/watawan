@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20;
+    @apply font-sans antialiased bg-[#121212] text-foreground selection:bg-primary/20;
   }
 
   h1, h2, h3, h4 {
@@ -20,7 +20,7 @@
   }
 
   input, textarea {
-    @apply transition-colors duration-200 text-foreground placeholder:text-muted-foreground/70;
+    @apply transition-colors duration-200 text-foreground placeholder:text-muted-foreground/70 bg-[#1e1e1e] border-[#333];
   }
 
   button {
@@ -29,5 +29,40 @@
 
   a {
     @apply text-primary hover:text-primary/90;
+  }
+}
+
+/* Estilos Airbnb Dark Mode */
+@layer components {
+  .card-airbnb {
+    @apply bg-[#1e1e1e] rounded-xl shadow-lg border border-[#333] overflow-hidden hover:shadow-xl transition-all duration-300;
+  }
+
+  .card-airbnb-header {
+    @apply p-4 border-b border-[#333] flex justify-between items-center;
+  }
+
+  .card-airbnb-body {
+    @apply p-4;
+  }
+
+  .card-airbnb-footer {
+    @apply p-4 border-t border-[#333] flex justify-between items-center;
+  }
+
+  .btn-airbnb {
+    @apply bg-primary text-white font-medium rounded-lg px-5 py-2.5 hover:opacity-90 transition-all duration-300;
+  }
+
+  .btn-airbnb-outline {
+    @apply bg-transparent border border-[#333] text-foreground hover:bg-[#2a2a2a] rounded-lg px-5 py-2.5 transition-all duration-300;
+  }
+
+  .input-airbnb {
+    @apply bg-[#1e1e1e] border border-[#333] rounded-lg p-3 focus:ring-primary focus:border-primary text-foreground;
+  }
+
+  .airbnb-badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/20 text-primary;
   }
 }

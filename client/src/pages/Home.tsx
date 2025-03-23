@@ -82,7 +82,7 @@ const Home: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen relative bg-neutral-100">
+    <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
       <Header user={user} />
       
       <main className="flex-grow container mx-auto px-4 pb-20">
@@ -93,19 +93,21 @@ const Home: React.FC = () => {
             <ShareBanner onShareClick={() => setShowShareModal(true)} />
             
             <div className="my-6">
-              <h2 className="text-xl font-semibold mb-4">Mis deseos</h2>
+              <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
               
               {myWishItems.length === 0 ? (
                 <EmptyWishlist onAddWish={handleAddWishClick} />
               ) : (
-                myWishItems.map(item => (
-                  <WishItem 
-                    key={item.id} 
-                    item={item} 
-                    onEdit={handleEditWish} 
-                    onDelete={handleDeleteWish} 
-                  />
-                ))
+                <div className="grid gap-4">
+                  {myWishItems.map(item => (
+                    <WishItem 
+                      key={item.id} 
+                      item={item} 
+                      onEdit={handleEditWish} 
+                      onDelete={handleDeleteWish} 
+                    />
+                  ))}
+                </div>
               )}
             </div>
           </>
@@ -113,25 +115,30 @@ const Home: React.FC = () => {
         
         {activeTab === 'reserved' && (
           <div className="my-6">
-            <h2 className="text-xl font-semibold mb-4">Reservados para ti</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-white">Reservados para ti</h2>
             
             {reservedItems.length === 0 ? (
-              <div className="bg-white rounded-lg border border-neutral-200 p-6 text-center my-4">
-                <div className="mx-auto w-16 h-16 bg-neutral-100 rounded-full flex items-center justify-center mb-4">
-                  <i className="far fa-calendar-check text-2xl text-neutral-400"></i>
+              <div className="card-airbnb p-6 text-center my-4">
+                <div className="mx-auto w-16 h-16 bg-[#252525] rounded-full flex items-center justify-center mb-4">
+                  <i className="far fa-calendar-check text-2xl text-white/70"></i>
                 </div>
-                <h3 className="font-medium text-lg text-neutral-800">No tienes regalos reservados</h3>
-                <p className="text-neutral-600 mt-2">Comparte tu lista y tus amigos podrán reservar regalos para ti.</p>
+                <h3 className="font-medium text-lg text-white">No tienes regalos reservados</h3>
+                <p className="text-white/70 mt-2 mb-4">Comparte tu lista y tus amigos podrán reservar regalos para ti.</p>
+                <button className="btn-airbnb" onClick={() => setShowShareModal(true)}>
+                  Compartir Lista
+                </button>
               </div>
             ) : (
-              reservedItems.map(item => (
-                <WishItem 
-                  key={item.id} 
-                  item={item} 
-                  onEdit={() => {}} 
-                  onDelete={() => {}} 
-                />
-              ))
+              <div className="grid gap-4">
+                {reservedItems.map(item => (
+                  <WishItem 
+                    key={item.id} 
+                    item={item} 
+                    onEdit={() => {}} 
+                    onDelete={() => {}} 
+                  />
+                ))}
+              </div>
             )}
           </div>
         )}
