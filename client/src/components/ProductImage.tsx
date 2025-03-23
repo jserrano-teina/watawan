@@ -82,13 +82,13 @@ const ProductImage: React.FC<ProductImageProps> = ({
     const placeholderUrl = getPlaceholderUrl();
     
     return (
-      <div className={`relative flex items-center justify-center bg-gray-100 rounded overflow-hidden ${className}`}>
+      <div className={`relative flex items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
         <img
           src={placeholderUrl}
           alt={title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center truncate">
+        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1.5 text-center truncate backdrop-blur-sm">
           {title}
         </div>
       </div>
@@ -100,13 +100,13 @@ const ProductImage: React.FC<ProductImageProps> = ({
     const placeholderUrl = getPlaceholderUrl();
     
     return (
-      <div className={`relative flex items-center justify-center bg-gray-100 rounded overflow-hidden ${className}`}>
+      <div className={`relative flex items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
         <img
           src={placeholderUrl}
           alt={title}
           className="w-full h-full object-cover"
         />
-        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-1 text-center truncate">
+        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1.5 text-center truncate backdrop-blur-sm">
           {title}
         </div>
       </div>
@@ -119,12 +119,12 @@ const ProductImage: React.FC<ProductImageProps> = ({
       <img 
         src={imageUrl} 
         alt={title} 
-        className="w-full h-full object-cover rounded"
+        className="w-full h-full object-cover rounded-lg"
         onLoad={handleImageLoad}
         onError={handleImageError}
       />
       {imgState === 'loading' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-gray-100">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#252525] rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
       )}
