@@ -94,11 +94,11 @@ export function WishlistItem({
           </div>
           
           {item.description && (
-            <p className="text-sm text-gray-500 mt-1">{item.description}</p>
+            <p className="text-sm text-gray-700 mt-1">{item.description}</p>
           )}
           
           {item.store && (
-            <div className="flex items-center mt-1 text-xs text-gray-500">
+            <div className="flex items-center mt-1 text-xs text-gray-700">
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
               <span>{item.store}</span>
             </div>
@@ -165,13 +165,13 @@ export function WishlistItem({
                 ) : (
                   <div className="flex space-x-1">
                     <button 
-                      className="p-1 text-gray-500 hover:text-gray-700 rounded"
+                      className="p-1 text-gray-700 hover:text-black rounded"
                       onClick={() => onEdit && onEdit(item.id)}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
                     </button>
                     <button 
-                      className="p-1 text-gray-500 hover:text-error rounded"
+                      className="p-1 text-gray-700 hover:text-error rounded"
                       onClick={() => onDelete && onDelete(item.id)}
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>

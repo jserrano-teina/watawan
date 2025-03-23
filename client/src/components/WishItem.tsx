@@ -64,13 +64,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
             <div className={`flex space-x-1 flex-shrink-0 ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}>
               <button 
                 onClick={() => onEdit(item)} 
-                className="text-neutral-500 hover:text-neutral-700 p-1"
+                className="text-neutral-700 hover:text-black p-1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
               </button>
               <button 
                 onClick={() => onDelete(item)} 
-                className="text-neutral-500 hover:text-error p-1"
+                className="text-neutral-700 hover:text-error p-1"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
               </button>
@@ -92,7 +92,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete }) => {
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               Ver enlace
             </a>
-            <span className="text-neutral-500 flex items-center">
+            <span className="text-neutral-700 flex items-center">
               <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
               {formattedDate}
             </span>
