@@ -19,85 +19,88 @@ const ProductImage: React.FC<ProductImageProps> = ({
   title, 
   className = "w-full h-full object-cover" 
 }) => {
-  const [imgState, setImgState] = useState<ImageState>('loading');
+  const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
   const [currentUrl, setCurrentUrl] = useState<string | undefined>(imageUrl);
   const [urlIndex, setUrlIndex] = useState(0);
-  const [extractedProductId, setExtractedProductId] = useState<string | undefined>(productId);
   
-  // Extraer ASIN/ID de producto si no se proporciona directamente
-  useEffect(() => {
-    if (!extractedProductId) {
-      // Primero intentamos usar el prop productId
-      if (productId && productId.length === 10 && /^[A-Z0-9]{10}$/.test(productId)) {
-        setExtractedProductId(productId);
-        return;
-      }
-      
-      // Si no tenemos productId, intentamos extraerlo de la URL de imagen
-      if (imageUrl) {
-        // Patrones para extraer ASIN de URLs de imagen de Amazon
-        const patterns = [
-          /\/images\/I\/([A-Z0-9]{10})(\.|_)/, // Patrón común en URLs de imagen de Amazon
-          /\/images\/P\/([A-Z0-9]{10})(\.|_)/, // Otro patrón de Amazon
-          /\/([A-Z0-9]{10})(\.|_)/ // Patrón más general
-        ];
-        
-        for (const pattern of patterns) {
-          const match = imageUrl.match(pattern);
-          if (match && match[1]) {
-            const extractedId = match[1];
-            console.log(`ID de producto extraído de URL de imagen: ${extractedId}`);
-            setExtractedProductId(extractedId);
-            return;
-          }
-        }
+  // Extraer ID de producto de la URL
+  const getProductIdFromUrl = (url: string): string | null => {
+    // Patrones comunes para URLs de Amazon
+    const amazonPatterns = [
+      /amazon\.com.*\/dp\/([A-Z0-9]{10})/i,
+      /amazon\.es.*\/dp\/([A-Z0-9]{10})/i,
+      /\/gp\/product\/([A-Z0-9]{10})/i,
+      /\/dp\/([A-Z0-9]{10})/i,
+      /\/([A-Z0-9]{10})(?:\/|\?|$)/
+    ];
+    
+    for (const pattern of amazonPatterns) {
+      const match = url.match(pattern);
+      if (match && match[1]) {
+        return match[1].toUpperCase();
       }
     }
-  }, [imageUrl, productId, extractedProductId]);
+    
+    return null;
+  };
   
-  // Generar diferentes formatos de URL para intentar
+  // Verificar si una URL es de Amazon
+  const isAmazonUrl = (url?: string): boolean => {
+    if (!url) return false;
+    return (
+      url.includes('amazon.com') || 
+      url.includes('amazon.es') || 
+      url.includes('amzn.') || 
+      url.includes('a.co/')
+    );
+  };
+  
+  // Generar URLs alternativas para productos de Amazon
+  const getAmazonImageUrls = (asin: string): string[] => {
+    if (asin.length !== 10) return [];
+    
+    const urls: string[] = [];
+    
+    // Añadir los formatos más comunes para imágenes de Amazon
+    urls.push(
+      // Formato P directo (funciona para la mayoría de los casos)
+      `https://images-na.ssl-images-amazon.com/images/P/${asin}.jpg`,
+      
+      // Formatos I con variantes de prefijos (61, 71, 81)
+      `https://m.media-amazon.com/images/I/61${asin.substring(0, 8)}._AC_SL1500_.jpg`,
+      `https://m.media-amazon.com/images/I/71${asin.substring(0, 8)}._AC_SL1500_.jpg`, 
+      `https://m.media-amazon.com/images/I/81${asin.substring(0, 8)}._AC_SL1500_.jpg`,
+      
+      // Con proxy para evitar CORS
+      `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(`https://images-na.ssl-images-amazon.com/images/P/${asin}.jpg`)}`
+    );
+    
+    return urls;
+  };
+  
+  // Generar todas las URLs alternativas para intentar
   const generateImageUrls = (): string[] => {
     const urls: string[] = [];
     
-    // Siempre empezamos con la URL original si existe
+    // Si tenemos una URL de imagen, siempre la intentamos primero
     if (imageUrl) {
       urls.push(imageUrl);
-    }
-    
-    // Si tenemos un ASIN/ID de producto, generamos URLs alternativas
-    if (extractedProductId && extractedProductId.length === 10) {
       
-      // Formato directo con ASIN
-      urls.push(`https://images-na.ssl-images-amazon.com/images/P/${extractedProductId}.jpg`);
-      
-      // Formatos con estructura de carpetas I y variaciones de prefijos
-      // Los prefijos 61, 71, 81, 91 son comunes en las URLs de imágenes de Amazon
-      if (extractedProductId.length >= 8) {
-        const idPart = extractedProductId.substring(0, 8);
-        urls.push(
-          // Variaciones con prefijos numéricos comunes
-          `https://m.media-amazon.com/images/I/61${idPart}._AC_SL1500_.jpg`,
-          `https://m.media-amazon.com/images/I/71${idPart}._AC_SL1500_.jpg`,
-          `https://m.media-amazon.com/images/I/81${idPart}._AC_SL1500_.jpg`,
-          `https://images-na.ssl-images-amazon.com/images/I/71${idPart}._SL1500_.jpg`,
-          `https://images-na.ssl-images-amazon.com/images/I/81${idPart}._SL1500_.jpg`,
-          `https://images-na.ssl-images-amazon.com/images/I/91${idPart}.jpg`
-        );
-      }
-      
-      // Si la URL original es de Amazon, intentamos con un proxy para evitar CORS
-      if (imageUrl && (
-        imageUrl.includes('amazon.com') || 
-        imageUrl.includes('media-amazon') || 
-        imageUrl.includes('images-amazon')
-      )) {
-        urls.push(
-          `https://images1-focus-opensocial.googleusercontent.com/gadgets/proxy?container=focus&refresh=2592000&url=${encodeURIComponent(imageUrl)}`
-        );
+      // Si es una URL de Amazon, extraemos el ID y generamos alternativas
+      if (isAmazonUrl(imageUrl)) {
+        const extractedId = getProductIdFromUrl(imageUrl);
+        if (extractedId) {
+          urls.push(...getAmazonImageUrls(extractedId));
+        }
       }
     }
     
-    // Eliminar duplicados usando Array.filter
+    // Si nos proporcionaron un ID de producto directamente
+    if (productId && productId.length === 10) {
+      urls.push(...getAmazonImageUrls(productId));
+    }
+    
+    // Eliminar duplicados manualmente
     return urls.filter((url, index) => urls.indexOf(url) === index);
   };
   
@@ -114,7 +117,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
     
     const nextUrl = getNextImageUrl();
     if (nextUrl) {
-      console.log(`Intentando formato alternativo ${nextIndex}: ${nextUrl}`);
+      console.log(`Intentando alternativa ${nextIndex}: ${nextUrl}`);
       setCurrentUrl(nextUrl);
     } else {
       setImgState('error');
@@ -128,8 +131,27 @@ const ProductImage: React.FC<ProductImageProps> = ({
     setImgState(imageUrl ? 'loading' : 'error');
   }, [imageUrl, productId]);
   
-  if (!currentUrl || imgState === 'error') {
-    return <i className="fas fa-gift text-neutral-400 text-4xl"></i>;
+  if (imgState === 'error' || !currentUrl) {
+    // Icono de fallback cuando no hay imagen
+    return (
+      <div className={`flex items-center justify-center bg-gray-100 ${className}`}>
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          width="64" 
+          height="64" 
+          viewBox="0 0 24 24" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="1.5" 
+          strokeLinecap="round" 
+          strokeLinejoin="round" 
+          className="text-gray-400"
+        >
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+          <line x1="7" y1="7" x2="7.01" y2="7"></line>
+        </svg>
+      </div>
+    );
   }
   
   return (
