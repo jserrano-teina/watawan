@@ -2,36 +2,20 @@ import React from 'react';
 import { cn } from '@/lib/utils';
 
 interface WishlistTabsProps {
-  activeTab: 'wishes' | 'reserved';
-  onTabChange: (tab: 'wishes' | 'reserved') => void;
+  // Mantener la interfaz por compatibilidad pero simplificar
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const WishlistTabs: React.FC<WishlistTabsProps> = ({ activeTab, onTabChange }) => {
+const WishlistTabs: React.FC<WishlistTabsProps> = () => {
   return (
     <div className="border-b border-[#333] mt-4">
       <div className="flex space-x-8">
-        <button 
-          className={cn(
-            "py-3 font-medium text-sm", 
-            activeTab === 'wishes' 
-              ? "border-b-2 border-primary text-primary" 
-              : "text-gray-400 hover:text-white/80 transition-colors"
-          )}
-          onClick={() => onTabChange('wishes')}
+        <div 
+          className="py-3 font-medium text-sm border-b-2 border-primary text-primary"
         >
           Mis deseos
-        </button>
-        <button 
-          className={cn(
-            "py-3 font-medium text-sm", 
-            activeTab === 'reserved' 
-              ? "border-b-2 border-primary text-primary" 
-              : "text-gray-400 hover:text-white/80 transition-colors"
-          )}
-          onClick={() => onTabChange('reserved')}
-        >
-          Reservados para mí
-        </button>
+        </div>
       </div>
     </div>
   );

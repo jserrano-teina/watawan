@@ -5,8 +5,8 @@ import WishlistTabs from '../components/WishlistTabs';
 import ShareBanner from '../components/ShareBanner';
 import WishItem from '../components/WishItem';
 import EmptyWishlist from '../components/EmptyWishlist';
-import BottomNavigation from '../components/BottomNavigation';
 import FloatingActionButton from '../components/FloatingActionButton';
+import BottomNavigation from '../components/BottomNavigation';
 import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
 import { WishItem as WishItemType } from '../types';
@@ -14,19 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
 import { AlertCircle, CheckCircle } from 'lucide-react';
 
-type TabType = 'wishes' | 'reserved';
-
 const Home: React.FC = () => {
   const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem } = useWishlist();
-  const [activeTab, setActiveTab] = useState<TabType>('wishes');
   const [showAddWishModal, setShowAddWishModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
   const myWishItems = Array.isArray(items) ? items : [];
-  // In a real app, reserved items would come from another API endpoint
-  const reservedItems: WishItemType[] = [];
 
   const handleAddWishClick = () => {
     setItemToEdit(undefined);
@@ -86,71 +81,33 @@ const Home: React.FC = () => {
       <Header user={user} />
       
       <main className="flex-grow container mx-auto px-4 pb-20">
-        <WishlistTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <WishlistTabs />
         
-        {activeTab === 'wishes' && (
-          <>
-            <ShareBanner onShareClick={() => setShowShareModal(true)} />
-            
-            <div className="my-6">
-              <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
-              
-              {myWishItems.length === 0 ? (
-                <EmptyWishlist onAddWish={handleAddWishClick} />
-              ) : (
-                <div className="grid gap-4">
-                  {myWishItems.map(item => (
-                    <WishItem 
-                      key={item.id} 
-                      item={item} 
-                      onEdit={handleEditWish} 
-                      onDelete={handleDeleteWish} 
-                    />
-                  ))}
-                </div>
-              )}
+        <ShareBanner onShareClick={() => setShowShareModal(true)} />
+        
+        <div className="my-6">
+          <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
+          
+          {myWishItems.length === 0 ? (
+            <EmptyWishlist onAddWish={handleAddWishClick} />
+          ) : (
+            <div className="grid gap-4">
+              {myWishItems.map(item => (
+                <WishItem 
+                  key={item.id} 
+                  item={item} 
+                  onEdit={handleEditWish} 
+                  onDelete={handleDeleteWish} 
+                />
+              ))}
             </div>
-          </>
-        )}
-        
-        {activeTab === 'reserved' && (
-          <div className="my-6">
-            <h2 className="text-2xl font-semibold mb-6 text-white">Reservados para ti</h2>
-            
-            {reservedItems.length === 0 ? (
-              <div className="card-airbnb p-6 text-center my-4">
-                <div className="mx-auto w-16 h-16 bg-[#252525] rounded-full flex items-center justify-center mb-4">
-                  <i className="far fa-calendar-check text-2xl text-white/70"></i>
-                </div>
-                <h3 className="font-medium text-lg text-white">No tienes regalos reservados</h3>
-                <p className="text-white/70 mt-2 mb-4">Comparte tu lista y tus amigos podrán reservar regalos para ti.</p>
-                <button className="btn-airbnb" onClick={() => setShowShareModal(true)}>
-                  Compartir Lista
-                </button>
-              </div>
-            ) : (
-              <div className="grid gap-4">
-                {reservedItems.map(item => (
-                  <WishItem 
-                    key={item.id} 
-                    item={item} 
-                    onEdit={() => {}} 
-                    onDelete={() => {}} 
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+          )}
+        </div>
       </main>
       
-      <BottomNavigation 
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        onAddWishClick={handleAddWishClick}
-      />
-      
       <FloatingActionButton onClick={handleAddWishClick} />
+      
+      <BottomNavigation onAddWishClick={handleAddWishClick} />
       
       <AddWishModal 
         isOpen={showAddWishModal}
