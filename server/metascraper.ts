@@ -247,13 +247,11 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
     }
     
     // Generamos formatos alternativos para aumentar posibilidades de éxito
-    // Intentar extraer los primeros caracteres para el formato de imagen común de Amazon
-    const firstPart = productId.substring(0, 1);
     
     // Intentamos varios formatos de URL para Amazon
     const imageFormats = [
       // Formato 1: URL directa de imagen de productos (más común)
-      `https://m.media-amazon.com/images/I/${firstPart}${productId}._AC_SL1500_.jpg`,
+      `https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`,
       
       // Formato 2: Variante de URL común 
       `https://m.media-amazon.com/images/I/${productId}._AC_SL1500_.jpg`,

@@ -66,15 +66,10 @@ const ProductImage: React.FC<ProductImageProps> = ({
     
     // Si tenemos un ASIN/ID de producto, generamos URLs alternativas
     if (extractedProductId && extractedProductId.length === 10) {
-      // Primera letra del ASIN (usado en algunos formatos)
-      const firstChar = extractedProductId.substring(0, 1);
       
       // Formatos comunes de Amazon
       urls.push(
         // Formato más común
-        `https://m.media-amazon.com/images/I/${firstChar}${extractedProductId}._AC_SL1500_.jpg`,
-        
-        // Variante común
         `https://m.media-amazon.com/images/I/${extractedProductId}._AC_SL1500_.jpg`,
         
         // Formato alternativo
@@ -102,8 +97,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
       }
     }
     
-    // Eliminar duplicados
-    return [...new Set(urls)];
+    // Eliminar duplicados usando Array.filter
+    return urls.filter((url, index) => urls.indexOf(url) === index);
   };
   
   // Obtener la siguiente URL para intentar
