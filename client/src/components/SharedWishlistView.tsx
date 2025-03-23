@@ -90,6 +90,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
                     title={item.title}
+                    purchaseLink={item.purchaseLink}
                   />
                 </div>
                 <div className="flex-grow">
@@ -133,6 +134,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
                       title={item.title}
+                      purchaseLink={item.purchaseLink}
                     />
                   </div>
                   <div className="flex-grow">
