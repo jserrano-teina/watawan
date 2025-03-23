@@ -248,29 +248,40 @@ const ProductImage: React.FC<ProductImageProps> = ({
     setImgState(imageUrl ? 'loading' : 'error');
   }, [imageUrl, productId, purchaseLink]);
   
+  // Generar hash simple para un color consistente basado en el título
+  const getConsistentColor = (text: string): string => {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = text.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = Math.abs(hash) % 360;
+    return `hsl(${color}, 70%, 60%)`;
+  };
+  
   if (imgState === 'error' || !currentUrl) {
-    // Icono de fallback cuando no hay imagen
+    // Crear una imagen generada basada en el título
+    const color = getConsistentColor(title);
+    const initials = title
+      .split(' ')
+      .map(word => word[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase();
+      
+    // URL para un placeholder que funciona de forma confiable
+    const placeholderUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${encodeURIComponent(color.replace('#', ''))}&color=fff&size=250`;
+    
     return (
-      <div className={`flex items-center justify-center bg-gray-100 rounded ${className}`}>
-        <div className="text-center p-4">
-          <svg 
-            xmlns="http://www.w3.org/2000/svg" 
-            width="48" 
-            height="48" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            strokeWidth="1.5" 
-            strokeLinecap="round" 
-            strokeLinejoin="round" 
-            className="text-gray-400 mx-auto mb-2"
-          >
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <circle cx="8.5" cy="8.5" r="1.5"></circle>
-            <polyline points="21 15 16 10 5 21"></polyline>
-          </svg>
-          <p className="text-xs text-gray-500 mt-1 line-clamp-1">{title}</p>
-        </div>
+      <div className={`flex flex-col items-center justify-center bg-gray-100 rounded overflow-hidden ${className}`}>
+        <img
+          src={placeholderUrl}
+          alt={title}
+          className="object-cover w-full h-full"
+          onError={() => {
+            // Si incluso el placeholder falla, mostramos un elemento div con color
+            setImgState('error');
+          }}
+        />
       </div>
     );
   }
