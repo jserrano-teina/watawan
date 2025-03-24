@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Package } from 'lucide-react';
 
 type ImageState = 'loading' | 'loaded' | 'error';
 
@@ -21,7 +22,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
   className = "w-full h-full object-cover",
   purchaseLink 
 }) => {
-  const [imgState, setImgState] = useState<ImageState>('loading');
+  const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
+  const [imgSrc, setImgSrc] = useState<string | undefined>(imageUrl);
   
   // Generar un color consistente basado en el título del producto
   const getConsistentColor = (text: string): string => {
@@ -33,82 +35,49 @@ const ProductImage: React.FC<ProductImageProps> = ({
     return `hsl(${color}, 70%, 60%)`;
   };
   
-  // Obtener las iniciales del título para el placeholder
-  const getInitials = (text: string): string => {
-    return text
-      .split(' ')
-      .map(word => word[0])
-      .join('')
-      .slice(0, 2)
-      .toUpperCase();
-  };
-  
   // Determinar si es una tienda problemática que sabemos que bloquea las imágenes
   const isProblematicStore = (): boolean => {
     const url = purchaseLink || imageUrl || '';
-    return url.includes('zara.com') || url.includes('pccomponentes.com');
-  };
-  
-  // Generar URL del placeholder basado en el título
-  const getPlaceholderUrl = (): string => {
-    const color = getConsistentColor(title);
-    const initials = getInitials(title);
-    return `https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=${encodeURIComponent(color.replace('#', ''))}&color=fff&size=200&bold=true`;
-  };
-  
-  // Verificar si es una URL de Amazon (que sí funciona bien)
-  const isAmazonUrl = (): boolean => {
-    const url = purchaseLink || imageUrl || '';
-    return url.includes('amazon.') || url.includes('amzn.') || url.includes('a.co/');
+    return url.includes('zara.com') || 
+           url.includes('pccomponentes.com') || 
+           url.includes('nike.com');
   };
   
   // Detectar si debemos usar un placeholder inmediatamente
   const shouldUseInitialsPlaceholder = (): boolean => {
-    return isProblematicStore() || !imageUrl;
+    return isProblematicStore() || !imageUrl || imgState === 'error';
   };
   
   // Comprobar errores al cargar la imagen
   const handleImageError = () => {
     setImgState('error');
+    setImgSrc(undefined);
   };
   
   // Cuando la imagen carga correctamente
   const handleImageLoad = () => {
     setImgState('loaded');
   };
+
+  // Actualizar el estado cuando cambia la URL de la imagen
+  useEffect(() => {
+    if (imageUrl) {
+      setImgSrc(imageUrl);
+      setImgState('loading');
+    } else {
+      setImgState('error');
+      setImgSrc(undefined);
+    }
+  }, [imageUrl]);
   
-  // Si es una tienda problemática o no hay URL, usar un placeholder con iniciales
+  // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {
-    const placeholderUrl = getPlaceholderUrl();
-    
     return (
-      <div className={`relative flex items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
-        <img
-          src={placeholderUrl}
-          alt={title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1.5 text-center truncate backdrop-blur-sm">
+      <div className={`relative flex flex-col items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
+        <Package size={48} className="mb-2 text-gray-500" />
+        <p className="text-gray-400 text-center text-sm px-2 truncate">
           {title}
-        </div>
-      </div>
-    );
-  }
-  
-  // Para Amazon y otras tiendas que funcionan bien con las imágenes
-  if (imgState === 'error' || !imageUrl) {
-    const placeholderUrl = getPlaceholderUrl();
-    
-    return (
-      <div className={`relative flex items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
-        <img
-          src={placeholderUrl}
-          alt={title}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-70 text-white text-xs p-1.5 text-center truncate backdrop-blur-sm">
-          {title}
-        </div>
+        </p>
       </div>
     );
   }
@@ -116,16 +85,30 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Para otras tiendas, intentar cargar la imagen normalmente
   return (
     <div className={`relative ${className}`}>
-      <img 
-        src={imageUrl} 
-        alt={title} 
-        className="w-full h-full object-cover rounded-lg"
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
+      {imgSrc && (
+        <img 
+          src={imgSrc} 
+          alt={title} 
+          className="w-full h-full object-cover rounded-lg"
+          onLoad={handleImageLoad}
+          onError={handleImageError}
+        />
+      )}
+      
+      {/* Mostrar spinner durante la carga */}
       {imgState === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#252525] rounded-lg">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      )}
+      
+      {/* Mostrar placeholder si la imagen falla */}
+      {imgState === 'error' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525] rounded-lg">
+          <Package size={48} className="mb-2 text-gray-500" />
+          <p className="text-gray-400 text-center text-sm px-2 truncate">
+            {title}
+          </p>
         </div>
       )}
     </div>
