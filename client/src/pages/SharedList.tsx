@@ -35,8 +35,8 @@ const SharedList: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-neutral-600">Cargando...</div>
+      <div className="min-h-screen flex items-center justify-center bg-[#121212]">
+        <div className="animate-pulse text-xl text-white/80">Cargando...</div>
       </div>
     );
   }
