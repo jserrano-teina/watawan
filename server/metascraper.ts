@@ -703,8 +703,7 @@ async function extractZaraPrice(url: string, html?: string): Promise<string | un
     
     // Si encontramos un script con JSON, podríamos intentar analizarlo
     try {
-      // Usamos una regex más simple para evitar problemas de compatibilidad
-      const scriptTags = productHtml.match(/<script[^>]*>[^<]*window\.__INITIAL_STATE__[^<]*<\/script>/gi);
+      const scriptTags = productHtml.match(/<script[^>]*>.*?window\.__INITIAL_STATE__.*?<\/script>/gsi);
       if (scriptTags && scriptTags.length > 0) {
         for (const scriptTag of scriptTags) {
           const jsonStart = scriptTag.indexOf('{');
@@ -757,7 +756,7 @@ async function extractNikePrice(url: string, html?: string): Promise<string | un
           debug(`Nike rechazó la petición: ${response.status}`);
           
           // Si Nike bloquea o no encontramos el precio, usar un precio aproximado basado en el modelo
-          const modelMatch = url.match(/dunk|air-force-1|air-max|vomero|zoom/i);
+          const modelMatch = url.match(/dunk|air-force-1|air-max/i);
           if (modelMatch) {
             const modelName = modelMatch[0].toLowerCase();
             if (modelName.includes('dunk')) {
@@ -766,10 +765,6 @@ async function extractNikePrice(url: string, html?: string): Promise<string | un
               return "129,99€";
             } else if (modelName.includes('air-max')) {
               return "189,99€";
-            } else if (modelName.includes('vomero')) {
-              return "149,99€";
-            } else if (modelName.includes('zoom')) {
-              return "139,99€";
             }
           }
           return undefined;
@@ -796,9 +791,7 @@ async function extractNikePrice(url: string, html?: string): Promise<string | un
     for (const pattern of pricePatterns) {
       const match = productHtml.match(pattern);
       if (match && match[1]) {
-        // Formateamos el precio correctamente: aseguramos que el símbolo € va después del número
-        const priceNumber = match[1].trim().replace(',€', '').replace('€', '');
-        return `${priceNumber}€`.trim();
+        return `${match[1]}€`.trim();
       }
     }
     
