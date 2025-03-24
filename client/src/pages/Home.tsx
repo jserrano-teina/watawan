@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { useWishlist } from '../hooks/useWishlist';
-import Header from '../components/Header';
-import WishlistTabs from '../components/WishlistTabs';
 import ShareBanner from '../components/ShareBanner';
 import WishItem from '../components/WishItem';
 import EmptyWishlist from '../components/EmptyWishlist';
@@ -86,14 +84,10 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
-      <Header user={user} />
-      
       <main className="flex-grow container mx-auto px-4 pb-20">
-        <WishlistTabs />
-        
         <ShareBanner onShareClick={() => setShowShareModal(true)} />
         
-        <div className="my-6">
+        <div className="mt-6">
           <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
           
           {myWishItems.length === 0 ? (
