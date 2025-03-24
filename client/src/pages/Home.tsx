@@ -85,9 +85,11 @@ const Home: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
       <main className="flex-grow container mx-auto px-4 pb-20">
-        <ShareBanner onShareClick={() => setShowShareModal(true)} />
+        {myWishItems.length > 0 && (
+          <ShareBanner onShareClick={() => setShowShareModal(true)} />
+        )}
         
-        <div className="mt-6">
+        <div className={myWishItems.length > 0 ? "mt-6" : "mt-1"}>
           <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
           
           {myWishItems.length === 0 ? (
@@ -109,6 +111,8 @@ const Home: React.FC = () => {
       </main>
       
       <FloatingActionButton onClick={handleAddWishClick} />
+      
+      <BottomNavigation />
       
       <AddWishModal 
         isOpen={showAddWishModal}

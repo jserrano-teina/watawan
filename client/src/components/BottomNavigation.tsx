@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
-import { User, Settings, LogOut } from 'lucide-react';
+import { User, Settings, LogOut, Gift } from 'lucide-react';
 
 interface BottomNavigationProps {
-  onAddWishClick: () => void;
+  onAddWishClick?: () => void;
 }
 
-const BottomNavigation: React.FC<BottomNavigationProps> = ({ 
-  onAddWishClick 
-}) => {
+const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const handleUserMenuClick = () => {
@@ -19,17 +17,9 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
       <nav className="fixed bottom-0 left-0 right-0 bg-[#1a1a1a] border-t border-[#333] z-20 md:hidden shadow-lg">
         <div className="flex justify-around items-center h-16">
           <button className="flex flex-col items-center justify-center w-full h-full text-primary">
-            <i className="fas fa-gift text-xl"></i>
+            <Gift className="h-5 w-5" />
             <span className="text-xs mt-1">Mis deseos</span>
           </button>
-          <div className="relative flex items-center justify-center">
-            <button 
-              onClick={onAddWishClick}
-              className="w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-xl absolute -top-7 hover:bg-primary/90 transition-all duration-300"
-            >
-              <i className="fas fa-plus text-xl"></i>
-            </button>
-          </div>
           <button 
             onClick={handleUserMenuClick}
             className="flex flex-col items-center justify-center w-full h-full text-gray-400 hover:text-white/80 transition-colors"
