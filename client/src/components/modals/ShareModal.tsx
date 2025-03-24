@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { Copy, X, Share2, Mail } from 'lucide-react';
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -42,23 +43,23 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
 
   return (
     <div 
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 modal"
+      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 modal"
       onClick={(e) => {
         if (e.target === e.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="bg-white rounded-lg w-full max-w-md mx-4">
-        <div className="flex justify-between items-center p-4 border-b border-neutral-200">
+      <div className="bg-[#1a1a1a] text-white rounded-lg w-full max-w-md mx-4 shadow-xl border border-[#333]">
+        <div className="flex justify-between items-center p-4 border-b border-[#333]">
           <h2 className="text-lg font-semibold">Compartir tu lista de deseos</h2>
-          <button onClick={onClose} className="text-neutral-500 hover:text-neutral-700">
-            <i className="fas fa-times text-xl"></i>
+          <button onClick={onClose} className="text-white/70 hover:text-white">
+            <X size={20} />
           </button>
         </div>
         
-        <div className="p-4">
-          <p className="text-neutral-600 mb-4">Comparte este enlace con amigos y familiares para que puedan ver tu lista de deseos</p>
+        <div className="p-5">
+          <p className="text-white/80 mb-6">Comparte este enlace con amigos y familiares para que puedan ver tu lista de deseos</p>
           
           <div className="flex items-center mb-6">
             <input 
@@ -66,36 +67,36 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
               type="text" 
               value={fullShareableLink} 
               readOnly 
-              className="flex-grow px-3 py-2 border border-neutral-300 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-secondary focus:border-transparent bg-neutral-50"
+              className="flex-grow px-3 py-2 border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-[#121212] text-white"
             />
             <button 
               onClick={copyToClipboard}
-              className="bg-secondary text-white px-4 py-2 rounded-r-lg"
+              className="bg-primary text-white px-4 py-2 rounded-r-lg hover:bg-primary/80 transition-colors"
             >
-              <i className="fas fa-copy"></i>
+              <Copy size={18} />
             </button>
           </div>
           
           <div className="flex flex-col gap-3">
             <button 
               onClick={shareOnWhatsApp}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white rounded-lg font-medium"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors"
             >
-              <i className="fab fa-whatsapp text-xl"></i>
+              <Share2 size={18} />
               Compartir por WhatsApp
             </button>
             <button 
               onClick={shareOnFacebook}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#3b5998] text-white rounded-lg font-medium"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#3b5998] text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors"
             >
-              <i className="fab fa-facebook text-xl"></i>
+              <Share2 size={18} />
               Compartir en Facebook
             </button>
             <button 
               onClick={shareByEmail}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-neutral-100 text-neutral-800 rounded-lg font-medium"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#202020] hover:bg-[#303030] text-white rounded-lg font-medium transition-colors"
             >
-              <i className="fas fa-envelope text-xl"></i>
+              <Mail size={18} />
               Enviar por email
             </button>
           </div>
