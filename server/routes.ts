@@ -129,37 +129,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Intentar extraer la imagen y el precio automáticamente del enlace de compra
+      // Guardar los datos originales del cuerpo de la solicitud
       let itemData = { ...req.body };
-      delete itemData.imageUrl; // Eliminamos cualquier URL proporcionada para usar extracción automática
-      delete itemData.price; // Eliminamos cualquier precio proporcionado para usar extracción automática
+      const originalImageUrl = itemData.imageUrl;
+      const originalPrice = itemData.price;
       
-      // Importar dinámicamente para evitar problemas de dependencia circular
+      // Solo intentar extraer la imagen y el precio si no se proporcionaron manualmente
       if (itemData.purchaseLink) {
         try {
           console.log(`Intentando extraer metadata de: ${itemData.purchaseLink}`);
           const { getUrlMetadata } = await import('./metascraper');
           const metadata = await getUrlMetadata(itemData.purchaseLink);
           
-          // Extraer imagen
-          if (metadata.imageUrl) {
+          // Usar la imagen extraída solo si no se proporcionó una manualmente
+          if (!originalImageUrl && metadata.imageUrl) {
             console.log(`Imagen extraída correctamente: ${metadata.imageUrl}`);
             itemData.imageUrl = metadata.imageUrl;
+          } else if (originalImageUrl) {
+            console.log(`Usando imagen proporcionada manualmente: ${originalImageUrl}`);
+            itemData.imageUrl = originalImageUrl;
           } else {
             console.log(`No se pudo extraer imagen para: ${itemData.purchaseLink}`);
           }
           
-          // Extraer precio
-          if (metadata.price) {
+          // Usar el precio extraído solo si no se proporcionó uno manualmente
+          if (!originalPrice && metadata.price) {
             console.log(`Precio extraído correctamente: ${metadata.price}`);
             itemData.price = metadata.price;
+          } else if (originalPrice) {
+            console.log(`Usando precio proporcionado manualmente: ${originalPrice}`);
+            itemData.price = originalPrice;
           } else {
             console.log(`No se pudo extraer precio para: ${itemData.purchaseLink}`);
           }
         } catch (metaError) {
           console.error('Error al extraer metadatos:', metaError);
-          // Continuar sin la imagen y precio
+          // Restaurar los valores originales si hay error
+          if (originalImageUrl) itemData.imageUrl = originalImageUrl;
+          if (originalPrice) itemData.price = originalPrice;
         }
+      } else {
+        // Si no hay enlace de compra, usar los valores proporcionados
+        if (originalImageUrl) itemData.imageUrl = originalImageUrl;
+        if (originalPrice) itemData.price = originalPrice;
       }
       
       // Validar y crear el item
@@ -208,32 +220,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       updateData.purchaseLink && 
       updateData.purchaseLink !== item.purchaseLink
     ) {
-      // Eliminamos cualquier URL de imagen y precio previos para siempre intentar extraerlos de nuevo
-      updateData.imageUrl = undefined;
-      updateData.price = undefined;
+      // Guardar los datos originales
+      const originalImageUrl = updateData.imageUrl;
+      const originalPrice = updateData.price;
+      
       try {
         console.log(`Intentando extraer metadata para actualización de: ${updateData.purchaseLink}`);
         const { getUrlMetadata } = await import('./metascraper');
         const metadata = await getUrlMetadata(updateData.purchaseLink);
         
-        // Extraer imagen
-        if (metadata.imageUrl) {
+        // Usar la imagen extraída solo si no se proporcionó una manualmente
+        if (!originalImageUrl && metadata.imageUrl) {
           console.log(`Imagen extraída correctamente en actualización: ${metadata.imageUrl}`);
           updateData.imageUrl = metadata.imageUrl;
+        } else if (originalImageUrl) {
+          console.log(`Usando imagen proporcionada manualmente en actualización: ${originalImageUrl}`);
+          updateData.imageUrl = originalImageUrl;
         } else {
           console.log(`No se pudo extraer imagen para actualización: ${updateData.purchaseLink}`);
         }
         
-        // Extraer precio
-        if (metadata.price) {
+        // Usar el precio extraído solo si no se proporcionó uno manualmente
+        if (!originalPrice && metadata.price) {
           console.log(`Precio extraído correctamente en actualización: ${metadata.price}`);
           updateData.price = metadata.price;
+        } else if (originalPrice) {
+          console.log(`Usando precio proporcionado manualmente en actualización: ${originalPrice}`);
+          updateData.price = originalPrice;
         } else {
           console.log(`No se pudo extraer precio para actualización: ${updateData.purchaseLink}`);
         }
       } catch (metaError) {
         console.error('Error al extraer metadatos durante actualización:', metaError);
-        // Continuar sin la imagen y el precio
+        // Restaurar los valores originales si hay error
+        if (originalImageUrl) updateData.imageUrl = originalImageUrl;
+        if (originalPrice) updateData.price = originalPrice;
       }
     }
     
