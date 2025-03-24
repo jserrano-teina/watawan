@@ -30,21 +30,17 @@ interface AddWishModalProps {
   onClose: () => void;
   onSubmit: (data: StepTwoFormValues) => void;
   itemToEdit?: WishItem;
-  isLoading?: boolean;
 }
 
 const AddWishModal: React.FC<AddWishModalProps> = ({ 
   isOpen, 
   onClose, 
   onSubmit,
-  itemToEdit,
-  isLoading: externalLoading = false
+  itemToEdit 
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1); // Paso 1 o 2
-  const [internalLoading, setInternalLoading] = useState(false);
-  // Combinar estado de carga interno y externo
-  const isLoading = internalLoading || externalLoading;
+  const [isLoading, setIsLoading] = useState(false);
   const [extractedData, setExtractedData] = useState<{
     imageUrl?: string,
     price?: string,
@@ -159,7 +155,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   // Manejar envío del paso 1
   const submitStepOne = async (data: StepOneFormValues) => {
-    setInternalLoading(true);
+    setIsLoading(true);
     setPurchaseLinkValue(data.purchaseLink);
     
     try {
@@ -197,7 +193,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setValueStepTwo('purchaseLink', data.purchaseLink);
       setStep(2);
     } finally {
-      setInternalLoading(false);
+      setIsLoading(false);
     }
   };
 
@@ -209,11 +205,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       price: `${data.price}${data.currency}`
     };
     
-    // Activar estado de carga
-    setInternalLoading(true);
-    // No necesitamos desactivar setInternalLoading aquí porque el modal se cierra
-    
-    // Enviar datos al padre
     onSubmit(formattedData);
     
     // Limpiar el formulario antes de cerrarlo
@@ -530,20 +521,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </button>
               <button 
                 type="submit"
-                disabled={isLoading}
-                className={`px-6 py-3 ${isLoading ? 'bg-gray-600' : 'bg-primary hover:bg-primary/90'} text-white rounded-lg font-medium transition-colors flex items-center justify-center min-w-[120px]`}
+                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
               >
-                {isLoading ? (
-                  <>
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Guardando...
-                  </>
-                ) : (
-                  itemToEdit ? 'Actualizar' : 'Guardar'
-                )}
+                {itemToEdit ? 'Actualizar' : 'Guardar'}
               </button>
             </div>
           </form>
