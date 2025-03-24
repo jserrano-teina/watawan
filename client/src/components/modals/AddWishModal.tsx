@@ -30,17 +30,21 @@ interface AddWishModalProps {
   onClose: () => void;
   onSubmit: (data: StepTwoFormValues) => void;
   itemToEdit?: WishItem;
+  isLoading?: boolean;
 }
 
 const AddWishModal: React.FC<AddWishModalProps> = ({ 
   isOpen, 
   onClose, 
   onSubmit,
-  itemToEdit 
+  itemToEdit,
+  isLoading: externalLoading = false
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1); // Paso 1 o 2
-  const [isLoading, setIsLoading] = useState(false);
+  const [internalLoading, setInternalLoading] = useState(false);
+  // Combinar estado de carga interno y externo
+  const isLoading = internalLoading || externalLoading;
   const [extractedData, setExtractedData] = useState<{
     imageUrl?: string,
     price?: string,
@@ -155,7 +159,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   // Manejar envío del paso 1
   const submitStepOne = async (data: StepOneFormValues) => {
-    setIsLoading(true);
+    setInternalLoading(true);
     setPurchaseLinkValue(data.purchaseLink);
     
     try {
@@ -193,7 +197,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setValueStepTwo('purchaseLink', data.purchaseLink);
       setStep(2);
     } finally {
-      setIsLoading(false);
+      setInternalLoading(false);
     }
   };
 
@@ -206,7 +210,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     };
     
     // Activar estado de carga
-    setIsLoading(true);
+    setInternalLoading(true);
+    // No necesitamos desactivar setInternalLoading aquí porque el modal se cierra
     
     // Enviar datos al padre
     onSubmit(formattedData);
