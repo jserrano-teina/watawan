@@ -5,6 +5,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
 import { Package, Image, Edit3 } from 'lucide-react';
+import ProductImage from '../ProductImage';
 
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
@@ -288,6 +289,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Renderizar imagen o placeholder
   const renderImage = () => {
     const imageUrl = watchedImageUrl || extractedData.imageUrl;
+    const productTitle = watchStepTwo('title') || 'Producto';
+    const purchaseLink = watchStepTwo('purchaseLink') || watchedPurchaseLink;
     
     if (uploadingImage) {
       return (
@@ -297,42 +300,35 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    if (imageUrl) {
-      return (
-        <div className="relative mb-6 w-full h-64">
-          <img 
-            src={imageUrl} 
-            alt="Imagen del producto"
-            className="w-full h-full object-contain rounded-lg border border-[#333] bg-[#252525]"
-          />
-          <div className="absolute bottom-2 right-2 flex space-x-2">
-            <button 
-              type="button" 
-              onClick={handleUploadClick} 
-              className="p-2 bg-[#252525] rounded-full hover:bg-[#333] transition-colors"
-            >
-              <Image size={20} />
-            </button>
-            <button 
-              type="button" 
-              onClick={handleEditImageUrlClick} 
-              className="p-2 bg-[#252525] rounded-full hover:bg-[#333] transition-colors"
-            >
-              <Edit3 size={20} />
-            </button>
-          </div>
-        </div>
-      );
-    }
-    
+    // Contenedor con o sin imagen usando ProductImage para manejar errores
     return (
-      <div 
-        onClick={handleUploadClick}
-        className="mb-6 w-full h-64 flex flex-col items-center justify-center bg-[#252525] rounded-lg border border-[#333] border-dashed cursor-pointer hover:bg-[#2a2a2a] transition-colors"
-      >
-        <Package size={48} className="mb-4 text-gray-500" />
-        <p className="text-gray-400 text-center mb-2">Sin imagen</p>
-        <p className="text-gray-500 text-sm text-center">Haz clic para añadir una imagen</p>
+      <div className="relative mb-6 w-full h-64">
+        <ProductImage 
+          imageUrl={imageUrl}
+          title={productTitle}
+          purchaseLink={purchaseLink}
+          className="w-full h-full rounded-lg border border-[#333]"
+        />
+        
+        {/* Botones de acción siempre visibles independientemente del estado de la imagen */}
+        <div className="absolute bottom-2 right-2 flex space-x-2">
+          <button 
+            type="button" 
+            onClick={handleUploadClick} 
+            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
+            title="Subir imagen"
+          >
+            <Image size={20} />
+          </button>
+          <button 
+            type="button" 
+            onClick={handleEditImageUrlClick} 
+            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
+            title="Editar URL de imagen"
+          >
+            <Edit3 size={20} />
+          </button>
+        </div>
       </div>
     );
   };
