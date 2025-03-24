@@ -320,6 +320,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(reservations);
   });
 
+  // Endpoint para extraer metadatos de una URL sin crear un elemento
+  router.get("/extract-metadata", async (req: Request, res) => {
+    const url = req.query.url as string;
+    
+    if (!url) {
+      return res.status(400).json({ message: "URL parameter is required" });
+    }
+    
+    try {
+      console.log(`Extrayendo metadatos de URL: ${url}`);
+      const { getUrlMetadata } = await import('./metascraper');
+      const metadata = await getUrlMetadata(url);
+      
+      // Agregar título si se puede extraer del URL (básico)
+      let title = '';
+      try {
+        const urlObj = new URL(url);
+        const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+        if (pathParts.length > 0) {
+          const lastPart = pathParts[pathParts.length - 1];
+          // Convertir algo como "zapatillas-running-nike-2023" a "Zapatillas Running Nike 2023"
+          title = lastPart
+            .replace(/-/g, ' ')
+            .replace(/\.\w+$/, '') // Eliminar extensión de archivo si existe
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+        }
+      } catch (e) {
+        console.log('Error extrayendo título de la URL:', e);
+      }
+      
+      res.json({
+        imageUrl: metadata.imageUrl,
+        price: metadata.price,
+        title: title || undefined
+      });
+    } catch (error) {
+      console.error('Error extrayendo metadatos:', error);
+      res.status(500).json({ 
+        message: "Error extracting metadata",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
   app.use("/api", router);
   return httpServer;
 }

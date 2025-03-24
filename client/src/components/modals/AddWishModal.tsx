@@ -1,21 +1,31 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WishItem } from '../../types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
+import { apiRequest } from '../../lib/queryClient';
 
-const wishFormSchema = z.object({
-  title: z.string().min(1, 'El título es obligatorio'),
-  description: z.string().optional(),
+// Esquema para el primer paso (solo enlace)
+const stepOneSchema = z.object({
   purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
 });
 
-type WishFormValues = z.infer<typeof wishFormSchema>;
+// Esquema para el segundo paso (detalles completos)
+const stepTwoSchema = z.object({
+  title: z.string().min(1, 'El título es obligatorio'),
+  description: z.string().optional(),
+  purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
+  price: z.string().optional(),
+  imageUrl: z.string().optional(),
+});
+
+type StepOneFormValues = z.infer<typeof stepOneSchema>;
+type StepTwoFormValues = z.infer<typeof stepTwoSchema>;
 
 interface AddWishModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: WishFormValues) => void;
+  onSubmit: (data: StepTwoFormValues) => void;
   itemToEdit?: WishItem;
 }
 
@@ -26,43 +36,153 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   itemToEdit 
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
+  const [step, setStep] = useState(1); // Paso 1 o 2
+  const [isLoading, setIsLoading] = useState(false);
+  const [extractedData, setExtractedData] = useState<{
+    imageUrl?: string,
+    price?: string,
+    title?: string,
+  }>({});
+  const [formLinkData, setFormLinkData] = useState<string>('');
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<WishFormValues>({
-    resolver: zodResolver(wishFormSchema),
+  // Formulario paso 1 (solo enlace)
+  const {
+    register: registerStepOne,
+    handleSubmit: handleSubmitStepOne,
+    reset: resetStepOne,
+    formState: { errors: errorsStepOne }
+  } = useForm<StepOneFormValues>({
+    resolver: zodResolver(stepOneSchema),
     defaultValues: {
-      title: itemToEdit?.title || '',
-      description: itemToEdit?.description || '',
       purchaseLink: itemToEdit?.purchaseLink || '',
     }
   });
 
-  // Reset form when editing an item
+  // Formulario paso 2 (todos los campos)
+  const {
+    register: registerStepTwo,
+    handleSubmit: handleSubmitStepTwo,
+    reset: resetStepTwo,
+    setValue: setValueStepTwo,
+    formState: { errors: errorsStepTwo }
+  } = useForm<StepTwoFormValues>({
+    resolver: zodResolver(stepTwoSchema),
+    defaultValues: {
+      title: itemToEdit?.title || '',
+      description: itemToEdit?.description || '',
+      purchaseLink: itemToEdit?.purchaseLink || '',
+      price: itemToEdit?.price || '',
+      imageUrl: itemToEdit?.imageUrl || '',
+    }
+  });
+
+  // Reset forms when editing an item
   useEffect(() => {
     if (itemToEdit) {
-      reset({
+      setStep(2); // Si estamos editando, ir directamente al paso 2
+      resetStepOne({
+        purchaseLink: itemToEdit.purchaseLink,
+      });
+      resetStepTwo({
         title: itemToEdit.title,
         description: itemToEdit.description || '',
         purchaseLink: itemToEdit.purchaseLink,
+        price: itemToEdit.price || '',
+        imageUrl: itemToEdit.imageUrl || '',
       });
     } else {
-      reset({
+      setStep(1);
+      resetStepOne({
+        purchaseLink: '',
+      });
+      resetStepTwo({
         title: '',
         description: '',
         purchaseLink: '',
+        price: '',
+        imageUrl: '',
       });
+      // Limpiar los datos extraídos
+      setExtractedData({});
     }
-  }, [itemToEdit, reset]);
+  }, [itemToEdit, resetStepOne, resetStepTwo, isOpen]);
 
   if (!isOpen) return null;
 
-  const submitForm = (data: WishFormValues) => {
+  // Manejar envío del paso 1
+  const submitStepOne = async (data: StepOneFormValues) => {
+    setIsLoading(true);
+    setFormLinkData(data.purchaseLink);
+    
+    try {
+      // Extraer metadatos del enlace
+      const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(data.purchaseLink)}`);
+      const metadata = await response.json();
+      
+      // Guardar datos extraídos para el paso 2
+      setExtractedData({
+        imageUrl: metadata.imageUrl,
+        price: metadata.price,
+        title: metadata.title || ''
+      });
+      
+      // Prerellenar formulario del paso 2
+      setValueStepTwo('purchaseLink', data.purchaseLink);
+      if (metadata.title) setValueStepTwo('title', metadata.title);
+      if (metadata.price) setValueStepTwo('price', metadata.price);
+      if (metadata.imageUrl) setValueStepTwo('imageUrl', metadata.imageUrl);
+      
+      // Avanzar al paso 2
+      setStep(2);
+    } catch (error) {
+      console.error('Error extrayendo metadatos:', error);
+      // Aún así, avanzamos al paso 2, pero sin datos extraídos
+      setValueStepTwo('purchaseLink', data.purchaseLink);
+      setStep(2);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Manejar envío del paso 2 (final)
+  const submitStepTwo = (data: StepTwoFormValues) => {
     onSubmit(data);
     // Limpiar el formulario antes de cerrarlo
-    reset({
+    resetStepOne({
+      purchaseLink: '',
+    });
+    resetStepTwo({
       title: '',
       description: '',
       purchaseLink: '',
+      price: '',
+      imageUrl: '',
     });
+    // Restablecer el paso y cerrar el modal
+    setStep(1);
+    setExtractedData({});
+    onClose();
+  };
+
+  // Manejar el retroceso a paso 1
+  const goBackToStepOne = () => {
+    setStep(1);
+  };
+
+  // Manejar cierre del modal
+  const handleClose = () => {
+    resetStepOne({
+      purchaseLink: '',
+    });
+    resetStepTwo({
+      title: '',
+      description: '',
+      purchaseLink: '',
+      price: '',
+      imageUrl: '',
+    });
+    setStep(1);
+    setExtractedData({});
     onClose();
   };
 
@@ -73,18 +193,15 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       <div ref={modalRef} className="flex flex-col h-full text-white">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
           <h2 className="text-xl font-semibold">
-            {itemToEdit ? 'Editar deseo' : 'Añadir nuevo deseo'}
+            {itemToEdit 
+              ? 'Editar deseo' 
+              : step === 1 
+                ? 'Paso 1: Añadir enlace' 
+                : 'Paso 2: Completar detalles'
+            }
           </h2>
           <button 
-            onClick={() => {
-              // Limpiar el formulario al cerrar el modal
-              reset({
-                title: '',
-                description: '',
-                purchaseLink: '',
-              });
-              onClose();
-            }} 
+            onClick={handleClose} 
             className="p-2 hover:bg-[#252525] rounded-full transition-colors"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -94,83 +211,164 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           </button>
         </div>
         
-        <form onSubmit={handleSubmit(submitForm)} className="flex-1 p-4">
-          <div className="mb-6">
-            <label htmlFor="title" className="block text-white font-medium mb-2">
-              Título
-            </label>
-            <input 
-              type="text" 
-              id="title" 
-              className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-              placeholder="¿Qué te gustaría recibir?"
-              {...register('title')}
-            />
-            {errors.title && (
-              <p className="text-red-500 text-sm mt-2">{errors.title.message}</p>
-            )}
-          </div>
-          
-          <div className="mb-6">
-            <label htmlFor="description" className="block text-white font-medium mb-2">
-              Descripción (opcional)
-            </label>
-            <textarea 
-              id="description" 
-              rows={4} 
-              className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-              placeholder="Añade detalles como color, talla, modelo..."
-              {...register('description')}
-            ></textarea>
-            {errors.description && (
-              <p className="text-red-500 text-sm mt-2">{errors.description.message}</p>
-            )}
-          </div>
-          
-          <div className="mb-6">
-            <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
-              Enlace de compra
-            </label>
-            <input 
-              type="url" 
-              id="purchaseLink" 
-              className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-              placeholder="https://..."
-              {...register('purchaseLink')}
-            />
-            {errors.purchaseLink && (
-              <p className="text-red-500 text-sm mt-2">{errors.purchaseLink.message}</p>
-            )}
-          </div>
-          
-          {/* El campo de imagen ha sido eliminado, ahora se obtiene automáticamente del enlace de compra */}
-          <div className="mb-6 px-4 py-3 bg-[#252525] rounded-lg border border-[#333]">
-            <p className="text-sm text-gray-400 flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="12" y1="16" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12.01" y2="8"></line>
-              </svg>
-              La imagen se extraerá automáticamente del enlace de compra
-            </p>
-          </div>
-        </form>
-        
-        <div className="sticky bottom-0 flex justify-between p-4 bg-[#121212] border-t border-[#333]">
-          <button 
-            type="button" 
-            onClick={onClose}
-            className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
-          >
-            Cancelar
-          </button>
-          <button 
-            onClick={handleSubmit(submitForm)}
-            className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
-          >
-            {itemToEdit ? 'Actualizar' : 'Guardar'}
-          </button>
-        </div>
+        {step === 1 ? (
+          // Formulario paso 1
+          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4">
+            <div className="mb-6">
+              <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
+                Enlace de compra
+              </label>
+              <input 
+                type="url" 
+                id="purchaseLink" 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                placeholder="https://..."
+                {...registerStepOne('purchaseLink')}
+              />
+              {errorsStepOne.purchaseLink && (
+                <p className="text-red-500 text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
+              )}
+            </div>
+            
+            <div className="mb-6 px-4 py-3 bg-[#252525] rounded-lg border border-[#333]">
+              <p className="text-sm text-gray-400 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                En el siguiente paso podrás completar los detalles del producto
+              </p>
+            </div>
+            
+            <div className="sticky bottom-0 flex justify-between bg-[#121212] pt-4">
+              <button 
+                type="button" 
+                onClick={handleClose}
+                className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
+              >
+                Cancelar
+              </button>
+              <button 
+                type="submit"
+                disabled={isLoading}
+                className={`px-6 py-3 ${isLoading ? 'bg-gray-600' : 'bg-primary hover:bg-primary/90'} text-white rounded-lg font-medium transition-colors flex items-center justify-center`}
+              >
+                {isLoading ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Procesando...
+                  </>
+                ) : (
+                  'Continuar'
+                )}
+              </button>
+            </div>
+          </form>
+        ) : (
+          // Formulario paso 2
+          <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4">
+            <div className="mb-6">
+              <label htmlFor="title" className="block text-white font-medium mb-2">
+                Título
+              </label>
+              <input 
+                type="text" 
+                id="title" 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                placeholder="¿Qué te gustaría recibir?"
+                {...registerStepTwo('title')}
+              />
+              {errorsStepTwo.title && (
+                <p className="text-red-500 text-sm mt-2">{errorsStepTwo.title.message}</p>
+              )}
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="description" className="block text-white font-medium mb-2">
+                Descripción (opcional)
+              </label>
+              <textarea 
+                id="description" 
+                rows={4} 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                placeholder="Añade detalles como color, talla, modelo..."
+                {...registerStepTwo('description')}
+              ></textarea>
+              {errorsStepTwo.description && (
+                <p className="text-red-500 text-sm mt-2">{errorsStepTwo.description.message}</p>
+              )}
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
+                Enlace de compra
+              </label>
+              <input 
+                type="url" 
+                id="purchaseLink" 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                readOnly
+                {...registerStepTwo('purchaseLink')}
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="price" className="block text-white font-medium mb-2">
+                Precio (opcional)
+              </label>
+              <input 
+                type="text" 
+                id="price" 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                placeholder="Ej: 59,99€"
+                {...registerStepTwo('price')}
+              />
+            </div>
+            
+            <div className="mb-6">
+              <label htmlFor="imageUrl" className="block text-white font-medium mb-2">
+                URL de la imagen (opcional)
+              </label>
+              <input 
+                type="url" 
+                id="imageUrl" 
+                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                placeholder="https://ejemplo.com/imagen.jpg"
+                {...registerStepTwo('imageUrl')}
+              />
+              {extractedData.imageUrl && (
+                <div className="mt-3">
+                  <p className="text-sm text-gray-400 mb-2">Vista previa:</p>
+                  <img 
+                    src={extractedData.imageUrl} 
+                    alt="Vista previa"
+                    className="w-32 h-32 object-cover rounded-lg border border-[#333]"
+                  />
+                </div>
+              )}
+            </div>
+            
+            <div className="sticky bottom-0 flex justify-between bg-[#121212] pt-4">
+              <button 
+                type="button" 
+                onClick={goBackToStepOne}
+                className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
+              >
+                Atrás
+              </button>
+              <button 
+                type="submit"
+                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+              >
+                {itemToEdit ? 'Actualizar' : 'Guardar'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
