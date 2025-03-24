@@ -20,6 +20,7 @@ const Home: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItemType | null>(null);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
+  const [isAddingWish, setIsAddingWish] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
   const myWishItems = Array.isArray(items) ? items : [];
@@ -47,6 +48,7 @@ const Home: React.FC = () => {
   };
 
   const handleWishFormSubmit = async (data: any) => {
+    setIsAddingWish(true);
     try {
       if (itemToEdit) {
         await updateWishItem.mutateAsync({ id: itemToEdit.id, ...data });
@@ -58,6 +60,8 @@ const Home: React.FC = () => {
     } catch (error) {
       console.error('Error saving wish:', error);
       showToast('Error al guardar el deseo', 'error');
+    } finally {
+      setIsAddingWish(false);
     }
   };
   
@@ -120,6 +124,7 @@ const Home: React.FC = () => {
         onClose={() => setShowAddWishModal(false)}
         onSubmit={handleWishFormSubmit}
         itemToEdit={itemToEdit}
+        isLoading={isAddingWish}
       />
       
       <ShareModal 
