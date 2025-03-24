@@ -91,17 +91,6 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
       className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
       onClick={handleItemClick}
     >
-      {item.isReserved && (
-        <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-20 rounded-xl">
-          <div className="bg-[#1e1e1e]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
-            <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-              <i className="fas fa-check text-primary"></i>
-            </div>
-            <p className="font-medium text-white text-sm mb-1">¡Alguien ha reservado este regalo!</p>
-            <p className="text-white/70 text-xs">Será una sorpresa 🎁</p>
-          </div>
-        </div>
-      )}
       
       <div className="flex">
         {/* Imagen a la izquierda */}
@@ -118,7 +107,25 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
         {/* Contenido a la derecha - simplificado */}
         <div className="flex-grow min-w-0 flex flex-col justify-center">
           <div className="flex justify-between items-start">
-            <h3 className="font-medium text-base truncate mr-2 text-white">{item.title}</h3>
+            <div>
+              <h3 className="font-medium text-base truncate mr-2 text-white">{item.title}</h3>
+              
+              <div className="flex items-center mt-1 gap-2">
+                {/* Tag de reservado */}
+                {item.isReserved && (
+                  <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs font-medium rounded-full">
+                    Reservado
+                  </span>
+                )}
+                
+                {/* Solo mostrar el precio en la tarjeta */}
+                {item.price && (
+                  <span className="text-primary font-medium text-xs">
+                    {item.price}
+                  </span>
+                )}
+              </div>
+            </div>
             
             {/* Menú de 3 puntos */}
             <div className="relative menu-container" ref={menuRef}>
@@ -127,17 +134,17 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   e.stopPropagation();
                   setShowMenu(!showMenu);
                 }}
-                className={`text-white/70 hover:text-white p-1 ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                className="text-white/70 hover:text-white p-1"
                 aria-label="Opciones"
               >
                 <MoreVertical size={18} />
               </button>
               
-              {showMenu && !item.isReserved && (
+              {showMenu && (
                 <div className="absolute right-0 top-8 z-10 bg-[#262626] rounded-lg shadow-lg border border-[#333] py-1 w-40">
                   <button 
                     onClick={handleEdit}
-                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center"
+                    className={`w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
                   >
                     <Edit size={14} className="mr-2" />
                     Editar
@@ -151,7 +158,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   </button>
                   <button 
                     onClick={handleDelete}
-                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center"
+                    className={`w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
                   >
                     <Trash size={14} className="mr-2" />
                     Eliminar
@@ -160,13 +167,6 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
               )}
             </div>
           </div>
-          
-          {/* Solo mostrar el precio en la tarjeta */}
-          {item.price && (
-            <span className="text-primary font-medium text-sm mt-1">
-              {item.price}
-            </span>
-          )}
         </div>
       </div>
     </div>

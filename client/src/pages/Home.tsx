@@ -110,8 +110,6 @@ const Home: React.FC = () => {
       
       <FloatingActionButton onClick={handleAddWishClick} />
       
-      <BottomNavigation onAddWishClick={handleAddWishClick} />
-      
       <AddWishModal 
         isOpen={showAddWishModal}
         onClose={() => setShowAddWishModal(false)}

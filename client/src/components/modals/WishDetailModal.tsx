@@ -113,11 +113,19 @@ const DesktopView = ({
                 <span>{formattedDate}</span>
               </div>
               
-              {item.price && (
-                <div className="px-3 py-1 bg-primary/20 rounded-full text-primary font-medium">
-                  {item.price}
-                </div>
-              )}
+              <div className="flex items-center gap-2">
+                {item.isReserved && (
+                  <div className="px-3 py-1 bg-primary/20 rounded-full text-primary font-medium text-xs">
+                    Reservado
+                  </div>
+                )}
+                
+                {item.price && (
+                  <div className="px-3 py-1 bg-primary/20 rounded-full text-primary font-medium">
+                    {item.price}
+                  </div>
+                )}
+              </div>
             </div>
             
             {/* Botones de acción */}
@@ -230,30 +238,25 @@ const MobileView = ({
             purchaseLink={item.purchaseLink}
             className="w-full h-full object-contain"
           />
-          
-          {/* Badge de reservado */}
-          {item.isReserved && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
-              <div className="bg-[#1e1e1e]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-check text-primary"></i>
-                </div>
-                <p className="font-medium text-white text-sm mb-1">¡Alguien ha reservado este regalo!</p>
-                <p className="text-white/70 text-xs">Será una sorpresa 🎁</p>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Detalles del producto */}
         <div className="p-5">
           <h2 className="text-xl font-medium mb-2 text-white">{item.title}</h2>
           
-          {item.price && (
-            <div className="inline-block px-3 py-1 bg-primary/20 rounded-full text-primary font-medium text-sm mb-3">
-              {item.price}
-            </div>
-          )}
+          <div className="flex items-center gap-2 mb-3">
+            {item.isReserved && (
+              <div className="inline-block px-3 py-1 bg-primary/20 rounded-full text-primary font-medium text-sm">
+                Reservado
+              </div>
+            )}
+            
+            {item.price && (
+              <div className="inline-block px-3 py-1 bg-primary/20 rounded-full text-primary font-medium text-sm">
+                {item.price}
+              </div>
+            )}
+          </div>
           
           {/* Descripción */}
           {item.description && (
