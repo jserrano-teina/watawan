@@ -99,10 +99,17 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 <div className="flex-grow min-w-0">
                   <h3 className="font-medium text-base truncate text-white">{item.title}</h3>
                   
-                  {/* Descripción solo si existe */}
-                  {item.description && (
-                    <p className="text-white/60 text-xs mt-0.5 line-clamp-1">{item.description}</p>
-                  )}
+                  {/* Descripción y precio */}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {item.description && (
+                      <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
+                    )}
+                    {item.price && (
+                      <span className="text-primary font-medium text-xs bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                        {item.price}
+                      </span>
+                    )}
+                  </div>
                   
                   <div className="mt-2 flex items-center justify-between">
                     <a 
@@ -151,10 +158,17 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   <div className="flex-grow min-w-0">
                     <h3 className="font-medium text-base truncate text-white">{item.title}</h3>
                     
-                    {/* Descripción solo si existe */}
-                    {item.description && (
-                      <p className="text-white/60 text-xs mt-0.5 line-clamp-1">{item.description}</p>
-                    )}
+                    {/* Descripción y precio */}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {item.description && (
+                        <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
+                      )}
+                      {item.price && (
+                        <span className="text-primary font-medium text-xs bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
+                          {item.price}
+                        </span>
+                      )}
+                    </div>
                     
                     <div className="mt-2">
                       <p className="text-green-500 text-xs flex items-center">
