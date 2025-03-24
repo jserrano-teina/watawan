@@ -115,8 +115,8 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
           />
         </div>
         
-        {/* Contenido a la derecha */}
-        <div className="flex-grow min-w-0 flex flex-col justify-between">
+        {/* Contenido a la derecha - simplificado */}
+        <div className="flex-grow min-w-0 flex flex-col justify-center">
           <div className="flex justify-between items-start">
             <h3 className="font-medium text-base truncate mr-2 text-white">{item.title}</h3>
             
@@ -161,16 +161,11 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
             </div>
           </div>
           
-          {/* Precio */}
+          {/* Solo mostrar el precio en la tarjeta */}
           {item.price && (
             <span className="text-primary font-medium text-sm mt-1">
               {item.price}
             </span>
-          )}
-          
-          {/* Descripción solo si existe */}
-          {item.description && (
-            <p className="text-white/70 text-xs mt-1 line-clamp-2">{item.description}</p>
           )}
         </div>
       </div>
