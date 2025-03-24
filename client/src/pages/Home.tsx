@@ -84,12 +84,13 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
-      <main className="flex-grow container mx-auto px-4 pb-20">
+      <div className="pt-6"></div>
+      <main className="flex-grow container mx-auto px-4 pb-24">
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
         )}
         
-        <div className={myWishItems.length > 0 ? "mt-6" : "mt-1"}>
+        <div className={myWishItems.length > 0 ? "mt-6" : "mt-3"}>
           <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
           
           {myWishItems.length === 0 ? (
