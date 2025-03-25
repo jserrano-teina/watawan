@@ -37,7 +37,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
       {/* Contenido scrolleable */}
       <div className="flex-grow overflow-auto">
         {/* Imagen a sangre al inicio */}
-        <div className="w-full h-80 bg-[#1a1a1a] relative">
+        <div className="w-full h-72 bg-[#1a1a1a] relative">
           <ProductImage 
             imageUrl={item.imageUrl} 
             title={item.title}
@@ -47,19 +47,36 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
         </div>
         
         {/* Información del producto */}
-        <div className="p-6">
-          <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
+        <div className="p-5">
+          <h2 className="text-[22px] font-semibold mb-2.5 text-white leading-tight">{item.title}</h2>
           
           {item.price && (
-            <div className="mb-2">
-              <span className="text-white text-xl font-medium">{item.price}</span>
+            <div className="mb-5">
+              <span className="text-white text-xl font-semibold">{item.price}</span>
             </div>
           )}
           
+          <div className="my-4 flex text-[13px] text-gray-400">
+            <span>Añadido hace 1 minuto</span>
+          </div>
+          
+          <div className="mb-5">
+            <h3 className="text-white/90 text-[15px] font-medium mb-1.5">Enlace de compra</h3>
+            <a 
+              href={item.purchaseLink}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary text-[13px] flex items-center truncate"
+            >
+              <ExternalLink size={14} className="flex-shrink-0 mr-1.5" />
+              <span className="truncate">{item.purchaseLink}</span>
+            </a>
+          </div>
+          
           {item.description && (
-            <div className="mb-6">
-              <h3 className="block text-white font-medium mb-2">Descripción</h3>
-              <p className="text-white/80 text-sm">{item.description}</p>
+            <div className="mb-5">
+              <h3 className="text-white/90 text-[15px] font-medium mb-1.5">Descripción</h3>
+              <p className="text-white/70 text-[14px]">{item.description}</p>
             </div>
           )}
         </div>
