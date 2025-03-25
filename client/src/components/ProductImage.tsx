@@ -37,14 +37,29 @@ const ProductImage: React.FC<ProductImageProps> = ({
   
   // Determinar si es una tienda problemática que sabemos que bloquea las imágenes
   const isProblematicStore = (): boolean => {
-    const url = purchaseLink || imageUrl || '';
+    const url = purchaseLink || '';
     return url.includes('zara.com') || 
            url.includes('pccomponentes.com') || 
            url.includes('nike.com');
   };
   
+  // Verificar si es un blob URL o una URL local (no una URL remota de una tienda)
+  const isBlobOrLocalUrl = (): boolean => {
+    return !!imageUrl && (
+      imageUrl.startsWith('blob:') || 
+      imageUrl.startsWith('data:') || 
+      imageUrl.startsWith('/') ||
+      imageUrl.startsWith('http://localhost')
+    );
+  };
+  
   // Detectar si debemos usar un placeholder inmediatamente
   const shouldUseInitialsPlaceholder = (): boolean => {
+    // Si es un blob URL o URL local, NO usamos placeholder
+    if (isBlobOrLocalUrl()) {
+      return false;
+    }
+    
     return isProblematicStore() || !imageUrl || imgState === 'error';
   };
   

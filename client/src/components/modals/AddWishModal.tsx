@@ -283,11 +283,19 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Para una demo, usamos URL.createObjectURL
         // En producción, esto se reemplazaría por una subida real
         const imageUrl = URL.createObjectURL(file);
+        
+        // Asignar URL al campo del formulario y al estado de datos extraídos
         setValueStepTwo('imageUrl', imageUrl);
+        
+        // Actualizar el estado para mostrar la imagen
         setExtractedData({
           ...extractedData,
           imageUrl: imageUrl
         });
+        
+        // Imprimir para depuración
+        console.log('Imagen subida manualmente:', imageUrl);
+        
         setUploadingImage(false);
       }, 1000);
     }
