@@ -411,7 +411,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           </form>
         ) : (
           // Formulario paso 2
-          <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4">
+          <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 flex flex-col">
             {/* Imagen primero */}
             {renderImage()}
             
@@ -467,6 +467,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   className="flex-1 px-4 py-3 bg-[#252525] border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
                   placeholder="59,99"
                   inputMode="decimal"
+                  pattern="[0-9]+(,[0-9]+)?"
                   {...registerStepTwo('price')}
                 />
                 <select 
@@ -508,7 +509,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {...registerStepTwo('purchaseLink')}
             />
             
-            <div className="sticky bottom-0 flex justify-between bg-[#121212] pt-4">
+            <div className="mt-auto pt-4 sticky bottom-0 flex justify-between bg-[#121212]">
               <button 
                 type="button" 
                 onClick={goBackToStepOne}
