@@ -310,10 +310,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const handleEditImageUrlClick = () => {
     setShowImageUrlInput(!showImageUrlInput);
   };
-  
-  // Renderizar imagen o placeholder
-  // Estado para controlar si la imagen ha fallado al cargar
+
+  // Estado para controlar si la imagen ha fallado al cargar (movido arriba con los otros estados)
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  
+  // Resetear el estado de fallo cuando cambia la URL (movido junto a los demás useEffect)
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [watchedImageUrl, extractedData.imageUrl]);
   
   // Verifica si estamos tratando con una tienda problemática
   const isProblematicStore = (link?: string): boolean => {
@@ -328,11 +332,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     setImageLoadFailed(true);
   };
   
-  // Resetear el estado de fallo cuando cambia la URL
-  useEffect(() => {
-    setImageLoadFailed(false);
-  }, [watchedImageUrl, extractedData.imageUrl]);
-  
+  // Renderizar imagen o placeholder
   const renderImage = () => {
     const imageUrl = watchedImageUrl || extractedData.imageUrl;
     const productTitle = watchStepTwo('title') || '';
