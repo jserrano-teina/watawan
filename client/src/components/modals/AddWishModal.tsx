@@ -423,6 +423,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           // Formulario paso 2
           <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col">
             {/* Imagen primero */}
+            <div className="mb-2">
+              <label className="block text-white font-medium mb-2">
+                Imagen del producto
+              </label>
+            </div>
             {renderImage()}
             
             {/* Input oculto para subir imagen */}
