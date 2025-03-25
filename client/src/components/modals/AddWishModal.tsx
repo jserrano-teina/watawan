@@ -471,15 +471,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 Precio
               </label>
               <div className="flex">
-                <input 
-                  type="text" 
-                  id="price" 
-                  className="flex-1 px-4 py-3 bg-[#252525] border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-                  placeholder="Introduce un número"
-                  inputMode="decimal"
-                  pattern="[0-9]+(,[0-9]+)?"
-                  {...registerStepTwo('price')}
-                />
+                <div className="flex-1 relative">
+                  <input 
+                    type="text" 
+                    id="price" 
+                    className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                    placeholder="Introduce un número"
+                    inputMode="decimal"
+                    pattern="[0-9]+(,[0-9]+)?"
+                    {...registerStepTwo('price')}
+                  />
+                </div>
                 <select 
                   className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white appearance-none bg-no-repeat bg-[right_10px_center]" 
                   style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")` }}
@@ -494,7 +496,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <p className="text-red-500 text-sm mt-2">{errorsStepTwo.price.message}</p>
               )}
               <p className="text-white/60 text-sm mt-2">
-                El precio de compra actual o un precio aproximado. Usa coma (,) para separar los decimales.
+                El precio de compra actual o un precio aproximado.
               </p>
             </div>
             
