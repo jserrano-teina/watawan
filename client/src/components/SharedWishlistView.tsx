@@ -25,18 +25,22 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
   if (!isOpen || !item) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-auto">
-      <div className="bg-[#1a1a1a] rounded-xl max-w-md w-full max-h-[90vh] overflow-auto relative">
-        {/* Botón de cierre */}
+    <div className="fixed inset-0 z-50 bg-[#121212] overflow-hidden flex flex-col">
+      {/* Header con botón de cierre */}
+      <div className="px-4 py-3 flex items-center border-b border-[#333]">
         <button 
           onClick={onClose} 
-          className="absolute top-2 right-2 text-white/70 hover:text-white z-10 bg-black/20 rounded-full p-1"
+          className="text-white mr-2"
         >
-          <X size={20} />
+          <X size={24} />
         </button>
-        
-        {/* Imagen del producto */}
-        <div className="w-full h-52 bg-[#252525] relative">
+        <h2 className="text-lg font-semibold text-white flex-grow">Detalles del regalo</h2>
+      </div>
+      
+      {/* Contenido scrolleable */}
+      <div className="flex-grow overflow-auto">
+        {/* Imagen a pantalla completa */}
+        <div className="w-full h-72 bg-[#1a1a1a] relative">
           <ProductImage 
             imageUrl={item.imageUrl} 
             title={item.title}
@@ -47,42 +51,40 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
         
         {/* Información del producto */}
         <div className="p-5">
-          <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
+          <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
           
           {item.price && (
-            <div className="mb-3">
-              <span className="text-white font-semibold text-lg">{item.price}</span>
+            <div className="mb-4">
+              <span className="text-white font-semibold text-xl">{item.price}</span>
             </div>
           )}
           
           {item.description && (
-            <div className="mb-4">
-              <h4 className="text-sm text-white/70 mb-1">Descripción</h4>
-              <p className="text-white">{item.description}</p>
+            <div className="mb-6">
+              <h4 className="text-sm text-white/70 mb-2">Descripción</h4>
+              <p className="text-white text-base">{item.description}</p>
             </div>
           )}
-          
-          <div className="mb-6">
-            <h4 className="text-sm text-white/70 mb-1">Enlace</h4>
-            <a 
-              href={item.purchaseLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:text-primary/80 hover:underline text-sm flex items-center"
-            >
-              <ExternalLink size={14} className="mr-1" />
-              Ver en tienda online
-            </a>
-          </div>
-          
-          {/* Botón de reservar */}
-          <button 
-            onClick={onReserveClick}
-            className="w-full bg-primary text-white py-3 rounded-md font-medium text-center hover:bg-primary/90 transition-colors"
-          >
-            Lo regalaré yo
-          </button>
         </div>
+      </div>
+      
+      {/* Barra inferior fija con botones */}
+      <div className="border-t border-[#333] p-4 grid grid-cols-2 gap-3">
+        <a 
+          href={item.purchaseLink} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="bg-[#252525] text-white flex items-center justify-center py-3 px-4 rounded-md font-medium text-center hover:bg-[#333] transition-colors"
+        >
+          <ExternalLink size={16} className="mr-2" />
+          Enlace de compra
+        </a>
+        <button 
+          onClick={onReserveClick}
+          className="bg-primary text-white py-3 px-4 rounded-md font-medium text-center hover:bg-primary/90 transition-colors"
+        >
+          Lo regalaré yo
+        </button>
       </div>
     </div>
   );
