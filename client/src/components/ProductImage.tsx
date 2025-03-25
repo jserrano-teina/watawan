@@ -88,7 +88,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {
     return (
-      <div className={`relative flex flex-col items-center justify-center bg-[#252525] overflow-hidden shadow-inner ${className}`}>
+      <div className={`relative flex flex-col items-center justify-center bg-[#252525] shadow-inner ${className}`}>
         <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
           <Package size={36} className="text-gray-400" />
         </div>
