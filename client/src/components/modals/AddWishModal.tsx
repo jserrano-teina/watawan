@@ -481,7 +481,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   {...registerStepTwo('price')}
                 />
                 <select 
-                  className="w-20 px-3 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white appearance-none bg-no-repeat bg-[right_10px_center]" 
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")` }}
                   {...registerStepTwo('currency')}
                 >
                   <option value="€">€</option>
