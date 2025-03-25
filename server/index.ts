@@ -6,6 +6,11 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
+// Add a simple health check route that responds quickly
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
+
 app.use((req, res, next) => {
   const start = Date.now();
   const path = req.path;
@@ -66,5 +71,10 @@ app.use((req, res, next) => {
     reusePort: true,
   }, () => {
     log(`serving on port ${port}`);
+    // Log additional info for troubleshooting
+    log(`Server running at http://0.0.0.0:${port}`);
+    log(`NODE_ENV: ${process.env.NODE_ENV || 'development'}`);
+    log(`REPL_ID: ${process.env.REPL_ID || 'not set'}`);
+    log(`REPL_SLUG: ${process.env.REPL_SLUG || 'not set'}`);
   });
 })();
