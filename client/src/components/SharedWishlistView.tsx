@@ -65,7 +65,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         <h1 className="text-xl font-semibold text-white">
           Lista de deseos de {owner.displayName || owner.username}
         </h1>
-        <p className="text-white/70 mt-1">
+        <p className="text-white mt-1">
           Elige un regalo para sorprenderle en su día especial
         </p>
       </div>
@@ -79,7 +79,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/50"><path d="M12 22v-8"/><path d="M20 8.5V7a2 2 0 0 0-2-2h-4l-2-3h-4l-2 3H2a2 2 0 0 0-2 2v1.5"/><path d="M16 19a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v7"/><path d="M12 22v-8"/><path d="M22 11v8a2 2 0 0 1-2 2h-2v-6.5"/><rect width="9" height="3" x="7.5" y="10.5"/></svg>
             </div>
             <h3 className="font-medium text-lg text-white">No hay deseos disponibles</h3>
-            <p className="text-white/70 mt-2">Todos los deseos han sido reservados o no se han añadido elementos a esta lista.</p>
+            <p className="text-white mt-2">Todos los deseos han sido reservados o no se han añadido elementos a esta lista.</p>
           </div>
         ) : (
           availableItems.map(item => (

@@ -44,7 +44,7 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
         </svg>
       </div>
       <h3 className="font-medium text-xl text-white mb-2">Tu lista de deseos está vacía</h3>
-      <p className="text-white/70 mb-6">Añade tu primer deseo para empezar a compartir con tus amigos</p>
+      <p className="text-white mb-6">Añade tu primer deseo para empezar a compartir con tus amigos</p>
       <button 
         onClick={onAddWish}
         className="btn-airbnb"
