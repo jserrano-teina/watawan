@@ -83,28 +83,40 @@ const ProductImage: React.FC<ProductImageProps> = ({
 
   // Actualizar el estado cuando cambia la URL de la imagen
   useEffect(() => {
+    // Siempre registra para depuración
+    console.log("ProductImage - URL cambiada:", { 
+      imageUrl, 
+      isProblematicStore: isProblematicStore(),
+      isBlobOrLocal: isBlobOrLocalUrl()
+    });
+    
     if (imageUrl) {
-      setImgSrc(imageUrl);
-      setImgState('loading');
-      
-      // Si es una tienda problemática, notificar error inmediatamente
-      if (isProblematicStore() && onImageError) {
-        setTimeout(() => {
+      // Solo usar la imagen si no es de una tienda problemática o si es un blob/local
+      if (!isProblematicStore() || isBlobOrLocalUrl()) {
+        setImgSrc(imageUrl);
+        setImgState('loading');
+      } else {
+        // Es una tienda problemática y no es blob/local, tratar como error
+        console.log("Tienda problemática detectada:", purchaseLink);
+        setImgState('error');
+        setImgSrc(undefined);
+        
+        // Notificar al componente padre
+        if (onImageError) {
           onImageError();
-        }, 0);
+        }
       }
     } else {
+      // No hay URL de imagen
       setImgState('error');
       setImgSrc(undefined);
       
       // Notificar error si no hay URL
       if (onImageError) {
-        setTimeout(() => {
-          onImageError();
-        }, 0);
+        onImageError();
       }
     }
-  }, [imageUrl, onImageError]);
+  }, [imageUrl, onImageError, purchaseLink]);
   
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {
