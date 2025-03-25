@@ -94,13 +94,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
       
       <div className="flex">
         {/* Imagen a la izquierda - border radius muy reducido */}
-        <div className="w-24 h-24 bg-[#252525] rounded-sm overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm">
+        <div className="w-24 h-24 bg-[#252525] rounded-md overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm">
           <ProductImage 
             imageUrl={item.imageUrl} 
             productId={productId}
             title={item.title}
             purchaseLink={item.purchaseLink}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover overflow-hidden"
           />
         </div>
         

@@ -103,7 +103,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
         <img 
           src={imgSrc} 
           alt={title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover scale-[0.95]"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
