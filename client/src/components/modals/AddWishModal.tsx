@@ -10,13 +10,13 @@ import ProductImage from '../ProductImage';
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
   purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
-});
+}).partial(); // Hacemos todos los campos opcionales para permitir omitir este paso
 
 // Esquema para el segundo paso (detalles completos)
 const stepTwoSchema = z.object({
   title: z.string().min(1, 'El nombre del producto es obligatorio'),
   description: z.string().optional(),
-  purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
+  purchaseLink: z.string().url('Debe ser una URL válida').optional(),
   price: z.string()
     .min(1, 'El precio es obligatorio')
     .refine(val => /^[0-9]+(,[0-9]+)?$/.test(val), {
@@ -164,38 +164,41 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const submitStepOne = async (data: StepOneFormValues) => {
     // Solo llegamos aquí durante el proceso de adición, no edición
     setIsLoading(true);
-    setPurchaseLinkValue(data.purchaseLink);
+    const purchaseLink = data.purchaseLink || '';
+    setPurchaseLinkValue(purchaseLink);
     
     try {
-      // Extraer metadatos del enlace
-      const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(data.purchaseLink)}`);
-      const metadata = await response.json();
-      
-      // Guardar datos extraídos para el paso 2
-      setExtractedData({
-        imageUrl: metadata.imageUrl,
-        price: metadata.price
-      });
-      
-      // Prerellenar formulario del paso 2
-      setValueStepTwo('purchaseLink', data.purchaseLink);
-      
-      // Extraer solo el valor numérico del precio si existe
-      if (metadata.price) {
-        // Primero eliminar todos los caracteres que no sean números, puntos o comas
-        let priceValue = metadata.price.replace(/[^0-9,.]/g, '');
+      // Extraer metadatos del enlace si existe
+      if (purchaseLink) {
+        const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(purchaseLink)}`);
+        const metadata = await response.json();
         
-        // Sustituir todos los puntos por comas para la representación de decimales
-        priceValue = priceValue.replace(/\./g, ',');
+        // Guardar datos extraídos para el paso 2
+        setExtractedData({
+          imageUrl: metadata.imageUrl,
+          price: metadata.price
+        });
         
-        const currencyValue = metadata.price.includes('$') ? '$' : '€';
+        // Prerellenar formulario del paso 2
+        setValueStepTwo('purchaseLink', purchaseLink);
         
-        setValueStepTwo('price', priceValue);
-        setValueStepTwo('currency', currencyValue);
-      }
-      
-      if (metadata.imageUrl) {
-        setValueStepTwo('imageUrl', metadata.imageUrl);
+        // Extraer solo el valor numérico del precio si existe
+        if (metadata.price) {
+          // Primero eliminar todos los caracteres que no sean números, puntos o comas
+          let priceValue = metadata.price.replace(/[^0-9,.]/g, '');
+          
+          // Sustituir todos los puntos por comas para la representación de decimales
+          priceValue = priceValue.replace(/\./g, ',');
+          
+          const currencyValue = metadata.price.includes('$') ? '$' : '€';
+          
+          setValueStepTwo('price', priceValue);
+          setValueStepTwo('currency', currencyValue);
+        }
+        
+        if (metadata.imageUrl) {
+          setValueStepTwo('imageUrl', metadata.imageUrl);
+        }
       }
       
       // Avanzar al paso 2
@@ -203,7 +206,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     } catch (error) {
       console.error('Error extrayendo metadatos:', error);
       // Aún así, avanzamos al paso 2, pero sin datos extraídos
-      setValueStepTwo('purchaseLink', data.purchaseLink);
+      if (purchaseLink) {
+        setValueStepTwo('purchaseLink', purchaseLink);
+      }
       setStep(2);
     } finally {
       setIsLoading(false);
@@ -429,6 +434,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <p className="text-white/60 text-sm mt-2">
                   Un enlace a la página de tu producto en Amazon o cualquier otra tienda
                 </p>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    // Ir al paso 2 sin enlace
+                    setValueStepTwo('purchaseLink', '');
+                    setStep(2);
+                  }}
+                  className="mt-3 text-primary text-sm hover:underline focus:outline-none"
+                >
+                  Omite este paso
+                </button>
               </div>
             </div>
             
