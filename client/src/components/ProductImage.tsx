@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package } from 'lucide-react';
+import { Package, ImageIcon } from 'lucide-react';
 
 type ImageState = 'loading' | 'loaded' | 'error';
 
@@ -88,10 +88,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {
     return (
-      <div className={`relative flex flex-col items-center justify-center bg-[#252525] shadow-inner ${className}`}>
-        <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
-          <Package size={36} className="text-gray-400" />
-        </div>
+      <div className={`relative flex flex-col items-center justify-center shadow-inner ${className}`}>
+        <ImageIcon size={54} className="text-white/50" strokeWidth={1} />
       </div>
     );
   }
@@ -118,10 +116,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
       
       {/* Mostrar placeholder si la imagen falla */}
       {imgState === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]">
-          <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
-            <Package size={36} className="text-gray-400" />
-          </div>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <ImageIcon size={54} className="text-white/50" strokeWidth={1} />
         </div>
       )}
     </div>
