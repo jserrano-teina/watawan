@@ -26,21 +26,18 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
   
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] overflow-hidden flex flex-col">
-      {/* Header con botón de cierre */}
-      <div className="px-4 py-3 flex items-center border-b border-[#333]">
-        <button 
-          onClick={onClose} 
-          className="text-white mr-2"
-        >
-          <X size={24} />
-        </button>
-        <h2 className="text-lg font-semibold text-white flex-grow">Detalles del regalo</h2>
-      </div>
+      {/* Botón flotante para cerrar */}
+      <button 
+        onClick={onClose} 
+        className="absolute top-3 left-3 z-30 bg-black/40 text-white rounded-full p-2 backdrop-blur-sm"
+      >
+        <X size={20} />
+      </button>
       
       {/* Contenido scrolleable */}
       <div className="flex-grow overflow-auto">
-        {/* Imagen a pantalla completa */}
-        <div className="w-full h-72 bg-[#1a1a1a] relative">
+        {/* Imagen a sangre al inicio */}
+        <div className="w-full h-80 bg-[#1a1a1a] relative">
           <ProductImage 
             imageUrl={item.imageUrl} 
             title={item.title}
@@ -50,19 +47,19 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
         </div>
         
         {/* Información del producto */}
-        <div className="p-5">
-          <h3 className="text-xl font-bold text-white mb-2">{item.title}</h3>
+        <div className="px-5 py-6">
+          <h3 className="text-2xl font-bold text-white mb-3">{item.title}</h3>
           
           {item.price && (
-            <div className="mb-4">
-              <span className="text-white font-semibold text-xl">{item.price}</span>
+            <div className="mb-5">
+              <span className="text-white font-bold text-2xl">{item.price}</span>
             </div>
           )}
           
           {item.description && (
-            <div className="mb-6">
-              <h4 className="text-sm text-white/70 mb-2">Descripción</h4>
-              <p className="text-white text-base">{item.description}</p>
+            <div className="mb-8">
+              <h4 className="text-sm uppercase tracking-wider text-white/60 mb-2 font-medium">Descripción</h4>
+              <p className="text-white text-base leading-relaxed">{item.description}</p>
             </div>
           )}
         </div>
@@ -74,14 +71,14 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
           href={item.purchaseLink} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="bg-[#252525] text-white flex items-center justify-center py-3 px-4 rounded-md font-medium text-center hover:bg-[#333] transition-colors"
+          className="bg-[#252525] text-white flex items-center justify-center py-3.5 px-4 rounded-lg font-medium text-sm text-center hover:bg-[#333] transition-colors"
         >
           <ExternalLink size={16} className="mr-2" />
           Enlace de compra
         </a>
         <button 
           onClick={onReserveClick}
-          className="bg-primary text-white py-3 px-4 rounded-md font-medium text-center hover:bg-primary/90 transition-colors"
+          className="bg-primary text-white py-3.5 px-4 rounded-lg font-medium text-sm text-center hover:bg-primary/90 transition-colors"
         >
           Lo regalaré yo
         </button>
