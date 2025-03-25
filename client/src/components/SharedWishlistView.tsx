@@ -172,7 +172,13 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
               key={item.id} 
               className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative hover:bg-[#262626] transition-colors shadow-md"
             >
-              <div className="flex">
+              <div 
+                className="flex cursor-pointer" 
+                onClick={() => {
+                  setSelectedItem(item);
+                  setShowDetailsModal(true);
+                }}
+              >
                 {/* Imagen a la izquierda con border radius reducido */}
                 <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                   <ProductImage 
@@ -184,37 +190,17 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   />
                 </div>
                 
-                {/* Contenido a la derecha */}
+                {/* Contenido a la derecha - Simplificado */}
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
-                  <div>
-                    {/* Nombre del producto con mayor tamaño y peso */}
-                    <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
-                    
-                    {/* Descripción y precio */}
-                    <div className="flex items-center gap-2 mt-1">
-                      {item.description && (
-                        <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
-                      )}
-                      {item.price && (
-                        <span className="text-white font-medium text-base">
-                          {item.price}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="mt-2">
-                      <a 
-                        href={item.purchaseLink} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary hover:text-primary/80 hover:underline text-sm flex items-center"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                        Ver producto
-                      </a>
-                    </div>
-                  </div>
+                  {/* Nombre del producto con mayor tamaño y peso */}
+                  <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                  
+                  {/* Solo precio */}
+                  {item.price && (
+                    <span className="text-white font-medium text-base mt-1">
+                      {item.price}
+                    </span>
+                  )}
                 </div>
               </div>
               
@@ -264,31 +250,22 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     />
                   </div>
                   
-                  {/* Contenido a la derecha */}
+                  {/* Contenido a la derecha - Simplificado */}
                   <div className="flex-grow min-w-0 flex flex-col justify-center">
-                    <div>
-                      {/* Nombre del producto con mayor tamaño y peso */}
-                      <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
-                      
-                      {/* Descripción y precio */}
-                      <div className="flex items-center gap-2 mt-1">
-                        {item.description && (
-                          <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
-                        )}
-                        {item.price && (
-                          <span className="text-white font-medium text-base">
-                            {item.price}
-                          </span>
-                        )}
-                      </div>
-                      
-                      <div className="mt-2">
-                        <p className="text-green-500 text-sm flex items-center font-medium">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                          Alguien ya se encargará de este regalo
-                        </p>
-                      </div>
-                    </div>
+                    {/* Nombre del producto con mayor tamaño y peso */}
+                    <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                    
+                    {/* Solo precio */}
+                    {item.price && (
+                      <span className="text-white font-medium text-base mt-1">
+                        {item.price}
+                      </span>
+                    )}
+                    
+                    <p className="text-green-500 text-sm flex items-center font-medium mt-2">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      Alguien ya se encargará de este regalo
+                    </p>
                   </div>
                 </div>
               </div>
