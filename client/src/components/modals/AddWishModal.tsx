@@ -45,6 +45,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const [step, setStep] = useState(1); // Paso 1 o 2
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [extractedData, setExtractedData] = useState<{
     imageUrl?: string,
     price?: string,
@@ -362,27 +363,29 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         
         {step === 1 ? (
           // Formulario paso 1
-          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 flex flex-col justify-center h-full">
-            <div className="mb-6">
-              <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
-                Enlace de compra
-              </label>
-              <input 
-                type="url" 
-                id="purchaseLink" 
-                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-                placeholder="https://..."
-                {...registerStepOne('purchaseLink')}
-              />
-              {errorsStepOne.purchaseLink && (
-                <p className="text-red-500 text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
-              )}
-              <p className="text-white/60 text-sm mt-2">
-                Un enlace a la página de tu producto en Amazon o cualquier otra tienda
-              </p>
+          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 flex flex-col">
+            <div className="flex-1 flex flex-col justify-center">
+              <div>
+                <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
+                  Enlace de compra
+                </label>
+                <input 
+                  type="url" 
+                  id="purchaseLink" 
+                  className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  placeholder="https://..."
+                  {...registerStepOne('purchaseLink')}
+                />
+                {errorsStepOne.purchaseLink && (
+                  <p className="text-red-500 text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
+                )}
+                <p className="text-white/60 text-sm mt-2">
+                  Un enlace a la página de tu producto en Amazon o cualquier otra tienda
+                </p>
+              </div>
             </div>
             
-            <div className="mt-auto pt-4 sticky bottom-0 flex justify-between bg-[#121212]">
+            <div className="mt-auto pt-4 flex justify-between bg-[#121212]">
               <button 
                 type="button" 
                 onClick={handleClose}
@@ -465,13 +468,13 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   type="text" 
                   id="price" 
                   className="flex-1 px-4 py-3 bg-[#252525] border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-                  placeholder="59,99"
+                  placeholder="Introduce un número"
                   inputMode="decimal"
                   pattern="[0-9]+(,[0-9]+)?"
                   {...registerStepTwo('price')}
                 />
                 <select 
-                  className="w-16 px-2 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  className="w-20 px-3 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
                   {...registerStepTwo('currency')}
                 >
                   <option value="€">€</option>
@@ -483,7 +486,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <p className="text-red-500 text-sm mt-2">{errorsStepTwo.price.message}</p>
               )}
               <p className="text-white/60 text-sm mt-2">
-                Usa coma (,) para separar los decimales, por ejemplo: 59,99
+                El precio de compra actual o un precio aproximado. Usa coma (,) para separar los decimales.
               </p>
             </div>
             
