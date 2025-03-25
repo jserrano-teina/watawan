@@ -9,6 +9,7 @@ interface ProductImageProps {
   title: string;
   className?: string;
   purchaseLink?: string;
+  onImageError?: () => void;  // Nuevo prop para manejar errores de carga
 }
 
 /**
@@ -20,7 +21,8 @@ const ProductImage: React.FC<ProductImageProps> = ({
   productId, 
   title, 
   className = "w-full h-full object-cover",
-  purchaseLink 
+  purchaseLink,
+  onImageError
 }) => {
   const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
   const [imgSrc, setImgSrc] = useState<string | undefined>(imageUrl);
@@ -67,6 +69,11 @@ const ProductImage: React.FC<ProductImageProps> = ({
   const handleImageError = () => {
     setImgState('error');
     setImgSrc(undefined);
+    
+    // Notificar al componente padre sobre el error si se proporcionó un callback
+    if (onImageError) {
+      onImageError();
+    }
   };
   
   // Cuando la imagen carga correctamente
@@ -79,11 +86,25 @@ const ProductImage: React.FC<ProductImageProps> = ({
     if (imageUrl) {
       setImgSrc(imageUrl);
       setImgState('loading');
+      
+      // Si es una tienda problemática, notificar error inmediatamente
+      if (isProblematicStore() && onImageError) {
+        setTimeout(() => {
+          onImageError();
+        }, 0);
+      }
     } else {
       setImgState('error');
       setImgSrc(undefined);
+      
+      // Notificar error si no hay URL
+      if (onImageError) {
+        setTimeout(() => {
+          onImageError();
+        }, 0);
+      }
     }
-  }, [imageUrl]);
+  }, [imageUrl, onImageError]);
   
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {

@@ -312,6 +312,27 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
   
   // Renderizar imagen o placeholder
+  // Estado para controlar si la imagen ha fallado al cargar
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  
+  // Verifica si estamos tratando con una tienda problemática
+  const isProblematicStore = (link?: string): boolean => {
+    const url = link || '';
+    return url.includes('zara.com') || 
+           url.includes('pccomponentes.com') || 
+           url.includes('nike.com');
+  };
+  
+  // Handler para cuando la imagen falla en cargar
+  const handleImageLoadError = () => {
+    setImageLoadFailed(true);
+  };
+  
+  // Resetear el estado de fallo cuando cambia la URL
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [watchedImageUrl, extractedData.imageUrl]);
+  
   const renderImage = () => {
     const imageUrl = watchedImageUrl || extractedData.imageUrl;
     const productTitle = watchStepTwo('title') || '';
@@ -325,8 +346,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Si no hay imagen, mostrar un botón centrado para añadirla
-    if (!imageUrl) {
+    // Si no hay imagen o la imagen falló al cargar, mostrar un botón centrado para añadirla
+    if (!imageUrl || imageLoadFailed || isProblematicStore(purchaseLink)) {
       return (
         <div className="mb-6 w-full h-64">
           <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
@@ -347,7 +368,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Si hay una imagen, mostrarla con el botón para cambiarla
+    // Si hay una imagen y no ha fallado, mostrarla con el botón para cambiarla
     return (
       <div className="relative mb-6 w-full h-64">
         <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
@@ -356,6 +377,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             title={productTitle}
             purchaseLink={purchaseLink}
             className="w-full h-full"
+            onImageError={handleImageLoadError}
           />
         </div>
         
