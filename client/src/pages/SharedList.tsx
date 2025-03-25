@@ -57,11 +57,20 @@ const SharedList: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
-      <header className="sticky top-0 bg-[#1a1a1a] border-b border-[#333] shadow-sm z-30">
+      <header className="sticky top-0 bg-[#121212] border-b border-[#333] shadow-sm z-30">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <h1 className="text-xl font-semibold text-white">
-              <i className="fas fa-gift text-primary mr-2"></i>Wishify
+            <div className="w-8 h-8 rounded-md bg-primary/20 mr-2 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                <rect x="3" y="8" width="18" height="12" rx="2" ry="2"></rect>
+                <path d="M20.3333 8H3.66667C3.29848 8 3 7.76278 3 7.47059V6.52941C3 6.23722 3.29848 6 3.66667 6H20.3333C20.7015 6 21 6.23722 21 6.52941V7.47059C21 7.76278 20.7015 8 20.3333 8Z"></path>
+                <path d="M4 6V4C4 2.89543 4.89543 2 6 2H18C19.1046 2 20 2.89543 20 4V6"></path>
+                <path d="M12 22V8"></path>
+                <path d="M8 12H16"></path>
+              </svg>
+            </div>
+            <h1 className="text-xl font-bold text-white">
+              Wishify
             </h1>
           </div>
         </div>

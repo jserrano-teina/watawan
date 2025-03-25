@@ -56,16 +56,16 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
-      <div className="py-6 text-center border-b border-[#333]">
-        <div className="w-20 h-20 rounded-full bg-[#333] mx-auto mb-3 flex items-center justify-center">
-          <span className="text-xl font-medium text-white">
+      <div className="py-6 text-center border-b border-[#333] mb-4">
+        <div className="w-24 h-24 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
+          <span className="text-2xl font-semibold text-white">
             {owner.initials || owner.displayName?.charAt(0) || 'U'}
           </span>
         </div>
-        <h1 className="text-xl font-semibold text-white">
+        <h1 className="text-2xl font-bold text-white">
           Lista de deseos de {owner.displayName || owner.username}
         </h1>
-        <p className="text-white mt-1">
+        <p className="text-white/70 mt-2 text-lg">
           Elige un regalo para sorprenderle en su día especial
         </p>
       </div>
@@ -74,59 +74,75 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         <h2 className="text-xl font-semibold mb-4 text-white">Disponibles para regalar</h2>
         
         {availableItems.length === 0 ? (
-          <div className="bg-[#1a1a1a] rounded-lg border border-[#333] p-6 text-center my-4">
-            <div className="mx-auto w-16 h-16 bg-[#252525] rounded-full flex items-center justify-center mb-4">
-              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/50"><path d="M12 22v-8"/><path d="M20 8.5V7a2 2 0 0 0-2-2h-4l-2-3h-4l-2 3H2a2 2 0 0 0-2 2v1.5"/><path d="M16 19a2 2 0 0 1-2 2h-4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v7"/><path d="M12 22v-8"/><path d="M22 11v8a2 2 0 0 1-2 2h-2v-6.5"/><rect width="9" height="3" x="7.5" y="10.5"/></svg>
+          <div className="bg-[#1e1e1e] rounded-xl p-8 text-center my-6 shadow-md border border-[#333]">
+            <div className="mx-auto w-24 h-24 flex items-center justify-center mb-4">
+              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/30">
+                <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M11.6316 14.4865C11.2177 14.5023 10.4429 14.1896 9.72255 13.4693C9.00221 12.749 8.6895 11.9741 8.70533 11.5603C8.72116 11.1464 8.81192 11.111 9.25421 11.2756C9.6965 11.4403 10.8507 12.0324 10.9575 12.6563C11.0643 13.2802 12.0456 14.4708 11.6316 14.4865Z" fill="currentColor"/>
+                <path d="M13.1258 14.4866C13.5397 14.5023 14.3146 14.1897 15.0349 13.4693C15.7552 12.749 16.068 11.9742 16.0521 11.5603C16.0363 11.1464 15.9455 11.111 15.5032 11.2757C15.0609 11.4403 13.9068 12.0324 13.8 12.6563C13.6932 13.2802 13.1258 14.4866 13.1258 14.4866Z" fill="currentColor"/>
+              </svg>
             </div>
-            <h3 className="font-medium text-lg text-white">No hay deseos disponibles</h3>
-            <p className="text-white mt-2">Todos los deseos han sido reservados o no se han añadido elementos a esta lista.</p>
+            <h3 className="font-semibold text-xl text-white mb-2">No hay deseos disponibles</h3>
+            <p className="text-white/70 text-base max-w-md mx-auto">
+              Todos los deseos de esta lista ya han sido reservados o no se han añadido elementos aún. 
+              Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
+            </p>
           </div>
         ) : (
           availableItems.map(item => (
-            <div key={item.id} className="bg-[#1a1a1a] rounded-lg border border-[#333] p-3 my-2 relative">
-              <div className="flex items-center">
-                {/* Imagen a la izquierda */}
-                <div className="w-16 h-16 bg-[#252525] rounded-lg overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center">
+            <div 
+              key={item.id} 
+              className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
+              onClick={() => handleReserveClick(item)}
+            >
+              <div className="flex">
+                {/* Imagen a la izquierda con border radius reducido */}
+                <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                   <ProductImage 
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
                     title={item.title}
                     purchaseLink={item.purchaseLink}
+                    className="w-full h-full object-cover"
                   />
                 </div>
                 
                 {/* Contenido a la derecha */}
-                <div className="flex-grow min-w-0">
-                  <h3 className="font-medium text-base truncate text-white">{item.title}</h3>
-                  
-                  {/* Descripción y precio */}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    {item.description && (
-                      <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
-                    )}
-                    {item.price && (
-                      <span className="text-primary font-medium text-xs bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                        {item.price}
-                      </span>
-                    )}
-                  </div>
-                  
-                  <div className="mt-2 flex items-center justify-between">
-                    <a 
-                      href={item.purchaseLink} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="text-primary hover:text-primary/80 hover:underline text-xs flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-                      Ver enlace
-                    </a>
-                    <button 
-                      onClick={() => handleReserveClick(item)}
-                      className="bg-primary text-white px-3 py-1 rounded text-xs flex-shrink-0 hover:bg-primary/80 transition-colors"
-                    >
-                      Lo regalaré yo
-                    </button>
+                <div className="flex-grow min-w-0 flex flex-col justify-center">
+                  <div>
+                    {/* Nombre del producto con mayor tamaño y peso */}
+                    <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                    
+                    {/* Descripción y precio */}
+                    <div className="flex items-center gap-2 mt-1">
+                      {item.description && (
+                        <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
+                      )}
+                      {item.price && (
+                        <span className="text-white font-medium text-base">
+                          {item.price}
+                        </span>
+                      )}
+                    </div>
+                    
+                    <div className="mt-2 flex items-center justify-between">
+                      <a 
+                        href={item.purchaseLink} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary hover:text-primary/80 hover:underline text-sm flex items-center"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                        Ver producto
+                      </a>
+                      <button 
+                        onClick={() => handleReserveClick(item)}
+                        className="bg-primary text-white px-4 py-1.5 rounded-md text-sm font-medium flex-shrink-0 hover:bg-primary/90 transition-colors"
+                      >
+                        Lo regalaré yo
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -139,42 +155,49 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             <h2 className="text-xl font-semibold mt-8 mb-4 text-white">Ya reservados</h2>
             
             {reservedItems.map(item => (
-              <div key={item.id} className="bg-[#1a1a1a] rounded-lg border border-[#333] p-3 my-2 relative opacity-75">
-                <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-0.5 rounded-bl-lg">
+              <div 
+                key={item.id} 
+                className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative opacity-80 shadow-md"
+              >
+                <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-md">
                   Reservado
                 </div>
-                <div className="flex items-center">
-                  {/* Imagen a la izquierda */}
-                  <div className="w-16 h-16 bg-[#252525] rounded-lg overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center">
+                <div className="flex">
+                  {/* Imagen a la izquierda con border radius reducido */}
+                  <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
                       title={item.title}
                       purchaseLink={item.purchaseLink}
+                      className="w-full h-full object-cover"
                     />
                   </div>
                   
                   {/* Contenido a la derecha */}
-                  <div className="flex-grow min-w-0">
-                    <h3 className="font-medium text-base truncate text-white">{item.title}</h3>
-                    
-                    {/* Descripción y precio */}
-                    <div className="flex items-center gap-2 mt-0.5">
-                      {item.description && (
-                        <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
-                      )}
-                      {item.price && (
-                        <span className="text-primary font-medium text-xs bg-primary/10 px-2 py-0.5 rounded-full whitespace-nowrap">
-                          {item.price}
-                        </span>
-                      )}
-                    </div>
-                    
-                    <div className="mt-2">
-                      <p className="text-green-500 text-xs flex items-center">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                        Alguien ya se encargará de este regalo
-                      </p>
+                  <div className="flex-grow min-w-0 flex flex-col justify-center">
+                    <div>
+                      {/* Nombre del producto con mayor tamaño y peso */}
+                      <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                      
+                      {/* Descripción y precio */}
+                      <div className="flex items-center gap-2 mt-1">
+                        {item.description && (
+                          <p className="text-white/60 text-xs line-clamp-1">{item.description}</p>
+                        )}
+                        {item.price && (
+                          <span className="text-white font-medium text-base">
+                            {item.price}
+                          </span>
+                        )}
+                      </div>
+                      
+                      <div className="mt-2">
+                        <p className="text-green-500 text-sm flex items-center font-medium">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                          Alguien ya se encargará de este regalo
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
