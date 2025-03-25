@@ -17,7 +17,11 @@ const stepTwoSchema = z.object({
   title: z.string().min(1, 'El nombre del producto es obligatorio'),
   description: z.string().optional(),
   purchaseLink: z.string().url('Debe ser una URL válida').min(1, 'El enlace de compra es obligatorio'),
-  price: z.string().min(1, 'El precio es obligatorio'),
+  price: z.string()
+    .min(1, 'El precio es obligatorio')
+    .refine(val => /^[0-9]+(,[0-9]+)?$/.test(val), {
+      message: 'Solo se aceptan números con decimales separados por coma'
+    }),
   currency: z.string().default('€'),
   imageUrl: z.string().optional(),
 });
