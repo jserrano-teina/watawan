@@ -17,13 +17,13 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
           </g>
         </svg>
       </div>
-      <h3 className="font-medium text-2xl text-white mb-3">Crea tu wishlist</h3>
-      <p className="text-white/70 mb-8 text-lg">Añade tus deseos y compártelos con amigos y familiares para que sepan qué regalarte</p>
+      <h3 className="font-medium text-xl text-white mb-2">Tu lista de deseos está vacía</h3>
+      <p className="text-white/70 mb-6">Añade tu primer deseo para empezar a compartir con tus amigos</p>
       <button 
         onClick={onAddWish}
-        className="btn-airbnb text-lg py-3 px-8"
+        className="btn-airbnb"
       >
-        Crear mi primer deseo
+        Añadir deseo
       </button>
     </div>
   );
