@@ -88,13 +88,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
 
   return (
     <div 
-      className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
+      className="bg-[#1e1e1e] rounded-xl p-4 my-1 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
       onClick={handleItemClick}
     >
       
       <div className="flex">
-        {/* Imagen a la izquierda */}
-        <div className="w-24 h-24 bg-[#252525] rounded-lg overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm">
+        {/* Imagen a la izquierda - border radius reducido */}
+        <div className="w-24 h-24 bg-[#252525] rounded-md overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm">
           <ProductImage 
             imageUrl={item.imageUrl} 
             productId={productId}
@@ -104,11 +104,12 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
           />
         </div>
         
-        {/* Contenido a la derecha - simplificado */}
+        {/* Contenido a la derecha */}
         <div className="flex-grow min-w-0 flex flex-col justify-center">
-          <div className="flex justify-between items-start">
+          <div className="flex justify-between items-center">
             <div>
-              <h3 className="font-medium text-base truncate mr-2 text-white">{item.title}</h3>
+              {/* Nombre del producto con mayor tamaño y peso */}
+              <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
               
               <div className="flex items-center mt-1 gap-2">
                 {/* Tag de reservado */}
@@ -118,17 +119,17 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   </span>
                 )}
                 
-                {/* Solo mostrar el precio en la tarjeta */}
+                {/* Precio con mayor tamaño y color blanco */}
                 {item.price && (
-                  <span className="text-primary font-medium text-xs">
+                  <span className="text-white font-medium text-base">
                     {item.price}
                   </span>
                 )}
               </div>
             </div>
             
-            {/* Menú de 3 puntos */}
-            <div className="relative menu-container" ref={menuRef}>
+            {/* Menú de 3 puntos centrado verticalmente */}
+            <div className="relative menu-container self-center" ref={menuRef}>
               <button 
                 onClick={(e) => {
                   e.stopPropagation();

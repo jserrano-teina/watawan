@@ -88,7 +88,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {
     return (
-      <div className={`relative flex flex-col items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
+      <div className={`relative flex flex-col items-center justify-center bg-[#252525] overflow-hidden shadow-inner ${className}`}>
         <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
           <Package size={36} className="text-gray-400" />
         </div>
@@ -103,7 +103,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
         <img 
           src={imgSrc} 
           alt={title} 
-          className="w-full h-full object-cover rounded-lg"
+          className="w-full h-full object-cover"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
@@ -111,14 +111,14 @@ const ProductImage: React.FC<ProductImageProps> = ({
       
       {/* Mostrar spinner durante la carga */}
       {imgState === 'loading' && (
-        <div className="absolute inset-0 flex items-center justify-center bg-[#252525] rounded-lg">
+        <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
         </div>
       )}
       
       {/* Mostrar placeholder si la imagen falla */}
       {imgState === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525] rounded-lg">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525]">
           <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
             <Package size={36} className="text-gray-400" />
           </div>
