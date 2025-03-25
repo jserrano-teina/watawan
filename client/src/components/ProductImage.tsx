@@ -9,7 +9,6 @@ interface ProductImageProps {
   title: string;
   className?: string;
   purchaseLink?: string;
-  onImageError?: () => void;  // Nuevo prop para manejar errores de carga
 }
 
 /**
@@ -21,8 +20,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   productId, 
   title, 
   className = "w-full h-full object-cover",
-  purchaseLink,
-  onImageError
+  purchaseLink 
 }) => {
   const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
   const [imgSrc, setImgSrc] = useState<string | undefined>(imageUrl);
@@ -69,11 +67,6 @@ const ProductImage: React.FC<ProductImageProps> = ({
   const handleImageError = () => {
     setImgState('error');
     setImgSrc(undefined);
-    
-    // Notificar al componente padre sobre el error si se proporcionó un callback
-    if (onImageError) {
-      onImageError();
-    }
   };
   
   // Cuando la imagen carga correctamente
@@ -83,40 +76,14 @@ const ProductImage: React.FC<ProductImageProps> = ({
 
   // Actualizar el estado cuando cambia la URL de la imagen
   useEffect(() => {
-    // Siempre registra para depuración
-    console.log("ProductImage - URL cambiada:", { 
-      imageUrl, 
-      isProblematicStore: isProblematicStore(),
-      isBlobOrLocal: isBlobOrLocalUrl()
-    });
-    
     if (imageUrl) {
-      // Solo usar la imagen si no es de una tienda problemática o si es un blob/local
-      if (!isProblematicStore() || isBlobOrLocalUrl()) {
-        setImgSrc(imageUrl);
-        setImgState('loading');
-      } else {
-        // Es una tienda problemática y no es blob/local, tratar como error
-        console.log("Tienda problemática detectada:", purchaseLink);
-        setImgState('error');
-        setImgSrc(undefined);
-        
-        // Notificar al componente padre
-        if (onImageError) {
-          onImageError();
-        }
-      }
+      setImgSrc(imageUrl);
+      setImgState('loading');
     } else {
-      // No hay URL de imagen
       setImgState('error');
       setImgSrc(undefined);
-      
-      // Notificar error si no hay URL
-      if (onImageError) {
-        onImageError();
-      }
     }
-  }, [imageUrl, onImageError, purchaseLink]);
+  }, [imageUrl]);
   
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
   if (shouldUseInitialsPlaceholder()) {

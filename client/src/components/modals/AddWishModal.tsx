@@ -42,9 +42,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   onSubmit,
   itemToEdit 
 }) => {
-  // Todos los hooks de estado al inicio
   const modalRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1); // Paso 1 o 2
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -55,7 +53,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showImageUrlInput, setShowImageUrlInput] = useState(false);
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Formulario paso 1 (solo enlace)
   const {
@@ -96,20 +94,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const watchedPurchaseLink = watchStepOne('purchaseLink');
   const watchedImageUrl = watchStepTwo('imageUrl');
 
-  // Todos los useEffect juntos
-  // 1. Manejo del enlace de compra entre pasos
   useEffect(() => {
+    // Guardar el valor del enlace para mantenerlo entre pasos
     if (watchedPurchaseLink) {
       setPurchaseLinkValue(watchedPurchaseLink);
     }
   }, [watchedPurchaseLink]);
-  
-  // 2. Reset del estado de error de imagen cuando cambia la URL
-  useEffect(() => {
-    setImageLoadFailed(false);
-  }, [watchedImageUrl, extractedData.imageUrl]);
 
-  // 3. Inicialización y reseteo de formularios al editar o crear
+  // Reset forms when editing an item
   useEffect(() => {
     if (itemToEdit) {
       setStep(2); // Si estamos editando, ir directamente al paso 2
@@ -164,36 +156,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     }
   }, [itemToEdit, resetStepOne, resetStepTwo, isOpen]);
 
-  // Return temprano si el modal no está abierto
   if (!isOpen) return null;
-
-  // Funciones auxiliares
-  // Verifica si estamos tratando con una tienda problemática
-  const isProblematicStore = (link?: string): boolean => {
-    const url = link || '';
-    return url.includes('zara.com') || 
-           url.includes('pccomponentes.com') || 
-           url.includes('nike.com');
-  };
-  
-  // Handler para cuando la imagen falla en cargar
-  const handleImageLoadError = () => {
-    console.log("AddWishModal - Error de carga de imagen detectado");
-    setImageLoadFailed(true);
-    
-    // Si hay una URL de imagen actual, la limpiamos para forzar el botón de subida
-    if (watchedImageUrl) {
-      setValueStepTwo('imageUrl', '');
-    }
-    
-    // También limpiar el estado de datos extraídos
-    if (extractedData.imageUrl) {
-      setExtractedData({
-        ...extractedData,
-        imageUrl: undefined
-      });
-    }
-  };
 
   // Manejar envío del paso 1
   const submitStepOne = async (data: StepOneFormValues) => {
@@ -354,7 +317,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     const productTitle = watchStepTwo('title') || '';
     const purchaseLink = watchStepTwo('purchaseLink') || watchedPurchaseLink;
     
-    // Si está cargando la imagen, mostrar spinner
     if (uploadingImage) {
       return (
         <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
@@ -363,20 +325,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Mostrar botón de añadir imagen si:
-    // 1. No hay URL de imagen, o
-    // 2. La imagen falló al cargar, o
-    // 3. Es una tienda problemática (Zara, Nike, PCComponentes)
-    const shouldShowImageButton = !imageUrl || imageLoadFailed || isProblematicStore(purchaseLink);
-    
-    if (shouldShowImageButton) {
-      console.log("Mostrando botón de añadir imagen. Estado:", { 
-        imageUrl, 
-        imageLoadFailed, 
-        isProblematicStore: isProblematicStore(purchaseLink),
-        purchaseLink
-      });
-      
+    // Si no hay imagen, mostrar un botón centrado para añadirla
+    if (!imageUrl) {
       return (
         <div className="mb-6 w-full h-64">
           <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
@@ -397,7 +347,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Si hay una imagen y no ha fallado, mostrarla con el botón para cambiarla
+    // Si hay una imagen, mostrarla con el botón para cambiarla
     return (
       <div className="relative mb-6 w-full h-64">
         <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
@@ -406,7 +356,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             title={productTitle}
             purchaseLink={purchaseLink}
             className="w-full h-full"
-            onImageError={handleImageLoadError}
           />
         </div>
         
