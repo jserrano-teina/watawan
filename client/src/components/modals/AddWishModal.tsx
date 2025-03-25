@@ -328,19 +328,21 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     // Si no hay imagen, mostrar un botón centrado para añadirla
     if (!imageUrl) {
       return (
-        <div className="mb-6 w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-          <button
-            type="button"
-            onClick={handleUploadClick}
-            className="px-5 py-3 bg-[#303030] hover:bg-[#404040] text-white rounded-lg transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <circle cx="8.5" cy="8.5" r="1.5"></circle>
-              <polyline points="21 15 16 10 5 21"></polyline>
-            </svg>
-            Añadir imagen del producto
-          </button>
+        <div className="mb-6 w-full h-64">
+          <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <button
+              type="button"
+              onClick={handleUploadClick}
+              className="px-5 py-3 bg-[#303030] hover:bg-[#404040] text-white rounded-lg transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              Añadir imagen del producto
+            </button>
+          </div>
         </div>
       );
     }
@@ -348,12 +350,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     // Si hay una imagen, mostrarla con el botón para cambiarla
     return (
       <div className="relative mb-6 w-full h-64">
-        <ProductImage 
-          imageUrl={imageUrl}
-          title={productTitle}
-          purchaseLink={purchaseLink}
-          className="w-full h-full rounded-lg border border-[#333]"
-        />
+        <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
+          <ProductImage 
+            imageUrl={imageUrl}
+            title={productTitle}
+            purchaseLink={purchaseLink}
+            className="w-full h-full"
+          />
+        </div>
         
         {/* Botón para cambiar la imagen */}
         <div className="absolute bottom-2 right-2">
