@@ -370,7 +370,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         
         {step === 1 ? (
           // Formulario paso 1
-          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 flex flex-col">
+          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
               <div>
                 <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
@@ -392,7 +392,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
             </div>
             
-            <div className="mt-auto pt-4 flex justify-between bg-[#121212]">
+            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
               <button 
                 type="button" 
                 onClick={handleClose}
@@ -421,7 +421,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           </form>
         ) : (
           // Formulario paso 2
-          <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 flex flex-col">
+          <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col">
             {/* Imagen primero */}
             {renderImage()}
             
@@ -519,7 +519,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {...registerStepTwo('purchaseLink')}
             />
             
-            <div className="mt-auto pt-4 sticky bottom-0 flex justify-between bg-[#121212]">
+            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
               <button 
                 type="button" 
                 onClick={goBackToStepOne}
