@@ -104,7 +104,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Reset forms when editing an item
   useEffect(() => {
     if (itemToEdit) {
-      setStep(2); // Si estamos editando, ir directamente al paso 2
+      // Para edición, colocamos ambos pasos en un solo paso
+      // Usamos el paso 2 para mantener la lógica pero modificaremos su presentación
+      setStep(2); 
       
       // Extraer valor numérico del precio si existe
       let priceValue = '';
@@ -158,8 +160,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Manejar envío del paso 1
+  // Manejar envío del paso 1 (para el modo de creación, no edición)
   const submitStepOne = async (data: StepOneFormValues) => {
+    // Solo llegamos aquí durante el proceso de adición, no edición
     setIsLoading(true);
     setPurchaseLinkValue(data.purchaseLink);
     
@@ -406,7 +409,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         </div>
         
         {step === 1 ? (
-          // Formulario paso 1
+          // Formulario paso 1 (solo para añadir nuevo, no para editar)
           <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
               <div>
@@ -457,9 +460,28 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             </div>
           </form>
         ) : (
-          // Formulario paso 2
+          // Formulario paso 2 (usado para añadir paso 2 y para editar en un solo paso)
           <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col">
-            {/* Imagen primero */}
+            {/* Campo de enlace para edición (solo visible en modo edición) */}
+            {itemToEdit && (
+              <div className="mb-6">
+                <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
+                  Enlace de compra
+                </label>
+                <input 
+                  type="url" 
+                  id="purchaseLink" 
+                  className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  placeholder="https://..."
+                  {...registerStepTwo('purchaseLink')}
+                />
+                {errorsStepTwo.purchaseLink && (
+                  <p className="text-red-500 text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
+                )}
+              </div>
+            )}
+            
+            {/* Imagen */}
             <div className="mb-2">
               <label className="block text-white font-medium mb-2">
                 Imagen del producto
@@ -558,19 +580,21 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               )}
             </div>
             
-            {/* Campo oculto para mantener el enlace de compra */}
-            <input 
-              type="hidden" 
-              {...registerStepTwo('purchaseLink')}
-            />
+            {/* Campo oculto para mantener el enlace de compra (solo para el flujo de creación) */}
+            {!itemToEdit && (
+              <input 
+                type="hidden" 
+                {...registerStepTwo('purchaseLink')}
+              />
+            )}
             
             <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
               <button 
                 type="button" 
-                onClick={goBackToStepOne}
+                onClick={itemToEdit ? handleClose : goBackToStepOne}
                 className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
               >
-                Atrás
+                {itemToEdit ? 'Cancelar' : 'Atrás'}
               </button>
               <button 
                 type="submit"
