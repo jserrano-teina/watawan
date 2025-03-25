@@ -42,7 +42,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   onSubmit,
   itemToEdit 
 }) => {
+  // Todos los hooks de estado al inicio
   const modalRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1); // Paso 1 o 2
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -53,7 +55,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showImageUrlInput, setShowImageUrlInput] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [imageLoadFailed, setImageLoadFailed] = useState(false);
   
   // Formulario paso 1 (solo enlace)
   const {
@@ -94,14 +96,20 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const watchedPurchaseLink = watchStepOne('purchaseLink');
   const watchedImageUrl = watchStepTwo('imageUrl');
 
+  // Todos los useEffect juntos
+  // 1. Manejo del enlace de compra entre pasos
   useEffect(() => {
-    // Guardar el valor del enlace para mantenerlo entre pasos
     if (watchedPurchaseLink) {
       setPurchaseLinkValue(watchedPurchaseLink);
     }
   }, [watchedPurchaseLink]);
+  
+  // 2. Reset del estado de error de imagen cuando cambia la URL
+  useEffect(() => {
+    setImageLoadFailed(false);
+  }, [watchedImageUrl, extractedData.imageUrl]);
 
-  // Reset forms when editing an item
+  // 3. Inicialización y reseteo de formularios al editar o crear
   useEffect(() => {
     if (itemToEdit) {
       setStep(2); // Si estamos editando, ir directamente al paso 2
@@ -156,7 +164,22 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     }
   }, [itemToEdit, resetStepOne, resetStepTwo, isOpen]);
 
+  // Return temprano si el modal no está abierto
   if (!isOpen) return null;
+
+  // Funciones auxiliares
+  // Verifica si estamos tratando con una tienda problemática
+  const isProblematicStore = (link?: string): boolean => {
+    const url = link || '';
+    return url.includes('zara.com') || 
+           url.includes('pccomponentes.com') || 
+           url.includes('nike.com');
+  };
+  
+  // Handler para cuando la imagen falla en cargar
+  const handleImageLoadError = () => {
+    setImageLoadFailed(true);
+  };
 
   // Manejar envío del paso 1
   const submitStepOne = async (data: StepOneFormValues) => {
@@ -309,27 +332,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Manejar clic en botón de editar URL de imagen
   const handleEditImageUrlClick = () => {
     setShowImageUrlInput(!showImageUrlInput);
-  };
-
-  // Estado para controlar si la imagen ha fallado al cargar (movido arriba con los otros estados)
-  const [imageLoadFailed, setImageLoadFailed] = useState(false);
-  
-  // Resetear el estado de fallo cuando cambia la URL (movido junto a los demás useEffect)
-  useEffect(() => {
-    setImageLoadFailed(false);
-  }, [watchedImageUrl, extractedData.imageUrl]);
-  
-  // Verifica si estamos tratando con una tienda problemática
-  const isProblematicStore = (link?: string): boolean => {
-    const url = link || '';
-    return url.includes('zara.com') || 
-           url.includes('pccomponentes.com') || 
-           url.includes('nike.com');
-  };
-  
-  // Handler para cuando la imagen falla en cargar
-  const handleImageLoadError = () => {
-    setImageLoadFailed(true);
   };
   
   // Renderizar imagen o placeholder
