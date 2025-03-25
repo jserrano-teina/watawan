@@ -179,7 +179,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       
       // Extraer solo el valor numérico del precio si existe
       if (metadata.price) {
-        const priceValue = metadata.price.replace(/[^0-9,.]/g, '');
+        // Primero eliminar todos los caracteres que no sean números, puntos o comas
+        let priceValue = metadata.price.replace(/[^0-9,.]/g, '');
+        
+        // Sustituir todos los puntos por comas para la representación de decimales
+        priceValue = priceValue.replace(/\./g, ',');
+        
         const currencyValue = metadata.price.includes('$') ? '$' : '€';
         
         setValueStepTwo('price', priceValue);
