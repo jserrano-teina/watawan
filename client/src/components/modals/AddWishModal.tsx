@@ -293,7 +293,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Renderizar imagen o placeholder
   const renderImage = () => {
     const imageUrl = watchedImageUrl || extractedData.imageUrl;
-    const productTitle = watchStepTwo('title') || 'Producto';
+    const productTitle = watchStepTwo('title') || '';
     const purchaseLink = watchStepTwo('purchaseLink') || watchedPurchaseLink;
     
     if (uploadingImage) {
@@ -314,23 +314,21 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           className="w-full h-full rounded-lg border border-[#333]"
         />
         
-        {/* Botones de acción siempre visibles independientemente del estado de la imagen */}
-        <div className="absolute bottom-2 right-2 flex space-x-2">
+        {/* Solo botón para subir imagen */}
+        <div className="absolute bottom-2 right-2">
           <button 
             type="button" 
             onClick={handleUploadClick} 
             className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
             title="Subir imagen"
           >
-            <Image size={20} />
-          </button>
-          <button 
-            type="button" 
-            onClick={handleEditImageUrlClick} 
-            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
-            title="Editar URL de imagen"
-          >
-            <Edit3 size={20} />
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+              <line x1="16" y1="5" x2="22" y2="5"></line>
+              <line x1="19" y1="2" x2="19" y2="8"></line>
+              <circle cx="9" cy="9" r="2"></circle>
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+            </svg>
           </button>
         </div>
       </div>
@@ -347,8 +345,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             {itemToEdit 
               ? 'Editar deseo' 
               : step === 1 
-                ? 'Paso 1: Añadir enlace' 
-                : 'Paso 2: Completar detalles'
+                ? 'Añadir deseo 1/2' 
+                : 'Añadir deseo 2/2'
             }
           </h2>
           <button 
@@ -364,7 +362,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         
         {step === 1 ? (
           // Formulario paso 1
-          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4">
+          <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 flex flex-col justify-center h-full">
             <div className="mb-6">
               <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
                 Enlace de compra
@@ -379,20 +377,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {errorsStepOne.purchaseLink && (
                 <p className="text-red-500 text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
               )}
-            </div>
-            
-            <div className="mb-6 px-4 py-3 bg-[#252525] rounded-lg border border-[#333]">
-              <p className="text-sm text-gray-400 flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="12" y1="16" x2="12" y2="12"></line>
-                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                </svg>
-                En el siguiente paso podrás completar los detalles del producto
+              <p className="text-white/60 text-sm mt-2">
+                Un enlace a la página de tu producto en Amazon o cualquier otra tienda
               </p>
             </div>
             
-            <div className="sticky bottom-0 flex justify-between bg-[#121212] pt-4">
+            <div className="mt-auto pt-4 sticky bottom-0 flex justify-between bg-[#121212]">
               <button 
                 type="button" 
                 onClick={handleClose}
@@ -458,7 +448,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 type="text" 
                 id="title" 
                 className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-                placeholder="¿Qué te gustaría recibir?"
+                placeholder="Introduce un nombre"
                 {...registerStepTwo('title')}
               />
               {errorsStepTwo.title && (
@@ -491,6 +481,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {errorsStepTwo.price && (
                 <p className="text-red-500 text-sm mt-2">{errorsStepTwo.price.message}</p>
               )}
+              <p className="text-white/60 text-sm mt-2">
+                Usa coma (,) para separar los decimales, por ejemplo: 59,99
+              </p>
             </div>
             
             <div className="mb-6">
