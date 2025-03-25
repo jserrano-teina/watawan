@@ -233,27 +233,26 @@ const MobileView = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col">
-      {/* Header con botón de regreso */}
-      <div className="flex items-center p-4 border-b border-[#333]">
-        <button 
-          onClick={onClose}
-          className="p-1 mr-2 text-white/80"
-        >
-          <ArrowLeft size={20} />
-        </button>
-        <h1 className="text-lg font-medium">Detalle del producto</h1>
-      </div>
-      
       <div className="flex-1 overflow-auto pb-28">
-        {/* Imagen principal */}
-        <div className="h-72 w-full bg-[#202020] relative">
-          <ProductImage 
-            imageUrl={item.imageUrl} 
-            productId={productId}
-            title={item.title}
-            purchaseLink={item.purchaseLink}
-            className="w-full h-full object-contain"
-          />
+        {/* Imagen principal a sangre */}
+        <div className="w-full bg-[#202020] relative">
+          {/* Botón de regreso flotante */}
+          <button 
+            onClick={onClose}
+            className="absolute top-4 left-4 z-20 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+          >
+            <ArrowLeft size={20} />
+          </button>
+
+          <div className="h-80 w-full">
+            <ProductImage 
+              imageUrl={item.imageUrl} 
+              productId={productId}
+              title={item.title}
+              purchaseLink={item.purchaseLink}
+              className="w-full h-full object-contain"
+            />
+          </div>
           
           {/* Badge de reservado (superpuesto) */}
           {item.isReserved && (
@@ -270,16 +269,23 @@ const MobileView = ({
         </div>
 
         {/* Detalles del producto */}
-        <div className="p-5">
-          <h2 className="text-xl font-medium mb-3 text-white">{item.title}</h2>
+        <div className="p-6">
+          {/* Nombre del producto con mayor tamaño y peso */}
+          <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
           
+          {/* Precio como texto normal de mayor tamaño */}
           {item.price && (
-            <div className="flex items-center mb-4">
-              <div className="inline-block px-3 py-1 bg-primary/20 rounded-lg text-primary font-medium text-sm">
+            <div className="mb-2">
+              <span className="text-white text-xl font-medium">
                 {item.price}
-              </div>
+              </span>
             </div>
           )}
+          
+          {/* Fecha de adición con color secundario y mejor formato */}
+          <div className="text-gray-400 text-sm mb-6">
+            Añadido {formattedDate}
+          </div>
           
           {/* Descripción */}
           {item.description && (
@@ -302,18 +308,10 @@ const MobileView = ({
               <span className="truncate">{item.purchaseLink}</span>
             </a>
           </div>
-          
-          {/* Información adicional */}
-          <div className="flex items-center text-xs text-white/60 mb-6">
-            <div className="flex items-center">
-              <Calendar size={14} className="mr-1" />
-              <span>Añadido {formattedDate}</span>
-            </div>
-          </div>
         </div>
       </div>
       
-      {/* Footer con botones fijos - igual al modal de AddWishModal */}
+      {/* Footer con botones fijos */}
       <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
         <button
           onClick={handleDelete}
