@@ -90,12 +90,9 @@ const Home: React.FC = () => {
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
         )}
         
-        <div className={myWishItems.length > 0 ? "mt-6" : "mt-3"}>
-          <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
-          
-          {myWishItems.length === 0 ? (
-            <EmptyWishlist onAddWish={handleAddWishClick} />
-          ) : (
+        {myWishItems.length > 0 ? (
+          <div className="mt-6">
+            <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
             <div className="grid gap-4">
               {myWishItems.map(item => (
                 <WishItem 
@@ -107,11 +104,17 @@ const Home: React.FC = () => {
                 />
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-[80vh]">
+            <EmptyWishlist onAddWish={handleAddWishClick} />
+          </div>
+        )}
       </main>
       
-      <FloatingActionButton onClick={handleAddWishClick} />
+      {myWishItems.length > 0 && (
+        <FloatingActionButton onClick={handleAddWishClick} />
+      )}
       
       <BottomNavigation />
       
