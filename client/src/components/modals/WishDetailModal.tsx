@@ -236,10 +236,10 @@ const MobileView = ({
       <div className="flex-1 overflow-auto pb-28">
         {/* Imagen principal a sangre */}
         <div className="w-full bg-[#202020] relative">
-          {/* Botón de regreso flotante */}
+          {/* Botón de regreso flotante, ahora fixed para mantenerlo visible al hacer scroll */}
           <button 
             onClick={onClose}
-            className="absolute top-4 left-4 z-20 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+            className="fixed top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
           >
             <ArrowLeft size={20} />
           </button>
@@ -287,15 +287,7 @@ const MobileView = ({
             Añadido {formattedDate}
           </div>
           
-          {/* Descripción */}
-          {item.description && (
-            <div className="mb-6">
-              <h3 className="block text-white font-medium mb-2">Descripción</h3>
-              <p className="text-white/80 text-sm">{item.description}</p>
-            </div>
-          )}
-          
-          {/* Enlace externo */}
+          {/* Enlace externo - ahora antes de la descripción */}
           <div className="mb-6">
             <h3 className="block text-white font-medium mb-2">Enlace de compra</h3>
             <a 
@@ -308,6 +300,14 @@ const MobileView = ({
               <span className="truncate">{item.purchaseLink}</span>
             </a>
           </div>
+          
+          {/* Descripción */}
+          {item.description && (
+            <div className="mb-6">
+              <h3 className="block text-white font-medium mb-2">Descripción</h3>
+              <p className="text-white/80 text-sm">{item.description}</p>
+            </div>
+          )}
         </div>
       </div>
       
