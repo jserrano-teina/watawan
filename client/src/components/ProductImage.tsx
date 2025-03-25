@@ -74,7 +74,9 @@ const ProductImage: React.FC<ProductImageProps> = ({
   if (shouldUseInitialsPlaceholder()) {
     return (
       <div className={`relative flex flex-col items-center justify-center bg-[#252525] rounded-lg overflow-hidden shadow-inner ${className}`}>
-        <Package size={48} className="text-gray-500" />
+        <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
+          <Package size={36} className="text-gray-400" />
+        </div>
       </div>
     );
   }
@@ -102,7 +104,9 @@ const ProductImage: React.FC<ProductImageProps> = ({
       {/* Mostrar placeholder si la imagen falla */}
       {imgState === 'error' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#252525] rounded-lg">
-          <Package size={48} className="text-gray-500" />
+          <div className="w-16 h-16 rounded-full bg-[#333] flex items-center justify-center">
+            <Package size={36} className="text-gray-400" />
+          </div>
         </div>
       )}
     </div>

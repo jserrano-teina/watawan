@@ -204,33 +204,40 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   // Manejar envío del paso 2 (final)
   const submitStepTwo = (data: StepTwoFormValues) => {
+    // Activar estado de carga
+    setIsSaving(true);
+    
     // Formatear el precio con la moneda seleccionada
     const formattedData = {
       ...data,
       price: `${data.price}${data.currency}`
     };
     
-    onSubmit(formattedData);
-    
-    // Limpiar el formulario antes de cerrarlo
-    resetStepOne({
-      purchaseLink: '',
-    });
-    resetStepTwo({
-      title: '',
-      description: '',
-      purchaseLink: '',
-      price: '',
-      currency: '€',
-      imageUrl: '',
-    });
-    
-    // Restablecer el paso y cerrar el modal
-    setStep(1);
-    setExtractedData({});
-    setPurchaseLinkValue('');
-    setShowImageUrlInput(false);
-    onClose();
+    // Simular un pequeño retraso para mostrar el estado de carga
+    setTimeout(() => {
+      onSubmit(formattedData);
+      
+      // Limpiar el formulario antes de cerrarlo
+      resetStepOne({
+        purchaseLink: '',
+      });
+      resetStepTwo({
+        title: '',
+        description: '',
+        purchaseLink: '',
+        price: '',
+        currency: '€',
+        imageUrl: '',
+      });
+      
+      // Restablecer el paso y cerrar el modal
+      setStep(1);
+      setExtractedData({});
+      setPurchaseLinkValue('');
+      setShowImageUrlInput(false);
+      setIsSaving(false);
+      onClose();
+    }, 500);
   };
 
   // Manejar el retroceso a paso 1
@@ -323,13 +330,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
             title="Subir imagen"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-              <line x1="16" y1="5" x2="22" y2="5"></line>
-              <line x1="19" y1="2" x2="19" y2="8"></line>
-              <circle cx="9" cy="9" r="2"></circle>
-              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-            </svg>
+            <div className="relative">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                <circle cx="9" cy="9" r="2"></circle>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+              </svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute -bottom-1 -right-1 bg-primary rounded-full p-0.5">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </div>
           </button>
         </div>
       </div>
@@ -522,9 +533,20 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </button>
               <button 
                 type="submit"
-                className="px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors"
+                disabled={isSaving}
+                className={`px-6 py-3 ${isSaving ? 'bg-gray-600' : 'bg-primary hover:bg-primary/90'} text-white rounded-lg font-medium transition-colors flex items-center justify-center`}
               >
-                {itemToEdit ? 'Actualizar' : 'Guardar'}
+                {isSaving ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Guardando...
+                  </>
+                ) : (
+                  itemToEdit ? 'Actualizar' : 'Guardar'
+                )}
               </button>
             </div>
           </form>
