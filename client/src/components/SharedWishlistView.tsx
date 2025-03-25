@@ -4,7 +4,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ReservationModal from './modals/ReservationModal';
 import ProductImage from './ProductImage';
-import { X, ExternalLink } from 'lucide-react';
+import { X, ExternalLink, ArrowLeft } from 'lucide-react';
 
 interface SharedWishlistViewProps {
   owner: User;
@@ -26,12 +26,12 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
   
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] overflow-hidden flex flex-col">
-      {/* Botón flotante para cerrar */}
+      {/* Botón flotante para volver */}
       <button 
         onClick={onClose} 
-        className="absolute top-3 left-3 z-30 bg-black/40 text-white rounded-full p-2 backdrop-blur-sm"
+        className="fixed top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
       >
-        <X size={20} />
+        <ArrowLeft size={20} />
       </button>
       
       {/* Contenido scrolleable */}
@@ -47,19 +47,19 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
         </div>
         
         {/* Información del producto */}
-        <div className="px-5 py-6">
-          <h3 className="text-2xl font-bold text-white mb-3">{item.title}</h3>
+        <div className="p-6">
+          <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
           
           {item.price && (
-            <div className="mb-5">
-              <span className="text-white font-bold text-2xl">{item.price}</span>
+            <div className="mb-2">
+              <span className="text-white text-xl font-medium">{item.price}</span>
             </div>
           )}
           
           {item.description && (
-            <div className="mb-8">
-              <h4 className="text-sm uppercase tracking-wider text-white/60 mb-2 font-medium">Descripción</h4>
-              <p className="text-white text-base leading-relaxed">{item.description}</p>
+            <div className="mb-6">
+              <h3 className="block text-white font-medium mb-2">Descripción</h3>
+              <p className="text-white/80 text-sm">{item.description}</p>
             </div>
           )}
         </div>
