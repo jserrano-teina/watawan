@@ -4,11 +4,88 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ReservationModal from './modals/ReservationModal';
 import ProductImage from './ProductImage';
+import { X, ExternalLink } from 'lucide-react';
 
 interface SharedWishlistViewProps {
   owner: User;
   items: WishItem[];
   onReserveItem: (itemId: number, reserverName: string) => Promise<void>;
+}
+
+// Modal para mostrar detalles del ítem sin permitir edición
+interface DetailsModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  item: WishItem | null;
+  onReserveClick: () => void;
+}
+
+// Componente de modal de detalles
+const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onReserveClick }) => {
+  if (!isOpen || !item) return null;
+  
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 overflow-auto">
+      <div className="bg-[#1a1a1a] rounded-xl max-w-md w-full max-h-[90vh] overflow-auto relative">
+        {/* Botón de cierre */}
+        <button 
+          onClick={onClose} 
+          className="absolute top-2 right-2 text-white/70 hover:text-white z-10 bg-black/20 rounded-full p-1"
+        >
+          <X size={20} />
+        </button>
+        
+        {/* Imagen del producto */}
+        <div className="w-full h-52 bg-[#252525] relative">
+          <ProductImage 
+            imageUrl={item.imageUrl} 
+            title={item.title}
+            purchaseLink={item.purchaseLink}
+            className="w-full h-full object-contain"
+          />
+        </div>
+        
+        {/* Información del producto */}
+        <div className="p-5">
+          <h3 className="text-xl font-semibold text-white mb-2">{item.title}</h3>
+          
+          {item.price && (
+            <div className="mb-3">
+              <span className="text-white font-semibold text-lg">{item.price}</span>
+            </div>
+          )}
+          
+          {item.description && (
+            <div className="mb-4">
+              <h4 className="text-sm text-white/70 mb-1">Descripción</h4>
+              <p className="text-white">{item.description}</p>
+            </div>
+          )}
+          
+          <div className="mb-6">
+            <h4 className="text-sm text-white/70 mb-1">Enlace</h4>
+            <a 
+              href={item.purchaseLink} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 hover:underline text-sm flex items-center"
+            >
+              <ExternalLink size={14} className="mr-1" />
+              Ver en tienda online
+            </a>
+          </div>
+          
+          {/* Botón de reservar */}
+          <button 
+            onClick={onReserveClick}
+            className="w-full bg-primary text-white py-3 rounded-md font-medium text-center hover:bg-primary/90 transition-colors"
+          >
+            Lo regalaré yo
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({ 
@@ -17,6 +94,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   onReserveItem
 }) => {
   const [showReservationModal, setShowReservationModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItem | undefined>(undefined);
   
   const availableItems = items.filter(item => !item.isReserved);
@@ -92,8 +170,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           availableItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
-              onClick={() => handleReserveClick(item)}
+              className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative hover:bg-[#262626] transition-colors shadow-md"
             >
               <div className="flex">
                 {/* Imagen a la izquierda con border radius reducido */}
@@ -125,7 +202,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                       )}
                     </div>
                     
-                    <div className="mt-2 flex items-center justify-between">
+                    <div className="mt-2">
                       <a 
                         href={item.purchaseLink} 
                         target="_blank" 
@@ -136,15 +213,28 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
                         Ver producto
                       </a>
-                      <button 
-                        onClick={() => handleReserveClick(item)}
-                        className="bg-primary text-white px-4 py-1.5 rounded-md text-sm font-medium flex-shrink-0 hover:bg-primary/90 transition-colors"
-                      >
-                        Lo regalaré yo
-                      </button>
                     </div>
                   </div>
                 </div>
+              </div>
+              
+              {/* Botones horizontales */}
+              <div className="grid grid-cols-2 gap-2 mt-4">
+                <button 
+                  onClick={() => {
+                    setSelectedItem(item);
+                    setShowDetailsModal(true);
+                  }}
+                  className="bg-[#252525] hover:bg-[#333] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Ver más
+                </button>
+                <button 
+                  onClick={() => handleReserveClick(item)}
+                  className="bg-[#252525] hover:bg-[#333] text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Lo regalaré yo
+                </button>
               </div>
             </div>
           ))
@@ -212,6 +302,16 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         onClose={() => setShowReservationModal(false)}
         onConfirm={handleConfirmReservation}
         item={selectedItem}
+      />
+
+      <DetailsModal 
+        isOpen={showDetailsModal}
+        onClose={() => setShowDetailsModal(false)}
+        item={selectedItem || null}
+        onReserveClick={() => {
+          setShowDetailsModal(false);
+          setShowReservationModal(true);
+        }}
       />
     </div>
   );
