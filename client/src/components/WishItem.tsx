@@ -93,8 +93,8 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
     >
       
       <div className="flex">
-        {/* Imagen a la izquierda - border radius muy reducido */}
-        <div className="w-24 h-24 bg-[#252525] rounded-sm overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm">
+        {/* Imagen a la izquierda con border radius reducido */}
+        <div className="w-24 h-24 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
           <ProductImage 
             imageUrl={item.imageUrl} 
             productId={productId}
