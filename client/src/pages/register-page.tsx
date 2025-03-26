@@ -1,157 +1,156 @@
-import { useState, useEffect } from 'react';
-import { useLocation, Redirect, Link } from 'wouter';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { useAuth } from '@/hooks/use-auth';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
-import { Gift, Lock, User, Mail, Loader2 } from 'lucide-react';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Link, useLocation } from "wouter";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { useEffect } from "react";
 
-// Esquema de validación
 const registerSchema = z.object({
-  email: z.string().email("Introduce un correo electrónico válido"),
-  password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
-  displayName: z.string().min(2, "El nombre mostrado debe tener al menos 2 caracteres"),
+  email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
+  displayName: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres" }),
 });
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
 export default function RegisterPage() {
-  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { user, isLoading, registerMutation } = useAuth();
+  const [, setLocation] = useLocation();
+  const { user, registerMutation } = useAuth();
 
-  // Direccionar al inicio si ya está autenticado
-  useEffect(() => {
-    if (user) {
-      navigate('/');
-    }
-  }, [user, navigate]);
-
-  // Formulario de registro
-  const registerForm = useForm<RegisterFormValues>({
+  const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      email: '',
-      password: '',
-      displayName: '',
+      email: "",
+      password: "",
+      displayName: "",
     },
   });
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
-    registerMutation.mutate(data, {
-      onError: (error: Error) => {
-        toast({
-          title: "Error de registro",
-          description: error.message,
-          variant: "destructive",
-        });
+    registerMutation.mutate(
+      {
+        email: data.email,
+        password: data.password,
+        displayName: data.displayName,
+      },
+      {
+        onSuccess: () => {
+          toast({
+            title: "Registro exitoso",
+            description: "¡Bienvenido a WishList!",
+          });
+          setLocation("/");
+        },
+        onError: (error: Error) => {
+          toast({
+            title: "Error al registrarse",
+            description: error.message || "No se pudo completar el registro",
+            variant: "destructive",
+          });
+        },
       }
-    });
+    );
   };
 
-  // Si el usuario ya está autenticado, redirigir a la página principal
-  if (user) {
-    return <Redirect to="/" />;
-  }
+  // Redirigir si el usuario ya está autenticado
+  useEffect(() => {
+    if (user) {
+      setLocation("/");
+    }
+  }, [user, setLocation]);
 
   return (
-    <div className="min-h-screen bg-[#121212] flex flex-col">
-      <div className="flex-grow flex flex-col items-center justify-center p-6">
-        <div className="w-full max-w-md space-y-8">
-          <div className="text-center">
-            <div className="flex items-center justify-center mb-6">
-              <Gift size={32} className="mr-3 text-primary" />
-              <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-white">
-                MiWishlist
-              </h1>
-            </div>
-            <h2 className="text-2xl font-bold text-white">Crear cuenta</h2>
-            <p className="mt-2 text-gray-400">
-              Regístrate para crear y compartir tus listas de deseos
-            </p>
-          </div>
-
-          <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="mt-8 space-y-6">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName">Nombre completo</Label>
-                <div className="relative">
-                  <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="displayName"
-                    placeholder="Tu nombre completo"
-                    className="pl-10 bg-[#252525] border-[#333] text-white"
-                    {...registerForm.register("displayName")}
-                  />
-                </div>
-                {registerForm.formState.errors.displayName && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.displayName.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="email">Correo electrónico</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="tu@email.com"
-                    className="pl-10 bg-[#252525] border-[#333] text-white"
-                    {...registerForm.register("email")}
-                  />
-                </div>
-                {registerForm.formState.errors.email && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.email.message}</p>
-                )}
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="password">Contraseña</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="••••••••"
-                    className="pl-10 bg-[#252525] border-[#333] text-white"
-                    {...registerForm.register("password")}
-                  />
-                </div>
-                {registerForm.formState.errors.password && (
-                  <p className="text-sm text-red-500">{registerForm.formState.errors.password.message}</p>
-                )}
-              </div>
-            </div>
-
-            <Button 
-              type="submit" 
-              className="w-full"
-              disabled={registerMutation.isPending}
-            >
-              {registerMutation.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Creando cuenta...
-                </>
-              ) : (
-                "Crear cuenta"
-              )}
-            </Button>
-
-            <div className="text-center text-gray-400 mt-4">
-              ¿Ya tienes una cuenta?{' '}
+    <div className="flex min-h-screen bg-background">
+      <div className="flex flex-col w-full items-center justify-center px-4 py-12">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
+            <CardDescription>
+              Registra una nueva cuenta para empezar a usar WishList
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onRegisterSubmit)}
+                className="space-y-4"
+              >
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Correo electrónico</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="tu@email.com"
+                          type="email"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="displayName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Nombre</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="Tu nombre"
+                          type="text"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="password"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contraseña</FormLabel>
+                      <FormControl>
+                        <Input
+                          placeholder="••••••••"
+                          type="password"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={registerMutation.isPending}
+                >
+                  {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+                </Button>
+              </form>
+            </Form>
+          </CardContent>
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-sm text-muted-foreground text-center">
+              ¿Ya tienes una cuenta?{" "}
               <Link href="/login" className="text-primary hover:underline">
                 Inicia sesión
               </Link>
             </div>
-          </form>
-        </div>
+          </CardFooter>
+        </Card>
       </div>
     </div>
   );
