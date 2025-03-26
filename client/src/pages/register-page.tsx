@@ -67,90 +67,89 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <div className="flex flex-col w-full items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Crear cuenta</CardTitle>
-            <CardDescription>
-              Registra una nueva cuenta para empezar a usar WishList
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onRegisterSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo electrónico</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="tu@email.com"
-                          type="email"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="displayName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Nombre</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="Tu nombre"
-                          type="text"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contraseña</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          type="password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={registerMutation.isPending}
-                >
-                  {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-muted-foreground text-center">
+      <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
+        <div className="w-full mb-8">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Crear cuenta</h1>
+          <p className="text-muted-foreground">
+            Registra una nueva cuenta para empezar a usar WishList
+          </p>
+        </div>
+        
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onRegisterSubmit)}
+            className="space-y-5 w-full"
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo electrónico</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="tu@email.com"
+                      type="email"
+                      className="bg-background"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="displayName"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Nombre</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Tu nombre"
+                      type="text"
+                      className="bg-background"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="••••••••"
+                      type="password"
+                      className="bg-background"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={registerMutation.isPending}
+            >
+              {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+            </Button>
+            
+            <div className="text-sm text-muted-foreground text-center pt-4">
               ¿Ya tienes una cuenta?{" "}
               <Link href="/login" className="text-primary hover:underline">
                 Inicia sesión
               </Link>
             </div>
-          </CardFooter>
-        </Card>
+          </form>
+        </Form>
       </div>
     </div>
   );

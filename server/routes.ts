@@ -20,14 +20,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Get user's wishlist
   router.get("/wishlist", requireAuth, async (req: Request, res: Response) => {
+    // En este punto sabemos que req.user existe porque requireAuth lo verifica
+    const user = req.user as User;
     
-    const wishlists = await storage.getUserWishlists(req.user.id);
+    const wishlists = await storage.getUserWishlists(user.id);
     
     if (wishlists.length === 0) {
       // Create a default wishlist if none exists
       const shareableLink = nanoid(10);
       const newWishlist = await storage.createWishlist({
-        userId: req.user.id,
+        userId: user.id,
         shareableLink
       });
       return res.json(newWishlist);

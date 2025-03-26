@@ -207,6 +207,7 @@ export function setupAuth(app: Express) {
 
 /**
  * Middleware para proteger rutas que requieren autenticación
+ * Este middleware asegura que req.user está disponible
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
   if (req.isAuthenticated()) {

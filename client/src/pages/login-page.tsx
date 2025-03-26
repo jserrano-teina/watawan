@@ -64,73 +64,71 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <div className="flex flex-col w-full items-center justify-center px-4 py-12">
-        <Card className="w-full max-w-md">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-bold">Inicia sesión</CardTitle>
-            <CardDescription>
-              Ingresa tus credenciales para acceder a tu cuenta
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onLoginSubmit)}
-                className="space-y-4"
-              >
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Correo electrónico</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="tu@email.com"
-                          type="email"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="password"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Contraseña</FormLabel>
-                      <FormControl>
-                        <Input
-                          placeholder="••••••••"
-                          type="password"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button
-                  type="submit"
-                  className="w-full"
-                  disabled={loginMutation.isPending}
-                >
-                  {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-sm text-muted-foreground text-center">
+      <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
+        <div className="w-full mb-8">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Inicia sesión</h1>
+          <p className="text-muted-foreground">
+            Ingresa tus credenciales para acceder a tu cuenta
+          </p>
+        </div>
+        
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onLoginSubmit)}
+            className="space-y-5 w-full"
+          >
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Correo electrónico</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="tu@email.com"
+                      type="email"
+                      className="bg-background"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="••••••••"
+                      type="password"
+                      className="bg-background"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={loginMutation.isPending}
+            >
+              {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
+            </Button>
+            
+            <div className="text-sm text-muted-foreground text-center pt-4">
               ¿No tienes una cuenta?{" "}
               <Link href="/register" className="text-primary hover:underline">
                 Regístrate
               </Link>
             </div>
-          </CardFooter>
-        </Card>
+          </form>
+        </Form>
       </div>
     </div>
   );
