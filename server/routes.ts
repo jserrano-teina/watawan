@@ -9,45 +9,17 @@ import {
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
-
-// Mock user ID for demo purposes - in a real app, this would come from authentication
-const DEMO_USER_ID = 1;
+import { setupAuth, requireAuth } from "./auth";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   const router = express.Router();
 
-  // Middleware to add current user to requests
-  router.use(async (req: Request & { user?: User }, res, next) => {
-    try {
-      // In a real app, this would use authentication
-      // For demo, we'll use the default user
-      const user = await storage.getUser(DEMO_USER_ID);
-      if (user) {
-        req.user = user;
-      }
-      next();
-    } catch (error) {
-      next(error);
-    }
-  });
-
-  // Get current user
-  router.get("/user", async (req: Request & { user?: User }, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    // Don't send password to client
-    const { password, ...userWithoutPassword } = req.user;
-    res.json(userWithoutPassword);
-  });
+  // Configurar autenticación
+  setupAuth(app);
 
   // Get user's wishlist
-  router.get("/wishlist", async (req: Request & { user?: User }, res: Response) => {
-    if (!req.user) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
+  router.get("/wishlist", requireAuth, async (req: Request, res: Response) => {
     
     const wishlists = await storage.getUserWishlists(req.user.id);
     
