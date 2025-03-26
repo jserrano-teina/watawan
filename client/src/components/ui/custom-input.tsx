@@ -11,7 +11,7 @@ const CustomInput = React.forwardRef<HTMLInputElement, CustomInputProps>(
       <input
         type={type}
         className={cn(
-          "w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white",
+          "w-full h-[50px] px-4 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white",
           className
         )}
         ref={ref}
