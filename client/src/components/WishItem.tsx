@@ -83,7 +83,10 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     setShowMenu(false);
-    onDelete(item);
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
+      onDelete(item);
+    }
   };
 
   return (

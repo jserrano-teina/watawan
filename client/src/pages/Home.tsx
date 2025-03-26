@@ -40,14 +40,12 @@ const Home: React.FC = () => {
   };
 
   const handleDeleteWish = async (item: WishItemType) => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
-      try {
-        await deleteWishItem.mutateAsync(item.id);
-        showToast('Deseo eliminado correctamente', 'success');
-      } catch (error) {
-        console.error('Error deleting wish:', error);
-        showToast('Error al eliminar el deseo', 'error');
-      }
+    try {
+      await deleteWishItem.mutateAsync(item.id);
+      showToast('Deseo eliminado correctamente', 'success');
+    } catch (error) {
+      console.error('Error deleting wish:', error);
+      showToast('Error al eliminar el deseo', 'error');
     }
   };
 
