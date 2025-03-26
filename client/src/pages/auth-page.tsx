@@ -14,12 +14,11 @@ import { Gift, Lock, User, Mail, Loader2 } from 'lucide-react';
 
 // Esquemas de validación
 const loginSchema = z.object({
-  username: z.string().min(3, "El nombre de usuario debe tener al menos 3 caracteres"),
+  email: z.string().email("Introduce un correo electrónico válido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
 });
 
 const registerSchema = z.object({
-  username: z.string().min(3, "El nombre de usuario debe tener al menos 3 caracteres"),
   email: z.string().email("Introduce un correo electrónico válido"),
   password: z.string().min(6, "La contraseña debe tener al menos 6 caracteres"),
   displayName: z.string().min(2, "El nombre mostrado debe tener al menos 2 caracteres"),
@@ -46,7 +45,7 @@ export default function AuthPage() {
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
+      email: '',
       password: '',
     },
   });
@@ -55,7 +54,6 @@ export default function AuthPage() {
   const registerForm = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      username: '',
       email: '',
       password: '',
       displayName: '',
@@ -118,18 +116,19 @@ export default function AuthPage() {
               <form onSubmit={loginForm.handleSubmit(onLoginSubmit)}>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-username">Nombre de usuario</Label>
+                    <Label htmlFor="login-email">Correo electrónico</Label>
                     <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                       <Input
-                        id="login-username"
-                        placeholder="username"
+                        id="login-email"
+                        type="email"
+                        placeholder="tu@email.com"
                         className="pl-10 bg-[#252525] border-[#333]"
-                        {...loginForm.register("username")}
+                        {...loginForm.register("email")}
                       />
                     </div>
-                    {loginForm.formState.errors.username && (
-                      <p className="text-sm text-red-500">{loginForm.formState.errors.username.message}</p>
+                    {loginForm.formState.errors.email && (
+                      <p className="text-sm text-red-500">{loginForm.formState.errors.email.message}</p>
                     )}
                   </div>
                   
@@ -187,22 +186,6 @@ export default function AuthPage() {
                     </div>
                     {registerForm.formState.errors.displayName && (
                       <p className="text-sm text-red-500">{registerForm.formState.errors.displayName.message}</p>
-                    )}
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="register-username">Nombre de usuario</Label>
-                    <div className="relative">
-                      <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                      <Input
-                        id="register-username"
-                        placeholder="username"
-                        className="pl-10 bg-[#252525] border-[#333]"
-                        {...registerForm.register("username")}
-                      />
-                    </div>
-                    {registerForm.formState.errors.username && (
-                      <p className="text-sm text-red-500">{registerForm.formState.errors.username.message}</p>
                     )}
                   </div>
                   

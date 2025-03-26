@@ -14,7 +14,6 @@ declare global {
     // Usar una interfaz para extender, no el mismo tipo
     interface User {
       id: number;
-      username: string;
       email: string;
       password: string;
       displayName?: string;
@@ -79,25 +78,28 @@ export function setupAuth(app: Express) {
 
   // Configurar estrategia de autenticación local
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        // Intentar obtener usuario por nombre de usuario
-        const user = await storage.getUserByUsername(username);
-        
-        // Si no encontramos usuario o la contraseña no coincide, autenticación fallida
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: "Credenciales incorrectas" });
+    new LocalStrategy(
+      { usernameField: 'email' }, // Usar email como campo de identificación
+      async (email, password, done) => {
+        try {
+          // Intentar obtener usuario por email
+          const user = await storage.getUserByEmail(email);
+          
+          // Si no encontramos usuario o la contraseña no coincide, autenticación fallida
+          if (!user || !(await comparePasswords(password, user.password))) {
+            return done(null, false, { message: "Credenciales incorrectas" });
+          }
+          
+          // Actualizar último inicio de sesión
+          await storage.updateLastLogin(user.id);
+          
+          // Autenticación exitosa
+          return done(null, user);
+        } catch (error) {
+          return done(error);
         }
-        
-        // Actualizar último inicio de sesión
-        await storage.updateLastLogin(user.id);
-        
-        // Autenticación exitosa
-        return done(null, user);
-      } catch (error) {
-        return done(error);
       }
-    })
+    )
   );
 
   // Serializar usuario para almacenar en sesión
@@ -123,12 +125,7 @@ export function setupAuth(app: Express) {
   // Registro de nuevo usuario
   app.post("/api/register", async (req, res, next) => {
     try {
-      // Verificar si ya existe un usuario con ese nombre o email
-      const existingUserByUsername = await storage.getUserByUsername(req.body.username);
-      if (existingUserByUsername) {
-        return res.status(400).json({ message: "El nombre de usuario ya está en uso" });
-      }
-      
+      // Verificar si ya existe un usuario con ese email
       const existingUserByEmail = await storage.getUserByEmail(req.body.email);
       if (existingUserByEmail) {
         return res.status(400).json({ message: "El correo electrónico ya está registrado" });
