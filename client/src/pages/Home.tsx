@@ -8,6 +8,7 @@ import BottomNavigation from '../components/BottomNavigation';
 import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
 import WishDetailModal from '../components/modals/WishDetailModal';
+import Header from '../components/Header';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
@@ -87,7 +88,7 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
-      <div className="pt-6"></div>
+      <Header user={user} />
       <main className="flex-grow container mx-auto px-4 pb-24">
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
