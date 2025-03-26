@@ -175,7 +175,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
               </SheetTrigger>
               <SheetContent 
                 side="bottom" 
-                className="px-0 pt-0 pb-6 bg-[#1e1e1e] rounded-t-3xl border-t-0"
+                className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
               >
                 <SheetHeader className="sr-only">
                   <SheetTitle>{item.title}</SheetTitle>
