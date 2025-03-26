@@ -44,21 +44,18 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
 
   const productId = getProductId();
 
-  // Variable para controlar si recientemente se cerró el sheet
-  const [recentlyClosed, setRecentlyClosed] = useState(false);
-
   // Función para manejar el clic en el ítem
   const handleItemClick = (e: React.MouseEvent) => {
-    // Si el sheet se cerró recientemente, no abrir el modal de detalle
-    if (recentlyClosed) {
-      return;
-    }
-
     // Evitar que se abra el modal si se hace clic en los botones o en el enlace
     if (
       (e.target as HTMLElement).closest('button') || 
       (e.target as HTMLElement).closest('a')
     ) {
+      return;
+    }
+    
+    // No abrir el detalle si el sheet está abierto
+    if (open) {
       return;
     }
     
@@ -130,18 +127,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
             {/* Menú de opciones con bottom sheet */}
             <Sheet 
               open={open} 
-              onOpenChange={(newOpen) => {
-                setOpen(newOpen);
-                // Prevenir que el evento se propague al padre cuando se cierra
-                if (!newOpen) {
-                  // Marcar como recientemente cerrado para evitar la apertura del detalle
-                  setRecentlyClosed(true);
-                  // Restaurar el estado después de un breve período
-                  setTimeout(() => {
-                    setRecentlyClosed(false);
-                  }, 300);
-                }
-              }}
+              onOpenChange={setOpen}
             >
               <SheetTrigger asChild>
                 <button 
@@ -155,11 +141,6 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                 </button>
               </SheetTrigger>
               <SheetContent 
-                onPointerDownOutside={(e) => {
-                  e.preventDefault();
-                  // Detener la propagación del evento
-                  e.stopPropagation();
-                }}
                 side="bottom" 
                 className="px-0 pt-0 pb-6 bg-[#1e1e1e] rounded-t-3xl border-t-0"
               >
