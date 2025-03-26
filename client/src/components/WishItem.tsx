@@ -91,7 +91,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
 
   return (
     <div 
-      className="bg-[#1e1e1e] rounded-xl p-4 my-1 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md"
+      className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
       onClick={handleItemClick}
     >
       
