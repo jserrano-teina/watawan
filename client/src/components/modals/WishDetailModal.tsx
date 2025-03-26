@@ -93,7 +93,7 @@ const DesktopView = ({
 
             {/* Detalles del producto */}
             <div className="p-5">
-              <h2 className="text-xl font-medium mb-3 text-white">{item.title}</h2>
+              <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
               
               {item.price && (
                 <div className="flex items-center mb-4">
@@ -106,22 +106,22 @@ const DesktopView = ({
               {/* Descripción */}
               {item.description && (
                 <div className="mb-6">
-                  <h3 className="block text-white font-medium mb-2">Descripción</h3>
+                  <h3 className="block text-white text-sm mb-2">Descripción</h3>
                   <p className="text-white/80 text-sm">{item.description}</p>
                 </div>
               )}
               
               {/* Enlace externo */}
               <div className="mb-6">
-                <h3 className="block text-white font-medium mb-2">Enlace de compra</h3>
+                <h3 className="block text-white text-sm mb-2">Enlace de compra</h3>
                 <a 
                   href={item.purchaseLink} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center text-primary text-sm max-w-full"
+                  className="flex items-center justify-between text-primary text-sm max-w-full"
                 >
-                  <ExternalLink size={14} className="mr-2 flex-shrink-0" />
-                  <span className="truncate">{item.purchaseLink}</span>
+                  <span className="truncate mr-2">{item.purchaseLink}</span>
+                  <ExternalLink size={16} className="flex-shrink-0" />
                 </a>
               </div>
               
@@ -140,8 +140,7 @@ const DesktopView = ({
                     <Check className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti</p>
-                    <p className="text-white text-sm mt-1">¡Pronto sabrás quién es! 🎁</p>
+                    <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
                   </div>
                 </div>
               )}
@@ -286,30 +285,29 @@ const MobileView = ({
                 <Check className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti</p>
-                <p className="text-white text-sm mt-1">¡Pronto sabrás quién es! 🎁</p>
+                <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
               </div>
             </div>
           )}
           
           {/* Enlace externo - ahora antes de la descripción */}
           <div className="mb-6">
-            <h3 className="block text-white font-medium mb-2">Enlace de compra</h3>
+            <h3 className="block text-white text-sm mb-2">Enlace de compra</h3>
             <a 
               href={item.purchaseLink} 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center text-primary text-sm max-w-full"
+              className="flex items-center justify-between text-primary text-sm max-w-full"
             >
-              <ExternalLink size={14} className="mr-2 flex-shrink-0" />
-              <span className="truncate">{item.purchaseLink}</span>
+              <span className="truncate mr-2">{item.purchaseLink}</span>
+              <ExternalLink size={16} className="flex-shrink-0" />
             </a>
           </div>
           
           {/* Descripción */}
           {item.description && (
             <div className="mb-6">
-              <h3 className="block text-white font-medium mb-2">Descripción</h3>
+              <h3 className="block text-white text-sm mb-2">Descripción</h3>
               <p className="text-white/80 text-sm">{item.description}</p>
             </div>
           )}
