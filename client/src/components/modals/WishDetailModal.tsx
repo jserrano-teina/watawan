@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WishDetailModalProps {
@@ -93,7 +93,12 @@ const DesktopView = ({
 
             {/* Detalles del producto */}
             <div className="p-5">
-              <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
+                <button className="p-1 hover:bg-[#252525] rounded-full transition-colors">
+                  <MoreVertical size={20} className="text-white/70" />
+                </button>
+              </div>
               
               {item.price && (
                 <div className="flex items-center mb-4">
@@ -140,7 +145,7 @@ const DesktopView = ({
                     <Check className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
+                    <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
                   </div>
                 </div>
               )}
@@ -262,7 +267,12 @@ const MobileView = ({
         {/* Detalles del producto */}
         <div className="p-6">
           {/* Nombre del producto con mayor tamaño y peso */}
-          <h2 className="text-2xl font-semibold mb-3 text-white">{item.title}</h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
+            <button className="p-1 hover:bg-[#252525] rounded-full transition-colors">
+              <MoreVertical size={20} className="text-white/70" />
+            </button>
+          </div>
           
           {/* Precio como texto normal de mayor tamaño */}
           {item.price && (
@@ -274,7 +284,7 @@ const MobileView = ({
           )}
           
           {/* Fecha de adición con color secundario y mejor formato */}
-          <div className="text-gray-400 text-sm mb-3">
+          <div className="text-gray-400 text-sm mb-5">
             Añadido {formattedDate}
           </div>
           
@@ -285,7 +295,7 @@ const MobileView = ({
                 <Check className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
+                <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
               </div>
             </div>
           )}
