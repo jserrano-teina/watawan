@@ -18,12 +18,11 @@ type AuthContextType = {
 };
 
 type LoginData = {
-  username: string;
+  email: string;
   password: string;
 };
 
 type RegisterData = {
-  username: string;
   email: string;
   password: string;
   displayName: string;
@@ -56,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "¡Bienvenido!",
-        description: `Has iniciado sesión como ${user.displayName || user.username}`,
+        description: `Has iniciado sesión como ${user.displayName || user.email}`,
       });
     },
     onError: (error: Error) => {
@@ -78,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       queryClient.setQueryData(["/api/user"], user);
       toast({
         title: "¡Cuenta creada!",
-        description: `Bienvenido, ${user.displayName || user.username}`,
+        description: `Bienvenido, ${user.displayName || user.email}`,
       });
     },
     onError: (error: Error) => {

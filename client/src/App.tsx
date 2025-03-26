@@ -5,7 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SharedList from "@/pages/SharedList";
-import AuthPage from "@/pages/auth-page";
+import LoginPage from "@/pages/login-page";
+import RegisterPage from "@/pages/register-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import React from "react";
@@ -14,7 +15,8 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Home} />
-      <Route path="/auth" component={AuthPage} />
+      <Route path="/login" component={LoginPage} />
+      <Route path="/register" component={RegisterPage} />
       <Route path="/share/:id" component={SharedList} />
       <Route component={NotFound} />
     </Switch>
