@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { WishItem as WishItemType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProductImage from './ProductImage';
-import { MoreVertical } from 'lucide-react';
-import ActionToast from './ActionToast';
+import { MoreVertical, Edit, Trash, ExternalLink } from 'lucide-react';
 
 interface WishItemProps {
   item: WishItemType;
@@ -14,7 +13,8 @@ interface WishItemProps {
 }
 
 const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) => {
-  const [showActionToast, setShowActionToast] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
@@ -53,83 +53,127 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
     }
   };
   
-  // Función para mostrar el toast de acciones
-  const handleShowActions = (e: React.MouseEvent) => {
+  // Cerrar el menú cuando se hace clic fuera
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowMenu(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+  
+  // Función para abrir enlace externamente
+  const openExternalLink = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setShowActionToast(true);
+    window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
   };
   
-  // Función para cerrar el toast
-  const handleCloseToast = () => {
-    setShowActionToast(false);
+  // Funciones para editar y eliminar
+  const handleEdit = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    onEdit(item);
+  };
+  
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    
+    if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
+      onDelete(item);
+    }
   };
 
   return (
-    <>
-      <div 
-        className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
-        onClick={handleItemClick}
-      >
-        <div className="flex">
-          {/* Imagen a la izquierda con border radius reducido y altura reducida */}
-          <div className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
-            <ProductImage 
-              imageUrl={item.imageUrl} 
-              productId={productId}
-              title={item.title}
-              purchaseLink={item.purchaseLink}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {/* Contenido a la derecha */}
-          <div className="flex-grow min-w-0 flex flex-col justify-center">
-            <div className="flex justify-between items-center">
-              <div>
-                {/* Nombre del producto con mayor tamaño y peso */}
-                <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
-                
-                <div className="flex items-center mt-1 gap-2">
-                  {/* Tag de reservado */}
-                  {item.isReserved && (
-                    <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs font-medium rounded-full">
-                      Reservado
-                    </span>
-                  )}
-                  
-                  {/* Precio con mayor tamaño y color blanco */}
-                  {item.price && (
-                    <span className="text-white font-medium text-base">
-                      {item.price}
-                    </span>
-                  )}
-                </div>
-              </div>
+    <div 
+      className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
+      onClick={handleItemClick}
+    >
+      
+      <div className="flex">
+        {/* Imagen a la izquierda con border radius reducido y altura reducida */}
+        <div className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
+          <ProductImage 
+            imageUrl={item.imageUrl} 
+            productId={productId}
+            title={item.title}
+            purchaseLink={item.purchaseLink}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        
+        {/* Contenido a la derecha */}
+        <div className="flex-grow min-w-0 flex flex-col justify-center">
+          <div className="flex justify-between items-center">
+            <div>
+              {/* Nombre del producto con mayor tamaño y peso */}
+              <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
               
-              {/* Botón de opciones */}
-              <div className="menu-container self-center">
-                <button 
-                  onClick={handleShowActions}
-                  className="text-white/70 hover:text-white p-1"
-                  aria-label="Opciones"
-                >
-                  <MoreVertical size={18} />
-                </button>
+              <div className="flex items-center mt-1 gap-2">
+                {/* Tag de reservado */}
+                {item.isReserved && (
+                  <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs font-medium rounded-full">
+                    Reservado
+                  </span>
+                )}
+                
+                {/* Precio con mayor tamaño y color blanco */}
+                {item.price && (
+                  <span className="text-white font-medium text-base">
+                    {item.price}
+                  </span>
+                )}
               </div>
+            </div>
+            
+            {/* Menú de 3 puntos centrado verticalmente */}
+            <div className="relative menu-container self-center" ref={menuRef}>
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMenu(!showMenu);
+                }}
+                className="text-white/70 hover:text-white p-1"
+                aria-label="Opciones"
+              >
+                <MoreVertical size={18} />
+              </button>
+              
+              {showMenu && (
+                <div className="absolute right-0 top-8 z-10 bg-[#262626] rounded-lg shadow-lg border border-[#333] py-1 w-40">
+                  <button 
+                    onClick={handleEdit}
+                    className={`w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                  >
+                    <Edit size={14} className="mr-2" />
+                    Editar
+                  </button>
+                  <button 
+                    onClick={openExternalLink}
+                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center"
+                  >
+                    <ExternalLink size={14} className="mr-2" />
+                    Ver producto
+                  </button>
+                  <button 
+                    onClick={handleDelete}
+                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center"
+                  >
+                    <Trash size={14} className="mr-2" />
+                    Eliminar
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-      
-      {/* Toast de acciones que se muestra desde arriba */}
-      <ActionToast 
-        item={item}
-        onEdit={onEdit}
-        onDelete={onDelete}
-        onClose={handleCloseToast}
-        show={showActionToast}
-      />
-    </>
+    </div>
   );
 };
 
