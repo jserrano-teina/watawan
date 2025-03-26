@@ -1,5 +1,12 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Copy, X, Share2, Mail } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+} from "@/components/ui/sheet";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -9,8 +16,6 @@ interface ShareModalProps {
 
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink }) => {
   const linkRef = useRef<HTMLInputElement>(null);
-  
-  if (!isOpen) return null;
   
   const fullShareableLink = `${window.location.origin}/share/${shareableLink}`;
   
@@ -42,23 +47,27 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   };
 
   return (
-    <div 
-      className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 modal"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) {
-          onClose();
-        }
-      }}
-    >
-      <div className="bg-[#121212] text-white rounded-lg w-full max-w-md mx-4 shadow-xl border border-[#333]">
-        <div className="flex justify-between items-center p-4 border-b border-[#333]">
-          <h2 className="text-lg font-semibold">Compartir tu lista de deseos</h2>
-          <button onClick={onClose} className="text-white/70 hover:text-white">
-            <X size={20} />
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent 
+        side="bottom" 
+        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Compartir lista de deseos</SheetTitle>
+          <SheetDescription>Opciones para compartir tu lista de deseos</SheetDescription>
+        </SheetHeader>
+        
+        <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
+          <h3 className="text-white text-xl font-medium">Compartir tu lista</h3>
+          <button 
+            onClick={onClose}
+            className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
+          >
+            <X className="h-7 w-7" />
           </button>
         </div>
         
-        <div className="p-5">
+        <div className="px-6 mt-4">
           <p className="text-white/80 mb-6">Comparte este enlace con amigos y familiares para que puedan ver tu lista de deseos</p>
           
           <div className="flex items-center mb-6">
@@ -77,32 +86,34 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
             </button>
           </div>
           
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-4 mt-6">
             <button 
               onClick={shareOnWhatsApp}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-4 bg-[#25D366] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
-              <Share2 size={18} />
+              <Share2 size={18} className="mr-2" />
               Compartir por WhatsApp
             </button>
+            
             <button 
               onClick={shareOnFacebook}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#3b5998] text-white rounded-lg font-medium hover:bg-opacity-90 transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-4 bg-[#3b5998] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
-              <Share2 size={18} />
+              <Share2 size={18} className="mr-2" />
               Compartir en Facebook
             </button>
+            
             <button 
               onClick={shareByEmail}
-              className="flex items-center justify-center gap-2 w-full py-3 bg-[#202020] hover:bg-[#303030] text-white rounded-lg font-medium transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-4 bg-[#202020] hover:bg-[#303030] text-white rounded-xl font-medium transition-colors"
             >
-              <Mail size={18} />
+              <Mail size={18} className="mr-2" />
               Enviar por email
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
