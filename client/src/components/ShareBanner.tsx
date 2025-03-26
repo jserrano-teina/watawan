@@ -6,9 +6,9 @@ interface ShareBannerProps {
 
 const ShareBanner: React.FC<ShareBannerProps> = ({ onShareClick }) => {
   return (
-    <div className="bg-gradient-to-r from-primary/20 to-primary/40 rounded-xl p-5 mt-6 shadow-lg border border-primary/30">
+    <div className="bg-gradient-to-r from-primary/30 to-primary/50 rounded-xl p-5 mt-6 shadow-lg border border-primary/30">
       <div className="flex items-center justify-between">
-        <div className="text-primary">
+        <div className="text-white">
           <h2 className="font-medium text-lg">Comparte tu lista de deseos</h2>
         </div>
         <button 
