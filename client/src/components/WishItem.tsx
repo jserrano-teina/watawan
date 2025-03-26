@@ -133,11 +133,11 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
               </SheetTrigger>
               <SheetContent 
                 side="bottom" 
-                className="px-0 pt-0 pb-6 bg-[#2c2c2c] rounded-t-xl"
+                className="px-0 pt-0 pb-6 bg-[#1e1e1e] rounded-t-3xl border-t-0"
               >
-                <SheetHeader className="text-left border-b border-[#333] pb-2 px-6 pt-6">
-                  <SheetTitle className="text-white text-xl">{item.title}</SheetTitle>
-                </SheetHeader>
+                <div className="text-left px-6 pt-6 pb-2">
+                  <h3 className="text-white text-xl font-medium">{item.title}</h3>
+                </div>
                 
                 <div className="mt-4 flex flex-col">
                   <button 
@@ -166,12 +166,11 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   </button>
                 </div>
                 
-                {/* Botón de cerrar personalizado */}
                 <button 
                   onClick={() => setOpen(false)}
-                  className="absolute right-4 top-4 rounded-full p-2 bg-[#333] text-white opacity-80 hover:opacity-100 transition-opacity"
+                  className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100 transition-opacity"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-7 w-7" />
                 </button>
               </SheetContent>
             </Sheet>
