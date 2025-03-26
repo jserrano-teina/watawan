@@ -13,57 +13,48 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
           {/* Fondo circular suave */}
           <circle cx="256" cy="256" r="200" fill="#1A1A1A" opacity="0.9" />
           
-          {/* Estrella fugaz - cuerpo principal */}
-          <path 
-            d="M146 166L386 346L356 366L116 186L146 166Z" 
-            fill="#333" 
-            stroke="#444" 
-            strokeWidth="2"
-          />
-          
           {/* Estela de la estrella */}
           <path 
-            d="M386 346L436 396C436 396 416 386 396 386C376 386 356 366 356 366L386 346Z" 
-            fill="#444" 
-            stroke="#555" 
-            strokeWidth="2"
+            d="M156 206L306 356L346.5 396L426 436" 
+            stroke="#777" 
+            strokeWidth="14" 
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeDasharray="1 28"
+            opacity="0.6"
           />
           
-          {/* Estrella brillante en la punta */}
           <path 
-            d="M146 166L158 138L186 150L158 108L186 96L146 96L134 66L122 96L82 96L110 108L82 150L110 138L146 166Z" 
+            d="M136 186L286 336" 
+            stroke="#999" 
+            strokeWidth="24" 
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.4"
+          />
+          
+          {/* Estrella brillante principal */}
+          <path 
+            d="M136 186L158 138L196 156L170 106L210 86L150 86L136 46L122 86L62 86L102 106L76 156L114 138L136 186Z" 
             fill="#777" 
             stroke="#999" 
             strokeWidth="2"
           />
           
-          {/* Círculo central con signo más */}
-          <circle 
-            cx="256" 
-            cy="256" 
-            r="40" 
-            fill="#333" 
-            stroke="#555" 
-            strokeWidth="3"
-          />
-          <path 
-            d="M236 256H276M256 236V276" 
-            stroke="#999" 
-            strokeWidth="6" 
-            strokeLinecap="round"
-          />
+          {/* Destellos pequeños alrededor */}
+          <circle cx="320" cy="320" r="8" fill="#666" />
+          <circle cx="380" cy="380" r="6" fill="#666" />
+          <circle cx="410" cy="410" r="4" fill="#666" />
           
-          {/* Destellos pequeños */}
-          <circle cx="200" cy="200" r="6" fill="#666" />
-          <circle cx="300" cy="320" r="8" fill="#666" />
-          <circle cx="180" cy="330" r="5" fill="#666" />
-          <circle cx="320" cy="180" r="7" fill="#666" />
+          {/* Destellos adicionales */}
+          <circle cx="200" cy="140" r="5" fill="#888" />
+          <circle cx="80" cy="200" r="4" fill="#888" />
+          <circle cx="180" cy="80" r="3" fill="#888" />
           
-          {/* Destellos lineales */}
-          <path d="M226 226L246 246" stroke="#666" strokeWidth="3" strokeLinecap="round" />
-          <path d="M266 266L286 286" stroke="#666" strokeWidth="3" strokeLinecap="round" />
-          <path d="M226 286L246 266" stroke="#666" strokeWidth="3" strokeLinecap="round" />
-          <path d="M266 246L286 226" stroke="#666" strokeWidth="3" strokeLinecap="round" />
+          {/* Destellos alrededor de la estrella */}
+          <path d="M106 166L96 156" stroke="#888" strokeWidth="2" strokeLinecap="round" />
+          <path d="M166 106L156 96" stroke="#888" strokeWidth="2" strokeLinecap="round" />
+          <path d="M166 166L176 176" stroke="#888" strokeWidth="2" strokeLinecap="round" />
         </svg>
       </div>
       <h3 className="font-medium text-xl text-white mb-2">Tu lista de deseos está vacía</h3>
