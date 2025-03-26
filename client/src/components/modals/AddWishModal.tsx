@@ -433,7 +433,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
                   )}
                 </div>
-                <p className="text-secondary text-sm mt-2">
+                <p className="text-gray-400 text-sm mt-2">
                   Un enlace a la página de tu producto en Amazon o cualquier otra tienda.{" "}
                   <button 
                     type="button"
@@ -442,7 +442,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       setValueStepTwo('purchaseLink', '');
                       setStep(2);
                     }}
-                    className="text-secondary underline hover:text-white focus:outline-none inline-block"
+                    className="text-gray-400 underline hover:text-white focus:outline-none inline-block"
                   >
                     Omite este paso
                   </button>
@@ -573,7 +573,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {errorsStepTwo.price && (
                 <p className="text-destructive text-sm mt-2">{errorsStepTwo.price.message}</p>
               )}
-              <p className="text-secondary text-sm mt-2">
+              <p className="text-gray-400 text-sm mt-2">
                 El precio de compra actual o un precio aproximado.
               </p>
             </div>
