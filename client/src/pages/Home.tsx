@@ -23,7 +23,10 @@ const Home: React.FC = () => {
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
-  const myWishItems = Array.isArray(items) ? items : [];
+  // Ordenar los items con los más recientes primero
+  const myWishItems = Array.isArray(items) 
+    ? [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    : [];
 
   const handleAddWishClick = () => {
     setItemToEdit(undefined);

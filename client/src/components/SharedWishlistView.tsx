@@ -113,8 +113,10 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItem | undefined>(undefined);
   
-  const availableItems = items.filter(item => !item.isReserved);
-  const reservedItems = items.filter(item => item.isReserved);
+  // Ordenar los items por fecha de creación (más recientes primero) y luego filtrar
+  const sortedItems = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  const availableItems = sortedItems.filter(item => !item.isReserved);
+  const reservedItems = sortedItems.filter(item => item.isReserved);
   
   // Extraer ASIN/ID de producto de URLs de Amazon
   const getProductId = (url?: string): string | undefined => {
