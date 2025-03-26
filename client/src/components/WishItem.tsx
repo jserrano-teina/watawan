@@ -127,7 +127,30 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
             {/* Menú de opciones con bottom sheet */}
             <Sheet 
               open={open} 
-              onOpenChange={setOpen}
+              onOpenChange={(newOpen) => {
+                setOpen(newOpen);
+                // Al cerrarse, programamos un timeout de 100ms para evitar que se abra el detalle
+                if (!newOpen) {
+                  // Prevenir cualquier clic en el elemento por un breve periodo
+                  const item = document.activeElement as HTMLElement;
+                  if (item) {
+                    item.blur();
+                    // Creamos un div transparente que capture todos los clics por un momento
+                    const blocker = document.createElement('div');
+                    blocker.style.position = 'fixed';
+                    blocker.style.top = '0';
+                    blocker.style.left = '0';
+                    blocker.style.right = '0';
+                    blocker.style.bottom = '0';
+                    blocker.style.zIndex = '9999';
+                    document.body.appendChild(blocker);
+                    
+                    setTimeout(() => {
+                      document.body.removeChild(blocker);
+                    }, 100);
+                  }
+                }
+              }}
             >
               <SheetTrigger asChild>
                 <button 
