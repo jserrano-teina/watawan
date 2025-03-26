@@ -55,10 +55,8 @@ const DesktopView = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
-      onDelete(item);
-      onClose();
-    }
+    onDelete(item);
+    onClose();
   };
 
   return (
@@ -219,10 +217,8 @@ const MobileView = ({
   };
 
   const handleDelete = () => {
-    if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
-      onDelete(item);
-      onClose();
-    }
+    onDelete(item);
+    onClose();
   };
 
   useEffect(() => {
