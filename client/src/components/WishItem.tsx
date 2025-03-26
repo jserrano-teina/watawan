@@ -131,37 +131,48 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   <MoreVertical size={18} />
                 </button>
               </SheetTrigger>
-              <SheetContent side="bottom" className="px-0 pt-0 pb-6">
+              <SheetContent 
+                side="bottom" 
+                className="px-0 pt-0 pb-6 bg-[#2c2c2c] rounded-t-xl"
+              >
                 <SheetHeader className="text-left border-b border-[#333] pb-2 px-6 pt-6">
-                  <SheetTitle>Opciones</SheetTitle>
+                  <SheetTitle className="text-white text-xl">{item.title}</SheetTitle>
                 </SheetHeader>
                 
                 <div className="mt-4 flex flex-col">
                   <button 
                     onClick={handleEdit}
-                    className={`w-full text-left px-6 py-4 text-[15px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
                     disabled={item.isReserved}
                   >
-                    <Edit size={18} className="mr-3" />
+                    <Edit size={22} className="mr-4" />
                     Editar
                   </button>
                   
                   <button 
                     onClick={openExternalLink}
-                    className="w-full text-left px-6 py-4 text-[15px] text-white/90 hover:bg-[#333] flex items-center"
+                    className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
                   >
-                    <ExternalLink size={18} className="mr-3" />
+                    <ExternalLink size={22} className="mr-4" />
                     Ver producto
                   </button>
                   
                   <button 
                     onClick={handleDelete}
-                    className="w-full text-left px-6 py-4 text-[15px] text-red-400 hover:bg-[#333] flex items-center"
+                    className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
                   >
-                    <Trash size={18} className="mr-3" />
+                    <Trash size={22} className="mr-4" />
                     Eliminar
                   </button>
                 </div>
+                
+                {/* Botón de cerrar personalizado */}
+                <button 
+                  onClick={() => setOpen(false)}
+                  className="absolute right-4 top-4 rounded-full p-2 bg-[#333] text-white opacity-80 hover:opacity-100 transition-opacity"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </SheetContent>
             </Sheet>
           </div>
