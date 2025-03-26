@@ -4,7 +4,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 interface WishDetailModalProps {
@@ -88,18 +88,7 @@ const DesktopView = ({
                 className="w-full h-full object-contain"
               />
               
-              {/* Badge de reservado */}
-              {item.isReserved && (
-                <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
-                  <div className="bg-[#121212]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
-                    <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                      <i className="fas fa-check text-primary"></i>
-                    </div>
-                    <p className="font-medium text-white text-sm mb-1">¡Alguien ha reservado este regalo!</p>
-                    <p className="text-white/70 text-xs">Será una sorpresa 🎁</p>
-                  </div>
-                </div>
-              )}
+              {/* Eliminamos la superposición */}
             </div>
 
             {/* Detalles del producto */}
@@ -143,6 +132,19 @@ const DesktopView = ({
                   <span>Añadido {formattedDate}</span>
                 </div>
               </div>
+              
+              {/* Banner de reservado */}
+              {item.isReserved && (
+                <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
+                  <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Check className="h-4 w-4 text-green-400" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-green-400 text-sm">¡Alguien ha reservado este regalo!</p>
+                    <p className="text-green-500/70 text-xs mt-0.5">Será una sorpresa 🎁</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -255,18 +257,7 @@ const MobileView = ({
             />
           </div>
           
-          {/* Badge de reservado (superpuesto) */}
-          {item.isReserved && (
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
-              <div className="bg-[#121212]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
-                <div className="w-12 h-12 bg-green-800/30 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-check text-green-400"></i>
-                </div>
-                <p className="font-medium text-white text-sm mb-1">¡Alguien ha reservado este regalo!</p>
-                <p className="text-white/70 text-xs">Será una sorpresa 🎁</p>
-              </div>
-            </div>
-          )}
+          {/* Eliminamos la superposición */}
         </div>
 
         {/* Detalles del producto */}
@@ -284,9 +275,22 @@ const MobileView = ({
           )}
           
           {/* Fecha de adición con color secundario y mejor formato */}
-          <div className="text-gray-400 text-sm mb-6">
+          <div className="text-gray-400 text-sm mb-3">
             Añadido {formattedDate}
           </div>
+          
+          {/* Banner de reservado */}
+          {item.isReserved && (
+            <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-green-400" />
+              </div>
+              <div>
+                <p className="font-medium text-green-400 text-sm">¡Alguien ha reservado este regalo!</p>
+                <p className="text-green-500/70 text-xs mt-0.5">Será una sorpresa 🎁</p>
+              </div>
+            </div>
+          )}
           
           {/* Enlace externo - ahora antes de la descripción */}
           <div className="mb-6">
