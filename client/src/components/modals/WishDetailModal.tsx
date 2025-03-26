@@ -140,8 +140,8 @@ const DesktopView = ({
                     <Check className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
-                    <p className="font-medium text-green-400 text-sm">¡Alguien ha reservado este regalo!</p>
-                    <p className="text-green-500/70 text-xs mt-0.5">Será una sorpresa 🎁</p>
+                    <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti</p>
+                    <p className="text-white text-sm mt-1">¡Pronto sabrás quién es! 🎁</p>
                   </div>
                 </div>
               )}
@@ -286,8 +286,8 @@ const MobileView = ({
                 <Check className="h-5 w-5 text-green-400" />
               </div>
               <div>
-                <p className="font-medium text-green-400 text-sm">¡Alguien ha reservado este regalo!</p>
-                <p className="text-green-500/70 text-xs mt-0.5">Será una sorpresa 🎁</p>
+                <p className="font-medium text-white text-base">Alguien ha reservado este regalo para ti</p>
+                <p className="text-white text-sm mt-1">¡Pronto sabrás quién es! 🎁</p>
               </div>
             </div>
           )}
