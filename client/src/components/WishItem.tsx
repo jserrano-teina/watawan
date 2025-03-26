@@ -9,6 +9,7 @@ import {
   SheetContent,
   SheetHeader,
   SheetTitle,
+  SheetDescription,
   SheetTrigger,
 } from "@/components/ui/sheet";
 
@@ -135,6 +136,10 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                 side="bottom" 
                 className="px-0 pt-0 pb-6 bg-[#1e1e1e] rounded-t-3xl border-t-0"
               >
+                <SheetHeader className="sr-only">
+                  <SheetTitle>{item.title}</SheetTitle>
+                  <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
+                </SheetHeader>
                 <div className="text-left px-6 pt-6 pb-2">
                   <h3 className="text-white text-xl font-medium">{item.title}</h3>
                 </div>
