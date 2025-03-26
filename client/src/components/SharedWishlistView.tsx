@@ -25,11 +25,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
   if (!isOpen || !item) return null;
   
   return (
-    <div className="fixed inset-0 z-50 bg-[#121212] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[var(--color-bg-primary)] overflow-hidden flex flex-col">
       {/* Botón flotante para volver */}
       <button 
         onClick={onClose} 
-        className="fixed top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+        className="fixed top-4 left-4 z-30 btn-icon shadow-lg backdrop-blur-sm"
       >
         <ArrowLeft size={20} />
       </button>
@@ -37,7 +37,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
       {/* Contenido scrolleable */}
       <div className="flex-grow overflow-auto">
         {/* Imagen a sangre al inicio */}
-        <div className="w-full h-72 bg-[#1a1a1a] relative">
+        <div className="w-full h-72 bg-[var(--color-bg-tertiary)] relative">
           <ProductImage 
             imageUrl={item.imageUrl} 
             title={item.title}
@@ -48,25 +48,25 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
         
         {/* Información del producto */}
         <div className="p-5">
-          <h2 className="text-[22px] font-semibold mb-2.5 text-white leading-tight">{item.title}</h2>
+          <h2 className="mb-2.5 leading-tight">{item.title}</h2>
           
           {item.price && (
             <div className="mb-5">
-              <span className="text-white text-xl font-semibold">{item.price}</span>
+              <span className="text-xl font-semibold text-[var(--color-text-primary)]">{item.price}</span>
             </div>
           )}
           
-          <div className="my-4 flex text-[13px] text-gray-400">
-            <span>Añadido hace 1 minuto</span>
+          <div className="my-4 flex text-sm text-[var(--color-text-tertiary)]">
+            <span>Añadido a la lista</span>
           </div>
           
           <div className="mb-5">
-            <h3 className="text-white/90 text-[15px] font-medium mb-1.5">Enlace de compra</h3>
+            <h3 className="font-medium mb-1.5">Enlace de compra</h3>
             <a 
               href={item.purchaseLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-primary text-[13px] flex items-center truncate"
+              className="text-primary text-sm flex items-center truncate"
             >
               <ExternalLink size={14} className="flex-shrink-0 mr-1.5" />
               <span className="truncate">{item.purchaseLink}</span>
@@ -75,27 +75,27 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
           
           {item.description && (
             <div className="mb-5">
-              <h3 className="text-white/90 text-[15px] font-medium mb-1.5">Descripción</h3>
-              <p className="text-white/70 text-[14px]">{item.description}</p>
+              <h3 className="font-medium mb-1.5">Descripción</h3>
+              <p className="text-sm">{item.description}</p>
             </div>
           )}
         </div>
       </div>
       
       {/* Barra inferior fija con botones */}
-      <div className="border-t border-[#333] p-4 grid grid-cols-2 gap-3">
+      <div className="border-t border-[var(--color-border)] p-4 grid grid-cols-2 gap-3">
         <a 
           href={item.purchaseLink} 
           target="_blank" 
           rel="noopener noreferrer"
-          className="bg-[#252525] text-white flex items-center justify-center py-3.5 px-4 rounded-lg font-medium text-sm text-center hover:bg-[#333] transition-colors"
+          className="btn-secondary flex items-center justify-center"
         >
           <ExternalLink size={16} className="mr-2" />
           Enlace de compra
         </a>
         <button 
           onClick={onReserveClick}
-          className="bg-primary text-white py-3.5 px-4 rounded-lg font-medium text-sm text-center hover:bg-primary/90 transition-colors"
+          className="btn-primary"
         >
           Lo regalaré yo
         </button>
@@ -150,34 +150,34 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
-      <div className="py-6 text-center border-b border-[#333] mb-4">
+      <div className="py-6 text-center border-b border-[var(--color-border)] mb-4">
         <div className="w-24 h-24 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
-          <span className="text-2xl font-semibold text-white">
+          <span className="text-2xl font-semibold">
             {owner.initials || owner.displayName?.charAt(0) || 'U'}
           </span>
         </div>
-        <h1 className="text-2xl font-bold text-white">
-          Lista de deseos de {owner.displayName || owner.username}
+        <h1 className="text-gradient">
+          Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
         </h1>
-        <p className="text-white/70 mt-2 text-lg">
+        <p className="mt-2 text-lg">
           Elige un regalo para sorprenderle en su día especial
         </p>
       </div>
 
       <div className="my-6">
-        <h2 className="text-xl font-semibold mb-4 text-white">Disponibles para regalar</h2>
+        <h2 className="mb-4">Disponibles para regalar</h2>
         
         {availableItems.length === 0 ? (
-          <div className="bg-[#1e1e1e] rounded-xl p-8 text-center my-6 shadow-md border border-[#333]">
+          <div className="card p-8 text-center my-6">
             <div className="mx-auto w-24 h-24 flex items-center justify-center mb-4">
-              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/30">
+              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-[var(--color-text-muted)]">
                 <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 <path d="M11.6316 14.4865C11.2177 14.5023 10.4429 14.1896 9.72255 13.4693C9.00221 12.749 8.6895 11.9741 8.70533 11.5603C8.72116 11.1464 8.81192 11.111 9.25421 11.2756C9.6965 11.4403 10.8507 12.0324 10.9575 12.6563C11.0643 13.2802 12.0456 14.4708 11.6316 14.4865Z" fill="currentColor"/>
                 <path d="M13.1258 14.4866C13.5397 14.5023 14.3146 14.1897 15.0349 13.4693C15.7552 12.749 16.068 11.9742 16.0521 11.5603C16.0363 11.1464 15.9455 11.111 15.5032 11.2757C15.0609 11.4403 13.9068 12.0324 13.8 12.6563C13.6932 13.2802 13.1258 14.4866 13.1258 14.4866Z" fill="currentColor"/>
               </svg>
             </div>
-            <h3 className="font-semibold text-xl text-white mb-2">No hay deseos disponibles</h3>
-            <p className="text-white/70 text-base max-w-md mx-auto">
+            <h3 className="text-xl mb-2">No hay deseos disponibles</h3>
+            <p className="text-base max-w-md mx-auto">
               Todos los deseos de esta lista ya han sido reservados o no se han añadido elementos aún. 
               Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
             </p>
@@ -186,7 +186,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           availableItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative hover:bg-[#262626] transition-colors shadow-md"
+              className="card p-4 my-3 hover:bg-[var(--color-bg-tertiary)]"
             >
               <div 
                 className="flex cursor-pointer" 
@@ -196,7 +196,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 }}
               >
                 {/* Imagen a la izquierda con border radius reducido */}
-                <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
+                <div className="w-24 h-24 bg-[var(--color-bg-tertiary)] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm rounded-md">
                   <ProductImage 
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
@@ -209,11 +209,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 {/* Contenido a la derecha - Simplificado */}
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
                   {/* Nombre del producto con mayor tamaño y peso */}
-                  <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                  <h3 className="truncate">{item.title}</h3>
                   
                   {/* Solo precio */}
                   {item.price && (
-                    <span className="text-white font-medium text-base mt-1">
+                    <span className="font-medium text-[var(--color-text-primary)] mt-1">
                       {item.price}
                     </span>
                   )}
@@ -227,13 +227,13 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     setSelectedItem(item);
                     setShowDetailsModal(true);
                   }}
-                  className="bg-[#252525] hover:bg-[#333] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="btn-secondary"
                 >
                   Ver más
                 </button>
                 <button 
                   onClick={() => handleReserveClick(item)}
-                  className="bg-[#252525] hover:bg-[#333] text-primary px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                  className="btn-outline text-primary"
                 >
                   Lo regalaré yo
                 </button>
@@ -244,19 +244,19 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         
         {reservedItems.length > 0 && (
           <>
-            <h2 className="text-xl font-semibold mt-8 mb-4 text-white">Ya reservados</h2>
+            <h2 className="mt-8 mb-4">Ya reservados</h2>
             
             {reservedItems.map(item => (
               <div 
                 key={item.id} 
-                className="bg-[#1e1e1e] rounded-xl p-4 my-2 relative opacity-80 shadow-md"
+                className="card p-4 my-3 opacity-80"
               >
-                <div className="absolute top-1 right-1 bg-green-500 text-white text-xs px-2 py-0.5 rounded-md">
-                  Reservado
+                <div className="absolute top-1 right-1">
+                  <span className="badge badge-success">Reservado</span>
                 </div>
                 <div className="flex">
                   {/* Imagen a la izquierda con border radius reducido */}
-                  <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
+                  <div className="w-24 h-24 bg-[var(--color-bg-tertiary)] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm rounded-md">
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
@@ -269,11 +269,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   {/* Contenido a la derecha - Simplificado */}
                   <div className="flex-grow min-w-0 flex flex-col justify-center">
                     {/* Nombre del producto con mayor tamaño y peso */}
-                    <h3 className="font-semibold text-lg truncate text-white">{item.title}</h3>
+                    <h3 className="truncate">{item.title}</h3>
                     
                     {/* Solo precio */}
                     {item.price && (
-                      <span className="text-white font-medium text-base mt-1">
+                      <span className="font-medium text-[var(--color-text-primary)] mt-1">
                         {item.price}
                       </span>
                     )}
