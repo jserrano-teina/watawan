@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useRoute, Redirect } from 'wouter';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -64,7 +64,7 @@ export default function AuthPage() {
 
   const onLoginSubmit = (data: LoginFormValues) => {
     loginMutation.mutate(data, {
-      onError: (error) => {
+      onError: (error: Error) => {
         toast({
           title: "Error de inicio de sesión",
           description: error.message,
@@ -76,7 +76,7 @@ export default function AuthPage() {
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
     registerMutation.mutate(data, {
-      onError: (error) => {
+      onError: (error: Error) => {
         toast({
           title: "Error de registro",
           description: error.message,
