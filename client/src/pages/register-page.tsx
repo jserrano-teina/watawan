@@ -68,11 +68,8 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
-        <div className="w-full mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Crear cuenta</h1>
-          <p className="text-muted-foreground">
-            Registra una nueva cuenta para empezar a usar WishList
-          </p>
+        <div className="w-full mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2 text-white">Crea tu cuenta</h1>
         </div>
         
         <Form {...form}>
@@ -136,7 +133,7 @@ export default function RegisterPage() {
               className="w-full"
               disabled={registerMutation.isPending}
             >
-              {registerMutation.isPending ? "Creando cuenta..." : "Crear cuenta"}
+              {registerMutation.isPending ? "Creando cuenta..." : "Crear mi cuenta"}
             </Button>
             
             <div className="text-sm text-muted-foreground text-center pt-4">

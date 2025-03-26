@@ -65,11 +65,8 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen bg-background">
       <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
-        <div className="w-full mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">Inicia sesión</h1>
-          <p className="text-muted-foreground">
-            Ingresa tus credenciales para acceder a tu cuenta
-          </p>
+        <div className="w-full mb-8 text-center">
+          <h1 className="text-3xl font-bold mb-2 text-white">Inicia sesión</h1>
         </div>
         
         <Form {...form}>
