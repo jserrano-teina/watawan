@@ -103,7 +103,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
             productId={productId}
             title={item.title}
             purchaseLink={item.purchaseLink}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
           />
         </div>
         
