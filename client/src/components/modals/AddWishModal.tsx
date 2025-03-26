@@ -6,6 +6,9 @@ import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
 import { Package, Image, Edit3 } from 'lucide-react';
 import ProductImage from '../ProductImage';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
@@ -389,9 +392,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   return (
-    <div 
-      className="fixed inset-0 z-50 bg-[#121212] min-h-screen overflow-auto"
-    >
+    <div className="fixed inset-0 z-50 bg-[#121212] min-h-screen overflow-auto">
       <div ref={modalRef} className="flex flex-col h-full text-white">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
           <h2 className="text-xl font-semibold">
@@ -418,20 +419,22 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col">
             <div className="flex-1 flex flex-col justify-center">
               <div>
-                <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
-                  Enlace de compra
-                </label>
-                <input 
-                  type="url" 
-                  id="purchaseLink" 
-                  className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
-                  placeholder="https://..."
-                  {...registerStepOne('purchaseLink')}
-                />
-                {errorsStepOne.purchaseLink && (
-                  <p className="text-red-500 text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
-                )}
-                <p className="text-white/60 text-sm mt-2">
+                <div className="mb-4">
+                  <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2">
+                    Enlace de compra
+                  </label>
+                  <Input
+                    type="url" 
+                    id="purchaseLink" 
+                    className="bg-background"
+                    placeholder="https://..."
+                    {...registerStepOne('purchaseLink')}
+                  />
+                  {errorsStepOne.purchaseLink && (
+                    <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
+                  )}
+                </div>
+                <p className="text-muted-foreground text-sm mt-2">
                   Un enlace a la página de tu producto en Amazon o cualquier otra tienda
                 </p>
                 <button 
@@ -449,17 +452,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             </div>
             
             <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
-              <button 
+              <Button 
                 type="button" 
                 onClick={handleClose}
-                className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
+                variant="outline"
               >
                 Cancelar
-              </button>
-              <button 
+              </Button>
+              <Button 
                 type="submit"
                 disabled={isLoading}
-                className={`px-6 py-3 ${isLoading ? 'bg-gray-600' : 'bg-primary hover:bg-primary/90'} text-white rounded-lg font-medium transition-colors flex items-center justify-center`}
+                className="px-6"
               >
                 {isLoading ? (
                   <>
@@ -472,7 +475,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 ) : (
                   'Continuar'
                 )}
-              </button>
+              </Button>
             </div>
           </form>
         ) : (
@@ -481,25 +484,25 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             {/* Campo de enlace para edición (solo visible en modo edición) */}
             {itemToEdit && (
               <div className="mb-6">
-                <label htmlFor="purchaseLink" className="block text-white font-medium mb-2">
+                <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2">
                   Enlace de compra
                 </label>
-                <input 
+                <Input
                   type="url" 
                   id="purchaseLink" 
-                  className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  className="bg-background"
                   placeholder="https://..."
                   {...registerStepTwo('purchaseLink')}
                 />
                 {errorsStepTwo.purchaseLink && (
-                  <p className="text-red-500 text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
+                  <p className="text-destructive text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
                 )}
               </div>
             )}
             
             {/* Imagen */}
             <div className="mb-2">
-              <label className="block text-white font-medium mb-2">
+              <label className="block text-sm font-medium mb-2">
                 Imagen del producto
               </label>
             </div>
@@ -517,13 +520,13 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             {/* Campo de URL de imagen (oculto por defecto) */}
             {showImageUrlInput && (
               <div className="mb-6">
-                <label htmlFor="imageUrl" className="block text-white font-medium mb-2">
+                <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
                   URL de la imagen
                 </label>
-                <input 
+                <Input
                   type="url" 
                   id="imageUrl" 
-                  className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                  className="bg-background"
                   placeholder="https://ejemplo.com/imagen.jpg"
                   {...registerStepTwo('imageUrl')}
                 />
@@ -531,31 +534,31 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             )}
             
             <div className="mb-6">
-              <label htmlFor="title" className="block text-white font-medium mb-2">
+              <label htmlFor="title" className="block text-sm font-medium mb-2">
                 Nombre del producto
               </label>
-              <input 
+              <Input
                 type="text" 
                 id="title" 
-                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                className="bg-background"
                 placeholder="Introduce un nombre"
                 {...registerStepTwo('title')}
               />
               {errorsStepTwo.title && (
-                <p className="text-red-500 text-sm mt-2">{errorsStepTwo.title.message}</p>
+                <p className="text-destructive text-sm mt-2">{errorsStepTwo.title.message}</p>
               )}
             </div>
             
             <div className="mb-6">
-              <label htmlFor="price" className="block text-white font-medium mb-2">
+              <label htmlFor="price" className="block text-sm font-medium mb-2">
                 Precio
               </label>
               <div className="flex">
                 <div className="flex-1 relative">
-                  <input 
+                  <Input
                     type="text" 
                     id="price" 
-                    className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-l-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                    className="rounded-r-none"
                     placeholder="Introduce un número"
                     inputMode="decimal"
                     pattern="[0-9]+(,[0-9]+)?"
@@ -563,8 +566,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   />
                 </div>
                 <select 
-                  className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white appearance-none bg-no-repeat bg-[right_10px_center]" 
-                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")` }}
+                  className="w-20 pl-3 pr-7 py-2 bg-background border border-input border-l-0 rounded-r-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground appearance-none" 
                   {...registerStepTwo('currency')}
                 >
                   <option value="€">€</option>
@@ -573,26 +575,26 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 </select>
               </div>
               {errorsStepTwo.price && (
-                <p className="text-red-500 text-sm mt-2">{errorsStepTwo.price.message}</p>
+                <p className="text-destructive text-sm mt-2">{errorsStepTwo.price.message}</p>
               )}
-              <p className="text-white/60 text-sm mt-2">
+              <p className="text-muted-foreground text-sm mt-2">
                 El precio de compra actual o un precio aproximado.
               </p>
             </div>
             
             <div className="mb-6">
-              <label htmlFor="description" className="block text-white font-medium mb-2">
+              <label htmlFor="description" className="block text-sm font-medium mb-2">
                 Descripción (opcional)
               </label>
-              <textarea 
+              <Textarea 
                 id="description" 
-                rows={4} 
-                className="w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white" 
+                rows={4}
+                className="bg-background resize-none"
                 placeholder="Añade detalles como color, talla, modelo..."
                 {...registerStepTwo('description')}
-              ></textarea>
+              />
               {errorsStepTwo.description && (
-                <p className="text-red-500 text-sm mt-2">{errorsStepTwo.description.message}</p>
+                <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
               )}
             </div>
             
@@ -605,17 +607,16 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             )}
             
             <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
-              <button 
+              <Button 
                 type="button" 
                 onClick={itemToEdit ? handleClose : goBackToStepOne}
-                className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors"
+                variant="outline"
               >
                 {itemToEdit ? 'Cancelar' : 'Atrás'}
-              </button>
-              <button 
+              </Button>
+              <Button 
                 type="submit"
                 disabled={isSaving}
-                className={`px-6 py-3 ${isSaving ? 'bg-gray-600' : 'bg-primary hover:bg-primary/90'} text-white rounded-lg font-medium transition-colors flex items-center justify-center`}
               >
                 {isSaving ? (
                   <>
@@ -628,7 +629,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 ) : (
                   itemToEdit ? 'Actualizar' : 'Guardar'
                 )}
-              </button>
+              </Button>
             </div>
           </form>
         )}
