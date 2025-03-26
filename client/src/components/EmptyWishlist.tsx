@@ -8,39 +8,53 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
   return (
     <div className="p-6 text-center max-w-md mx-auto">
       {/* Ilustración inspiracional SVG */}
-      <div className="mx-auto w-48 h-48 mb-6 flex items-center justify-center">
+      <div className="mx-auto w-56 h-56 mb-6 flex items-center justify-center">
         <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <g opacity="0.9">
-            {/* Base circular */}
-            <circle cx="256" cy="256" r="200" fill="#1A1A1A" />
+          {/* Fondo circular suave */}
+          <circle cx="256" cy="256" r="200" fill="url(#gradient)" opacity="0.8" />
+          
+          {/* Lista con items */}
+          <rect x="136" y="156" width="240" height="200" rx="16" fill="#2A2A2A" stroke="#555" strokeWidth="2" />
+          
+          {/* Líneas de lista */}
+          <rect x="160" y="196" width="192" height="12" rx="6" fill="#555" />
+          <rect x="160" y="236" width="192" height="12" rx="6" fill="#555" />
+          <rect x="160" y="276" width="192" height="12" rx="6" fill="#555" />
+          <rect x="160" y="316" width="120" height="12" rx="6" fill="#555" />
+          
+          {/* Encabezado de lista */}
+          <rect x="136" y="156" width="240" height="24" rx="8" fill="#444" />
+          <rect x="160" y="162" width="80" height="12" rx="6" fill="#666" />
+          
+          {/* Corazón para indicar lista de deseos */}
+          <path d="M370 230C370 230 350 210 330 230C310 250 330 280 370 320C410 280 430 250 410 230C390 210 370 230 370 230Z" 
+                fill="url(#heartGradient)" />
+          
+          {/* Estrella para indicar favoritos */}
+          <path d="M142 380L150 396L168 400L156 412L158 430L142 422L126 430L128 412L116 400L134 396L142 380Z" 
+                fill="url(#starGradient)" />
+                
+          {/* Signo más para indicar añadir */}
+          <circle cx="370" cy="380" r="24" fill="#444" />
+          <path d="M360 380H380M370 370V390" stroke="#999" strokeWidth="4" strokeLinecap="round" />
+          
+          {/* Definición de gradientes */}
+          <defs>
+            <linearGradient id="gradient" x1="256" y1="56" x2="256" y2="456" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#333" />
+              <stop offset="1" stopColor="#111" />
+            </linearGradient>
             
-            {/* Detalles decorativos */}
-            <path d="M296 146L356 206M356 146L296 206" stroke="#777" strokeWidth="6" strokeLinecap="round" />
-            <path d="M156 146L216 206M216 146L156 206" stroke="#777" strokeWidth="6" strokeLinecap="round" />
+            <linearGradient id="heartGradient" x1="370" y1="210" x2="370" y2="330" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FF4444" />
+              <stop offset="1" stopColor="#FF0000" />
+            </linearGradient>
             
-            {/* Caja de regalo - base */}
-            <rect x="176" y="206" width="160" height="160" rx="8" fill="#2A2A2A" />
-            
-            {/* Detalles de la caja */}
-            <rect x="176" y="246" width="160" height="10" fill="#333" />
-            <rect x="256" y="206" width="10" height="160" fill="#333" />
-            
-            {/* Lazo */}
-            <path d="M266 196C266 196 296 166 316 186C336 206 306 236 306 236" stroke="#666" strokeWidth="8" strokeLinecap="round" />
-            <path d="M246 196C246 196 216 166 196 186C176 206 206 236 206 236" stroke="#666" strokeWidth="8" strokeLinecap="round" />
-            
-            {/* Estrella en el centro */}
-            <path d="M256 306L268 330L296 334L276 354L280 380L256 368L232 380L236 354L216 334L244 330L256 306Z" fill="#555" />
-            
-            {/* Detalles brillantes */}
-            <circle cx="210" cy="226" r="4" fill="#999" />
-            <circle cx="302" cy="226" r="4" fill="#999" />
-            <circle cx="210" cy="286" r="4" fill="#999" />
-            <circle cx="302" cy="286" r="4" fill="#999" />
-            
-            {/* Sombra suave */}
-            <circle cx="256" cy="390" r="16" fill="#111" opacity="0.6" />
-          </g>
+            <linearGradient id="starGradient" x1="142" y1="380" x2="142" y2="430" gradientUnits="userSpaceOnUse">
+              <stop stopColor="#FFDD00" />
+              <stop offset="1" stopColor="#FFB000" />
+            </linearGradient>
+          </defs>
         </svg>
       </div>
       <h3 className="font-medium text-xl text-white mb-2">Tu lista de deseos está vacía</h3>
