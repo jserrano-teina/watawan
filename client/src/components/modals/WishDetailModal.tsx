@@ -168,7 +168,8 @@ const DesktopView = ({
               </a>
               <button
                 onClick={handleEdit}
-                className="px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                disabled={item.isReserved}
+                className={`px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
               >
                 <Edit size={16} className="mr-2" />
                 Editar
@@ -316,14 +317,16 @@ const MobileView = ({
       <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
         <button
           onClick={handleDelete}
-          className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
+          disabled={item.isReserved}
+          className={`px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
         >
           <Trash2 size={16} className="mr-2" />
           Eliminar
         </button>
         <button
           onClick={handleEdit}
-          className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center"
+          disabled={item.isReserved}
+          className={`px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
         >
           <Edit size={16} className="mr-2" />
           Editar

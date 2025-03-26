@@ -30,11 +30,22 @@ const Home: React.FC = () => {
   };
 
   const handleEditWish = (item: WishItemType) => {
+    // No permitir editar items reservados
+    if (item.isReserved) {
+      showToast('No se puede editar un deseo reservado', 'warning');
+      return;
+    }
     setItemToEdit(item);
     setShowAddWishModal(true);
   };
 
   const handleDeleteWish = async (item: WishItemType) => {
+    // No permitir eliminar items reservados
+    if (item.isReserved) {
+      showToast('No se puede eliminar un deseo reservado', 'warning');
+      return;
+    }
+    
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       try {
         await deleteWishItem.mutateAsync(item.id);
