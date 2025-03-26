@@ -50,7 +50,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
         }
       }}
     >
-      <div className="bg-[#1a1a1a] text-white rounded-lg w-full max-w-md mx-4 shadow-xl border border-[#333]">
+      <div className="bg-[#121212] text-white rounded-lg w-full max-w-md mx-4 shadow-xl border border-[#333]">
         <div className="flex justify-between items-center p-4 border-b border-[#333]">
           <h2 className="text-lg font-semibold">Compartir tu lista de deseos</h2>
           <button onClick={onClose} className="text-white/70 hover:text-white">
