@@ -163,7 +163,7 @@ const DesktopView = ({
                 className="px-4 py-2 border border-[#333] rounded-lg text-white text-sm font-medium hover:bg-[#252525] transition-colors flex items-center"
               >
                 <ExternalLink size={16} className="mr-2" />
-                Ver producto
+                Ir al enlace de compra
               </a>
               <button
                 onClick={handleEdit}

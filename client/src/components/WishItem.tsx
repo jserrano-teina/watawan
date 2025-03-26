@@ -206,7 +206,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                     className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
                   >
                     <ExternalLink size={22} className="mr-4" />
-                    Ver producto
+                    Ir al enlace de compra
                   </button>
                   
                   <button 
