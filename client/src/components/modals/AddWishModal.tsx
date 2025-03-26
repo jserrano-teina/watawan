@@ -486,10 +486,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2">
                   Enlace de compra
                 </label>
-                <Input
+                <CustomInput
                   type="url" 
                   id="purchaseLink" 
-                  className="bg-background"
                   placeholder="https://..."
                   {...registerStepTwo('purchaseLink')}
                 />
@@ -522,10 +521,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
                   URL de la imagen
                 </label>
-                <Input
+                <CustomInput
                   type="url" 
                   id="imageUrl" 
-                  className="bg-background"
                   placeholder="https://ejemplo.com/imagen.jpg"
                   {...registerStepTwo('imageUrl')}
                 />
@@ -536,10 +534,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               <label htmlFor="title" className="block text-sm font-medium mb-2">
                 Nombre del producto
               </label>
-              <Input
+              <CustomInput
                 type="text" 
                 id="title" 
-                className="bg-background"
                 placeholder="Introduce un nombre"
                 {...registerStepTwo('title')}
               />
@@ -554,7 +551,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </label>
               <div className="flex">
                 <div className="flex-1 relative">
-                  <Input
+                  <CustomInput
                     type="text" 
                     id="price" 
                     className="rounded-r-none"
@@ -565,7 +562,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   />
                 </div>
                 <select 
-                  className="w-20 pl-3 pr-7 py-2 bg-background border border-input border-l-0 rounded-r-md focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent text-foreground appearance-none" 
+                  className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-white appearance-none" 
                   {...registerStepTwo('currency')}
                 >
                   <option value="€">€</option>
@@ -585,10 +582,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               <label htmlFor="description" className="block text-sm font-medium mb-2">
                 Descripción (opcional)
               </label>
-              <Textarea 
+              <CustomTextarea 
                 id="description" 
                 rows={4}
-                className="bg-background resize-none"
+                className="resize-none"
                 placeholder="Añade detalles como color, talla, modelo..."
                 {...registerStepTwo('description')}
               />

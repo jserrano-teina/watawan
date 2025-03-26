@@ -5,7 +5,7 @@ import { Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
+import { CustomInput } from "@/components/ui/custom-input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect } from "react";
@@ -84,10 +84,9 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel>Correo electrónico</FormLabel>
                   <FormControl>
-                    <Input
+                    <CustomInput
                       placeholder="tu@email.com"
                       type="email"
-                      className="bg-background"
                       {...field}
                     />
                   </FormControl>
@@ -102,10 +101,9 @@ export default function LoginPage() {
                 <FormItem>
                   <FormLabel>Contraseña</FormLabel>
                   <FormControl>
-                    <Input
+                    <CustomInput
                       placeholder="••••••••"
                       type="password"
-                      className="bg-background"
                       {...field}
                     />
                   </FormControl>
