@@ -5,7 +5,6 @@ import { z } from "zod";
 // User schema
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name"),
@@ -17,7 +16,6 @@ export const users = pgTable("users", {
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
   email: true,
   password: true,
   displayName: true,
@@ -87,7 +85,6 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
 // necesitamos ajustar los tipos para manejar undefined en lugar de null
 export type User = {
   id: number;
-  username: string;
   email: string;
   password: string;
   displayName?: string;
