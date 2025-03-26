@@ -1,9 +1,16 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState } from 'react';
 import { WishItem as WishItemType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProductImage from './ProductImage';
-import { MoreVertical, Edit, Trash, ExternalLink } from 'lucide-react';
+import { MoreVertical, Edit, Trash, ExternalLink, X } from 'lucide-react';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface WishItemProps {
   item: WishItemType;
@@ -13,8 +20,7 @@ interface WishItemProps {
 }
 
 const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) => {
-  const [showMenu, setShowMenu] = useState(false);
-  const menuRef = useRef<HTMLDivElement>(null);
+  const [open, setOpen] = useState(false);
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
@@ -42,8 +48,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
     // Evitar que se abra el modal si se hace clic en los botones o en el enlace
     if (
       (e.target as HTMLElement).closest('button') || 
-      (e.target as HTMLElement).closest('a') ||
-      (e.target as HTMLElement).closest('.menu-container')
+      (e.target as HTMLElement).closest('a')
     ) {
       return;
     }
@@ -53,40 +58,23 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
     }
   };
   
-  // Cerrar el menú cuando se hace clic fuera
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
-        setShowMenu(false);
-      }
-    }
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-  
   // Función para abrir enlace externamente
-  const openExternalLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const openExternalLink = () => {
     window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
+    setOpen(false);
   };
   
   // Funciones para editar y eliminar
-  const handleEdit = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowMenu(false);
+  const handleEdit = () => {
     onEdit(item);
+    setOpen(false);
   };
   
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setShowMenu(false);
-    
+  const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
     }
+    setOpen(false);
   };
 
   return (
@@ -94,7 +82,6 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
       className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
       onClick={handleItemClick}
     >
-      
       <div className="flex">
         {/* Imagen a la izquierda con border radius reducido y altura reducida */}
         <div className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
@@ -131,45 +118,52 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
               </div>
             </div>
             
-            {/* Menú de 3 puntos centrado verticalmente */}
-            <div className="relative menu-container self-center" ref={menuRef}>
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMenu(!showMenu);
-                }}
-                className="text-white/70 hover:text-white p-1"
-                aria-label="Opciones"
-              >
-                <MoreVertical size={18} />
-              </button>
-              
-              {showMenu && (
-                <div className="absolute right-0 top-8 z-10 bg-[#262626] rounded-lg shadow-lg border border-[#333] py-1 w-40">
+            {/* Menú de opciones con bottom sheet */}
+            <Sheet open={open} onOpenChange={setOpen}>
+              <SheetTrigger asChild>
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  className="text-white/70 hover:text-white p-1"
+                  aria-label="Opciones"
+                >
+                  <MoreVertical size={18} />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="px-0 pt-0 pb-6">
+                <SheetHeader className="text-left border-b border-[#333] pb-2 px-6 pt-6">
+                  <SheetTitle>Opciones</SheetTitle>
+                </SheetHeader>
+                
+                <div className="mt-4 flex flex-col">
                   <button 
                     onClick={handleEdit}
-                    className={`w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    className={`w-full text-left px-6 py-4 text-[15px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    disabled={item.isReserved}
                   >
-                    <Edit size={14} className="mr-2" />
+                    <Edit size={18} className="mr-3" />
                     Editar
                   </button>
+                  
                   <button 
                     onClick={openExternalLink}
-                    className="w-full text-left px-3 py-2 text-sm text-white/80 hover:bg-[#333] flex items-center"
+                    className="w-full text-left px-6 py-4 text-[15px] text-white/90 hover:bg-[#333] flex items-center"
                   >
-                    <ExternalLink size={14} className="mr-2" />
+                    <ExternalLink size={18} className="mr-3" />
                     Ver producto
                   </button>
+                  
                   <button 
                     onClick={handleDelete}
-                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center"
+                    className="w-full text-left px-6 py-4 text-[15px] text-red-400 hover:bg-[#333] flex items-center"
                   >
-                    <Trash size={14} className="mr-2" />
+                    <Trash size={18} className="mr-3" />
                     Eliminar
                   </button>
                 </div>
-              )}
-            </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </div>
       </div>
