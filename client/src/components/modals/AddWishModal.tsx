@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
-import { Package, Image, Edit3 } from 'lucide-react';
+import { Package, Image, Edit3, ChevronLeft } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
@@ -608,6 +608,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 onClick={itemToEdit ? handleClose : goBackToStepOne}
                 variant="outline"
               >
+                {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
                 {itemToEdit ? 'Cancelar' : 'Atrás'}
               </Button>
               <Button 
