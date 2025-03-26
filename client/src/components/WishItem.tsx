@@ -18,9 +18,10 @@ interface WishItemProps {
   onEdit: (item: WishItemType) => void;
   onDelete: (item: WishItemType) => void;
   onClick?: (item: WishItemType) => void;
+  onSheetClose?: () => void; // Callback para notificar cuando se cierra el sheet
 }
 
-const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) => {
+const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, onSheetClose }) => {
   const [open, setOpen] = useState(false);
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
@@ -129,12 +130,18 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
               open={open} 
               onOpenChange={(newOpen) => {
                 setOpen(newOpen);
-                // Al cerrarse, programamos un timeout de 100ms para evitar que se abra el detalle
+                // Al cerrarse, notificar al componente padre
                 if (!newOpen) {
+                  // Llamar al callback de cierre si existe
+                  if (onSheetClose) {
+                    onSheetClose();
+                  }
+                  
                   // Prevenir cualquier clic en el elemento por un breve periodo
                   const item = document.activeElement as HTMLElement;
                   if (item) {
                     item.blur();
+                    
                     // Creamos un div transparente que capture todos los clics por un momento
                     const blocker = document.createElement('div');
                     blocker.style.position = 'fixed';
@@ -143,11 +150,14 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                     blocker.style.right = '0';
                     blocker.style.bottom = '0';
                     blocker.style.zIndex = '9999';
+                    blocker.style.cursor = 'default';
                     document.body.appendChild(blocker);
                     
                     setTimeout(() => {
-                      document.body.removeChild(blocker);
-                    }, 100);
+                      if (document.body.contains(blocker)) {
+                        document.body.removeChild(blocker);
+                      }
+                    }, 300); // Aumentamos a 300ms para mayor seguridad
                   }
                 }
               }}

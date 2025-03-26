@@ -68,7 +68,24 @@ const Home: React.FC = () => {
     }
   };
   
+  // Variable para rastrear si una operación de Sheet se cerró recientemente
+  const [sheetRecentlyClosed, setSheetRecentlyClosed] = useState(false);
+
+  // Función para avisar al componente Home que un Sheet se cerró
+  const handleSheetClosed = () => {
+    setSheetRecentlyClosed(true);
+    setTimeout(() => {
+      setSheetRecentlyClosed(false);
+    }, 300); // Prevenir clics por 300ms
+  };
+  
   const handleItemClick = (item: WishItemType) => {
+    // Si un Sheet se cerró recientemente, ignorar el clic para prevenir eventos accidentales
+    if (sheetRecentlyClosed) {
+      console.log('Ignorando clic de detalle, sheet recientemente cerrado');
+      return;
+    }
+    
     setSelectedItem(item);
     setShowDetailModal(true);
   };
@@ -108,6 +125,7 @@ const Home: React.FC = () => {
                   onEdit={handleEditWish} 
                   onDelete={handleDeleteWish}
                   onClick={handleItemClick}
+                  onSheetClose={handleSheetClosed}
                 />
               ))}
             </div>
