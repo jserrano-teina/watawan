@@ -105,17 +105,17 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
         <div className="flex-grow min-w-0 flex flex-col justify-center">
           <div className="flex justify-between items-center">
             <div>
+              {/* Tag de reservado encima del título */}
+              {item.isReserved && (
+                <span className="px-2 py-0.5 mb-1 bg-green-800/30 text-green-400 text-xs font-medium rounded-full inline-block">
+                  Reservado
+                </span>
+              )}
+              
               {/* Nombre del producto con mayor tamaño y peso */}
               <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
               
               <div className="flex items-center mt-1 gap-2">
-                {/* Tag de reservado */}
-                {item.isReserved && (
-                  <span className="px-2 py-0.5 bg-primary/20 text-primary text-xs font-medium rounded-full">
-                    Reservado
-                  </span>
-                )}
-                
                 {/* Precio con mayor tamaño y color blanco */}
                 {item.price && (
                   <span className="text-white font-medium text-base">

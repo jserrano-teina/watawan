@@ -211,6 +211,12 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 {/* Contenido a la derecha - Simplificado */}
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
                   {/* Nombre del producto con mayor tamaño y peso */}
+                  {item.isReserved && (
+                    <span className="px-2 py-0.5 mb-1 bg-green-800/30 text-green-400 text-xs font-medium rounded-full inline-block">
+                      Reservado
+                    </span>
+                  )}
+                  
                   <h3 className="truncate">{item.title}</h3>
                   
                   {/* Solo precio */}

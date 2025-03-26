@@ -259,8 +259,8 @@ const MobileView = ({
           {item.isReserved && (
             <div className="absolute inset-0 bg-black/60 backdrop-blur-[2px] flex items-center justify-center z-10">
               <div className="bg-[#121212]/90 px-5 py-4 rounded-xl text-center border border-[#333] shadow-lg">
-                <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-2">
-                  <i className="fas fa-check text-primary"></i>
+                <div className="w-12 h-12 bg-green-800/30 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <i className="fas fa-check text-green-400"></i>
                 </div>
                 <p className="font-medium text-white text-sm mb-1">¡Alguien ha reservado este regalo!</p>
                 <p className="text-white/70 text-xs">Será una sorpresa 🎁</p>
