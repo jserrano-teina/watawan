@@ -150,8 +150,7 @@ const DesktopView = ({
           <div className="flex justify-between p-4 border-t border-[#333] bg-[#121212]">
             <button
               onClick={handleDelete}
-              disabled={item.isReserved}
-              className={`px-4 py-2 border border-[#333] rounded-lg text-white text-sm font-medium hover:bg-[#252525] transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+              className="px-4 py-2 border border-[#333] rounded-lg text-white text-sm font-medium hover:bg-[#252525] transition-colors flex items-center"
             >
               <Trash2 size={16} className="mr-2" />
               Eliminar
@@ -317,8 +316,7 @@ const MobileView = ({
       <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
         <button
           onClick={handleDelete}
-          disabled={item.isReserved}
-          className={`px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+          className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
         >
           <Trash2 size={16} className="mr-2" />
           Eliminar

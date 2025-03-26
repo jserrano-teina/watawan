@@ -159,7 +159,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick }) 
                   </button>
                   <button 
                     onClick={handleDelete}
-                    className={`w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    className="w-full text-left px-3 py-2 text-sm text-red-400 hover:bg-[#333] flex items-center"
                   >
                     <Trash size={14} className="mr-2" />
                     Eliminar
