@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -6,16 +6,30 @@ import { z } from "zod";
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
   username: text("username").notNull().unique(),
+  email: text("email").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name"),
   initials: text("initials"),
+  avatar: text("avatar"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastLogin: timestamp("last_login"),
+  settings: json("settings").default({}),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
+  email: true,
   password: true,
   displayName: true,
   initials: true,
+  avatar: true,
+});
+
+// Sesión schema (compatibilidad con express-session)
+export const sessions = pgTable("sessions", {
+  sid: text("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire").notNull(),
 });
 
 // Wishlist schema
@@ -74,9 +88,14 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
 export type User = {
   id: number;
   username: string;
+  email: string;
   password: string;
   displayName?: string;
   initials?: string;
+  avatar?: string;
+  createdAt?: Date;
+  lastLogin?: Date;
+  settings?: Record<string, any>;
 };
 export type InsertUser = z.infer<typeof insertUserSchema>;
 

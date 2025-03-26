@@ -10,7 +10,10 @@ export interface IStorage {
   // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<User>): Promise<User>;
+  updateLastLogin(id: number): Promise<User>;
 
   // Wishlist operations
   getWishlist(id: number): Promise<Wishlist | undefined>;
@@ -55,6 +58,7 @@ export class MemStorage implements IStorage {
     // Create a default user
     this.createUser({
       username: "demo",
+      email: "demo@example.com",
       password: "password",
       displayName: "Demo User",
       initials: "DU"
@@ -71,22 +75,39 @@ export class MemStorage implements IStorage {
       (user) => user.username === username,
     );
   }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    return Array.from(this.users.values()).find(
+      (user) => user.email === email,
+    );
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
     const now = new Date();
     
     // Create user
-    // Aseguramos que displayName e initials sean string o undefined, nunca null
+    // Aseguramos que los campos opcionales sean string o undefined, nunca null
     const displayName = insertUser.displayName || undefined;
     const initials = insertUser.initials || undefined;
+    const avatar = insertUser.avatar || undefined;
     
     const user: User = { 
       ...insertUser, 
       id,
       displayName,
-      initials
+      initials,
+      avatar,
+      createdAt: now,
+      lastLogin: now,
+      settings: {}
     };
+    
+    // Verificamos si falta el campo email (para compatibilidad con datos antiguos)
+    if (!user.email) {
+      user.email = `${user.username}@example.com`;
+    }
+    
     this.users.set(id, user);
     
     // Create default wishlist for the user
@@ -100,6 +121,31 @@ export class MemStorage implements IStorage {
     this.wishlists.set(wishlist.id, wishlist);
     
     return user;
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    const updatedUser = { ...existingUser, ...userData };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateLastLogin(id: number): Promise<User> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    const updatedUser = { 
+      ...existingUser, 
+      lastLogin: new Date() 
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // Wishlist operations
@@ -144,15 +190,17 @@ export class MemStorage implements IStorage {
   async createWishItem(item: InsertWishItem): Promise<WishItem> {
     const id = this.currentWishItemId++;
     
-    // Aseguramos que description e imageUrl sean string o undefined, nunca null
+    // Aseguramos que los campos opcionales sean string o undefined, nunca null
     const description = item.description || undefined;
     const imageUrl = item.imageUrl || undefined;
+    const price = item.price || undefined;
     
     const newItem: WishItem = { 
       ...item, 
       id,
       description,
       imageUrl,
+      price,
       isReserved: false,
       createdAt: new Date(),
     };
