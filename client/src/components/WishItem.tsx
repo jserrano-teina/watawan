@@ -181,8 +181,14 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                   <SheetTitle>{item.title}</SheetTitle>
                   <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
                 </SheetHeader>
-                <div className="text-left px-6 pt-6 pb-2">
+                <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
                   <h3 className="text-white text-xl font-medium">{item.title}</h3>
+                  <button 
+                    onClick={() => setOpen(false)}
+                    className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
+                  >
+                    <X className="h-7 w-7" />
+                  </button>
                 </div>
                 
                 <div className="mt-4 flex flex-col">
@@ -211,13 +217,6 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                     Eliminar
                   </button>
                 </div>
-                
-                <button 
-                  onClick={() => setOpen(false)}
-                  className="absolute right-4 top-4 text-white opacity-70 hover:opacity-100 transition-opacity"
-                >
-                  <X className="h-7 w-7" />
-                </button>
               </SheetContent>
             </Sheet>
           </div>
