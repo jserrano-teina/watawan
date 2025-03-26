@@ -6,9 +6,9 @@ import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
 import { Package, Image, Edit3 } from 'lucide-react';
 import ProductImage from '../ProductImage';
-import { Input } from "@/components/ui/input";
+import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { CustomTextarea } from "@/components/ui/custom-textarea";
 
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
@@ -423,10 +423,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2">
                     Enlace de compra
                   </label>
-                  <Input
+                  <CustomInput
                     type="url" 
                     id="purchaseLink" 
-                    className="bg-background"
                     placeholder="https://..."
                     {...registerStepOne('purchaseLink')}
                   />
