@@ -15,7 +15,7 @@ const ToastViewport: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "fixed bottom-0 right-0 flex flex-col p-4 gap-2 w-full md:max-w-[420px] max-h-screen z-50",
+        "fixed bottom-20 right-0 flex flex-col p-4 gap-2 w-full md:max-w-[420px] max-h-screen z-40",
         className
       )}
       {...props}
