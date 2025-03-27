@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { WishItem, Reservation } from '@shared/schema';
 import Header from '@/components/Header';
-import { User } from '@/types';
+import { User, WishItem, Reservation } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -23,10 +22,22 @@ const NotificationsPage: React.FC = () => {
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   
   // Obtener todas las reservas
-  const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
+  const { data: rawNotifications = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/reserved-items'],
     enabled: !!user,
   });
+  
+  // Adaptar los datos para que coincidan con los tipos del frontend
+  const notifications: NotificationItem[] = rawNotifications.length ? rawNotifications.map(({ item, reservation }) => ({
+    item: {
+      ...item,
+      createdAt: item.createdAt?.toString() || new Date().toString(),
+    },
+    reservation: {
+      ...reservation,
+      reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
+    }
+  })) : [];
   
   // Mutación para marcar notificaciones como leídas
   const markAsReadMutation = useMutation({
@@ -156,8 +167,8 @@ const NotificationsPage: React.FC = () => {
       
       {selectedItem && (
         <WishDetailModal
-          open={detailModalOpen}
-          onOpenChange={setDetailModalOpen}
+          isOpen={detailModalOpen}
+          onClose={() => setDetailModalOpen(false)}
           item={selectedItem}
           onEdit={() => {}}
           onDelete={() => {}}

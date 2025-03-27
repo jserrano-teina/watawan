@@ -1,6 +1,6 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
-import { WishItem, Reservation } from '@shared/schema';
+import { WishItem, Reservation } from '@/types';
 import { useAuth } from './use-auth';
 
 type NotificationItem = {
@@ -13,25 +13,49 @@ export function useNotifications() {
   
   // Obtener notificaciones no leídas
   const { 
-    data: unreadNotifications = [], 
+    data: rawUnreadNotifications = [], 
     isLoading: unreadLoading,
     error: unreadError,
-  } = useQuery<NotificationItem[]>({
+  } = useQuery<any[]>({
     queryKey: ['/api/notifications/unread'],
     enabled: !!user,
     staleTime: 1000 * 60, // 1 minuto
   });
   
+  // Adaptar las notificaciones no leídas al formato del frontend
+  const unreadNotifications: NotificationItem[] = rawUnreadNotifications.length ? rawUnreadNotifications.map(({ item, reservation }) => ({
+    item: {
+      ...item,
+      createdAt: item.createdAt?.toString() || new Date().toString(),
+    },
+    reservation: {
+      ...reservation,
+      reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
+    }
+  })) : [];
+  
   // Obtener todas las notificaciones
   const { 
-    data: allNotifications = [], 
+    data: rawAllNotifications = [], 
     isLoading: allLoading,
     error: allError,
-  } = useQuery<NotificationItem[]>({
+  } = useQuery<any[]>({
     queryKey: ['/api/reserved-items'],
     enabled: !!user,
     staleTime: 1000 * 60, // 1 minuto
   });
+  
+  // Adaptar todas las notificaciones al formato del frontend
+  const allNotifications: NotificationItem[] = rawAllNotifications.length ? rawAllNotifications.map(({ item, reservation }) => ({
+    item: {
+      ...item,
+      createdAt: item.createdAt?.toString() || new Date().toString(),
+    },
+    reservation: {
+      ...reservation,
+      reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
+    }
+  })) : [];
   
   // Marcar notificaciones como leídas
   const markAsRead = useMutation({
