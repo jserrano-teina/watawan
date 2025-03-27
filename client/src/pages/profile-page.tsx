@@ -128,20 +128,83 @@ const ProfilePage = () => {
     });
   };
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const compressImage = (imageDataUrl: string, maxSizeMB = 0.2): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = imageDataUrl;
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Calcular el factor de escala para mantener la proporción
+        const MAX_SIZE = 500; // px
+        if (width > height) {
+          if (width > MAX_SIZE) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          }
+        } else {
+          if (height > MAX_SIZE) {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Ajustar la calidad para reducir el tamaño
+        const compressedImage = canvas.toDataURL('image/jpeg', 0.7);
+        resolve(compressedImage);
+      };
+    });
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
+    if (!file) return;
+    
+    // Comprobar tamaño antes de procesar
+    if (file.size > 5 * 1024 * 1024) { // 5MB
+      setToastState({
+        message: "La imagen es demasiado grande. El tamaño máximo es 5MB.",
+        variant: "error",
+      });
+      return;
+    }
+    
+    try {
       const reader = new FileReader();
-      reader.onloadend = () => {
-        const result = reader.result as string;
-        setAvatar(result);
-        updateProfileMutation.mutate({
-          displayName: user?.displayName || "",
-          avatar: result,
-          initials: ""
-        });
+      reader.onloadend = async () => {
+        try {
+          const result = reader.result as string;
+          // Comprimir imagen antes de guardarla
+          const compressedImage = await compressImage(result);
+          setAvatar(compressedImage);
+          
+          updateProfileMutation.mutate({
+            displayName: user?.displayName || "",
+            avatar: compressedImage,
+            initials: ""
+          });
+        } catch (err) {
+          setToastState({
+            message: "Error al procesar la imagen. Inténtalo con otra imagen.",
+            variant: "error",
+          });
+        }
       };
       reader.readAsDataURL(file);
+    } catch (err) {
+      setToastState({
+        message: "Error al cargar la imagen. Inténtalo con otra imagen.",
+        variant: "error",
+      });
     }
   };
 
