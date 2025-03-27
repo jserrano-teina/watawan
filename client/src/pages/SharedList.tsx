@@ -87,7 +87,7 @@ const SharedList: React.FC = () => {
           <Toast visible={true} variant={toast.variant}>
             <div className="flex items-center">
               {toast.variant === 'success' ? (
-                <Check className="mr-2 h-8 w-8 text-green-400" />
+                <Check className="mr-2 h-6 w-6 text-green-400" />
               ) : (
                 <AlertCircle className="mr-2 h-4 w-4" />
               )}
