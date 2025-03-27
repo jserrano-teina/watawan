@@ -96,12 +96,12 @@ const ProductImage: React.FC<ProductImageProps> = ({
   
   // Para otras tiendas, intentar cargar la imagen normalmente
   return (
-    <div className={`relative ${className}`}>
+    <div className={`relative flex items-center justify-center ${className}`}>
       {imgSrc && (
         <img 
           src={imgSrc} 
           alt={title} 
-          className="w-full h-full object-cover"
+          className="w-full h-full object-contain"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
