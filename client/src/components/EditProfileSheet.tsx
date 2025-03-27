@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { User } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -48,32 +48,20 @@ export function EditProfileSheet({
   const [displayName, setDisplayName] = useState(user.displayName || "");
   const [email, setEmail] = useState(user.email);
   const [password, setPassword] = useState("");
-  const [mode, setMode] = useState<"name" | "email">("name");
   const [error, setError] = useState("");
+  const [emailChanged, setEmailChanged] = useState(false);
+
+  // Comprobar si el email ha cambiado respecto al original
+  useEffect(() => {
+    setEmailChanged(email !== user.email);
+  }, [email, user.email]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     
-    if (mode === "name") {
-      updateProfileMutation.mutate(
-        {
-          displayName,
-          avatar: user.avatar || "",
-          initials: ""
-        },
-        {
-          onSuccess: () => {
-            onClose();
-          }
-        }
-      );
-    } else {
-      if (email === user.email) {
-        setError("El nuevo email debe ser diferente al actual");
-        return;
-      }
-      
+    // Si el email ha cambiado, necesitamos validar contraseña
+    if (emailChanged) {
       if (!password) {
         setError("La contraseña es requerida para cambiar el email");
         return;
@@ -83,6 +71,14 @@ export function EditProfileSheet({
         { email, password },
         {
           onSuccess: () => {
+            // También actualizamos el nombre si ha cambiado
+            if (displayName !== user.displayName) {
+              updateProfileMutation.mutate({
+                displayName,
+                avatar: user.avatar || "",
+                initials: ""
+              });
+            }
             onClose();
             setPassword("");
           },
@@ -91,19 +87,35 @@ export function EditProfileSheet({
           },
         }
       );
+    } else {
+      // Solo se actualiza el nombre
+      if (displayName !== user.displayName) {
+        updateProfileMutation.mutate(
+          {
+            displayName,
+            avatar: user.avatar || "",
+            initials: ""
+          },
+          {
+            onSuccess: () => {
+              onClose();
+            }
+          }
+        );
+      } else {
+        // No hay cambios que guardar
+        onClose();
+      }
     }
   };
 
   const handleClose = () => {
     setError("");
-    setMode("name");
     setDisplayName(user.displayName || "");
     setEmail(user.email);
     setPassword("");
     onClose();
   };
-
-  const title = mode === "name" ? "Editar perfil" : "Cambiar email";
 
   return (
     <Sheet open={isOpen} onOpenChange={handleClose}>
@@ -112,16 +124,14 @@ export function EditProfileSheet({
         className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
       >
         <SheetHeader className="sr-only">
-          <SheetTitle>{title}</SheetTitle>
+          <SheetTitle>Editar perfil</SheetTitle>
           <SheetDescription>
-            {mode === "name" 
-              ? "Actualiza tu información personal" 
-              : "Para cambiar tu email, necesitamos confirmar tu contraseña"}
+            Actualiza tu información personal
           </SheetDescription>
         </SheetHeader>
         
         <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
-          <h3 className="text-white text-xl font-medium">{title}</h3>
+          <h3 className="text-white text-xl font-medium">Editar perfil</h3>
           <button 
             onClick={handleClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
@@ -136,70 +146,59 @@ export function EditProfileSheet({
           )}
           
           <div className="text-white/80 mb-6">
-            {mode === "name" 
-              ? "Actualiza tu nombre de perfil que será visible cuando compartas tus listas de deseos" 
-              : "Para cambiar tu email, necesitamos confirmar tu contraseña actual"}
+            Actualiza tu información de perfil
           </div>
           
-          {mode === "name" ? (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-white/80">Nombre</Label>
-                <CustomInput
-                  id="displayName"
-                  type="text"
-                  placeholder="Tu nombre"
-                  value={displayName}
-                  onChange={(e) => setDisplayName(e.target.value)}
-                />
-              </div>
-              
-              <div className="pt-2">
-                <button 
-                  type="button" 
-                  className="text-primary underline text-sm"
-                  onClick={() => setMode("email")}
-                >
-                  Cambiar email
-                </button>
-              </div>
+          <div className="space-y-4">
+            {/* Campo de nombre */}
+            <div className="space-y-2">
+              <Label htmlFor="displayName" className="text-white/80">Nombre</Label>
+              <CustomInput
+                id="displayName"
+                type="text"
+                placeholder="Tu nombre"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+              />
             </div>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white/80">Nuevo email</Label>
-                <CustomInput
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  error={error.includes("email")}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white/80">Contraseña actual</Label>
-                <CustomInput
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  error={error.includes("contraseña")}
-                />
-              </div>
-              
-              <div className="pt-2">
-                <button 
-                  type="button" 
-                  className="text-primary underline text-sm"
-                  onClick={() => setMode("name")}
-                >
-                  Editar perfil
-                </button>
-              </div>
+            
+            {/* Campo de email */}
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-white/80">Email</Label>
+              <CustomInput
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                error={error.includes("email")}
+              />
             </div>
-          )}
+            
+            {/* Campo de contraseña - deshabilitado si el email no ha cambiado */}
+            <div className="space-y-2">
+              <Label 
+                htmlFor="password" 
+                className={`text-white/80 ${!emailChanged ? 'opacity-50' : ''}`}
+              >
+                Contraseña actual {emailChanged ? '(requerida)' : ''}
+              </Label>
+              <CustomInput
+                id="password"
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={!emailChanged}
+                required={emailChanged}
+                error={error.includes("contraseña")}
+                className={`${!emailChanged ? 'opacity-50' : ''}`}
+              />
+              {emailChanged && (
+                <p className="text-xs text-white/60 mt-1">
+                  Necesitamos verificar tu identidad para cambiar el email
+                </p>
+              )}
+            </div>
+          </div>
           
           <div className="flex flex-col pt-8">
             <Button
