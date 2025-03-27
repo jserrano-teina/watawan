@@ -120,9 +120,8 @@ const Home: React.FC = () => {
       {/* Overlay de carga durante el guardado */}
       {isSaving && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-[#1e1e1e] rounded-xl p-6 flex flex-col items-center">
-            <Loader2 className="h-12 w-12 animate-spin text-primary mb-3" />
-            <p className="text-white text-lg font-medium">Guardando tu deseo...</p>
+          <div className="bg-[#1e1e1e] rounded-xl p-6 flex items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </div>
         </div>
       )}
