@@ -19,10 +19,10 @@ const stepOneSchema = z.object({
 const stepTwoSchema = z.object({
   title: z.string().min(1, 'El nombre del producto es obligatorio'),
   description: z.string().optional(),
-  purchaseLink: z.string().url('Debe ser una URL válida').optional(),
+  purchaseLink: z.string().optional(), // Hacemos opcional sin validación de URL
   price: z.string()
-    .min(1, 'El precio es obligatorio')
-    .refine(val => /^[0-9]+(,[0-9]+)?$/.test(val), {
+    .optional() // Hacemos el precio opcional
+    .refine(val => !val || /^[0-9]+(,[0-9]+)?$/.test(val), { // Solo validamos si hay un valor
       message: 'Solo se aceptan números con decimales separados por coma'
     }),
   currency: z.string().default('€'),
@@ -223,10 +223,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     // Activar estado de carga
     setIsSaving(true);
     
-    // Formatear el precio con la moneda seleccionada
+    // Formatear el precio con la moneda seleccionada solo si hay un precio
     const formattedData = {
       ...data,
-      price: `${data.price}${data.currency}`
+      price: data.price ? `${data.price}${data.currency}` : undefined
     };
     
     // Simular un pequeño retraso para mostrar el estado de carga
