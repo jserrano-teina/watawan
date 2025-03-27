@@ -84,7 +84,7 @@ const ToastPortal: React.FC = () => {
   }
   
   return createPortal(
-    <div className="fixed bottom-[5rem] right-0 flex flex-col p-4 gap-2 w-full md:max-w-[420px] max-h-screen z-40">
+    <div className="fixed bottom-[5rem] right-0 flex flex-col p-4 gap-2 w-full md:max-w-[480px] max-h-screen z-40">
       {globalState.toasts.map(({id, node}) => (
         <div key={id}>{node}</div>
       ))}
@@ -136,7 +136,7 @@ const Toast: React.FC<ToastProps> = ({
   ...props 
 }) => {
   const variantClasses = {
-    success: "bg-success text-white",
+    success: "bg-[#152218] text-white border border-green-800/30",
     error: "bg-error text-white",
     warning: "bg-warning text-black",
     info: "bg-secondary text-white",
@@ -150,7 +150,7 @@ const Toast: React.FC<ToastProps> = ({
   return (
     <div
       className={cn(
-        "px-4 py-2 rounded-lg shadow-lg flex items-center justify-between transition-opacity duration-300",
+        "px-5 py-3 rounded-lg shadow-lg flex items-center justify-between transition-opacity duration-300",
         variantClasses[variant],
         visible ? "opacity-100" : "opacity-0 pointer-events-none",
         className
