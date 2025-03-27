@@ -38,15 +38,30 @@ type EditProfileProps = {
 
 const EditProfile = ({ user, updateProfileMutation }: EditProfileProps) => {
   const [displayName, setDisplayName] = useState(user.displayName || "");
-  const [initials, setInitials] = useState(user.initials || "");
   const [avatar, setAvatar] = useState(user.avatar || "");
+
+  // Función para generar iniciales automáticamente desde el nombre o email
+  const getInitials = () => {
+    if (displayName) {
+      // Si hay nombre, tomar la primera letra de cada palabra (máximo 2)
+      const words = displayName.trim().split(/\s+/);
+      if (words.length === 1) {
+        return words[0].charAt(0).toUpperCase();
+      } else {
+        return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+      }
+    }
+    // Si no hay nombre, usar las primeras letras del email
+    return user.email.substring(0, 2).toUpperCase();
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     updateProfileMutation.mutate({
       displayName,
-      initials,
       avatar,
+      // Eliminamos la propiedad de iniciales, se calculará automáticamente
+      initials: ""
     });
   };
 
@@ -58,7 +73,7 @@ const EditProfile = ({ user, updateProfileMutation }: EditProfileProps) => {
             <div
               className={cn(
                 "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium text-white",
-                avatar ? "overflow-hidden" : "bg-primary"
+                avatar ? "overflow-hidden" : "bg-gray-800/70"
               )}
             >
               {avatar ? (
@@ -68,7 +83,7 @@ const EditProfile = ({ user, updateProfileMutation }: EditProfileProps) => {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                initials || user.email.substring(0, 2).toUpperCase()
+                getInitials()
               )}
             </div>
             <label
@@ -119,18 +134,6 @@ const EditProfile = ({ user, updateProfileMutation }: EditProfileProps) => {
               placeholder="Tu nombre"
               value={displayName}
               onChange={(e) => setDisplayName(e.target.value)}
-              className="h-[50px]"
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="initials">Iniciales</Label>
-            <Input
-              id="initials"
-              type="text"
-              placeholder="Tus iniciales"
-              value={initials}
-              onChange={(e) => setInitials(e.target.value)}
-              maxLength={2}
               className="h-[50px]"
             />
           </div>
@@ -395,8 +398,6 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen pb-20">
       <div className="max-w-md mx-auto p-4">
-        <h1 className="text-2xl font-bold mb-6">Mi perfil</h1>
-
         <div className="bg-card rounded-lg p-6 shadow-sm">
           <EditProfile user={user} updateProfileMutation={updateProfileMutation} />
         </div>
