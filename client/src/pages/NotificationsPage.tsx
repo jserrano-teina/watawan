@@ -8,7 +8,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProductImage from '@/components/ProductImage';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Bell } from 'lucide-react';
+import BottomNavigation from '@/components/BottomNavigation';
 
 type NotificationItem = {
   item: WishItem;
@@ -109,15 +110,39 @@ const NotificationsPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="text-center py-16">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#222] flex items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white/40"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          <div className="p-6 text-center max-w-md mx-auto">
+            {/* Ilustración inspiracional SVG */}
+            <div className="mx-auto w-40 h-40 mb-6 flex items-center justify-center">
+              <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+                {/* Círculo de fondo */}
+                <circle cx="256" cy="256" r="180" fill="#1A1A1A" stroke="#2A2A2A" strokeWidth="2" />
+                
+                {/* Icono de notificación en el centro */}
+                <path 
+                  d="M256 170C268 170 280 174 289 182C298 190 303 201 303 213V245L320 279H192L209 245V213C209 201 214 190 223 182C232 174 244 170 256 170Z" 
+                  fill="#444" 
+                  stroke="#555" 
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path 
+                  d="M238 310H274C274 316 271 322 267 326C263 330 257 333 251 333C245 333 239 330 235 326C231 322 228 316 228 310" 
+                  fill="#444" 
+                  stroke="#555" 
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
             </div>
-            <h3 className="text-xl font-medium text-white/90">No hay notificaciones</h3>
-            <p className="mt-2 text-white/50">Las reservas de tus deseos aparecerán aquí</p>
+            <h2 className="font-bold text-2xl text-white mb-3">No hay notificaciones</h2>
+            <p className="text-white/60 mb-6">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
           </div>
         )}
       </main>
+      
+      <BottomNavigation />
     </div>
   );
 };

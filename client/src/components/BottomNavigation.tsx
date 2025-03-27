@@ -36,7 +36,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
             className={`flex flex-col items-center justify-center w-full h-full ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
           >
             <Home className="h-5 w-5" />
-            <span className="text-xs mt-1">Inicio</span>
+            <span className="text-xs mt-1">Mis deseos</span>
           </button>
           
           <button 
