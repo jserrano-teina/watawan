@@ -322,7 +322,7 @@ const MobileView = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col">
+    <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col animate-slide-up">
       <div className="flex-1 overflow-auto pb-28">
         {/* Imagen principal a sangre */}
         <div className="w-full bg-[#202020] relative">

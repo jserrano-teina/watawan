@@ -392,7 +392,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#121212] min-h-screen overflow-auto">
+    <div className="fixed inset-0 z-50 bg-[#121212] min-h-screen overflow-auto animate-slide-up">
       <div ref={modalRef} className="flex flex-col h-full text-white">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
           <h2 className="text-xl font-semibold">
