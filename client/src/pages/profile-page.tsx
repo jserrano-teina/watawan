@@ -291,13 +291,15 @@ const ProfilePage = () => {
           <p className="text-gray-500 text-sm mb-2">{user.email}</p>
           
           {/* Botón de editar */}
-          <button
+          <Button
             onClick={() => setIsEditingProfile(true)}
-            className="text-primary underline text-sm flex items-center"
+            variant="secondary"
+            size="sm"
+            className="mt-4 flex items-center gap-1 h-9 px-4"
           >
-            <Pencil className="h-3 w-3 mr-1" />
-            Editar
-          </button>
+            <Pencil className="h-3.5 w-3.5" />
+            Editar perfil
+          </Button>
         </div>
 
         <div className="mt-8 space-y-4">
