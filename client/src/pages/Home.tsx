@@ -12,7 +12,7 @@ import Header from '../components/Header';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, Check, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem } = useWishlist();
@@ -187,11 +187,11 @@ const Home: React.FC = () => {
           <Toast visible={true} variant={toast.variant}>
             <div className="flex items-center">
               {toast.variant === 'success' ? (
-                <CheckCircle className="mr-2 h-6 w-6 text-green-400" />
+                <Check className="mr-2 h-8 w-8 text-green-400" />
               ) : (
                 <AlertCircle className="mr-2 h-4 w-4" />
               )}
-              <span>{toast.message}</span>
+              <span className="text-white font-medium">{toast.message}</span>
             </div>
           </Toast>
         </ToastContainer>
