@@ -49,6 +49,8 @@ const Toast: React.FC<ToastProps> = ({
   className, 
   variant = 'success', 
   visible = true,
+  open,
+  onOpenChange,
   children, 
   ...props 
 }) => {
@@ -60,6 +62,21 @@ const Toast: React.FC<ToastProps> = ({
     destructive: "bg-red-800 border border-red-700 text-white",
   }
 
+  // Efecto para auto-cerrar la notificación después de un tiempo
+  React.useEffect(() => {
+    if (visible && onOpenChange) {
+      const timer = setTimeout(() => {
+        onOpenChange(false);
+      }, 5000); // 5 segundos
+      
+      return () => clearTimeout(timer);
+    }
+  }, [visible, onOpenChange]);
+
+  // Filtrar propiedades que no son válidas para elementos DOM
+  const domProps = { ...props };
+  delete (domProps as any).onOpenChange;
+  
   return (
     <div
       className={cn(
@@ -68,7 +85,7 @@ const Toast: React.FC<ToastProps> = ({
         visible ? "opacity-100" : "opacity-0 pointer-events-none",
         className
       )}
-      {...props}
+      {...domProps}
     >
       <div className="flex items-center flex-1">
         <ToastIcon variant={variant} />

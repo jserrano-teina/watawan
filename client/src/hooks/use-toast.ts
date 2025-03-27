@@ -11,8 +11,9 @@ type ToastProps = {
   onOpenChange?: (open: boolean) => void;
 }
 
+// Limitar a un toast a la vez y eliminar automáticamente después de 4 segundos
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 5000
+const TOAST_REMOVE_DELAY = 4000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -166,6 +167,11 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+  
+  // Auto-dismiss el toast después de un tiempo
+  setTimeout(() => {
+    dismiss();
+  }, TOAST_REMOVE_DELAY);
 
   return {
     id: id,
