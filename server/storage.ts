@@ -13,6 +13,7 @@ export interface IStorage {
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, userData: Partial<User>): Promise<User>;
   updateLastLogin(id: number): Promise<User>;
+  updateLastNotificationsView(id: number): Promise<User>;
 
   // Wishlist operations
   getWishlist(id: number): Promise<Wishlist | undefined>;
@@ -30,6 +31,7 @@ export interface IStorage {
   // Reservation operations
   reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation>;
   getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
+  getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
 }
 
 export class MemStorage implements IStorage {
@@ -130,6 +132,20 @@ export class MemStorage implements IStorage {
     const updatedUser = { 
       ...existingUser, 
       lastLogin: new Date() 
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+  
+  async updateLastNotificationsView(id: number): Promise<User> {
+    const existingUser = this.users.get(id);
+    if (!existingUser) {
+      throw new Error(`User with ID ${id} not found`);
+    }
+    
+    const updatedUser = { 
+      ...existingUser, 
+      lastNotificationsView: new Date() 
     };
     this.users.set(id, updatedUser);
     return updatedUser;
@@ -271,6 +287,23 @@ export class MemStorage implements IStorage {
     }
     
     return result;
+  }
+  
+  async getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {
+    // Get all reservations
+    const allReservations = await this.getReservationsForUser(userId);
+    
+    // Get user data to check last notifications view
+    const user = await this.getUser(userId);
+    if (!user || !user.lastNotificationsView) {
+      // If user doesn't exist or has never viewed notifications, return all reservations
+      return allReservations;
+    }
+    
+    // Filter only those reservations that happened after the last time the user viewed notifications
+    return allReservations.filter(({ reservation }) => {
+      return new Date(reservation.reservedAt) > new Date(user.lastNotificationsView!);
+    });
   }
 }
 

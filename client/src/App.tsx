@@ -7,6 +7,7 @@ import Home from "@/pages/Home";
 import SharedList from "@/pages/SharedList";
 import LoginPage from "./pages/login-page";
 import RegisterPage from "./pages/register-page";
+import NotificationsPage from "./pages/NotificationsPage";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import React from "react";
@@ -15,6 +16,7 @@ function Router() {
   return (
     <Switch>
       <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/share/:id" component={SharedList} />

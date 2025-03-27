@@ -12,6 +12,7 @@ export const users = pgTable("users", {
   avatar: text("avatar"),
   createdAt: timestamp("created_at").defaultNow(),
   lastLogin: timestamp("last_login"),
+  lastNotificationsView: timestamp("last_notifications_view"),
   settings: json("settings").default({}),
 });
 
@@ -92,6 +93,7 @@ export type User = {
   avatar?: string;
   createdAt?: Date;
   lastLogin?: Date;
+  lastNotificationsView?: Date;
   settings?: Record<string, any>;
 };
 export type InsertUser = z.infer<typeof insertUserSchema>;

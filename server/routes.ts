@@ -314,6 +314,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const reservations = await storage.getReservationsForUser(req.user.id);
     res.json(reservations);
   });
+  
+  // Get unread notifications (reservations)
+  router.get("/notifications/unread", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    
+    const unreadReservations = await storage.getUnreadReservationsForUser(user.id);
+    res.json(unreadReservations);
+  });
+  
+  // Mark notifications as read
+  router.post("/notifications/mark-read", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    
+    const updatedUser = await storage.updateLastNotificationsView(user.id);
+    res.json({ success: true, lastNotificationsView: updatedUser.lastNotificationsView });
+  });
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
   router.get("/extract-metadata", async (req: Request, res) => {
