@@ -107,7 +107,7 @@ const NotificationsPage: React.FC = () => {
                 onClick={() => handleOpenDetail(item)}
               >
                 <div className="flex items-start gap-4">
-                  <div className="h-16 w-16 rounded-lg overflow-hidden flex-shrink-0 bg-[#222]">
+                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0 bg-[#222]" style={{ borderRadius: '6px' }}>
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
@@ -119,7 +119,7 @@ const NotificationsPage: React.FC = () => {
                   
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm">
-                      <p>¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
+                      <p className="text-white">¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
                     </div>
                     
                     <p className="text-white/50 text-sm mt-2">
