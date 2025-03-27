@@ -54,8 +54,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "¡Bienvenido!",
-        description: `Has iniciado sesión como ${user.displayName || user.email}`,
+        title: "¡Bienvenido a WataWan!",
+        variant: "success"
       });
     },
     onError: (error: Error) => {
@@ -76,8 +76,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     onSuccess: (user: User) => {
       queryClient.setQueryData(["/api/user"], user);
       toast({
-        title: "¡Cuenta creada!",
-        description: `Bienvenido, ${user.displayName || user.email}`,
+        title: "¡Bienvenido a WataWan!",
+        variant: "success"
       });
     },
     onError: (error: Error) => {
@@ -99,8 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Invalida todas las consultas para refrescar los datos después de cerrar sesión
       queryClient.invalidateQueries();
       toast({
-        title: "Sesión cerrada",
-        description: "Has cerrado sesión correctamente",
+        title: "Has cerrado sesión",
+        variant: "info"
       });
     },
     onError: (error: Error) => {

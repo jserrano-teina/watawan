@@ -39,8 +39,10 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }
 
 interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'success' | 'error' | 'warning' | 'info';
+  variant?: 'success' | 'error' | 'warning' | 'info' | 'destructive';
   visible?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const Toast: React.FC<ToastProps> = ({ 
@@ -51,10 +53,11 @@ const Toast: React.FC<ToastProps> = ({
   ...props 
 }) => {
   const variantClasses = {
-    success: "bg-green-800/20 border border-green-800/30 text-white",
-    error: "bg-red-800/20 border border-red-800/30 text-white",
-    warning: "bg-yellow-800/20 border border-yellow-800/30 text-white",
-    info: "bg-blue-800/20 border border-blue-800/30 text-white",
+    success: "bg-green-800 border border-green-700 text-white",
+    error: "bg-red-800 border border-red-700 text-white",
+    warning: "bg-yellow-800 border border-yellow-700 text-white",
+    info: "bg-blue-800 border border-blue-700 text-white",
+    destructive: "bg-red-800 border border-red-700 text-white",
   }
 
   return (
@@ -112,17 +115,18 @@ const ToastIcon: React.FC<{ variant: ToastProps['variant'] }> = ({ variant }) =>
     success: <Check className="h-5 w-5 text-green-400" />,
     error: <AlertCircle className="h-5 w-5 text-red-400" />,
     warning: <AlertTriangle className="h-5 w-5 text-amber-400" />,
-    info: <Info className="h-5 w-5 text-blue-400" />
+    info: <Info className="h-5 w-5 text-blue-400" />,
+    destructive: <AlertCircle className="h-5 w-5 text-red-400" />
   };
 
   return (
     <div className={cn(
       "w-9 h-9 rounded-full flex items-center justify-center mr-3 flex-shrink-0",
       {
-        "bg-green-800/30": variant === 'success',
-        "bg-red-800/30": variant === 'error',
-        "bg-yellow-800/30": variant === 'warning',
-        "bg-blue-800/30": variant === 'info',
+        "bg-green-700": variant === 'success',
+        "bg-red-700": variant === 'error' || variant === 'destructive', // Usamos el mismo color para error y destructive
+        "bg-yellow-700": variant === 'warning',
+        "bg-blue-700": variant === 'info',
       }
     )}>
       {iconMap[variant || 'success']}
