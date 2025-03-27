@@ -4,8 +4,16 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical, Trash } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -28,6 +36,8 @@ const DesktopView = ({
   onDelete: (item: WishItem) => void;
   isOpen: boolean;
 }) => {
+  const [openSheet, setOpenSheet] = useState(false);
+  
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
     locale: es
@@ -51,14 +61,22 @@ const DesktopView = ({
 
   const handleEdit = () => {
     onEdit(item);
+    setOpenSheet(false);
     onClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
+      setOpenSheet(false);
       onClose();
     }
+  };
+  
+  // Función para abrir enlace externamente
+  const openExternalLink = () => {
+    window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
+    setOpenSheet(false);
   };
 
   return (
@@ -95,9 +113,64 @@ const DesktopView = ({
             <div className="p-5">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
-                <button className="p-1 hover:bg-[#252525] rounded-full transition-colors">
-                  <MoreVertical size={20} className="text-white/70" />
-                </button>
+                <Sheet 
+                  open={openSheet} 
+                  onOpenChange={setOpenSheet}
+                >
+                  <SheetTrigger asChild>
+                    <button 
+                      className="p-1 hover:bg-[#252525] rounded-full transition-colors"
+                      aria-label="Opciones"
+                    >
+                      <MoreVertical size={20} className="text-white/70" />
+                    </button>
+                  </SheetTrigger>
+                  <SheetContent 
+                    side="bottom" 
+                    className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+                  >
+                    <SheetHeader className="sr-only">
+                      <SheetTitle>{item.title}</SheetTitle>
+                      <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
+                    </SheetHeader>
+                    <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
+                      <h3 className="text-white text-xl font-medium">{item.title}</h3>
+                      <button 
+                        onClick={() => setOpenSheet(false)}
+                        className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
+                      >
+                        <X className="h-7 w-7" />
+                      </button>
+                    </div>
+                    
+                    <div className="mt-4 flex flex-col">
+                      <button 
+                        onClick={handleEdit}
+                        className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                        disabled={item.isReserved}
+                      >
+                        <Edit size={22} className="mr-4" />
+                        Editar
+                      </button>
+                      
+                      <button 
+                        onClick={openExternalLink}
+                        className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
+                      >
+                        <ExternalLink size={22} className="mr-4" />
+                        Ir al enlace de compra
+                      </button>
+                      
+                      <button 
+                        onClick={handleDelete}
+                        className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
+                      >
+                        <Trash size={22} className="mr-4" />
+                        Eliminar
+                      </button>
+                    </div>
+                  </SheetContent>
+                </Sheet>
               </div>
               
               {item.price && (
@@ -198,6 +271,8 @@ const MobileView = ({
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
 }) => {
+  const [openSheet, setOpenSheet] = useState(false);
+  
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
     locale: es
@@ -221,14 +296,22 @@ const MobileView = ({
 
   const handleEdit = () => {
     onEdit(item);
+    setOpenSheet(false);
     onClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
+      setOpenSheet(false);
       onClose();
     }
+  };
+  
+  // Función para abrir enlace externamente
+  const openExternalLink = () => {
+    window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
+    setOpenSheet(false);
   };
 
   useEffect(() => {
@@ -269,9 +352,64 @@ const MobileView = ({
           {/* Nombre del producto con mayor tamaño y peso */}
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
-            <button className="p-1 hover:bg-[#252525] rounded-full transition-colors">
-              <MoreVertical size={20} className="text-white/70" />
-            </button>
+            <Sheet 
+              open={openSheet} 
+              onOpenChange={setOpenSheet}
+            >
+              <SheetTrigger asChild>
+                <button 
+                  className="p-1 hover:bg-[#252525] rounded-full transition-colors"
+                  aria-label="Opciones"
+                >
+                  <MoreVertical size={20} className="text-white/70" />
+                </button>
+              </SheetTrigger>
+              <SheetContent 
+                side="bottom" 
+                className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+              >
+                <SheetHeader className="sr-only">
+                  <SheetTitle>{item.title}</SheetTitle>
+                  <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
+                </SheetHeader>
+                <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
+                  <h3 className="text-white text-xl font-medium">{item.title}</h3>
+                  <button 
+                    onClick={() => setOpenSheet(false)}
+                    className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
+                  >
+                    <X className="h-7 w-7" />
+                  </button>
+                </div>
+                
+                <div className="mt-4 flex flex-col">
+                  <button 
+                    onClick={handleEdit}
+                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    disabled={item.isReserved}
+                  >
+                    <Edit size={22} className="mr-4" />
+                    Editar
+                  </button>
+                  
+                  <button 
+                    onClick={openExternalLink}
+                    className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
+                  >
+                    <ExternalLink size={22} className="mr-4" />
+                    Ir al enlace de compra
+                  </button>
+                  
+                  <button 
+                    onClick={handleDelete}
+                    className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
+                  >
+                    <Trash size={22} className="mr-4" />
+                    Eliminar
+                  </button>
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
           
           {/* Precio como texto normal de mayor tamaño */}
