@@ -92,7 +92,10 @@ const NotificationsPage: React.FC = () => {
       <Header user={user as User} />
       
       <main className="flex-grow container mx-auto px-4 pb-24">
-        <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
+        {/* Mostramos el título solo cuando hay notificaciones */}
+        {notifications.length > 0 && (
+          <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
+        )}
         
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
@@ -134,7 +137,7 @@ const NotificationsPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="p-6 text-center max-w-md mx-auto">
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] p-6 text-center max-w-md mx-auto">
             {/* Ilustración inspiracional SVG */}
             <div className="mx-auto w-40 h-40 mb-6 flex items-center justify-center">
               <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
