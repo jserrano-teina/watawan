@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { WishItem, Reservation } from '@shared/schema';
@@ -10,6 +10,7 @@ import { es } from 'date-fns/locale';
 import ProductImage from '@/components/ProductImage';
 import { Loader2, Bell } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
+import WishDetailModal from '@/components/modals/WishDetailModal';
 
 type NotificationItem = {
   item: WishItem;
@@ -18,6 +19,8 @@ type NotificationItem = {
 
 const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
+  const [selectedItem, setSelectedItem] = useState<WishItem | null>(null);
+  const [detailModalOpen, setDetailModalOpen] = useState(false);
   
   // Obtener todas las reservas
   const { data: notifications = [], isLoading } = useQuery<NotificationItem[]>({
@@ -36,6 +39,12 @@ const NotificationsPage: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
     }
   });
+  
+  // Función para abrir el detalle del deseo
+  const handleOpenDetail = (item: WishItem) => {
+    setSelectedItem(item);
+    setDetailModalOpen(true);
+  };
   
   // Marcar como leídas automáticamente al visitar la página
   useEffect(() => {
@@ -69,7 +78,7 @@ const NotificationsPage: React.FC = () => {
       <Header user={user as User} />
       
       <main className="flex-grow container mx-auto px-4 pb-24">
-        <h1 className="text-2xl font-bold mt-4 mb-6">Notificaciones</h1>
+        <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
         
         {isLoading ? (
           <div className="flex justify-center items-center h-40">
@@ -78,9 +87,13 @@ const NotificationsPage: React.FC = () => {
         ) : notifications.length > 0 ? (
           <div className="space-y-4">
             {notifications.map(({ item, reservation }) => (
-              <div key={reservation.id} className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333]">
+              <div 
+                key={reservation.id} 
+                className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333] cursor-pointer active:bg-[#222]"
+                onClick={() => handleOpenDetail(item)}
+              >
                 <div className="flex items-start gap-3">
-                  <div className="h-16 w-16 rounded-md overflow-hidden flex-shrink-0 bg-[#222]">
+                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0 bg-[#222]">
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
@@ -91,11 +104,8 @@ const NotificationsPage: React.FC = () => {
                   </div>
                   
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-white">{item.title}</h3>
-                    
-                    <div className="text-green-500 flex items-center text-sm mt-1">
-                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>
-                      <p>Alguien ha reservado este regalo para ti</p>
+                    <div className="text-green-500 text-sm">
+                      <p>¡Alguien ha reservado <span className="font-medium">{item.title}</span> para regalarte!</p>
                     </div>
                     
                     <p className="text-white/50 text-sm mt-2">
@@ -143,6 +153,16 @@ const NotificationsPage: React.FC = () => {
       </main>
       
       <BottomNavigation />
+      
+      {selectedItem && (
+        <WishDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          item={selectedItem}
+          onEdit={() => {}}
+          onDelete={() => {}}
+        />
+      )}
     </div>
   );
 };
