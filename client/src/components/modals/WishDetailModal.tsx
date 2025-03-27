@@ -59,6 +59,11 @@ const DesktopView = ({
 
   const productId = getProductId();
 
+  // Función segura para cerrar la modal
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    handleClose();
+  };
   const handleEdit = () => {
     onEdit(item);
     setOpenSheet(false);
@@ -297,14 +302,14 @@ const MobileView = ({
   const handleEdit = () => {
     onEdit(item);
     setOpenSheet(false);
-    onClose();
+    handleClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
       setOpenSheet(false);
-      onClose();
+      handleClose();
     }
   };
   
@@ -315,11 +320,19 @@ const MobileView = ({
   };
 
   useEffect(() => {
+    // Bloquear el scroll mientras la modal está abierta
     document.body.style.overflow = 'hidden';
+    
     return () => {
       document.body.style.overflow = '';
     };
   }, []);
+  
+  // Función segura para cerrar la modal
+  const handleClose = (e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    onClose();
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col animate-slide-up">
@@ -328,7 +341,7 @@ const MobileView = ({
         <div className="w-full bg-[#202020] relative">
           {/* Botón de regreso flotante, ahora fixed para mantenerlo visible al hacer scroll */}
           <button 
-            onClick={onClose}
+            onClick={handleClose}
             className="fixed top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
           >
             <ArrowLeft size={20} />
