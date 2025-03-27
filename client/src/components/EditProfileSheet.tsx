@@ -145,10 +145,6 @@ export function EditProfileSheet({
             <div className="text-sm text-red-500 font-medium mb-4">{error}</div>
           )}
           
-          <div className="text-white/80 mb-6">
-            Actualiza tu información de perfil
-          </div>
-          
           <div className="space-y-4">
             {/* Campo de nombre */}
             <div className="space-y-2">
@@ -159,6 +155,7 @@ export function EditProfileSheet({
                 placeholder="Tu nombre"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
+                required
               />
             </div>
             
@@ -168,10 +165,15 @@ export function EditProfileSheet({
               <CustomInput
                 id="email"
                 type="email"
+                placeholder="ejemplo@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 error={error.includes("email")}
+                required
               />
+              <p className="text-xs text-white/60 mt-1">
+                Para cambiar tu email deberás confirmar tu contraseña
+              </p>
             </div>
             
             {/* Campo de contraseña - deshabilitado si el email no ha cambiado */}
@@ -180,11 +182,12 @@ export function EditProfileSheet({
                 htmlFor="password" 
                 className={`text-white/80 ${!emailChanged ? 'opacity-50' : ''}`}
               >
-                Contraseña actual {emailChanged ? '(requerida)' : ''}
+                Contraseña actual
               </Label>
               <CustomInput
                 id="password"
                 type="password"
+                placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={!emailChanged}
@@ -192,11 +195,6 @@ export function EditProfileSheet({
                 error={error.includes("contraseña")}
                 className={`${!emailChanged ? 'opacity-50' : ''}`}
               />
-              {emailChanged && (
-                <p className="text-xs text-white/60 mt-1">
-                  Necesitamos verificar tu identidad para cambiar el email
-                </p>
-              )}
             </div>
           </div>
           
