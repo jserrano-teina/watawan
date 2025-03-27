@@ -1,19 +1,12 @@
 import * as React from "react"
 
-// Define los tipos localmente ya que no los exportamos del componente toast
-type ToastActionElement = React.ReactElement
+import type {
+  ToastActionElement,
+  ToastProps,
+} from "@/components/ui/toast"
 
-// Debe coincidir con la interfaz ToastProps en el componente toast
-type ToastProps = {
-  variant?: 'success' | 'error' | 'warning' | 'info' | 'destructive';
-  visible?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
-// Limitar a un toast a la vez y eliminar automáticamente después de 4 segundos
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 4000
+const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -162,16 +155,11 @@ function toast({ ...props }: Toast) {
       ...props,
       id,
       open: true,
-      onOpenChange: (open: boolean) => {
+      onOpenChange: (open) => {
         if (!open) dismiss()
       },
     },
   })
-  
-  // Auto-dismiss el toast después de un tiempo
-  setTimeout(() => {
-    dismiss();
-  }, TOAST_REMOVE_DELAY);
 
   return {
     id: id,

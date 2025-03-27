@@ -1,6 +1,6 @@
 import * as React from "react"
 import { cn } from "@/lib/utils"
-import { X, Check, AlertCircle, Info, AlertTriangle } from "lucide-react"
+import { X } from "lucide-react"
 
 const ToastProvider: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ 
   children 
@@ -30,7 +30,7 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "fixed top-4 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-xl animate-slide-down",
+        "fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50",
         className
       )}
       {...props}
@@ -39,60 +39,35 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
 }
 
 interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'success' | 'error' | 'warning' | 'info' | 'destructive';
+  variant?: 'success' | 'error' | 'warning' | 'info';
   visible?: boolean;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
 }
 
 const Toast: React.FC<ToastProps> = ({ 
   className, 
   variant = 'success', 
   visible = true,
-  open,
-  onOpenChange,
   children, 
   ...props 
 }) => {
   const variantClasses = {
-    success: "bg-green-800 border border-green-700 text-white",
-    error: "bg-red-800 border border-red-700 text-white",
-    warning: "bg-yellow-800 border border-yellow-700 text-white",
-    info: "bg-blue-800 border border-blue-700 text-white",
-    destructive: "bg-red-800 border border-red-700 text-white",
+    success: "bg-success text-white",
+    error: "bg-error text-white",
+    warning: "bg-warning text-black",
+    info: "bg-secondary text-white",
   }
 
-  // Efecto para auto-cerrar la notificación después de un tiempo
-  React.useEffect(() => {
-    if (visible && onOpenChange) {
-      const timer = setTimeout(() => {
-        onOpenChange(false);
-      }, 5000); // 5 segundos
-      
-      return () => clearTimeout(timer);
-    }
-  }, [visible, onOpenChange]);
-
-  // Filtrar propiedades que no son válidas para elementos DOM
-  const domProps = { ...props };
-  delete (domProps as any).onOpenChange;
-  
   return (
     <div
       className={cn(
-        "px-4 py-3 rounded-xl shadow-lg flex items-center justify-between transition-opacity duration-300",
+        "px-4 py-2 rounded-lg shadow-lg flex items-center justify-between transition-opacity duration-300",
         variantClasses[variant],
         visible ? "opacity-100" : "opacity-0 pointer-events-none",
         className
       )}
-      {...domProps}
+      {...props}
     >
-      <div className="flex items-center flex-1">
-        <ToastIcon variant={variant} />
-        <div className="flex-1 min-w-0">
-          {children}
-        </div>
-      </div>
+      {children}
     </div>
   )
 }
@@ -104,7 +79,7 @@ const ToastTitle: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "font-medium text-sm text-white",
+        "font-medium text-sm",
         className
       )}
       {...props}
@@ -119,37 +94,13 @@ const ToastDescription: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "text-sm text-white",
+        "text-xs opacity-90",
         className
       )}
       {...props}
     />
   )
 }
-
-const ToastIcon: React.FC<{ variant: ToastProps['variant'] }> = ({ variant }) => {
-  const iconMap = {
-    success: <Check className="h-5 w-5 text-green-400" />,
-    error: <AlertCircle className="h-5 w-5 text-red-400" />,
-    warning: <AlertTriangle className="h-5 w-5 text-amber-400" />,
-    info: <Info className="h-5 w-5 text-blue-400" />,
-    destructive: <AlertCircle className="h-5 w-5 text-red-400" />
-  };
-
-  return (
-    <div className={cn(
-      "w-9 h-9 rounded-full flex items-center justify-center mr-3 flex-shrink-0",
-      {
-        "bg-green-700": variant === 'success',
-        "bg-red-700": variant === 'error' || variant === 'destructive', // Usamos el mismo color para error y destructive
-        "bg-yellow-700": variant === 'warning',
-        "bg-blue-700": variant === 'info',
-      }
-    )}>
-      {iconMap[variant || 'success']}
-    </div>
-  );
-};
 
 const ToastClose: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement>> = ({ 
   className, 
@@ -175,6 +126,5 @@ export {
   ToastViewport, 
   ToastTitle, 
   ToastDescription, 
-  ToastClose,
-  ToastIcon
+  ToastClose 
 }

@@ -5,7 +5,7 @@ import {
   ToastDescription,
   ToastProvider,
   ToastTitle,
-  ToastContainer,
+  ToastViewport,
 } from "@/components/ui/toast"
 
 export function Toaster() {
@@ -13,26 +13,21 @@ export function Toaster() {
 
   return (
     <ToastProvider>
-      <ToastContainer>
-        {toasts.map(function ({ id, title, description, action, onOpenChange, open, ...props }) {
-          return (
-            <Toast 
-              key={id} 
-              {...props}
-              onOpenChange={onOpenChange}
-              visible={open}
-            >
-              <div className="grid gap-1">
-                {title && <ToastTitle>{title}</ToastTitle>}
-                {description && (
-                  <ToastDescription>{description}</ToastDescription>
-                )}
-              </div>
-              {action}
-            </Toast>
-          )
-        })}
-      </ToastContainer>
+      {toasts.map(function ({ id, title, description, action, ...props }) {
+        return (
+          <Toast key={id} {...props}>
+            <div className="grid gap-1">
+              {title && <ToastTitle>{title}</ToastTitle>}
+              {description && (
+                <ToastDescription>{description}</ToastDescription>
+              )}
+            </div>
+            {action}
+            <ToastClose />
+          </Toast>
+        )
+      })}
+      <ToastViewport />
     </ToastProvider>
   )
 }
