@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { useParams } from 'wouter';
 import { useSharedWishlist } from '../hooks/useWishlist';
 import SharedWishlistView from '../components/SharedWishlistView';
-import { Toast, ToastContainer } from '@/components/ui/toast';
-import { CheckCircle, AlertCircle } from 'lucide-react';
+import { Toast, ToastContainer, ToastTitle } from '@/components/ui/toast';
+import { AlertCircle } from 'lucide-react';
 
 const SharedList: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -84,14 +84,7 @@ const SharedList: React.FC = () => {
       
       <ToastContainer>
         <Toast visible={toast.visible} variant={toast.variant}>
-          <div className="flex items-center">
-            {toast.variant === 'success' ? (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            ) : (
-              <AlertCircle className="mr-2 h-4 w-4" />
-            )}
-            <span>{toast.message}</span>
-          </div>
+          <ToastTitle>{toast.message}</ToastTitle>
         </Toast>
       </ToastContainer>
     </div>
