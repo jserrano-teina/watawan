@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWishlist } from '../hooks/useWishlist';
 import ShareBanner from '../components/ShareBanner';
 import WishItem from '../components/WishItem';
@@ -12,7 +12,7 @@ import Header from '../components/Header';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
-import { AlertCircle, CheckCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
   const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem } = useWishlist();
@@ -21,6 +21,7 @@ const Home: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItemType | null>(null);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
+  const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
   // Ordenar los items con los más recientes primero
@@ -55,6 +56,9 @@ const Home: React.FC = () => {
 
   const handleWishFormSubmit = async (data: any) => {
     try {
+      setIsSaving(true);
+      setShowAddWishModal(false); // Cerrar modal al iniciar la operación
+      
       if (itemToEdit) {
         await updateWishItem.mutateAsync({ id: itemToEdit.id, ...data });
         showToast('Deseo actualizado correctamente', 'success');
@@ -65,6 +69,11 @@ const Home: React.FC = () => {
     } catch (error) {
       console.error('Error saving wish:', error);
       showToast('Error al guardar el deseo', 'error');
+    } finally {
+      // Dar un pequeño tiempo antes de ocultar el loader para asegurar que los datos se han cargado
+      setTimeout(() => {
+        setIsSaving(false);
+      }, 500);
     }
   };
   
@@ -108,6 +117,16 @@ const Home: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
+      {/* Overlay de carga durante el guardado */}
+      {isSaving && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
+          <div className="bg-[#1e1e1e] rounded-xl p-6 flex flex-col items-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mb-3" />
+            <p className="text-white text-lg font-medium">Guardando tu deseo...</p>
+          </div>
+        </div>
+      )}
+      
       <Header user={user} />
       <main className="flex-grow container mx-auto px-4 pb-24">
         {myWishItems.length > 0 && (
