@@ -24,292 +24,38 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useLocation } from "wouter";
-import { Check, AlertCircle } from "lucide-react";
+import { Check, AlertCircle, Pencil } from "lucide-react";
 import { Toast, ToastContainer } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useMutation } from "@tanstack/react-query";
+import { EditProfileSheet } from "@/components/EditProfileSheet";
 
-type EditProfileProps = {
-  user: User;
-  updateProfileMutation: any;
-};
-
-const EditProfile = ({ user, updateProfileMutation }: EditProfileProps) => {
-  const [displayName, setDisplayName] = useState(user.displayName || "");
-  const [avatar, setAvatar] = useState(user.avatar || "");
-
-  // Función para generar iniciales automáticamente desde el nombre o email
-  const getInitials = () => {
-    if (displayName) {
-      // Si hay nombre, tomar la primera letra de cada palabra (máximo 2)
-      const words = displayName.trim().split(/\s+/);
-      if (words.length === 1) {
-        return words[0].charAt(0).toUpperCase();
-      } else {
-        return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
-      }
+// Función para generar iniciales automáticamente desde el nombre o email
+const getInitials = (displayName: string | undefined, email: string) => {
+  if (displayName) {
+    // Si hay nombre, tomar la primera letra de cada palabra (máximo 2)
+    const words = displayName.trim().split(/\s+/);
+    if (words.length === 1) {
+      return words[0].charAt(0).toUpperCase();
+    } else {
+      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
     }
-    // Si no hay nombre, usar las primeras letras del email
-    return user.email.substring(0, 2).toUpperCase();
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    updateProfileMutation.mutate({
-      displayName,
-      avatar,
-      // Eliminamos la propiedad de iniciales, se calculará automáticamente
-      initials: ""
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <div className="flex justify-center mb-6">
-          <div className="relative">
-            <div
-              className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium text-white",
-                avatar ? "overflow-hidden" : "bg-gray-800/70"
-              )}
-            >
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt={displayName || user.email}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                getInitials()
-              )}
-            </div>
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 bg-secondary hover:bg-secondary/90 p-2 rounded-full cursor-pointer shadow-md"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="text-white"
-              >
-                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-              </svg>
-              <input
-                id="avatar-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onloadend = () => {
-                      setAvatar(reader.result as string);
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }}
-              />
-            </label>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName">Nombre</Label>
-            <Input
-              id="displayName"
-              type="text"
-              placeholder="Tu nombre"
-              value={displayName}
-              onChange={(e) => setDisplayName(e.target.value)}
-              className="h-[50px]"
-            />
-          </div>
-          <Button
-            type="submit"
-            className="w-full h-[50px] mt-6"
-            disabled={updateProfileMutation.isPending}
-          >
-            {updateProfileMutation.isPending ? (
-              <div className="flex items-center">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Guardando...
-              </div>
-            ) : (
-              "Guardar cambios"
-            )}
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
-};
-
-type EmailFormProps = {
-  user: User;
-  isOpen: boolean;
-  onClose: () => void;
-  updateEmailMutation: any;
-};
-
-const EmailForm = ({
-  user,
-  isOpen,
-  onClose,
-  updateEmailMutation,
-}: EmailFormProps) => {
-  const [email, setEmail] = useState(user.email);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
-    
-    if (email === user.email) {
-      setError("El nuevo email debe ser diferente al actual");
-      return;
-    }
-
-    updateEmailMutation.mutate(
-      { email, password },
-      {
-        onSuccess: () => {
-          onClose();
-          setPassword("");
-        },
-        onError: (err: Error) => {
-          setError(err.message || "Error al actualizar el email");
-        },
-      }
-    );
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Cambiar email</DialogTitle>
-          <DialogDescription>
-            Para cambiar tu email, necesitamos confirmar tu contraseña
-          </DialogDescription>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="space-y-4 py-4">
-            {error && (
-              <div className="text-sm text-red-500 font-medium">{error}</div>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Nuevo email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="h-[50px]"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Contraseña actual</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-[50px]"
-                required
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={onClose}
-              type="button"
-              className="h-[50px]"
-            >
-              Cancelar
-            </Button>
-            <Button
-              type="submit"
-              className="h-[50px]"
-              disabled={updateEmailMutation.isPending}
-            >
-              {updateEmailMutation.isPending ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Actualizando...
-                </div>
-              ) : (
-                "Cambiar email"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-};
+  }
+  // Si no hay nombre, usar las primeras letras del email
+  return email.substring(0, 2).toUpperCase();
+}
 
 const ProfilePage = () => {
   const { user, error, isLoading, logoutMutation } = useAuth();
   const [, setLocation] = useLocation();
   const { toast } = useToast();
-  const [isEditingEmail, setIsEditingEmail] = useState(false);
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
-
+  const [avatar, setAvatar] = useState<string | undefined>(user?.avatar);
+  
   // Mutaciones con TanStack Query
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { displayName: string; initials: string; avatar: string }) => {
@@ -352,7 +98,6 @@ const ProfilePage = () => {
       });
       // Actualizar la información del usuario en la cache
       queryClient.invalidateQueries({ queryKey: ["/api/user"] });
-      setIsEditingEmail(false);
     },
     onError: (error: Error) => {
       setToastState({
@@ -368,6 +113,23 @@ const ProfilePage = () => {
         setLocation("/auth");
       },
     });
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setAvatar(result);
+        updateProfileMutation.mutate({
+          displayName: user?.displayName || "",
+          avatar: result,
+          initials: ""
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   if (isLoading) {
@@ -398,19 +160,71 @@ const ProfilePage = () => {
   return (
     <div className="min-h-screen pb-20">
       <div className="max-w-md mx-auto p-4">
-        <div className="bg-card rounded-lg p-6 shadow-sm">
-          <EditProfile user={user} updateProfileMutation={updateProfileMutation} />
+        <div className="flex flex-col items-center py-6">
+          {/* Avatar con botón de edición */}
+          <div className="relative mb-6">
+            <div
+              className={cn(
+                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium text-white",
+                avatar ? "overflow-hidden" : "bg-gray-800/70"
+              )}
+            >
+              {avatar ? (
+                <img
+                  src={avatar}
+                  alt={user.displayName || user.email}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                getInitials(user.displayName, user.email)
+              )}
+            </div>
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-secondary hover:bg-secondary/90 p-2 rounded-full cursor-pointer shadow-md"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-white"
+              >
+                <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+              </svg>
+              <input
+                id="avatar-upload"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+            </label>
+          </div>
+
+          {/* Información del usuario */}
+          <h2 className="text-xl font-bold mb-1">
+            {user.displayName || user.email.split('@')[0]}
+          </h2>
+          <p className="text-gray-500 text-sm mb-2">{user.email}</p>
+          
+          {/* Botón de editar */}
+          <button
+            onClick={() => setIsEditingProfile(true)}
+            className="text-primary underline text-sm flex items-center"
+          >
+            <Pencil className="h-3 w-3 mr-1" />
+            Editar
+          </button>
         </div>
 
         <div className="mt-8 space-y-4">
-          <Button
-            variant="outline"
-            onClick={() => setIsEditingEmail(true)}
-            className="w-full h-[50px] border border-gray-300"
-          >
-            Cambiar email
-          </Button>
-
           <Button
             variant="destructive"
             onClick={() => setIsLogoutDialogOpen(true)}
@@ -421,13 +235,16 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      <EmailForm
+      {/* Bottom Sheet para editar perfil */}
+      <EditProfileSheet
         user={user}
-        isOpen={isEditingEmail}
-        onClose={() => setIsEditingEmail(false)}
+        isOpen={isEditingProfile}
+        onClose={() => setIsEditingProfile(false)}
+        updateProfileMutation={updateProfileMutation}
         updateEmailMutation={updateEmailMutation}
       />
 
+      {/* Diálogo de confirmación para cerrar sesión */}
       <AlertDialog
         open={isLogoutDialogOpen}
         onOpenChange={setIsLogoutDialogOpen}
