@@ -37,7 +37,10 @@ const NotificationsPage: React.FC = () => {
       ...reservation,
       reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
     }
-  })) : [];
+  })).sort((a, b) => {
+    // Ordenar por fecha de reserva, de más reciente a más antigua
+    return new Date(b.reservation.reservedAt).getTime() - new Date(a.reservation.reservedAt).getTime();
+  }) : [];
   
   // Mutación para marcar notificaciones como leídas
   const markAsReadMutation = useMutation({
@@ -96,7 +99,7 @@ const NotificationsPage: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : notifications.length > 0 ? (
-          <div className="space-y-4">
+          <div className="space-y-2">
             {notifications.map(({ item, reservation }) => (
               <div 
                 key={reservation.id} 

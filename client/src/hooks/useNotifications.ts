@@ -32,7 +32,10 @@ export function useNotifications() {
       ...reservation,
       reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
     }
-  })) : [];
+  })).sort((a, b) => {
+    // Ordenar por fecha de reserva, de más reciente a más antigua
+    return new Date(b.reservation.reservedAt).getTime() - new Date(a.reservation.reservedAt).getTime();
+  }) : [];
   
   // Obtener todas las notificaciones
   const { 
@@ -55,7 +58,10 @@ export function useNotifications() {
       ...reservation,
       reservedAt: reservation.reservedAt?.toString() || new Date().toString(),
     }
-  })) : [];
+  })).sort((a, b) => {
+    // Ordenar por fecha de reserva, de más reciente a más antigua
+    return new Date(b.reservation.reservedAt).getTime() - new Date(a.reservation.reservedAt).getTime();
+  }) : [];
   
   // Marcar notificaciones como leídas
   const markAsRead = useMutation({
