@@ -2,6 +2,10 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { X } from "lucide-react"
 
+export type ToastActionElement = React.ReactElement<
+  React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>
+>
+
 const ToastProvider: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ 
   children 
 }) => {
@@ -38,8 +42,8 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   )
 }
 
-interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
-  variant?: 'success' | 'error' | 'warning' | 'info';
+export interface ToastProps extends React.HTMLAttributes<HTMLDivElement> {
+  variant?: 'success' | 'error' | 'warning' | 'info' | 'destructive';
   visible?: boolean;
 }
 
@@ -55,6 +59,7 @@ const Toast: React.FC<ToastProps> = ({
     error: "bg-error text-white",
     warning: "bg-warning text-black",
     info: "bg-secondary text-white",
+    destructive: "bg-destructive text-white",
   }
 
   return (
