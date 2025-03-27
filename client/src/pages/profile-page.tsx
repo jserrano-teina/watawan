@@ -56,6 +56,19 @@ const ProfilePage = () => {
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
   const [avatar, setAvatar] = useState<string | undefined>(user?.avatar);
   
+  // Efecto para hacer que el toast desaparezca después de 3 segundos
+  useEffect(() => {
+    if (toastState) {
+      const timer = setTimeout(() => {
+        setToastState(null);
+      }, 3000);
+      
+      return () => {
+        clearTimeout(timer);
+      };
+    }
+  }, [toastState]);
+  
   // Mutaciones con TanStack Query
   const updateProfileMutation = useMutation({
     mutationFn: async (data: { displayName: string; initials: string; avatar: string }) => {
