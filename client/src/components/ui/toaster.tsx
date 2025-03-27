@@ -11,6 +11,11 @@ import {
 export function Toaster() {
   const { toasts } = useToast()
 
+  // Solo renderizamos el ToastProvider y el ToastViewport si hay toasts para mostrar
+  if (toasts.length === 0) {
+    return null;
+  }
+
   return (
     <ToastProvider>
       {toasts.map(function ({ id, title, description, action, ...props }) {

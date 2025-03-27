@@ -19,7 +19,7 @@ const ToastViewport: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "fixed bottom-20 right-0 flex flex-col p-4 gap-2 w-full md:max-w-[420px] max-h-screen z-40",
+        "fixed bottom-[5rem] right-0 flex flex-col p-4 gap-2 w-full md:max-w-[420px] max-h-screen z-40",
         className
       )}
       {...props}
@@ -34,7 +34,7 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50",
+        "fixed bottom-[5rem] left-1/2 transform -translate-x-1/2 z-40",
         className
       )}
       {...props}

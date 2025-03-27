@@ -82,18 +82,20 @@ const SharedList: React.FC = () => {
         onReserveItem={handleReserveItem} 
       />
       
-      <ToastContainer>
-        <Toast visible={toast.visible} variant={toast.variant}>
-          <div className="flex items-center">
-            {toast.variant === 'success' ? (
-              <CheckCircle className="mr-2 h-4 w-4" />
-            ) : (
-              <AlertCircle className="mr-2 h-4 w-4" />
-            )}
-            <span>{toast.message}</span>
-          </div>
-        </Toast>
-      </ToastContainer>
+      {toast.visible && (
+        <ToastContainer>
+          <Toast visible={true} variant={toast.variant}>
+            <div className="flex items-center">
+              {toast.variant === 'success' ? (
+                <CheckCircle className="mr-2 h-4 w-4" />
+              ) : (
+                <AlertCircle className="mr-2 h-4 w-4" />
+              )}
+              <span>{toast.message}</span>
+            </div>
+          </Toast>
+        </ToastContainer>
+      )}
     </div>
   );
 };
