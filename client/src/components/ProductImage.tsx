@@ -101,7 +101,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
         <img 
           src={imgSrc} 
           alt={title} 
-          className="w-full h-full object-contain"
+          className="w-full h-full object-cover"
           onLoad={handleImageLoad}
           onError={handleImageError}
         />
