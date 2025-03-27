@@ -8,6 +8,7 @@ import SharedList from "@/pages/SharedList";
 import LoginPage from "./pages/login-page";
 import RegisterPage from "./pages/register-page";
 import NotificationsPage from "./pages/NotificationsPage";
+import ProfilePage from "./pages/profile-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import React from "react";
@@ -17,6 +18,7 @@ function Router() {
     <Switch>
       <ProtectedRoute path="/" component={Home} />
       <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/share/:id" component={SharedList} />

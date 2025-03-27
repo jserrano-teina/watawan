@@ -3,6 +3,7 @@ export interface User {
   email: string;
   displayName?: string;
   initials?: string;
+  avatar?: string;
 }
 
 export interface Wishlist {

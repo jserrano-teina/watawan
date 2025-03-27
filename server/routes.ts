@@ -330,6 +330,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const updatedUser = await storage.updateLastNotificationsView(user.id);
     res.json({ success: true, lastNotificationsView: updatedUser.lastNotificationsView });
   });
+  
+  // Actualizar perfil de usuario
+  router.put("/user/profile", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    const { displayName, initials, avatar } = req.body;
+    
+    try {
+      const updatedUser = await storage.updateUser(user.id, { 
+        displayName, 
+        initials, 
+        avatar 
+      });
+      
+      // Excluir password del resultado
+      const { password, ...userInfo } = updatedUser;
+      
+      res.status(200).json(userInfo);
+    } catch (error) {
+      console.error("Error actualizando perfil:", error);
+      res.status(500).json({ message: "Error al actualizar el perfil" });
+    }
+  });
+  
+  // Actualizar email de usuario (requiere verificación de contraseña)
+  router.put("/user/email", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+      return res.status(400).json({ message: "Email y contraseña son requeridos" });
+    }
+    
+    try {
+      // Verificar primero si el email ya está en uso
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser && existingUser.id !== user.id) {
+        return res.status(400).json({ message: "Este email ya está en uso" });
+      }
+      
+      // Verificar contraseña
+      const currentUser = await storage.getUser(user.id);
+      if (!currentUser) {
+        return res.status(404).json({ message: "Usuario no encontrado" });
+      }
+      
+      const { comparePasswords } = await import('./auth');
+      const passwordMatch = await comparePasswords(password, currentUser.password);
+      if (!passwordMatch) {
+        return res.status(400).json({ message: "Contraseña incorrecta" });
+      }
+      
+      // Actualizar email
+      const updatedUser = await storage.updateUser(user.id, { email });
+      
+      // Excluir password del resultado
+      const { password: _, ...userInfo } = updatedUser;
+      
+      res.status(200).json(userInfo);
+    } catch (error) {
+      console.error("Error actualizando email:", error);
+      res.status(500).json({ message: "Error al actualizar el email" });
+    }
+  });
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
   router.get("/extract-metadata", async (req: Request, res) => {
