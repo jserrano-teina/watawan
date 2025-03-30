@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WishItem } from '../../types';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Gift } from 'lucide-react';
 
@@ -19,7 +18,17 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 }) => {
   const [reserverName, setReserverName] = useState('');
   
-  if (!item) return null;
+  if (!item || !isOpen) return null;
+
+  // Bloquear el scroll del body cuando se muestra el modal
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
 
   const handleConfirm = () => {
     onConfirm(reserverName);
@@ -27,11 +36,11 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-[#1a1a1a] text-white border border-[#333] sm:rounded-lg">
-        <DialogHeader>
-          <DialogTitle className="text-white text-lg">Confirmar reserva</DialogTitle>
-        </DialogHeader>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
+      <div className="bg-[#1a1a1a] text-white border border-[#333] rounded-lg w-full max-w-md mx-4 p-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-white text-lg font-semibold">Confirmar reserva</h2>
+        </div>
         
         <div className="py-2">
           <p className="text-white/80 mb-5">¿Estás seguro que quieres reservar este regalo? Una vez confirmado, nadie más podrá reservarlo.</p>
@@ -68,7 +77,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
           </div>
         </div>
         
-        <DialogFooter className="gap-3 mt-2">
+        <div className="flex justify-end gap-3 mt-2">
           <Button 
             variant="outline" 
             onClick={onClose}
@@ -82,9 +91,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
           >
             Confirmar reserva
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </div>
   );
 };
 
