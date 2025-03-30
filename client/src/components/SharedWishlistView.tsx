@@ -155,7 +155,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
-      <div className="flex flex-col items-center mb-8 pt-12">
+      <div className="flex flex-col items-center mb-10 pt-16">
         <div className="mb-6">
           {owner.avatar ? (
             <div className="w-24 h-24 rounded-full overflow-hidden">
@@ -173,7 +173,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             </div>
           )}
         </div>
-        <h1 className="text-2xl font-semibold text-white text-center">
+        <h1 className="text-2xl font-semibold text-white text-center mb-4">
           Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
         </h1>
       </div>
@@ -209,7 +209,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 }}
               >
                 {/* Imagen a la izquierda con border radius reducido */}
-                <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center rounded-md">
+                <div className="w-20 h-20 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                   <ProductImage 
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
@@ -277,7 +277,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 </div>
                 <div className="flex">
                   {/* Imagen a la izquierda con border radius reducido */}
-                  <div className="w-24 h-24 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center rounded-md">
+                  <div className="w-20 h-20 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
