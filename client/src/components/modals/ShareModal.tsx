@@ -18,7 +18,7 @@ interface ShareModalProps {
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink }) => {
   const linkRef = useRef<HTMLInputElement>(null);
   
-  const fullShareableLink = `${window.location.origin}/share/${shareableLink}`;
+  const fullShareableLink = `${window.location.origin}/s/${shareableLink}`;
   
   const copyToClipboard = () => {
     if (linkRef.current) {

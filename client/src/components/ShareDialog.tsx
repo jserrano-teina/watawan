@@ -20,7 +20,7 @@ export function ShareDialog({
   const { toast } = useToast();
   const inputRef = React.useRef<HTMLInputElement>(null);
   
-  const shareUrl = `${window.location.origin}/shared/${shareableId}`;
+  const shareUrl = `${window.location.origin}/s/${shareableId}`;
   
   const handleCopyLink = () => {
     if (inputRef.current) {
