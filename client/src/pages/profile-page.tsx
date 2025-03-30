@@ -257,7 +257,7 @@ const ProfilePage = () => {
             </div>
             <label
               htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 bg-secondary hover:bg-secondary/90 p-2 rounded-full cursor-pointer shadow-md"
+              className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-md border border-[#333] bg-transparent hover:bg-[#252525] transition-colors"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
