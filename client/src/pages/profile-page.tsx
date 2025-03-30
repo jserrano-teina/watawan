@@ -24,13 +24,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useLocation } from "wouter";
-import { Check, AlertCircle, Pencil } from "lucide-react";
+import { Check, AlertCircle, Pencil, LogOut } from "lucide-react";
 import { Toast, ToastContainer } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import BottomNavigation from "@/components/BottomNavigation";
 import { useMutation } from "@tanstack/react-query";
 import { EditProfileSheet } from "@/components/EditProfileSheet";
+import { LogoutSheet } from "@/components/LogoutSheet";
 
 // Función para generar iniciales automáticamente desde el nombre o email
 const getInitials = (displayName: string | undefined, email: string) => {
@@ -286,14 +287,14 @@ const ProfilePage = () => {
           </button>
         </div>
 
-        <div className="mt-8 space-y-4">
-          <Button
-            variant="destructive"
+        <div className="mt-8 flex justify-center">
+          <button
             onClick={() => setIsLogoutDialogOpen(true)}
-            className="w-full h-[50px]"
+            className="text-white flex items-center py-2 px-3 hover:bg-[#252525] transition-colors rounded"
           >
-            Cerrar sesión
-          </Button>
+            <LogOut size={16} className="mr-2" />
+            <span>Cerrar sesión</span>
+          </button>
         </div>
       </div>
 
@@ -306,55 +307,12 @@ const ProfilePage = () => {
         updateEmailMutation={updateEmailMutation}
       />
 
-      {/* Diálogo de confirmación para cerrar sesión */}
-      <AlertDialog
-        open={isLogoutDialogOpen}
-        onOpenChange={setIsLogoutDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>¿Cerrar sesión?</AlertDialogTitle>
-            <AlertDialogDescription>
-              ¿Estás seguro de que quieres cerrar la sesión? Tendrás que volver a iniciar sesión para acceder a tus listas.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel className="h-[50px]">Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleLogout}
-              className="h-[50px] bg-destructive text-destructive-foreground"
-            >
-              {logoutMutation.isPending ? (
-                <div className="flex items-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Cerrando sesión...
-                </div>
-              ) : (
-                "Cerrar sesión"
-              )}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      {/* Bottom Sheet para cerrar sesión */}
+      <LogoutSheet
+        isOpen={isLogoutDialogOpen}
+        onClose={() => setIsLogoutDialogOpen(false)}
+        logoutMutation={logoutMutation}
+      />
 
       <BottomNavigation />
 
