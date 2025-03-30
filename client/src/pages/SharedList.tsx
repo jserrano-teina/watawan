@@ -61,19 +61,6 @@ const SharedList: React.FC = () => {
 
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
-      <header className="sticky top-0 bg-[#121212] border-b border-[#333] shadow-sm z-30">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <div className="w-8 h-8 rounded-md bg-primary/20 mr-2 flex items-center justify-center">
-              <Gift size={18} className="text-primary" />
-            </div>
-            <h1 className="text-xl font-bold text-white">
-              Wishify
-            </h1>
-          </div>
-        </div>
-      </header>
-      
       <SharedWishlistView 
         owner={owner} 
         items={items || []} 

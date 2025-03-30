@@ -154,23 +154,27 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   };
 
   return (
-    <div className="flex-grow container mx-auto px-4 pb-20">
-      <div className="py-6 text-center border-b border-[#333] mb-4">
-        <div className="w-24 h-24 rounded-full bg-primary/10 mx-auto mb-4 flex items-center justify-center">
-          <span className="text-2xl font-semibold text-white">
-            {owner.initials || owner.displayName?.charAt(0) || 'U'}
-          </span>
-        </div>
-        <h1 className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent text-2xl font-bold">
-          Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
+    <div className="flex-grow container mx-auto px-4 pb-20 pt-6">
+      <div className="flex items-center mb-6">
+        {owner.avatar ? (
+          <img 
+            src={owner.avatar} 
+            alt={owner.displayName || 'Usuario'}
+            className="w-12 h-12 rounded-full mr-4"
+          />
+        ) : (
+          <div className="w-12 h-12 rounded-full bg-primary/10 mr-4 flex items-center justify-center">
+            <span className="text-lg font-semibold text-white">
+              {owner.initials || owner.displayName?.charAt(0) || 'U'}
+            </span>
+          </div>
+        )}
+        <h1 className="text-2xl font-semibold text-white">
+          Lista de {owner.displayName || owner.email.split('@')[0]}
         </h1>
-        <p className="mt-2 text-lg text-white/80">
-          Elige un regalo para sorprenderle en su día especial
-        </p>
       </div>
 
-      <div className="my-6">
-        <h2 className="text-2xl font-semibold mb-4 text-white">Disponibles para regalar</h2>
+      <div>
         
         {availableItems.length === 0 ? (
           <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-8 text-center my-6">
