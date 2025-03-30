@@ -41,7 +41,7 @@ export function LogoutSheet({ isOpen, onClose, logoutMutation }: LogoutSheetProp
 
         <div className="px-6 mt-4">
           <p className="text-gray-400 mb-6">
-            ¿Estás seguro de que quieres cerrar la sesión? Tendrás que volver a iniciar sesión para acceder a tus listas.
+            ¿Quieres cerrar la sesión?
           </p>
           
           <div className="space-y-3">
