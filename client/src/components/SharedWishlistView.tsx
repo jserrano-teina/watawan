@@ -154,9 +154,9 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   };
 
   return (
-    <div className="flex-grow container mx-auto px-4 pb-20 pt-6">
-      <div className="flex flex-col items-center mb-8">
-        <div className="mb-4">
+    <div className="flex-grow container mx-auto px-4 pb-20">
+      <div className="flex flex-col items-center mb-8 pt-12">
+        <div className="mb-6">
           {owner.avatar ? (
             <div className="w-24 h-24 rounded-full overflow-hidden">
               <img 
@@ -228,11 +228,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     </span>
                   )}
                   
-                  <h3 className="truncate text-white font-medium">{item.title}</h3>
+                  <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
                   
                   {/* Solo precio */}
                   {item.price && (
-                    <span className="font-medium text-white mt-1">
+                    <span className="text-white font-medium text-base mt-1">
                       {item.price}
                     </span>
                   )}
@@ -290,11 +290,11 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   {/* Contenido a la derecha - Simplificado */}
                   <div className="flex-grow min-w-0 flex flex-col justify-center">
                     {/* Nombre del producto con mayor tamaño y peso */}
-                    <h3 className="truncate text-white font-medium">{item.title}</h3>
+                    <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
                     
                     {/* Solo precio */}
                     {item.price && (
-                      <span className="font-medium text-white mt-1">
+                      <span className="text-white font-medium text-base mt-1">
                         {item.price}
                       </span>
                     )}
