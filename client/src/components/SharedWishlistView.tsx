@@ -105,7 +105,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({ isOpen, onClose, item, onRe
       </DialogContent>
     </Dialog>
   );
-}
+};
 
 const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({ 
   owner, 
@@ -155,30 +155,29 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
-      <div className="flex flex-col items-center mb-10 pt-16">
-        <div className="mb-6">
-          {owner.avatar ? (
-            <div className="w-24 h-24 rounded-full overflow-hidden">
-              <img 
-                src={owner.avatar} 
-                alt={owner.displayName || 'Usuario'}
-                className="w-full h-full object-cover"
-              />
-            </div>
-          ) : (
-            <div className="w-24 h-24 rounded-full bg-gray-800/70 flex items-center justify-center">
-              <span className="text-xl font-medium text-white">
-                {owner.initials || owner.displayName?.charAt(0) || owner.email.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+      <div className="max-w-[500px] mx-auto w-full">
+        <div className="flex flex-col items-center mb-10 pt-16">
+          <div className="mb-6">
+            {owner.avatar ? (
+              <div className="w-24 h-24 rounded-full overflow-hidden">
+                <img 
+                  src={owner.avatar} 
+                  alt={owner.displayName || 'Usuario'}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-24 h-24 rounded-full bg-gray-800/70 flex items-center justify-center">
+                <span className="text-xl font-medium text-white">
+                  {owner.initials || owner.displayName?.charAt(0) || owner.email.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+          </div>
+          <h1 className="text-2xl font-semibold text-white text-center mb-4">
+            Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
+          </h1>
         </div>
-        <h1 className="text-2xl font-semibold text-white text-center mb-4">
-          Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
-        </h1>
-      </div>
-
-      <div>
         
         {availableItems.length === 0 ? (
           <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-8 text-center my-6">
