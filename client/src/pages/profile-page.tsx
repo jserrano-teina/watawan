@@ -287,10 +287,10 @@ const ProfilePage = () => {
           </button>
         </div>
 
-        <div className="mt-8 flex justify-center">
+        <div className="mt-4 flex justify-center">
           <button
             onClick={() => setIsLogoutDialogOpen(true)}
-            className="text-white flex items-center py-2 px-3 hover:bg-[#252525] transition-colors rounded"
+            className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
           >
             <LogOut size={16} className="mr-2" />
             <span>Cerrar sesión</span>
