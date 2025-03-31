@@ -16,9 +16,6 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
   item, 
   onReserveClick 
 }) => {
-  // Si no hay item o no está abierto, no renderizar nada
-  if (!item || !isOpen) return null;
-  
   // Bloquear el scroll del body cuando se muestra el modal
   useEffect(() => {
     if (isOpen) {
@@ -28,6 +25,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
       document.body.style.overflow = '';
     };
   }, [isOpen]);
+  
+  // Si no hay item o no está abierto, no renderizar nada
+  if (!item || !isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden">

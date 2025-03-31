@@ -18,8 +18,6 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
 }) => {
   const [reserverName, setReserverName] = useState('');
   
-  if (!item || !isOpen) return null;
-
   // Bloquear el scroll del body cuando se muestra el modal
   useEffect(() => {
     if (isOpen) {
@@ -34,6 +32,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
     onConfirm(reserverName);
     setReserverName('');
   };
+  
+  // Si no hay item o no está abierto, no renderizar nada
+  if (!item || !isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
