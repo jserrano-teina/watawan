@@ -53,7 +53,12 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   const handleConfirmReservation = async (reserverName: string) => {
     if (selectedItem) {
       await onReserveItem(selectedItem.id, reserverName);
+      // Solo cerrar el modal de reserva, mantener abierto el modal de detalles
       setShowReservationModal(false);
+      
+      // Actualizar el item seleccionado para reflejar que ahora está reservado
+      const updatedItem = {...selectedItem, isReserved: true};
+      setSelectedItem(updatedItem);
     }
   };
 
@@ -181,7 +186,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         onClose={() => setShowDetailsModal(false)}
         item={selectedItem || null}
         onReserveClick={() => {
-          setShowDetailsModal(false);
+          // Mantener el modal de detalles abierto mientras se muestra el modal de reserva
           setShowReservationModal(true);
         }}
       />

@@ -29,7 +29,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   const handleConfirm = () => {
     onConfirm(reserverName);
     setReserverName('');
-    onClose();
+    // Ya no llamamos a onClose() aquí porque el componente padre
+    // se encargará de cerrar este modal manteniendo abierto el de detalles
   };
   
   // Si no hay item, no renderizamos nada
@@ -39,7 +40,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 
         side="bottom" 
-        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0 z-[60]"
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Reservar regalo</SheetTitle>
