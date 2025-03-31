@@ -67,7 +67,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         {/* Contenido scrolleable */}
         <div className="flex-grow overflow-auto">
           {/* Imagen a sangre al inicio */}
-          <div className="w-full h-72 bg-[#252525] relative">
+          <div className="w-full h-80 bg-[#252525] relative">
             <ProductImage 
               imageUrl={item.imageUrl} 
               title={item.title}
@@ -78,11 +78,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
           
           {/* Información del producto */}
           <div className="px-5 py-6">
-            <h2 className="text-2xl font-bold text-white mb-2.5 leading-tight">{item.title}</h2>
+            <h2 className="text-2xl font-semibold text-white mb-2.5 leading-tight">{item.title}</h2>
             
             {item.price && (
               <div className="mb-5">
-                <span className="text-xl font-bold text-white">{item.price}</span>
+                <span className="text-xl font-semibold text-white">{item.price}</span>
               </div>
             )}
             
@@ -91,21 +91,21 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             </div>
             
             <div className="mb-6">
-              <h3 className="font-medium mb-2 text-white">Enlace de compra</h3>
+              <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
               <a 
                 href={item.purchaseLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-primary text-sm flex items-center truncate hover:underline"
+                className="text-primary text-sm flex items-center justify-between truncate hover:underline"
               >
-                <ExternalLink size={14} className="flex-shrink-0 mr-1.5" />
                 <span className="truncate">{item.purchaseLink}</span>
+                <ExternalLink size={16} className="flex-shrink-0 ml-2" />
               </a>
             </div>
             
             {item.description && (
               <div className="mb-6">
-                <h3 className="font-medium mb-2 text-white">Descripción</h3>
+                <h3 className="text-sm font-medium mb-2 text-white">Descripción</h3>
                 <p className="text-sm text-white/80 whitespace-pre-line">{item.description}</p>
               </div>
             )}
@@ -113,25 +113,10 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         </div>
         
         {/* Barra inferior fija con botones */}
-        <div className="border-t border-[#333] p-4 grid grid-cols-2 gap-3">
-          <Button 
-            variant="outline"
-            asChild
-            className="h-[50px] border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white"
-          >
-            <a 
-              href={item.purchaseLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="inline-flex items-center justify-center"
-            >
-              <ExternalLink size={16} className="mr-2" />
-              Enlace de compra
-            </a>
-          </Button>
+        <div className="border-t border-[#333] p-4 flex justify-center">
           <Button 
             onClick={onReserveClick}
-            className="h-[50px] bg-primary hover:bg-primary/90 text-white"
+            className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-white"
           >
             Lo regalaré yo
           </Button>
