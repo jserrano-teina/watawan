@@ -191,6 +191,7 @@ const Home: React.FC = () => {
         item={selectedItem}
         onEdit={handleEditWish}
         onDelete={handleDeleteWish}
+        onMarkAsReceived={handleMarkAsReceived}
       />
       
       <ReceivedConfirmationSheet
