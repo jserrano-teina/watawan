@@ -79,6 +79,18 @@
 }
 
 /* Componentes consistentes para toda la app */
+@layer utilities {
+  /* Oculta la barra de desplazamiento pero mantiene la funcionalidad de scroll */
+  .scrollbar-none {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
+}
+
 @layer components {
   /* Cards */
   .card {

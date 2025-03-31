@@ -21,9 +21,43 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   const [showReservationModal, setShowReservationModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItem | undefined>(undefined);
+  const [priceFilter, setPriceFilter] = useState<string>("Todo");
   
-  // Ordenar los items por fecha de creación (más recientes primero)
-  const sortedItems = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  // Función para extraer un número de precio de una cadena (ej: "32,99€" -> 32.99)
+  const extractPriceNumber = (priceString?: string): number => {
+    if (!priceString) return 0;
+    // Extraer números, puntos y comas del string
+    const numStr = priceString.replace(/[^0-9,\.]/g, '');
+    // Reemplazar comas por puntos y convertir a número
+    return parseFloat(numStr.replace(',', '.')) || 0;
+  };
+
+  // Filtrar items por rango de precio
+  const filterItemsByPrice = (items: WishItem[]): WishItem[] => {
+    if (priceFilter === "Todo") return items;
+    
+    return items.filter(item => {
+      const price = extractPriceNumber(item.price);
+      
+      switch (priceFilter) {
+        case "Hasta 30€":
+          return price > 0 && price <= 30;
+        case "30 - 60€":
+          return price > 30 && price <= 60;
+        case "60 - 100€":
+          return price > 60 && price <= 100;
+        case "+ 100€":
+          return price > 100;
+        default:
+          return true;
+      }
+    });
+  };
+
+  // Ordenar los items por fecha de creación (más recientes primero) y aplicar filtro por precio
+  const sortedItems = filterItemsByPrice([...items].sort((a, b) => 
+    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  ));
   
   // Extraer ASIN/ID de producto de URLs de Amazon
   const getProductId = (url?: string): string | undefined => {
@@ -65,7 +99,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
       <div className="max-w-[500px] mx-auto w-full">
-        <div className="flex flex-col items-center mb-10 pt-16">
+        <div className="flex flex-col items-center mb-5 pt-16">
           <div className="mb-6">
             {owner.avatar ? (
               <div className="w-24 h-24 rounded-full overflow-hidden">
@@ -83,10 +117,31 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
               </div>
             )}
           </div>
-          <h1 className="text-2xl font-semibold text-white text-center mb-4">
+          <h1 className="text-2xl font-semibold text-white text-center mb-2">
             Lista de deseos de {owner.displayName || owner.email.split('@')[0]}
           </h1>
         </div>
+
+        {/* Botones de filtro por precio */}
+        {items.length > 0 && (
+          <div className="mb-4 overflow-x-auto pb-2 scrollbar-none">
+            <div className="flex space-x-2 w-max min-w-full">
+              {["Todo", "Hasta 30€", "30 - 60€", "60 - 100€", "+ 100€"].map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setPriceFilter(filter)}
+                  className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                    priceFilter === filter 
+                      ? 'bg-primary text-white' 
+                      : 'bg-[#1a1a1a] border border-[#333] text-white/80 hover:bg-[#252525]'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
         
         {items.length === 0 ? (
           <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-8 text-center my-6">
@@ -100,6 +155,19 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             <h3 className="text-xl font-semibold mb-2 text-white">No hay deseos disponibles</h3>
             <p className="text-white/70 text-base max-w-md mx-auto">
               Esta lista está vacía. Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
+            </p>
+          </div>
+        ) : sortedItems.length === 0 ? (
+          // Mensaje cuando no hay resultados para el filtro aplicado
+          <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 text-center my-6">
+            <div className="mx-auto w-16 h-16 flex items-center justify-center mb-3">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/50">
+                <path d="M9 9.5L15 15.5M15 9.5L9 15.5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold mb-2 text-white">No hay regalos en este rango de precio</h3>
+            <p className="text-white/70 text-sm max-w-md mx-auto">
+              Prueba otro filtro para ver más opciones de regalo
             </p>
           </div>
         ) : (
