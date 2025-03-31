@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { WishItem } from '../../types';
 import { Button } from "@/components/ui/button";
 import { Gift, X } from 'lucide-react';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose
+} from "@/components/ui/sheet";
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -17,78 +25,41 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   item
 }) => {
   const [reserverName, setReserverName] = useState('');
-  const [sheetVisible, setSheetVisible] = useState(false);
-  
-  // Gestionar la animación de entrada y salida
-  useEffect(() => {
-    if (isOpen) {
-      // Bloquear scroll
-      document.body.style.overflow = 'hidden';
-      // Animar la entrada
-      setTimeout(() => {
-        setSheetVisible(true);
-      }, 10);
-    } else {
-      // Animar la salida
-      setSheetVisible(false);
-      // Desbloquear scroll después de la animación
-      setTimeout(() => {
-        document.body.style.overflow = '';
-      }, 300);
-    }
-  }, [isOpen]);
-
-  const handleClose = () => {
-    setSheetVisible(false);
-    setTimeout(() => {
-      onClose();
-    }, 300);
-  };
 
   const handleConfirm = () => {
     onConfirm(reserverName);
     setReserverName('');
-    handleClose();
+    onClose();
   };
   
-  // Si no hay item o no está abierto, no renderizar nada
-  if (!item || !isOpen) return null;
+  // Si no hay item, no renderizamos nada
+  if (!item) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 overflow-hidden">
-      {/* Fondo oscurecido con cierre al tocar */}
-      <div 
-        className="absolute inset-0 transition-opacity duration-300"
-        style={{ opacity: sheetVisible ? 1 : 0 }}
-        onClick={handleClose}
-      />
-      
-      {/* Bottom Sheet */}
-      <div 
-        className="absolute bottom-0 left-0 right-0 bg-[#1a1a1a] text-white border-t border-[#333] rounded-t-xl max-h-[85vh] overflow-auto transform transition-transform duration-300 ease-out"
-        style={{ transform: sheetVisible ? 'translateY(0)' : 'translateY(100%)' }}
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent 
+        side="bottom" 
+        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
       >
-        {/* Indicador de arrastre */}
-        <div className="flex justify-center pt-2 pb-1">
-          <div className="w-12 h-1 bg-[#333] rounded-full"></div>
-        </div>
+        <SheetHeader className="sr-only">
+          <SheetTitle>Confirmar reserva</SheetTitle>
+          <SheetDescription>Reserva un regalo de la lista de deseos</SheetDescription>
+        </SheetHeader>
         
-        {/* Encabezado con botón de cierre */}
-        <div className="flex justify-between items-center px-4 pb-2">
-          <h2 className="text-white text-lg font-semibold">Confirmar reserva</h2>
+        <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
+          <h3 className="text-white text-xl font-medium">Confirmar reserva</h3>
           <button 
-            onClick={handleClose} 
-            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-[#252525]"
+            onClick={onClose}
+            className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
           >
-            <X size={18} className="text-white/70" />
+            <X className="h-7 w-7" />
           </button>
         </div>
         
-        {/* Contenido */}
-        <div className="px-4 py-3">
-          <p className="text-white/80 mb-5">¿Estás seguro que quieres reservar este regalo? Una vez confirmado, nadie más podrá reservarlo.</p>
+        <div className="px-6 mt-4">
+          <p className="text-white/80 mb-6">¿Estás seguro que quieres reservar este regalo? Una vez confirmado, nadie más podrá reservarlo.</p>
           
-          <div className="p-3 bg-[#252525] rounded-lg mb-5">
+          <div className="p-3 bg-[#252525] rounded-lg mb-6">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-[#333] rounded overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center">
                 {item.imageUrl ? (
@@ -106,8 +77,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             </div>
           </div>
           
-          <div className="mb-5">
-            <label htmlFor="reserverName" className="block text-white/90 font-medium mb-1">Tu nombre (opcional)</label>
+          <div className="mb-6">
+            <label htmlFor="reserverName" className="block text-white/90 font-medium mb-2">Tu nombre (opcional)</label>
             <input 
               type="text" 
               id="reserverName" 
@@ -119,15 +90,15 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             <p className="text-white/50 text-xs mt-1">Esto es solo para ti, no se mostrará a la persona que recibirá el regalo</p>
           </div>
           
-          {/* Botones */}
-          <div className="flex gap-3 pt-2 pb-6">
-            <Button 
-              variant="outline" 
-              onClick={handleClose}
-              className="flex-1 border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white h-[50px]"
-            >
-              Cancelar
-            </Button>
+          <div className="flex gap-3 pt-2">
+            <SheetClose asChild>
+              <Button 
+                variant="outline" 
+                className="flex-1 border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white h-[50px]"
+              >
+                Cancelar
+              </Button>
+            </SheetClose>
             <Button 
               onClick={handleConfirm}
               className="flex-1 bg-primary hover:bg-primary/90 text-white h-[50px]"
@@ -136,8 +107,8 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 
