@@ -22,10 +22,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItem | undefined>(undefined);
   
-  // Ordenar los items por fecha de creación (más recientes primero) y luego filtrar
+  // Ordenar los items por fecha de creación (más recientes primero)
   const sortedItems = [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-  const availableItems = sortedItems.filter(item => !item.isReserved);
-  const reservedItems = sortedItems.filter(item => item.isReserved);
   
   // Extraer ASIN/ID de producto de URLs de Amazon
   const getProductId = (url?: string): string | undefined => {
@@ -85,7 +83,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           </h1>
         </div>
         
-        {availableItems.length === 0 ? (
+        {items.length === 0 ? (
           <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-8 text-center my-6">
             <div className="mx-auto w-24 h-24 flex items-center justify-center mb-4">
               <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/50">
@@ -96,15 +94,14 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             </div>
             <h3 className="text-xl font-semibold mb-2 text-white">No hay deseos disponibles</h3>
             <p className="text-white/70 text-base max-w-md mx-auto">
-              Todos los deseos de esta lista ya han sido reservados o no se han añadido elementos aún. 
-              Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
+              Esta lista está vacía. Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
             </p>
           </div>
         ) : (
-          availableItems.map(item => (
+          sortedItems.map(item => (
             <div 
               key={item.id} 
-              className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 hover:bg-[#252525] transition-colors"
+              className={`bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 ${item.isReserved ? 'opacity-75' : 'hover:bg-[#252525]'} transition-colors`}
             >
               <div 
                 className="flex cursor-pointer" 
@@ -126,93 +123,55 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 
                 {/* Contenido a la derecha - Simplificado */}
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
-                  {/* Nombre del producto con mayor tamaño y peso */}
+                  {/* Tag de reservado */}
                   {item.isReserved && (
-                    <span className="px-2 py-0.5 mb-1 bg-green-800/30 text-green-400 text-xs font-medium rounded-full inline-block">
+                    <span className="px-2 py-0.5 mb-1 bg-green-500/20 text-green-500 text-xs font-medium rounded-full inline-block w-fit">
                       Reservado
                     </span>
                   )}
                   
+                  {/* Nombre del producto */}
                   <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
                   
-                  {/* Solo precio */}
+                  {/* Precio */}
                   {item.price && (
                     <span className="text-white font-medium text-base mt-1">
                       {item.price}
                     </span>
                   )}
-                </div>
-              </div>
-              
-              {/* Botones horizontales */}
-              <div className="grid grid-cols-2 gap-3 mt-4">
-                <button 
-                  onClick={() => {
-                    setSelectedItem(item);
-                    setShowDetailsModal(true);
-                  }}
-                  className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
-                >
-                  Ver más
-                </button>
-                <button 
-                  onClick={() => handleReserveClick(item)}
-                  className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-                >
-                  Lo regalaré yo
-                </button>
-              </div>
-            </div>
-          ))
-        )}
-        
-        {reservedItems.length > 0 && (
-          <>
-            <h2 className="text-2xl font-semibold mt-8 mb-4 text-white">Ya reservados</h2>
-            
-            {reservedItems.map(item => (
-              <div 
-                key={item.id} 
-                className="relative bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 opacity-75"
-              >
-                <div className="absolute top-2 right-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-500/20 text-green-500">
-                    Reservado
-                  </span>
-                </div>
-                <div className="flex">
-                  {/* Imagen a la izquierda con border radius reducido */}
-                  <div className="w-20 h-20 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
-                    <ProductImage 
-                      imageUrl={item.imageUrl} 
-                      productId={getProductId(item.purchaseLink)}
-                      title={item.title}
-                      purchaseLink={item.purchaseLink}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
                   
-                  {/* Contenido a la derecha - Simplificado */}
-                  <div className="flex-grow min-w-0 flex flex-col justify-center">
-                    {/* Nombre del producto con mayor tamaño y peso */}
-                    <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
-                    
-                    {/* Solo precio */}
-                    {item.price && (
-                      <span className="text-white font-medium text-base mt-1">
-                        {item.price}
-                      </span>
-                    )}
-                    
+                  {/* Mensaje adicional para items reservados */}
+                  {item.isReserved && (
                     <p className="text-green-500 text-sm flex items-center font-medium mt-2">
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Alguien ya se encargará de este regalo
                     </p>
-                  </div>
+                  )}
                 </div>
               </div>
-            ))}
-          </>
+              
+              {/* Botones horizontales (solo para items no reservados) */}
+              {!item.isReserved && (
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <button 
+                    onClick={() => {
+                      setSelectedItem(item);
+                      setShowDetailsModal(true);
+                    }}
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
+                  >
+                    Ver más
+                  </button>
+                  <button 
+                    onClick={() => handleReserveClick(item)}
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+                  >
+                    Lo regalaré yo
+                  </button>
+                </div>
+              )}
+            </div>
+          ))
         )}
       </div>
       
