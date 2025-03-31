@@ -99,8 +99,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   return (
     <div className="flex-grow container mx-auto px-4 pb-20">
       <div className="max-w-[500px] mx-auto w-full">
-        <div className="flex flex-col items-center mb-5 pt-16">
-          <div className="mb-6">
+        <div className="flex flex-col items-center mb-5 pt-10">
+          <div className="mb-4">
             {owner.avatar ? (
               <div className="w-24 h-24 rounded-full overflow-hidden">
                 <img 
@@ -124,21 +124,23 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
         {/* Botones de filtro por precio */}
         {items.length > 0 && (
-          <div className="mb-4 overflow-x-auto pb-2 scrollbar-none">
-            <div className="flex space-x-2 w-max min-w-full">
-              {["Todo", "Hasta 30€", "30 - 60€", "60 - 100€", "+ 100€"].map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setPriceFilter(filter)}
-                  className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
-                    priceFilter === filter 
-                      ? 'bg-primary text-white' 
-                      : 'bg-[#1a1a1a] border border-[#333] text-white/80 hover:bg-[#252525]'
-                  }`}
-                >
-                  {filter}
-                </button>
-              ))}
+          <div className="mb-4 -mx-4">
+            <div className="overflow-x-auto px-4 pb-2 scrollbar-none">
+              <div className="flex space-x-2 w-max min-w-full">
+                {["Todo", "Hasta 30€", "30 - 60€", "60 - 100€", "+ 100€"].map((filter) => (
+                  <button
+                    key={filter}
+                    onClick={() => setPriceFilter(filter)}
+                    className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                      priceFilter === filter 
+                        ? 'bg-white text-black font-medium border border-white' 
+                        : 'bg-[#1a1a1a] border border-[#333] text-white/80 hover:bg-[#252525]'
+                    }`}
+                  >
+                    {filter}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
         )}
@@ -231,7 +233,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   </button>
                   <button 
                     onClick={() => handleReserveClick(item)}
-                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
                   >
                     Lo regalaré yo
                   </button>
