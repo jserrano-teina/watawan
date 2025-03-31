@@ -1,7 +1,10 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WishItem } from '../../types';
+import { formatDistanceToNow } from 'date-fns';
+import { es } from 'date-fns/locale';
 import { ExternalLink, ArrowLeft } from 'lucide-react';
 import ProductImage from '../ProductImage';
+import { Button } from '@/components/ui/button';
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -16,94 +19,123 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
   item, 
   onReserveClick 
 }) => {
-  // Bloquear el scroll del body cuando se muestra el modal
+  const [modalVisible, setModalVisible] = useState(false);
+  
+  // Animación de entrada y control de scroll del body
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      // Pequeño delay para la animación de entrada
+      setTimeout(() => {
+        setModalVisible(true);
+      }, 10);
+    } else {
+      setModalVisible(false);
+      // Retraso para permitir que la animación se complete
+      setTimeout(() => {
+        document.body.style.overflow = '';
+      }, 300);
     }
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, [isOpen]);
   
   // Si no hay item o no está abierto, no renderizar nada
   if (!item || !isOpen) return null;
+  
+  // Formatear la fecha de creación para mostrarla
+  const timeAgo = formatDistanceToNow(new Date(item.createdAt), {
+    addSuffix: true,
+    locale: es
+  });
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden">
-      {/* Botón flotante para volver */}
-      <button 
-        onClick={onClose}
-        className="fixed top-4 left-4 z-30 p-2 rounded-full flex items-center justify-center bg-[#252525] hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+    <div 
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 overflow-hidden"
+      style={{ opacity: modalVisible ? 1 : 0 }}
+    >
+      <div 
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out"
+        style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
       >
-        <ArrowLeft size={20} className="text-white" />
-      </button>
-      
-      {/* Contenido scrolleable */}
-      <div className="flex-grow overflow-auto">
-        {/* Imagen a sangre al inicio */}
-        <div className="w-full h-72 bg-[#252525] relative">
-          <ProductImage 
-            imageUrl={item.imageUrl} 
-            title={item.title}
-            purchaseLink={item.purchaseLink}
-            className="w-full h-full object-contain"
-          />
+        {/* Botón flotante para volver */}
+        <button 
+          onClick={onClose}
+          className="fixed top-4 left-4 z-30 p-2 rounded-full flex items-center justify-center bg-[#1a1a1a]/80 hover:bg-[#252525] transition-colors shadow-lg backdrop-blur-sm"
+        >
+          <ArrowLeft size={20} className="text-white" />
+        </button>
+        
+        {/* Contenido scrolleable */}
+        <div className="flex-grow overflow-auto">
+          {/* Imagen a sangre al inicio */}
+          <div className="w-full h-72 bg-[#252525] relative">
+            <ProductImage 
+              imageUrl={item.imageUrl} 
+              title={item.title}
+              purchaseLink={item.purchaseLink}
+              className="w-full h-full object-contain"
+            />
+          </div>
+          
+          {/* Información del producto */}
+          <div className="px-5 py-6">
+            <h2 className="text-2xl font-bold text-white mb-2.5 leading-tight">{item.title}</h2>
+            
+            {item.price && (
+              <div className="mb-5">
+                <span className="text-xl font-bold text-white">{item.price}</span>
+              </div>
+            )}
+            
+            <div className="my-4">
+              <span className="text-sm text-white/60">Añadido a la lista {timeAgo}</span>
+            </div>
+            
+            <div className="mb-6">
+              <h3 className="font-medium mb-2 text-white">Enlace de compra</h3>
+              <a 
+                href={item.purchaseLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-primary text-sm flex items-center truncate hover:underline"
+              >
+                <ExternalLink size={14} className="flex-shrink-0 mr-1.5" />
+                <span className="truncate">{item.purchaseLink}</span>
+              </a>
+            </div>
+            
+            {item.description && (
+              <div className="mb-6">
+                <h3 className="font-medium mb-2 text-white">Descripción</h3>
+                <p className="text-sm text-white/80 whitespace-pre-line">{item.description}</p>
+              </div>
+            )}
+          </div>
         </div>
         
-        {/* Información del producto */}
-        <div className="p-5">
-          <h2 className="text-2xl font-semibold text-white mb-2.5 leading-tight">{item.title}</h2>
-          
-          {item.price && (
-            <div className="mb-5">
-              <span className="text-xl font-semibold text-white">{item.price}</span>
-            </div>
-          )}
-          
-          <div className="my-4 flex text-sm text-white/60">
-            <span>Añadido a la lista</span>
-          </div>
-          
-          <div className="mb-5">
-            <h3 className="font-medium mb-1.5 text-white">Enlace de compra</h3>
+        {/* Barra inferior fija con botones */}
+        <div className="border-t border-[#333] p-4 grid grid-cols-2 gap-3">
+          <Button 
+            variant="outline"
+            asChild
+            className="h-[50px] border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white"
+          >
             <a 
-              href={item.purchaseLink}
-              target="_blank"
+              href={item.purchaseLink} 
+              target="_blank" 
               rel="noopener noreferrer"
-              className="text-primary text-sm flex items-center truncate"
+              className="inline-flex items-center justify-center"
             >
-              <ExternalLink size={14} className="flex-shrink-0 mr-1.5" />
-              <span className="truncate">{item.purchaseLink}</span>
+              <ExternalLink size={16} className="mr-2" />
+              Enlace de compra
             </a>
-          </div>
-          
-          {item.description && (
-            <div className="mb-5">
-              <h3 className="font-medium mb-1.5 text-white">Descripción</h3>
-              <p className="text-sm text-white/80">{item.description}</p>
-            </div>
-          )}
+          </Button>
+          <Button 
+            onClick={onReserveClick}
+            className="h-[50px] bg-primary hover:bg-primary/90 text-white"
+          >
+            Lo regalaré yo
+          </Button>
         </div>
-      </div>
-      
-      {/* Barra inferior fija con botones */}
-      <div className="border-t border-[#333] p-4 grid grid-cols-2 gap-3">
-        <a 
-          href={item.purchaseLink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
-        >
-          <ExternalLink size={16} className="mr-2" />
-          Enlace de compra
-        </a>
-        <button 
-          onClick={onReserveClick}
-          className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-        >
-          Lo regalaré yo
-        </button>
       </div>
     </div>
   );
