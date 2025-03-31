@@ -161,15 +161,14 @@ const DesktopView = ({
                         </button>
                       )}
 
-                      {!item.isReserved && (
-                        <button 
-                          onClick={handleEdit}
-                          className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
-                        >
-                          <Edit size={22} className="mr-4" />
-                          Editar
-                        </button>
-                      )}
+                      <button 
+                        onClick={handleEdit}
+                        className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                        disabled={item.isReserved}
+                      >
+                        <Edit size={22} className="mr-4" />
+                        Editar
+                      </button>
                       
                       <button 
                         onClick={openExternalLink}
@@ -417,15 +416,14 @@ const MobileView = ({
                     </button>
                   )}
 
-                  {!item.isReserved && (
-                    <button 
-                      onClick={handleEdit}
-                      className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
-                    >
-                      <Edit size={22} className="mr-4" />
-                      Editar
-                    </button>
-                  )}
+                  <button 
+                    onClick={handleEdit}
+                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
+                    disabled={item.isReserved}
+                  >
+                    <Edit size={22} className="mr-4" />
+                    Editar
+                  </button>
                   
                   <button 
                     onClick={openExternalLink}
