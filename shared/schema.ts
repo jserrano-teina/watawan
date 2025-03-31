@@ -54,6 +54,7 @@ export const wishItems = pgTable("wish_items", {
   imageUrl: text("image_url"),
   price: text("price"),
   isReserved: boolean("is_reserved").default(false),
+  isReceived: boolean("is_received").default(false),
   reservedBy: text("reserved_by"),
   reserverName: text("reserver_name"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -115,6 +116,7 @@ export type WishItem = {
   imageUrl?: string;
   price?: string;
   isReserved: boolean;
+  isReceived: boolean;
   reservedBy?: string;
   reserverName?: string;
   createdAt: Date;

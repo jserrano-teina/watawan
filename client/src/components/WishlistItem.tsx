@@ -11,6 +11,7 @@ interface WishlistItemProps {
     store?: string;
     imageUrl?: string;
     isReserved?: boolean;
+    isReceived?: boolean;
     isReservedByVisitor?: boolean;
     reservation?: {
       id: number;
@@ -23,6 +24,7 @@ interface WishlistItemProps {
   onReserve?: (id: number) => void;
   onCancelReservation?: (id: number) => void;
   onReleaseReservation?: (id: number) => void;
+  onMarkAsReceived?: (id: number) => void;
 }
 
 export function WishlistItem({
@@ -32,7 +34,8 @@ export function WishlistItem({
   onDelete,
   onReserve,
   onCancelReservation,
-  onReleaseReservation
+  onReleaseReservation,
+  onMarkAsReceived
 }: WishlistItemProps) {
   
   const handleLinkClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -156,25 +159,43 @@ export function WishlistItem({
                 </a>
                 
                 {item.isReserved ? (
-                  <button 
-                    className="text-sm text-primary font-medium"
-                    onClick={() => onReleaseReservation && onReleaseReservation(item.id)}
-                  >
-                    Liberar
-                  </button>
-                ) : (
-                  <div className="flex space-x-1">
+                  <div className="flex space-x-2">
                     <button 
-                      className="p-1 text-gray-700 hover:text-black rounded"
-                      onClick={() => onEdit && onEdit(item.id)}
+                      className="text-sm text-primary font-medium"
+                      onClick={() => onReleaseReservation && onReleaseReservation(item.id)}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                      Liberar
                     </button>
                     <button 
-                      className="p-1 text-gray-700 hover:text-error rounded"
-                      onClick={() => onDelete && onDelete(item.id)}
+                      className="text-sm text-green-600 font-medium flex items-center"
+                      onClick={() => onMarkAsReceived && onMarkAsReceived(item.id)}
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      ¡Ya lo recibí!
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex space-x-2">
+                    <div className="flex space-x-1">
+                      <button 
+                        className="p-1 text-gray-700 hover:text-black rounded"
+                        onClick={() => onEdit && onEdit(item.id)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                      </button>
+                      <button 
+                        className="p-1 text-gray-700 hover:text-error rounded"
+                        onClick={() => onDelete && onDelete(item.id)}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                      </button>
+                    </div>
+                    <button 
+                      className="text-sm text-green-600 font-medium flex items-center"
+                      onClick={() => onMarkAsReceived && onMarkAsReceived(item.id)}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                      ¡Ya lo recibí!
                     </button>
                   </div>
                 )}

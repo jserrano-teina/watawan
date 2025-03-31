@@ -22,11 +22,12 @@ export interface IStorage {
   createWishlist(wishlist: InsertWishlist): Promise<Wishlist>;
   
   // WishItem operations
-  getWishItemsForWishlist(wishlistId: number): Promise<WishItem[]>;
+  getWishItemsForWishlist(wishlistId: number, includeReceived?: boolean): Promise<WishItem[]>;
   getWishItem(id: number): Promise<WishItem | undefined>;
   createWishItem(item: InsertWishItem): Promise<WishItem>;
   updateWishItem(id: number, item: Partial<WishItem>): Promise<WishItem>;
   deleteWishItem(id: number): Promise<boolean>;
+  markWishItemAsReceived(id: number): Promise<WishItem>;
   
   // Reservation operations
   reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation>;
@@ -180,9 +181,9 @@ export class MemStorage implements IStorage {
   }
 
   // WishItem operations
-  async getWishItemsForWishlist(wishlistId: number): Promise<WishItem[]> {
+  async getWishItemsForWishlist(wishlistId: number, includeReceived: boolean = false): Promise<WishItem[]> {
     return Array.from(this.wishItems.values()).filter(
-      (item) => item.wishlistId === wishlistId
+      (item) => item.wishlistId === wishlistId && (includeReceived || !item.isReceived)
     );
   }
 
@@ -205,6 +206,7 @@ export class MemStorage implements IStorage {
       imageUrl,
       price,
       isReserved: false,
+      isReceived: false,
       createdAt: new Date(),
     };
     this.wishItems.set(id, newItem);
@@ -233,6 +235,20 @@ export class MemStorage implements IStorage {
     }
     
     return this.wishItems.delete(id);
+  }
+  
+  async markWishItemAsReceived(id: number): Promise<WishItem> {
+    const existingItem = this.wishItems.get(id);
+    if (!existingItem) {
+      throw new Error(`Wish item with ID ${id} not found`);
+    }
+    
+    const updatedItem = { 
+      ...existingItem, 
+      isReceived: true 
+    };
+    this.wishItems.set(id, updatedItem);
+    return updatedItem;
   }
 
   // Reservation operations

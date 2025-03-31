@@ -60,6 +60,17 @@ export function useWishlist() {
       queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
     },
   });
+  
+  // Mark item as received mutation
+  const markAsReceived = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('POST', `/api/wishlist/items/${id}/received`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+    },
+  });
 
   return {
     user,
@@ -69,6 +80,7 @@ export function useWishlist() {
     addWishItem,
     updateWishItem,
     deleteWishItem,
+    markAsReceived,
   };
 }
 

@@ -75,7 +75,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Wishlist not found" });
     }
     
-    const items = await storage.getWishItemsForWishlist(wishlistId);
+    // Por defecto, no incluimos los elementos recibidos en la respuesta
+    const items = await storage.getWishItemsForWishlist(wishlistId, false);
     res.json(items);
   });
 
@@ -329,6 +330,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     const updatedUser = await storage.updateLastNotificationsView(user.id);
     res.json({ success: true, lastNotificationsView: updatedUser.lastNotificationsView });
+  });
+  
+  // Mark wish item as received
+  router.post("/wishlist/items/:id/received", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    const { id } = req.params;
+    const itemId = parseInt(id, 10);
+    
+    if (isNaN(itemId)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+    
+    const item = await storage.getWishItem(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ message: "Wish item not found" });
+    }
+    
+    const wishlist = await storage.getWishlist(item.wishlistId);
+    
+    if (!wishlist || wishlist.userId !== user.id) {
+      return res.status(403).json({ message: "You don't have permission to mark this item as received" });
+    }
+    
+    try {
+      const updatedItem = await storage.markWishItemAsReceived(itemId);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error marking item as received:", error);
+      res.status(500).json({ message: "Error al marcar el regalo como recibido" });
+    }
   });
   
   // Actualizar perfil de usuario

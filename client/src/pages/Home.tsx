@@ -8,6 +8,7 @@ import BottomNavigation from '../components/BottomNavigation';
 import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
 import WishDetailModal from '../components/modals/WishDetailModal';
+import { ReceivedConfirmationSheet } from '../components/modals/ReceivedConfirmationSheet';
 import Header from '../components/Header';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -15,10 +16,11 @@ import { Toast, ToastContainer } from '@/components/ui/toast';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
-  const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem } = useWishlist();
+  const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem, markAsReceived } = useWishlist();
   const [showAddWishModal, setShowAddWishModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showReceivedSheet, setShowReceivedSheet] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItemType | null>(null);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
@@ -98,6 +100,14 @@ const Home: React.FC = () => {
     setSelectedItem(item);
     setShowDetailModal(true);
   };
+  
+  const handleMarkAsReceived = (itemId: number) => {
+    const item = items?.find((item) => item.id === itemId);
+    if (item) {
+      setSelectedItem(item);
+      setShowReceivedSheet(true);
+    }
+  };
 
   const showToast = (message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ visible: true, message, variant });
@@ -144,6 +154,7 @@ const Home: React.FC = () => {
                   onDelete={handleDeleteWish}
                   onClick={handleItemClick}
                   onSheetClose={handleSheetClosed}
+                  onMarkAsReceived={handleMarkAsReceived}
                 />
               ))}
             </div>
@@ -180,6 +191,13 @@ const Home: React.FC = () => {
         item={selectedItem}
         onEdit={handleEditWish}
         onDelete={handleDeleteWish}
+      />
+      
+      <ReceivedConfirmationSheet
+        isOpen={showReceivedSheet}
+        onClose={() => setShowReceivedSheet(false)}
+        item={selectedItem}
+        markAsReceivedMutation={markAsReceived}
       />
       
       {toast.visible && (
