@@ -136,7 +136,7 @@ export default function RegisterPage() {
               {registerMutation.isPending ? "Creando cuenta..." : "Crear mi cuenta"}
             </Button>
             
-            <div className="text-sm text-muted-foreground text-center pt-4">
+            <div className="text-sm text-white text-center pt-4">
               ¿Ya tienes una cuenta?{" "}
               <Link href="/login" className="text-white underline hover:text-white/80">
                 Inicia sesión

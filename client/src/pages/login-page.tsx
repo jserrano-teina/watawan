@@ -116,7 +116,7 @@ export default function LoginPage() {
               {loginMutation.isPending ? "Iniciando sesión..." : "Iniciar sesión"}
             </Button>
             
-            <div className="text-sm text-muted-foreground text-center pt-4">
+            <div className="text-sm text-white text-center pt-4">
               ¿No tienes una cuenta?{" "}
               <Link href="/register" className="text-white underline hover:text-white/80">
                 Regístrate
