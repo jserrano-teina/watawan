@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WishItem } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ExternalLink, ArrowLeft } from 'lucide-react';
+import { ExternalLink, ArrowLeft, Check } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { Button } from '@/components/ui/button';
 
@@ -81,14 +81,26 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             <h2 className="text-2xl font-semibold text-white mb-2.5 leading-tight">{item.title}</h2>
             
             {item.price && (
-              <div className="mb-5">
+              <div className="mb-1">
                 <span className="text-xl font-semibold text-white">{item.price}</span>
               </div>
             )}
             
-            <div className="my-4">
-              <span className="text-sm text-white/60">Añadido a la lista {timeAgo}</span>
+            <div className="mb-4">
+              <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
+            
+            {/* Banner de reservado */}
+            {item.isReserved && (
+              <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
+                <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <Check className="h-5 w-5 text-green-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-white text-sm">Alguien ya ha reservado este regalo y no está disponible</p>
+                </div>
+              </div>
+            )}
             
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
@@ -112,15 +124,17 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
         </div>
         
-        {/* Barra inferior fija con botones */}
-        <div className="border-t border-[#333] p-4 flex justify-center">
-          <Button 
-            onClick={onReserveClick}
-            className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-white"
-          >
-            Lo regalaré yo
-          </Button>
-        </div>
+        {/* Barra inferior fija con botones - Solo visible si el item no está reservado */}
+        {!item.isReserved && (
+          <div className="border-t border-[#333] p-4 flex justify-end">
+            <Button 
+              onClick={onReserveClick}
+              className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-white"
+            >
+              Lo regalaré yo
+            </Button>
+          </div>
+        )}
       </div>
     </div>
   );
