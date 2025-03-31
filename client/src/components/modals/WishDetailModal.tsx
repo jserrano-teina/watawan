@@ -21,6 +21,7 @@ interface WishDetailModalProps {
   item: WishItem | null;
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
+  onMarkAsReceived?: (itemId: number) => void;
 }
 
 const DesktopView = ({ 
@@ -28,13 +29,15 @@ const DesktopView = ({
   onClose, 
   onEdit, 
   onDelete,
-  isOpen 
+  isOpen,
+  onMarkAsReceived
 }: { 
   item: WishItem;
   onClose: () => void;
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
   isOpen: boolean;
+  onMarkAsReceived?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   
@@ -144,14 +147,29 @@ const DesktopView = ({
                     </div>
                     
                     <div className="mt-4 flex flex-col">
-                      <button 
-                        onClick={handleEdit}
-                        className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-                        disabled={item.isReserved}
-                      >
-                        <Edit size={22} className="mr-4" />
-                        Editar
-                      </button>
+                      {item.isReserved && onMarkAsReceived && (
+                        <button 
+                          onClick={() => {
+                            onMarkAsReceived(item.id);
+                            setOpenSheet(false);
+                            onClose();
+                          }}
+                          className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"
+                        >
+                          <Check size={22} className="mr-4" />
+                          ¡Ya lo recibí!
+                        </button>
+                      )}
+
+                      {!item.isReserved && (
+                        <button 
+                          onClick={handleEdit}
+                          className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
+                        >
+                          <Edit size={22} className="mr-4" />
+                          Editar
+                        </button>
+                      )}
                       
                       <button 
                         onClick={openExternalLink}
@@ -264,12 +282,14 @@ const MobileView = ({
   item, 
   onClose, 
   onEdit, 
-  onDelete 
+  onDelete,
+  onMarkAsReceived
 }: {
   item: WishItem;
   onClose: () => void;
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
+  onMarkAsReceived?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   
@@ -383,14 +403,29 @@ const MobileView = ({
                 </div>
                 
                 <div className="mt-4 flex flex-col">
-                  <button 
-                    onClick={handleEdit}
-                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-                    disabled={item.isReserved}
-                  >
-                    <Edit size={22} className="mr-4" />
-                    Editar
-                  </button>
+                  {item.isReserved && onMarkAsReceived && (
+                    <button 
+                      onClick={() => {
+                        onMarkAsReceived(item.id);
+                        setOpenSheet(false);
+                        onClose();
+                      }}
+                      className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"
+                    >
+                      <Check size={22} className="mr-4" />
+                      ¡Ya lo recibí!
+                    </button>
+                  )}
+
+                  {!item.isReserved && (
+                    <button 
+                      onClick={handleEdit}
+                      className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
+                    >
+                      <Edit size={22} className="mr-4" />
+                      Editar
+                    </button>
+                  )}
                   
                   <button 
                     onClick={openExternalLink}
@@ -471,14 +506,25 @@ const MobileView = ({
           <Trash2 size={16} className="mr-2" />
           Eliminar
         </button>
-        <button
-          onClick={handleEdit}
-          disabled={item.isReserved}
-          className={`px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
-        >
-          <Edit size={16} className="mr-2" />
-          Editar
-        </button>
+        
+        {item.isReserved && onMarkAsReceived ? (
+          <button
+            onClick={() => onMarkAsReceived(item.id)}
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
+          >
+            <Check size={16} className="mr-2" />
+            ¡Ya lo recibí!
+          </button>
+        ) : (
+          <button
+            onClick={handleEdit}
+            disabled={item.isReserved}
+            className={`px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+          >
+            <Edit size={16} className="mr-2" />
+            Editar
+          </button>
+        )}
       </div>
     </div>
   );

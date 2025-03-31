@@ -19,9 +19,10 @@ interface WishItemProps {
   onDelete: (item: WishItemType) => void;
   onClick?: (item: WishItemType) => void;
   onSheetClose?: () => void; // Callback para notificar cuando se cierra el sheet
+  onMarkAsReceived?: (itemId: number) => void; // Callback para marcar un item como recibido
 }
 
-const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, onSheetClose }) => {
+const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, onSheetClose, onMarkAsReceived }) => {
   const [open, setOpen] = useState(false);
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
@@ -208,6 +209,19 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                     <ExternalLink size={22} className="mr-4" />
                     Ir al enlace de compra
                   </button>
+                  
+                  {onMarkAsReceived && (
+                    <button 
+                      onClick={() => {
+                        onMarkAsReceived(item.id);
+                        setOpen(false);
+                      }}
+                      className="w-full text-left px-6 py-5 text-[17px] text-green-400 hover:bg-[#333] flex items-center"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                      ¡Ya lo recibí!
+                    </button>
+                  )}
                   
                   <button 
                     onClick={handleDelete}

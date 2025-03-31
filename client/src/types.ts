@@ -22,6 +22,7 @@ export interface WishItem {
   imageUrl?: string;
   price?: string;
   isReserved: boolean;
+  isReceived?: boolean;
   reservedBy?: string;
   reserverName?: string;
   createdAt: string;
