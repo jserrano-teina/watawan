@@ -138,30 +138,13 @@ const NotificationsPage: React.FC = () => {
           </div>
         ) : (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] p-6 text-center max-w-md mx-auto">
-            {/* Ilustración inspiracional SVG */}
-            <div className="mx-auto w-40 h-40 mb-6 flex items-center justify-center">
-              <svg width="100%" height="100%" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
-                {/* Círculo de fondo */}
-                <circle cx="256" cy="256" r="180" fill="#1A1A1A" stroke="#2A2A2A" strokeWidth="2" />
-                
-                {/* Icono de notificación en el centro */}
-                <path 
-                  d="M256 170C268 170 280 174 289 182C298 190 303 201 303 213V245L320 279H192L209 245V213C209 201 214 190 223 182C232 174 244 170 256 170Z" 
-                  fill="#444" 
-                  stroke="#555" 
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <path 
-                  d="M238 310H274C274 316 271 322 267 326C263 330 257 333 251 333C245 333 239 330 235 326C231 322 228 316 228 310" 
-                  fill="#444" 
-                  stroke="#555" 
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
+            {/* Imagen de notificaciones */}
+            <div className="mx-auto w-64 h-64 mb-6 flex items-center justify-center">
+              <img 
+                src="/images/notifications-empty.png" 
+                alt="Notificaciones" 
+                className="w-full h-full object-contain"
+              />
             </div>
             <h2 className="font-bold text-2xl text-white mb-3">No hay notificaciones</h2>
             <p className="text-white/60 mb-6">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
