@@ -28,15 +28,47 @@ export function ItemOptionsSheet({
   onMarkAsReceived,
   onExternalLinkClick
 }: ItemOptionsSheetProps) {
+  // Función para manejar el cierre con seguridad
+  const handleSafeClose = () => {
+    // Primero cerramos el sheet
+    onOpenChange(false);
+    
+    // Luego bloqueamos clics durante un breve período
+    const blocker = document.createElement('div');
+    blocker.style.position = 'fixed';
+    blocker.style.top = '0';
+    blocker.style.left = '0';
+    blocker.style.right = '0';
+    blocker.style.bottom = '0';
+    blocker.style.zIndex = '9999';
+    blocker.style.cursor = 'default';
+    
+    // Escuchar eventos de clic en el blocker para detenerlos por completo
+    blocker.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    }, true);
+    
+    // Añadir el blocker al DOM
+    document.body.appendChild(blocker);
+    
+    // Eliminar el blocker después de un breve periodo
+    setTimeout(() => {
+      if (document.body.contains(blocker)) {
+        document.body.removeChild(blocker);
+      }
+    }, 500);
+  };
+  
   const handleEdit = () => {
     onEdit(item);
-    onOpenChange(false);
+    handleSafeClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
-      onOpenChange(false);
+      handleSafeClose();
     }
   };
   
@@ -46,20 +78,28 @@ export function ItemOptionsSheet({
     } else {
       window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
     }
-    onOpenChange(false);
+    handleSafeClose();
   };
 
   const handleMarkAsReceived = () => {
     if (onMarkAsReceived) {
       onMarkAsReceived(item.id);
-      onOpenChange(false);
+      handleSafeClose();
     }
   };
 
   return (
     <Sheet
       open={isOpen}
-      onOpenChange={onOpenChange}
+      onOpenChange={(open) => {
+        if (!open) {
+          // Si estamos cerrando, usamos nuestro manejador personalizado
+          handleSafeClose();
+        } else {
+          // Si estamos abriendo, comportamiento normal
+          onOpenChange(open);
+        }
+      }}
     >
       <SheetContent 
         side="bottom" 
@@ -72,7 +112,7 @@ export function ItemOptionsSheet({
         <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
           <h3 className="text-white text-xl font-medium">{item.title}</h3>
           <button 
-            onClick={() => onOpenChange(false)}
+            onClick={handleSafeClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
           >
             <X className="h-7 w-7" />
