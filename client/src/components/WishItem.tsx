@@ -84,15 +84,12 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
 
   return (
     <div 
-      className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
+      className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c]"
+      onClick={handleItemClick}
     >
       <div className="flex items-center">
-        {/* Imagen a la izquierda con border radius reducido y altura reducida - clickeable */}
-        <div 
-          className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm cursor-pointer" 
-          style={{ borderRadius: '6px' }}
-          onClick={handleItemClick}
-        >
+        {/* Imagen a la izquierda con border radius reducido y altura reducida */}
+        <div className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
           <ProductImage 
             imageUrl={item.imageUrl} 
             productId={productId}
@@ -105,7 +102,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
         {/* Contenido a la derecha */}
         <div className="flex-grow min-w-0 flex flex-col my-auto">
           <div className="flex justify-between items-center">
-            <div onClick={handleItemClick} className="cursor-pointer">
+            <div>
               {/* Tag de reservado encima del título */}
               {item.isReserved && (
                 <span className="px-2 py-0.5 mb-1 bg-green-800/30 text-green-400 text-xs font-medium rounded-full inline-block">
