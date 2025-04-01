@@ -1,10 +1,10 @@
 import React from 'react';
 import { 
   Sheet,
-  SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
+  SheetContent
 } from "@/components/ui/sheet";
 import { Check, Edit, ExternalLink, Trash, X } from 'lucide-react';
 import { WishItem } from '@/types';
@@ -38,13 +38,22 @@ export function ItemOptionsSheet({
     blocker.style.right = '0';
     blocker.style.bottom = '0';
     blocker.style.zIndex = '10000';
-    blocker.style.cursor = 'not-allowed';
+    blocker.style.cursor = 'default'; // Cambiado de 'not-allowed' a 'default'
+    blocker.style.backgroundColor = 'transparent'; // Bloqueador invisible
     
-    // Escuchar eventos de clic
-    blocker.addEventListener('click', (e) => {
+    // Escuchar eventos de clic en captura para interceptarlos antes de que lleguen a elementos subyacentes
+    const handleEvent = (e: Event) => {
       e.preventDefault();
       e.stopPropagation();
-    }, true);
+      return false;
+    };
+    
+    // Capturar todos los tipos de eventos que podrían causar interacciones
+    blocker.addEventListener('click', handleEvent, true);
+    blocker.addEventListener('mousedown', handleEvent, true);
+    blocker.addEventListener('mouseup', handleEvent, true);
+    blocker.addEventListener('touchstart', handleEvent, true);
+    blocker.addEventListener('touchend', handleEvent, true);
     
     // Añadir el blocker al DOM
     document.body.appendChild(blocker);
@@ -52,6 +61,12 @@ export function ItemOptionsSheet({
     // Eliminar después del tiempo especificado
     setTimeout(() => {
       if (document.body.contains(blocker)) {
+        // Eliminar todos los event listeners antes de remover el elemento
+        blocker.removeEventListener('click', handleEvent, true);
+        blocker.removeEventListener('mousedown', handleEvent, true);
+        blocker.removeEventListener('mouseup', handleEvent, true);
+        blocker.removeEventListener('touchstart', handleEvent, true);
+        blocker.removeEventListener('touchend', handleEvent, true);
         document.body.removeChild(blocker);
       }
     }, duration);
@@ -104,6 +119,16 @@ export function ItemOptionsSheet({
     }
   };
 
+  // Función para manejar el clic en la superposición
+  const handleOverlayClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    // Asegurar que el clic fue en el overlay y no en el contenido
+    if (e.target === e.currentTarget) {
+      e.preventDefault();
+      e.stopPropagation();
+      handleExtendedClose();
+    }
+  };
+
   return (
     <Sheet
       open={isOpen}
@@ -121,7 +146,7 @@ export function ItemOptionsSheet({
         side="bottom" 
         className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
         // Evento para evitar propagación de clics a través del contenido
-        onClick={(e) => e.stopPropagation()}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
         <SheetHeader className="sr-only">
           <SheetTitle>{item.title}</SheetTitle>
