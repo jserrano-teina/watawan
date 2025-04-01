@@ -28,22 +28,19 @@ export function ItemOptionsSheet({
   onMarkAsReceived,
   onExternalLinkClick
 }: ItemOptionsSheetProps) {
-  // Función para manejar el cierre con seguridad
-  const handleSafeClose = () => {
-    // Primero cerramos el sheet
-    onOpenChange(false);
-    
-    // Luego bloqueamos clics durante un breve período
+  // Función para hacer un bloqueo de seguridad avanzado
+  const createBlocker = (duration: number = 800) => {
+    // Creamos un bloqueador externo 
     const blocker = document.createElement('div');
     blocker.style.position = 'fixed';
     blocker.style.top = '0';
     blocker.style.left = '0';
     blocker.style.right = '0';
     blocker.style.bottom = '0';
-    blocker.style.zIndex = '9999';
-    blocker.style.cursor = 'default';
+    blocker.style.zIndex = '10000';
+    blocker.style.cursor = 'not-allowed';
     
-    // Escuchar eventos de clic en el blocker para detenerlos por completo
+    // Escuchar eventos de clic
     blocker.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -52,23 +49,42 @@ export function ItemOptionsSheet({
     // Añadir el blocker al DOM
     document.body.appendChild(blocker);
     
-    // Eliminar el blocker después de un breve periodo
+    // Eliminar después del tiempo especificado
     setTimeout(() => {
       if (document.body.contains(blocker)) {
         document.body.removeChild(blocker);
       }
-    }, 500);
+    }, duration);
   };
   
+  // Función para cerrar con seguridad - cierre básico
+  const handleSafeClose = () => {
+    // Primero cerramos el sheet
+    onOpenChange(false);
+    
+    // Bloqueador básico
+    createBlocker(500);
+  };
+  
+  // Función para cerrar con seguridad extendida - para overlays
+  const handleExtendedClose = () => {
+    // Primero cerramos el sheet
+    onOpenChange(false);
+    
+    // Bloqueador extendido
+    createBlocker(800);
+  };
+  
+  // Métodos para todas las acciones del menú
   const handleEdit = () => {
     onEdit(item);
-    handleSafeClose();
+    handleExtendedClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
-      handleSafeClose();
+      handleExtendedClose();
     }
   };
   
@@ -78,13 +94,13 @@ export function ItemOptionsSheet({
     } else {
       window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
     }
-    handleSafeClose();
+    handleExtendedClose();
   };
 
   const handleMarkAsReceived = () => {
     if (onMarkAsReceived) {
       onMarkAsReceived(item.id);
-      handleSafeClose();
+      handleExtendedClose();
     }
   };
 
@@ -93,8 +109,8 @@ export function ItemOptionsSheet({
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          // Si estamos cerrando, usamos nuestro manejador personalizado
-          handleSafeClose();
+          // Si estamos cerrando, utilizamos la seguridad extendida
+          handleExtendedClose();
         } else {
           // Si estamos abriendo, comportamiento normal
           onOpenChange(open);
@@ -104,6 +120,8 @@ export function ItemOptionsSheet({
       <SheetContent 
         side="bottom" 
         className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+        // Evento para evitar propagación de clics a través del contenido
+        onClick={(e) => e.stopPropagation()}
       >
         <SheetHeader className="sr-only">
           <SheetTitle>{item.title}</SheetTitle>
@@ -112,7 +130,7 @@ export function ItemOptionsSheet({
         <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
           <h3 className="text-white text-xl font-medium">{item.title}</h3>
           <button 
-            onClick={handleSafeClose}
+            onClick={handleExtendedClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
           >
             <X className="h-7 w-7" />
