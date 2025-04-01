@@ -14,7 +14,7 @@ import {
   SheetTitle,
   SheetDescription
 } from "@/components/ui/sheet";
-import { ItemOptionsSheet } from './ItemOptionsSheet';
+import { DetailItemOptionsSheet } from './DetailItemOptionsSheet';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -129,7 +129,7 @@ const DesktopView = ({
                       <MoreVertical size={20} className="text-white/70" />
                     </button>
                   </SheetTrigger>
-                  <ItemOptionsSheet
+                  <DetailItemOptionsSheet
                     isOpen={openSheet}
                     onOpenChange={setOpenSheet}
                     item={item}
@@ -349,7 +349,7 @@ const MobileView = ({
                   <MoreVertical size={20} className="text-white/70" />
                 </button>
               </SheetTrigger>
-              <ItemOptionsSheet
+              <DetailItemOptionsSheet
                 isOpen={openSheet}
                 onOpenChange={setOpenSheet}
                 item={item}
