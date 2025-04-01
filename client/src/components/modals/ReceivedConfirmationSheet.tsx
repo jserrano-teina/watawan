@@ -79,7 +79,7 @@ export function ReceivedConfirmationSheet({
         </div>
         
         <div className="px-6 py-3 text-white/80 text-sm">
-          Al confirmar, este regalo se marcará como recibido y desaparecerá de tu lista de deseos.
+          Al confirmar, este regalo se marcará como recibido y desaparecerá de tu lista de deseos. Esta acción no se puede deshacer y ayudará a mantener tu lista de deseos organizada con solo los artículos que aún estás esperando.
         </div>
 
         <div className="px-6 mt-2 flex flex-col gap-2">
@@ -90,20 +90,20 @@ export function ReceivedConfirmationSheet({
             )}
           </div>
 
-          <div className="mt-6 flex flex-col">
+          <div className="mt-6 flex flex-col gap-3">
             <button 
               onClick={handleConfirm}
               disabled={markAsReceivedMutation.isPending}
-              className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center justify-center rounded-lg font-medium"
+              className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
             >
-              <Check size={22} className="mr-3" />
+              <Check size={20} className="mr-2" />
               {markAsReceivedMutation.isPending ? "Confirmando..." : "Sí, ya lo recibí"}
             </button>
             
             <button 
               onClick={handleClose}
               disabled={markAsReceivedMutation.isPending}
-              className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center justify-center rounded-lg mt-2"
+              className="w-full px-4 py-3 border border-[#333] hover:bg-[#252525] text-white/90 rounded-lg text-base transition-colors flex items-center justify-center"
             >
               No, aún no
             </button>
