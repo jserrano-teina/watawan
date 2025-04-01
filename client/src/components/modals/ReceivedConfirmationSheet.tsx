@@ -69,7 +69,7 @@ export function ReceivedConfirmationSheet({
         </SheetHeader>
         
         <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
-          <h3 className="text-white text-xl font-medium">¿Ya recibiste este regalo?</h3>
+          <h3 className="text-white text-xl font-medium">{item.title}</h3>
           <button 
             onClick={handleClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
@@ -78,17 +78,14 @@ export function ReceivedConfirmationSheet({
           </button>
         </div>
         
-        <div className="px-6 py-3 text-white/80 text-sm">
-          Al confirmar, este regalo se marcará como recibido y desaparecerá de tu lista de deseos. Esta acción no se puede deshacer y ayudará a mantener tu lista de deseos organizada con solo los artículos que aún estás esperando.
+        <div className="px-6 py-4 text-white/90 text-base">
+          ¿Confirmas que ya has recibido este regalo?
         </div>
 
         <div className="px-6 mt-2 flex flex-col gap-2">
-          <div className="flex flex-col gap-2">
-            <p className="text-lg font-medium text-white">{item.title}</p>
-            {item.description && (
-              <p className="text-sm text-white/60">{item.description}</p>
-            )}
-          </div>
+          {item.description && (
+            <p className="text-sm text-white/60 mb-2">{item.description}</p>
+          )}
 
           <div className="mt-6 flex flex-col gap-3">
             <button 
