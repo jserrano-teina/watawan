@@ -28,78 +28,26 @@ export function ItemOptionsSheet({
   onMarkAsReceived,
   onExternalLinkClick
 }: ItemOptionsSheetProps) {
-  // Función para hacer un bloqueo de seguridad avanzado
-  const createBlocker = (duration: number = 800) => {
-    // Creamos un bloqueador externo 
-    const blocker = document.createElement('div');
-    blocker.style.position = 'fixed';
-    blocker.style.top = '0';
-    blocker.style.left = '0';
-    blocker.style.right = '0';
-    blocker.style.bottom = '0';
-    blocker.style.zIndex = '10000';
-    blocker.style.cursor = 'default'; // Cambiado de 'not-allowed' a 'default'
-    blocker.style.backgroundColor = 'transparent'; // Bloqueador invisible
-    
-    // Escuchar eventos de clic en captura para interceptarlos antes de que lleguen a elementos subyacentes
-    const handleEvent = (e: Event) => {
-      e.preventDefault();
-      e.stopPropagation();
-      return false;
-    };
-    
-    // Capturar todos los tipos de eventos que podrían causar interacciones
-    blocker.addEventListener('click', handleEvent, true);
-    blocker.addEventListener('mousedown', handleEvent, true);
-    blocker.addEventListener('mouseup', handleEvent, true);
-    blocker.addEventListener('touchstart', handleEvent, true);
-    blocker.addEventListener('touchend', handleEvent, true);
-    
-    // Añadir el blocker al DOM
-    document.body.appendChild(blocker);
-    
-    // Eliminar después del tiempo especificado
-    setTimeout(() => {
-      if (document.body.contains(blocker)) {
-        // Eliminar todos los event listeners antes de remover el elemento
-        blocker.removeEventListener('click', handleEvent, true);
-        blocker.removeEventListener('mousedown', handleEvent, true);
-        blocker.removeEventListener('mouseup', handleEvent, true);
-        blocker.removeEventListener('touchstart', handleEvent, true);
-        blocker.removeEventListener('touchend', handleEvent, true);
-        document.body.removeChild(blocker);
-      }
-    }, duration);
-  };
+  // Ya no implementamos un bloqueador propio en este componente
+  // porque podría interferir con el bloqueador del componente padre (WishItem)
+  // En su lugar, solo nos encargamos de notificar al componente padre cuando
+  // se cierra el sheet para que él se encargue del bloqueo
   
-  // Función para cerrar con seguridad - cierre básico
-  const handleSafeClose = () => {
-    // Primero cerramos el sheet
+  // Función simplificada para cerrar el sheet
+  const handleClose = () => {
     onOpenChange(false);
-    
-    // Bloqueador básico
-    createBlocker(500);
-  };
-  
-  // Función para cerrar con seguridad extendida - para overlays
-  const handleExtendedClose = () => {
-    // Primero cerramos el sheet
-    onOpenChange(false);
-    
-    // Bloqueador extendido
-    createBlocker(800);
   };
   
   // Métodos para todas las acciones del menú
   const handleEdit = () => {
     onEdit(item);
-    handleExtendedClose();
+    handleClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
-      handleExtendedClose();
+      handleClose();
     }
   };
   
@@ -109,13 +57,13 @@ export function ItemOptionsSheet({
     } else {
       window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
     }
-    handleExtendedClose();
+    handleClose();
   };
 
   const handleMarkAsReceived = () => {
     if (onMarkAsReceived) {
       onMarkAsReceived(item.id);
-      handleExtendedClose();
+      handleClose();
     }
   };
 
@@ -125,7 +73,7 @@ export function ItemOptionsSheet({
     if (e.target === e.currentTarget) {
       e.preventDefault();
       e.stopPropagation();
-      handleExtendedClose();
+      handleClose();
     }
   };
 
@@ -134,8 +82,8 @@ export function ItemOptionsSheet({
       open={isOpen}
       onOpenChange={(open) => {
         if (!open) {
-          // Si estamos cerrando, utilizamos la seguridad extendida
-          handleExtendedClose();
+          // Si estamos cerrando, simplemente notificamos al componente padre
+          handleClose();
         } else {
           // Si estamos abriendo, comportamiento normal
           onOpenChange(open);
@@ -155,7 +103,7 @@ export function ItemOptionsSheet({
         <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
           <h3 className="text-white text-xl font-medium">{item.title}</h3>
           <button 
-            onClick={handleExtendedClose}
+            onClick={handleClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
           >
             <X className="h-7 w-7" />
