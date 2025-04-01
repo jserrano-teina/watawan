@@ -4,16 +4,17 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical, Trash } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Sheet,
+  SheetTrigger,
   SheetContent,
   SheetHeader,
   SheetTitle,
-  SheetDescription,
-  SheetTrigger,
+  SheetDescription
 } from "@/components/ui/sheet";
+import { ItemOptionsSheet } from './ItemOptionsSheet';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -128,65 +129,30 @@ const DesktopView = ({
                       <MoreVertical size={20} className="text-white/70" />
                     </button>
                   </SheetTrigger>
-                  <SheetContent 
-                    side="bottom" 
-                    className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
-                  >
-                    <SheetHeader className="sr-only">
-                      <SheetTitle>{item.title}</SheetTitle>
-                      <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
-                    </SheetHeader>
-                    <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
-                      <h3 className="text-white text-xl font-medium">{item.title}</h3>
-                      <button 
-                        onClick={() => setOpenSheet(false)}
-                        className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
-                      >
-                        <X className="h-7 w-7" />
-                      </button>
-                    </div>
-                    
-                    <div className="mt-4 flex flex-col">
-                      {item.isReserved && onMarkAsReceived && (
-                        <button 
-                          onClick={() => {
-                            onMarkAsReceived(item.id);
-                            setOpenSheet(false);
-                            onClose();
-                          }}
-                          className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"
-                        >
-                          <Check size={22} className="mr-4" />
-                          ¡Ya lo recibí!
-                        </button>
-                      )}
-
-                      <button 
-                        onClick={handleEdit}
-                        className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-                        disabled={item.isReserved}
-                      >
-                        <Edit size={22} className="mr-4" />
-                        Editar
-                      </button>
-                      
-                      <button 
-                        onClick={openExternalLink}
-                        className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
-                      >
-                        <ExternalLink size={22} className="mr-4" />
-                        Ir al enlace de compra
-                      </button>
-                      
-                      <button 
-                        onClick={handleDelete}
-                        className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
-                      >
-                        <Trash size={22} className="mr-4" />
-                        Eliminar
-                      </button>
-                    </div>
-                  </SheetContent>
+                  <ItemOptionsSheet
+                    isOpen={openSheet}
+                    onOpenChange={setOpenSheet}
+                    item={item}
+                    onEdit={(item) => {
+                      onEdit(item);
+                      setOpenSheet(false);
+                      onClose();
+                    }}
+                    onDelete={(item) => {
+                      onDelete(item);
+                      setOpenSheet(false);
+                      onClose();
+                    }}
+                    onMarkAsReceived={onMarkAsReceived ? (id) => {
+                      onMarkAsReceived(id);
+                      setOpenSheet(false);
+                      onClose();
+                    } : undefined}
+                    onExternalLinkClick={(url) => {
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                      setOpenSheet(false);
+                    }}
+                  />
                 </Sheet>
               </div>
               
@@ -383,65 +349,30 @@ const MobileView = ({
                   <MoreVertical size={20} className="text-white/70" />
                 </button>
               </SheetTrigger>
-              <SheetContent 
-                side="bottom" 
-                className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
-              >
-                <SheetHeader className="sr-only">
-                  <SheetTitle>{item.title}</SheetTitle>
-                  <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
-                </SheetHeader>
-                <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
-                  <h3 className="text-white text-xl font-medium">{item.title}</h3>
-                  <button 
-                    onClick={() => setOpenSheet(false)}
-                    className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
-                  >
-                    <X className="h-7 w-7" />
-                  </button>
-                </div>
-                
-                <div className="mt-4 flex flex-col">
-                  {item.isReserved && onMarkAsReceived && (
-                    <button 
-                      onClick={() => {
-                        onMarkAsReceived(item.id);
-                        setOpenSheet(false);
-                        onClose();
-                      }}
-                      className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"
-                    >
-                      <Check size={22} className="mr-4" />
-                      ¡Ya lo recibí!
-                    </button>
-                  )}
-
-                  <button 
-                    onClick={handleEdit}
-                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-                    disabled={item.isReserved}
-                  >
-                    <Edit size={22} className="mr-4" />
-                    Editar
-                  </button>
-                  
-                  <button 
-                    onClick={openExternalLink}
-                    className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
-                  >
-                    <ExternalLink size={22} className="mr-4" />
-                    Ir al enlace de compra
-                  </button>
-                  
-                  <button 
-                    onClick={handleDelete}
-                    className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
-                  >
-                    <Trash size={22} className="mr-4" />
-                    Eliminar
-                  </button>
-                </div>
-              </SheetContent>
+              <ItemOptionsSheet
+                isOpen={openSheet}
+                onOpenChange={setOpenSheet}
+                item={item}
+                onEdit={(item) => {
+                  onEdit(item);
+                  setOpenSheet(false);
+                  onClose();
+                }}
+                onDelete={(item) => {
+                  onDelete(item);
+                  setOpenSheet(false);
+                  onClose();
+                }}
+                onMarkAsReceived={onMarkAsReceived ? (id) => {
+                  onMarkAsReceived(id);
+                  setOpenSheet(false);
+                  onClose();
+                } : undefined}
+                onExternalLinkClick={(url) => {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                  setOpenSheet(false);
+                }}
+              />
             </Sheet>
           </div>
           

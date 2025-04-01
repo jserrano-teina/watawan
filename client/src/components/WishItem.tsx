@@ -3,15 +3,9 @@ import { WishItem as WishItemType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProductImage from './ProductImage';
-import { MoreVertical, Edit, Trash, ExternalLink, X } from 'lucide-react';
-import { 
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+import { MoreVertical, X } from 'lucide-react';
+import { Sheet, SheetTrigger } from "@/components/ui/sheet";
+import { ItemOptionsSheet } from './modals/ItemOptionsSheet';
 
 interface WishItemProps {
   item: WishItemType;
@@ -129,7 +123,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
             {/* Menú de opciones con bottom sheet */}
             <Sheet 
               open={open} 
-              onOpenChange={(newOpen) => {
+              onOpenChange={(newOpen: boolean) => {
                 setOpen(newOpen);
                 // Al cerrarse, notificar al componente padre
                 if (!newOpen) {
@@ -174,64 +168,17 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                   <MoreVertical size={18} />
                 </button>
               </SheetTrigger>
-              <SheetContent 
-                side="bottom" 
-                className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
-              >
-                <SheetHeader className="sr-only">
-                  <SheetTitle>{item.title}</SheetTitle>
-                  <SheetDescription>Opciones para gestionar este deseo</SheetDescription>
-                </SheetHeader>
-                <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
-                  <h3 className="text-white text-xl font-medium">{item.title}</h3>
-                  <button 
-                    onClick={() => setOpen(false)}
-                    className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
-                  >
-                    <X className="h-7 w-7" />
-                  </button>
-                </div>
-                
-                <div className="mt-4 flex flex-col">
-                  <button 
-                    onClick={handleEdit}
-                    className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-                    disabled={item.isReserved}
-                  >
-                    <Edit size={22} className="mr-4" />
-                    Editar
-                  </button>
-                  
-                  <button 
-                    onClick={openExternalLink}
-                    className="w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center"
-                  >
-                    <ExternalLink size={22} className="mr-4" />
-                    Ir al enlace de compra
-                  </button>
-                  
-                  {onMarkAsReceived && (
-                    <button 
-                      onClick={() => {
-                        onMarkAsReceived(item.id);
-                        setOpen(false);
-                      }}
-                      className="w-full text-left px-6 py-5 text-[17px] text-green-400 hover:bg-[#333] flex items-center"
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-4"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                      ¡Ya lo recibí!
-                    </button>
-                  )}
-                  
-                  <button 
-                    onClick={handleDelete}
-                    className="w-full text-left px-6 py-5 text-[17px] text-red-400 hover:bg-[#333] flex items-center"
-                  >
-                    <Trash size={22} className="mr-4" />
-                    Eliminar
-                  </button>
-                </div>
-              </SheetContent>
+              <ItemOptionsSheet
+                isOpen={open}
+                onOpenChange={setOpen}
+                item={item}
+                onEdit={onEdit}
+                onDelete={onDelete}
+                onMarkAsReceived={onMarkAsReceived}
+                onExternalLinkClick={(url) => {
+                  window.open(url, '_blank', 'noopener,noreferrer');
+                }}
+              />
             </Sheet>
           </div>
         </div>
