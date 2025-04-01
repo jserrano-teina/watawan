@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { WishItem as WishItemType } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -6,6 +6,7 @@ import ProductImage from './ProductImage';
 import { MoreVertical, X } from 'lucide-react';
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { ItemOptionsSheet } from './modals/ItemOptionsSheet';
+import { useInteractionLock } from '@/hooks/use-interaction-lock';
 
 interface WishItemProps {
   item: WishItemType;
@@ -40,8 +41,11 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
 
   const productId = getProductId();
 
-  // Variable para saber si recientemente se cerró el sheet
-  const [recentlyClosed, setRecentlyClosed] = useState(false);
+  // Obtenemos las funciones del sistema de bloqueo global
+  const { isInteractionAllowed, lockInteraction } = useInteractionLock();
+  
+  // Nota: Ya no necesitamos el estado recentlyClosed porque ahora usamos
+  // el sistema de bloqueo global para manejar esta funcionalidad
   
   // Función para manejar el clic en el ítem
   const handleItemClick = (e: React.MouseEvent) => {
@@ -53,8 +57,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
       return;
     }
     
-    // No abrir el detalle si el sheet está abierto o si se cerró recientemente
-    if (open || recentlyClosed) {
+    // No abrir el detalle si el sheet está abierto
+    if (open) {
+      return;
+    }
+    
+    // Verificar si está permitida la interacción según el sistema global
+    if (!isInteractionAllowed()) {
       return;
     }
     
@@ -137,54 +146,9 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                     onSheetClose();
                   }
                   
-                  // Marcar como recientemente cerrado para evitar clics accidentales
-                  setRecentlyClosed(true);
-                  setTimeout(() => setRecentlyClosed(false), 500);
-                  
-                  // Sistema mejorado para prevenir la apertura accidental del detalle
-                  // Este bloqueador captura TODOS los eventos durante un periodo breve
-                  const blocker = document.createElement('div');
-                  blocker.style.position = 'fixed';
-                  blocker.style.top = '0';
-                  blocker.style.left = '0';
-                  blocker.style.right = '0';
-                  blocker.style.bottom = '0';
-                  blocker.style.zIndex = '100000'; // Mayor z-index para estar por encima de todo
-                  blocker.style.cursor = 'default';
-                  blocker.style.backgroundColor = 'transparent';
-                  
-                  // Lista de todos los eventos que queremos bloquear para asegurar que nada se activará
-                  const eventsToBlock = [
-                    'click', 'mousedown', 'mouseup', 'touchstart', 'touchend', 
-                    'pointerdown', 'pointerup', 'contextmenu'
-                  ];
-                  
-                  // Función para bloquear cualquier evento que ocurra
-                  const blockEvent = (e: Event) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation(); // Importante: detiene también los listeners siguientes
-                    return false;
-                  };
-                  
-                  // Agregar listeners para todos los eventos
-                  eventsToBlock.forEach(eventType => {
-                    blocker.addEventListener(eventType, blockEvent, { capture: true, passive: false });
-                  });
-                  
-                  // Añadir el blocker al DOM como primer hijo para capturar todo
-                  document.body.insertAdjacentElement('afterbegin', blocker);
-                  
-                  // Eliminar el blocker y todos sus listeners después de un periodo
-                  setTimeout(() => {
-                    if (document.body.contains(blocker)) {
-                      // Remover todos los listeners antes de quitar el elemento
-                      eventsToBlock.forEach(eventType => {
-                        blocker.removeEventListener(eventType, blockEvent, { capture: true });
-                      });
-                      document.body.removeChild(blocker);
-                    }
-                  }, 800); // Aumentado a 800ms para mayor seguridad
+                  // Usar el sistema de bloqueo global en lugar de un sistema personalizado
+                  // para prevenir interacciones accidentales después de cerrar el sheet
+                  lockInteraction(800); // Bloquear interacciones durante 800ms
                 }
               }}
             >

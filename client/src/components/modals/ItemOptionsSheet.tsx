@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Sheet,
   SheetHeader,
@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/sheet";
 import { Check, Edit, ExternalLink, Trash, X } from 'lucide-react';
 import { WishItem } from '@/types';
+import { useInteractionLock } from '@/hooks/use-interaction-lock';
 
 interface ItemOptionsSheetProps {
   isOpen: boolean;
@@ -28,14 +29,20 @@ export function ItemOptionsSheet({
   onMarkAsReceived,
   onExternalLinkClick
 }: ItemOptionsSheetProps) {
-  // Ya no implementamos un bloqueador propio en este componente
-  // porque podría interferir con el bloqueador del componente padre (WishItem)
-  // En su lugar, solo nos encargamos de notificar al componente padre cuando
-  // se cierra el sheet para que él se encargue del bloqueo
+  // Usamos el sistema de bloqueo global para evitar interacciones conflictivas
+  const lockInteraction = useInteractionLock(state => state.lockInteraction);
   
-  // Función simplificada para cerrar el sheet
+  // Cuando este componente se abre, bloqueamos otras interacciones
+  useEffect(() => {
+    if (isOpen) {
+      lockInteraction(500); // Bloquear por 500ms cuando se abre
+    }
+  }, [isOpen, lockInteraction]);
+  
+  // Función para cerrar el sheet y aplicar el bloqueo
   const handleClose = () => {
     onOpenChange(false);
+    lockInteraction(500); // Bloquear interacciones por 500ms al cerrar
   };
   
   // Métodos para todas las acciones del menú
