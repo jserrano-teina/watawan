@@ -40,6 +40,9 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
 
   const productId = getProductId();
 
+  // Variable para saber si recientemente se cerró el sheet
+  const [recentlyClosed, setRecentlyClosed] = useState(false);
+  
   // Función para manejar el clic en el ítem
   const handleItemClick = (e: React.MouseEvent) => {
     // Evitar que se abra el modal si se hace clic en los botones o en el enlace
@@ -50,8 +53,8 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
       return;
     }
     
-    // No abrir el detalle si el sheet está abierto
-    if (open) {
+    // No abrir el detalle si el sheet está abierto o si se cerró recientemente
+    if (open || recentlyClosed) {
       return;
     }
     
@@ -124,7 +127,9 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
             <Sheet 
               open={open} 
               onOpenChange={(newOpen: boolean) => {
+                // Al abrirse o cerrarse el Sheet, actualizar el estado local
                 setOpen(newOpen);
+                
                 // Al cerrarse, notificar al componente padre
                 if (!newOpen) {
                   // Llamar al callback de cierre si existe
@@ -132,28 +137,36 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                     onSheetClose();
                   }
                   
-                  // Prevenir cualquier clic en el elemento por un breve periodo
-                  const item = document.activeElement as HTMLElement;
-                  if (item) {
-                    item.blur();
-                    
-                    // Creamos un div transparente que capture todos los clics por un momento
-                    const blocker = document.createElement('div');
-                    blocker.style.position = 'fixed';
-                    blocker.style.top = '0';
-                    blocker.style.left = '0';
-                    blocker.style.right = '0';
-                    blocker.style.bottom = '0';
-                    blocker.style.zIndex = '9999';
-                    blocker.style.cursor = 'default';
-                    document.body.appendChild(blocker);
-                    
-                    setTimeout(() => {
-                      if (document.body.contains(blocker)) {
-                        document.body.removeChild(blocker);
-                      }
-                    }, 300); // Aumentamos a 300ms para mayor seguridad
-                  }
+                  // Marcar como recientemente cerrado para evitar clics accidentales
+                  setRecentlyClosed(true);
+                  setTimeout(() => setRecentlyClosed(false), 500);
+                  
+                  // Prevenir la apertura accidental del detalle cuando se cierra el sheet
+                  // Para hacerlo, cancelamos todos los clics durante un breve periodo
+                  const blocker = document.createElement('div');
+                  blocker.style.position = 'fixed';
+                  blocker.style.top = '0';
+                  blocker.style.left = '0';
+                  blocker.style.right = '0';
+                  blocker.style.bottom = '0';
+                  blocker.style.zIndex = '9999';
+                  blocker.style.cursor = 'default';
+                  
+                  // Escuchar eventos de clic en el blocker para detenerlos por completo
+                  blocker.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }, true);
+                  
+                  // Añadir el blocker al DOM
+                  document.body.appendChild(blocker);
+                  
+                  // Eliminar el blocker después de un breve periodo
+                  setTimeout(() => {
+                    if (document.body.contains(blocker)) {
+                      document.body.removeChild(blocker);
+                    }
+                  }, 400); // Aumentamos a 400ms para mayor seguridad
                 }
               }}
             >
