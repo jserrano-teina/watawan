@@ -112,8 +112,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
         <div className="flex-grow min-w-0 flex flex-col my-auto">
           <div className="flex justify-between items-center">
             <div>
-              {/* Tag de reservado encima del título */}
-              {item.isReserved && (
+              {/* Tag de recibido o reservado encima del título */}
+              {item.isReceived && (
+                <span className="px-2 py-0.5 mb-1 bg-purple-800/30 text-purple-400 text-xs font-medium rounded-full inline-block">
+                  Recibido
+                </span>
+              )}
+              {item.isReserved && !item.isReceived && (
                 <span className="px-2 py-0.5 mb-1 bg-green-800/30 text-green-400 text-xs font-medium rounded-full inline-block">
                   Reservado
                 </span>

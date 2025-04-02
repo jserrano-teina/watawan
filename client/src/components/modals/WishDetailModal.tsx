@@ -194,8 +194,22 @@ const DesktopView = ({
                 </div>
               </div>
               
-              {/* Banner de reservado */}
-              {item.isReserved && (
+              {/* Banner de recibido o reservado */}
+              {item.isReceived && (
+                <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-4 flex items-center">
+                  <div className="w-9 h-9 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Check className="h-4 w-4 text-purple-400" />
+                  </div>
+                  <div>
+                    {item.reserverName ? (
+                      <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> te lo regaló, ¡que lo disfrutes!</p>
+                    ) : (
+                      <p className="font-medium text-white text-sm">Has recibido este regalo, ¡que lo disfrutes!</p>
+                    )}
+                  </div>
+                </div>
+              )}
+              {item.isReserved && !item.isReceived && (
                 <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
                   <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                     <Check className="h-4 w-4 text-green-400" />
@@ -390,8 +404,22 @@ const MobileView = ({
             Añadido {formattedDate}
           </div>
           
-          {/* Banner de reservado */}
-          {item.isReserved && (
+          {/* Banner de recibido o reservado */}
+          {item.isReceived && (
+            <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-purple-400" />
+              </div>
+              <div>
+                {item.reserverName ? (
+                  <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> te lo regaló, ¡que lo disfrutes!</p>
+                ) : (
+                  <p className="font-medium text-white text-sm">Has recibido este regalo, ¡que lo disfrutes!</p>
+                )}
+              </div>
+            </div>
+          )}
+          {item.isReserved && !item.isReceived && (
             <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
               <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                 <Check className="h-5 w-5 text-green-400" />
@@ -436,7 +464,7 @@ const MobileView = ({
           Eliminar
         </button>
         
-        {item.isReserved && onMarkAsReceived ? (
+        {item.isReserved && !item.isReceived && onMarkAsReceived ? (
           <button
             onClick={() => onMarkAsReceived(item.id)}
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"

@@ -69,14 +69,14 @@ export function ReceivedSuccessSheet({
           
           {/* Mostrar mensaje de agradecimiento solo si hay reserverName */}
           {item.reserverName && (
-            <p className="text-white/80 mb-6">
+            <p className="text-white/80 mb-8">
               No olvides dar las gracias a <span className="font-semibold">{item.reserverName}</span>
             </p>
           )}
           
           <button 
             onClick={handleClose}
-            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
+            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center mt-6"
           >
             Cerrar
           </button>
