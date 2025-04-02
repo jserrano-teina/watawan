@@ -61,7 +61,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Get wish items for a wishlist
-  router.get("/wishlist/:id/items", async (req, res) => {
+  router.get("/wishlist/:id/items", async (req: Request & { user?: User }, res) => {
     const { id } = req.params;
     const wishlistId = parseInt(id, 10);
     
@@ -75,8 +75,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Wishlist not found" });
     }
     
-    // Ahora incluimos los elementos recibidos en la respuesta
-    const items = await storage.getWishItemsForWishlist(wishlistId, true);
+    // Determinar si es el propietario quien accede o un visitante
+    const isOwnerAccess = req.user && req.user.id === wishlist.userId;
+    
+    // Si es el propietario, incluimos los elementos recibidos
+    // Si es un visitante (acceso compartido), no incluimos elementos recibidos
+    const includeReceived = isOwnerAccess;
+    
+    const items = await storage.getWishItemsForWishlist(wishlistId, includeReceived);
     res.json(items);
   });
 
