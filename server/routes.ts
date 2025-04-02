@@ -59,6 +59,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     res.json({ wishlist, owner: ownerInfo });
   });
+  
+  // Get items for a shared wishlist - never includes received items
+  router.get("/wishlist/shared/:link/items", async (req, res) => {
+    const { link } = req.params;
+    
+    const wishlist = await storage.getWishlistByShareableLink(link);
+    
+    if (!wishlist) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+    
+    // Para listas compartidas, nunca incluimos los elementos recibidos
+    const includeReceived = false;
+    
+    const items = await storage.getWishItemsForWishlist(wishlist.id, includeReceived);
+    res.json(items);
+  });
 
   // Get wish items for a wishlist
   router.get("/wishlist/:id/items", async (req: Request & { user?: User }, res) => {

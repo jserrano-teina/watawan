@@ -99,10 +99,10 @@ export function useSharedWishlist(shareableLink: string) {
     },
   });
 
-  // Get wish items for the shared wishlist
+  // Get wish items for the shared wishlist (using the dedicated endpoint for shared lists)
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: [`/api/wishlist/${sharedWishlistData?.wishlist?.id}/items`],
-    enabled: !!sharedWishlistData?.wishlist?.id,
+    queryKey: [`/api/wishlist/shared/${shareableLink}/items`],
+    enabled: !!shareableLink,
   });
 
   // Reserve item mutation
@@ -112,7 +112,7 @@ export function useSharedWishlist(shareableLink: string) {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${sharedWishlistData?.wishlist?.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/shared/${shareableLink}/items`] });
     },
   });
 
