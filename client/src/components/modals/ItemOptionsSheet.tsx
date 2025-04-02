@@ -135,7 +135,7 @@ export function ItemOptionsSheet({
             Ir al enlace de compra
           </button>
           
-          {onMarkAsReceived && !item.isReceived && (
+          {onMarkAsReceived && !item.isReceived && item.isReserved && (
             <button 
               onClick={handleMarkAsReceived}
               className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"

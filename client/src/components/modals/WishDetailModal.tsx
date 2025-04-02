@@ -164,7 +164,7 @@ const DesktopView = ({
                       setOpenSheet(false);
                       onClose();
                     }}
-                    onMarkAsReceived={item.isReserved && !item.isReceived && onMarkAsReceived ? (id) => {
+                    onMarkAsReceived={!item.isReceived && onMarkAsReceived ? (id) => {
                       setOpenSheet(false);
                       setShowReceivedConfirmation(true);
                     } : undefined}
@@ -434,7 +434,7 @@ const MobileView = ({
                   setOpenSheet(false);
                   onClose();
                 }}
-                onMarkAsReceived={item.isReserved && !item.isReceived && onMarkAsReceived ? (id) => {
+                onMarkAsReceived={!item.isReceived && onMarkAsReceived ? (id) => {
                   setOpenSheet(false);
                   setShowReceivedConfirmation(true);
                 } : undefined}

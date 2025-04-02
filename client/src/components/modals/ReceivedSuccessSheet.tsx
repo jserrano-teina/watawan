@@ -4,11 +4,12 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { UseMutationResult } from "@tanstack/react-query";
+import { UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { WishItem } from "@/types";
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
 import { CustomSheetContent } from '@/components/CustomSheetContent';
+import { CheckCircle2 } from 'lucide-react';
 
 interface ReceivedSuccessSheetProps {
   isOpen: boolean;
@@ -21,6 +22,9 @@ export function ReceivedSuccessSheet({
   onClose,
   item,
 }: ReceivedSuccessSheetProps) {
+  const queryClient = useQueryClient();
+  const [refreshing, setRefreshing] = useState(false);
+  
   // Usamos el sistema de bloqueo global para evitar interacciones conflictivas
   const lockInteraction = useInteractionLock(state => state.lockInteraction);
   
@@ -33,8 +37,28 @@ export function ReceivedSuccessSheet({
   
   // Función para cerrar el sheet y aplicar el bloqueo
   const handleClose = () => {
-    onClose();
-    lockInteraction(500); // Bloquear interacciones por 500ms al cerrar
+    // Añadimos un refresco de los datos antes de cerrar
+    setRefreshing(true);
+    
+    // Actualizamos todos los queries relevantes para asegurar
+    // que la UI se refresca con el estado actualizado
+    if (item) {
+      Promise.all([
+        queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] }),
+        queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] }),
+      ]).finally(() => {
+        // Una vez que se han refrescado los datos, cerramos el modal
+        setTimeout(() => {
+          setRefreshing(false);
+          onClose();
+          lockInteraction(500); // Bloquear interacciones por 500ms al cerrar
+        }, 300); // Pequeño retraso para asegurar que la UI se actualiza correctamente
+      });
+    } else {
+      onClose();
+      lockInteraction(500);
+    }
   };
 
   if (!item) return null;
@@ -76,9 +100,25 @@ export function ReceivedSuccessSheet({
           
           <button 
             onClick={handleClose}
-            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center mt-12"
+            disabled={refreshing}
+            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center mt-12 relative"
           >
-            Cerrar
+            {refreshing ? (
+              <>
+                <span className="opacity-0">Cerrar</span>
+                <span className="absolute inset-0 flex items-center justify-center">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                </span>
+              </>
+            ) : (
+              <>
+                <CheckCircle2 className="mr-2 h-5 w-5" />
+                Cerrar
+              </>
+            )}
           </button>
         </div>
       </CustomSheetContent>
