@@ -5,7 +5,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { Check, X } from 'lucide-react';
-import { UseMutationResult } from "@tanstack/react-query";
+import { UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { WishItem } from "@/types";
 import { useEffect, useState } from 'react';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
@@ -29,6 +29,8 @@ export function ReceivedConfirmationSheet({
   const [showSuccessSheet, setShowSuccessSheet] = useState(false);
   // Estado para guardar el item marcado como recibido
   const [receivedItem, setReceivedItem] = useState<WishItem | null>(null);
+  // Accedemos al queryClient para poder refrescar los datos
+  const queryClient = useQueryClient();
   
   // Usamos el sistema de bloqueo global para evitar interacciones conflictivas
   const lockInteraction = useInteractionLock(state => state.lockInteraction);
@@ -51,9 +53,25 @@ export function ReceivedConfirmationSheet({
 
   // Función para cerrar el sheet de éxito
   const handleSuccessSheetClose = () => {
-    setShowSuccessSheet(false);
-    onClose();
-    lockInteraction(500);
+    if (item) {
+      // Forzamos el refresco de los datos antes de cerrar
+      Promise.all([
+        queryClient.fetchQuery({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] }),
+        queryClient.fetchQuery({ queryKey: ['/api/notifications/unread'] }),
+        queryClient.fetchQuery({ queryKey: ['/api/reserved-items'] }),
+      ]).finally(() => {
+        // Esperamos que se completen las solicitudes y luego cerramos
+        setTimeout(() => {
+          setShowSuccessSheet(false);
+          onClose();
+          lockInteraction(1000);
+        }, 500);
+      });
+    } else {
+      setShowSuccessSheet(false);
+      onClose();
+      lockInteraction(500);
+    }
   };
 
   const handleConfirm = () => {

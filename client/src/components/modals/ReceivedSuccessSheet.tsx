@@ -40,20 +40,24 @@ export function ReceivedSuccessSheet({
     // Añadimos un refresco de los datos antes de cerrar
     setRefreshing(true);
     
+    // Verificar primero si la hoja está abierta para evitar ejecutar esto varias veces
+    if (!isOpen) return;
+    
     // Actualizamos todos los queries relevantes para asegurar
     // que la UI se refresca con el estado actualizado
     if (item) {
+      // Forzamos el refresco de las listas con fetchQuery para garantizar que los datos se actualizan
       Promise.all([
-        queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] }),
-        queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] }),
+        queryClient.fetchQuery({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] }),
+        queryClient.fetchQuery({ queryKey: ['/api/notifications/unread'] }),
+        queryClient.fetchQuery({ queryKey: ['/api/reserved-items'] }),
       ]).finally(() => {
-        // Una vez que se han refrescado los datos, cerramos el modal
+        // Esperamos un poco para asegurar que la UI se actualiza antes de cerrar
         setTimeout(() => {
           setRefreshing(false);
           onClose();
-          lockInteraction(500); // Bloquear interacciones por 500ms al cerrar
-        }, 300); // Pequeño retraso para asegurar que la UI se actualiza correctamente
+          lockInteraction(1000); // Mayor bloqueo para asegurar que no se realizan otras interacciones
+        }, 500); // Mayor retraso para asegurar que la UI se actualiza correctamente
       });
     } else {
       onClose();
@@ -115,7 +119,6 @@ export function ReceivedSuccessSheet({
               </>
             ) : (
               <>
-                <CheckCircle2 className="mr-2 h-5 w-5" />
                 Cerrar
               </>
             )}
