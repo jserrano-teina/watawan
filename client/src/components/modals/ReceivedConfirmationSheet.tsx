@@ -54,6 +54,9 @@ export function ReceivedConfirmationSheet({
   // Función para cerrar el sheet de éxito
   const handleSuccessSheetClose = () => {
     if (item) {
+      // Primero cambiamos el estado de showSuccessSheet
+      setShowSuccessSheet(false);
+      
       // Forzamos el refresco de los datos antes de cerrar
       Promise.all([
         queryClient.fetchQuery({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] }),
@@ -62,10 +65,10 @@ export function ReceivedConfirmationSheet({
       ]).finally(() => {
         // Esperamos que se completen las solicitudes y luego cerramos
         setTimeout(() => {
-          setShowSuccessSheet(false);
+          // Cerramos el modal principal
           onClose();
           lockInteraction(1000);
-        }, 500);
+        }, 300);
       });
     } else {
       setShowSuccessSheet(false);

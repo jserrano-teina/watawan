@@ -9,7 +9,6 @@ import { WishItem } from "@/types";
 import { useEffect, useState } from 'react';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
 import { CustomSheetContent } from '@/components/CustomSheetContent';
-import { CheckCircle2 } from 'lucide-react';
 
 interface ReceivedSuccessSheetProps {
   isOpen: boolean;
