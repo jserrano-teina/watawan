@@ -10,6 +10,7 @@ import ProductImage from '@/components/ProductImage';
 import { Loader2, Bell } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
 import WishDetailModal from '@/components/modals/WishDetailModal';
+import { ReceivedConfirmationSheet } from '@/components/modals/ReceivedConfirmationSheet';
 
 type NotificationItem = {
   item: WishItem;
@@ -20,6 +21,7 @@ const NotificationsPage: React.FC = () => {
   const { user } = useAuth();
   const [selectedItem, setSelectedItem] = useState<WishItem | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
+  const [showReceivedSheet, setShowReceivedSheet] = useState(false);
   
   // Obtener todas las reservas
   const { data: rawNotifications = [], isLoading } = useQuery<any[]>({
@@ -54,10 +56,34 @@ const NotificationsPage: React.FC = () => {
     }
   });
   
+  // Mutación para marcar un item como recibido
+  const markAsReceived = useMutation({
+    mutationFn: async (itemId: number) => {
+      const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/received`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      // Cerrar el sheet y refrescar los datos
+      setShowReceivedSheet(false);
+      // Refrescar los datos de reservas y notificaciones
+      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    }
+  });
+  
   // Función para abrir el detalle del deseo
   const handleOpenDetail = (item: WishItem) => {
     setSelectedItem(item);
     setDetailModalOpen(true);
+  };
+  
+  // Función para manejar marcar como recibido
+  const handleMarkAsReceived = (itemId: number) => {
+    const item = notifications.find((n) => n.item.id === itemId)?.item;
+    if (item) {
+      setSelectedItem(item);
+      setShowReceivedSheet(true);
+    }
   };
   
   // Marcar como leídas automáticamente al visitar la página
@@ -161,8 +187,16 @@ const NotificationsPage: React.FC = () => {
           item={selectedItem}
           onEdit={() => {}}
           onDelete={() => {}}
+          onMarkAsReceived={handleMarkAsReceived}
         />
       )}
+      
+      <ReceivedConfirmationSheet
+        isOpen={showReceivedSheet}
+        onClose={() => setShowReceivedSheet(false)}
+        item={selectedItem}
+        markAsReceivedMutation={markAsReceived}
+      />
     </div>
   );
 };
