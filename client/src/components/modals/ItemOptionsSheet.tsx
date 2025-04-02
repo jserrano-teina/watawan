@@ -120,8 +120,8 @@ export function ItemOptionsSheet({
         <div className="mt-4 flex flex-col">
           <button 
             onClick={handleEdit}
-            className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved ? 'opacity-50 pointer-events-none' : ''}`}
-            disabled={item.isReserved}
+            className={`w-full text-left px-6 py-5 text-[17px] text-white/90 hover:bg-[#333] flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 pointer-events-none' : ''}`}
+            disabled={item.isReserved || item.isReceived}
           >
             <Edit size={22} className="mr-4" />
             Editar
