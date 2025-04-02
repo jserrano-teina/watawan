@@ -46,7 +46,9 @@ export function ReceivedConfirmationSheet({
   const handleClose = () => {
     // Solo cerramos si no estamos mostrando el sheet de éxito
     if (!showSuccessSheet) {
-      onClose();
+      // Simplemente cerramos este sheet, sin cerrar el modal padre
+      // El onClose() del padre solo lo llamamos cuando sea necesario (al marcar como recibido)
+      setShowSuccessSheet(false);
       lockInteraction(500); // Bloquear interacciones por 500ms al cerrar
     }
   };
@@ -97,7 +99,7 @@ export function ReceivedConfirmationSheet({
         <CustomSheetContent 
           side="bottom" 
           className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
-          onCloseComplete={handleClose}
+          // Eliminamos onCloseComplete para evitar el cierre del modal padre
           // Evento para evitar propagación de clics a través del contenido
           onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
         >
