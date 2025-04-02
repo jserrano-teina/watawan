@@ -75,8 +75,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Wishlist not found" });
     }
     
-    // Por defecto, no incluimos los elementos recibidos en la respuesta
-    const items = await storage.getWishItemsForWishlist(wishlistId, false);
+    // Ahora incluimos los elementos recibidos en la respuesta
+    const items = await storage.getWishItemsForWishlist(wishlistId, true);
     res.json(items);
   });
 

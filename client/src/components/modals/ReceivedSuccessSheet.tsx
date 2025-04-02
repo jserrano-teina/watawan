@@ -117,9 +117,7 @@ export function ReceivedSuccessSheet({
                 </span>
               </>
             ) : (
-              <>
-                Cerrar
-              </>
+              "Cerrar"
             )}
           </button>
         </div>

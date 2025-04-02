@@ -26,9 +26,25 @@ const Home: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [toast, setToast] = useState<{ visible: boolean, message: string, variant: 'success' | 'error' | 'warning' | 'info' }>({ visible: false, message: '', variant: 'success' });
 
-  // Ordenar los items con los más recientes primero
+  // Ordenar los items según los criterios:
+  // 1. Primero los no recibidos, luego los recibidos
+  // 2. Dentro de cada grupo, primero los no reservados, luego los reservados
+  // 3. Para cada subgrupo, ordenamos por fecha de creación (más nuevos primero)
   const myWishItems = Array.isArray(items) 
-    ? [...items].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    ? [...items].sort((a, b) => {
+        // 1. Primero por estado de recibido
+        if (a.isReceived !== b.isReceived) {
+          return a.isReceived ? 1 : -1; // No recibidos primero
+        }
+        
+        // 2. Luego por estado de reserva
+        if (a.isReserved !== b.isReserved) {
+          return a.isReserved ? 1 : -1; // No reservados primero
+        }
+        
+        // 3. Finalmente por fecha de creación
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(); // Más nuevos primero
+      })
     : [];
 
   const handleAddWishClick = () => {
