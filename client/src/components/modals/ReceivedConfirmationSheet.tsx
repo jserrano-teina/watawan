@@ -63,16 +63,11 @@ export function ReceivedConfirmationSheet({
         queryClient.fetchQuery({ queryKey: ['/api/notifications/unread'] }),
         queryClient.fetchQuery({ queryKey: ['/api/reserved-items'] }),
       ]).finally(() => {
-        // Esperamos que se completen las solicitudes y luego cerramos
-        setTimeout(() => {
-          // Cerramos el modal principal
-          onClose();
-          lockInteraction(1000);
-        }, 300);
+        // Ya no cerramos el modal principal, sólo aplicamos un bloqueo de interacción
+        lockInteraction(1000);
       });
     } else {
       setShowSuccessSheet(false);
-      onClose();
       lockInteraction(500);
     }
   };
