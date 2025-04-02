@@ -287,9 +287,7 @@ const DesktopView = ({
             isOpen={showReceivedConfirmation}
             onClose={() => {
               setShowReceivedConfirmation(false);
-              // Nota: Ahora solo se cierra el modal padre cuando
-              // se marca realmente como recibido a través de handleSuccessSheetClose,
-              // no con el simple cierre del confirmation sheet
+              // Ya no cerramos el modal padre aquí, solo ocultamos el sheet de confirmación
             }}
             item={item}
             markAsReceivedMutation={markAsReceivedMutation}
@@ -549,9 +547,7 @@ const MobileView = ({
           isOpen={showReceivedConfirmation}
           onClose={() => {
             setShowReceivedConfirmation(false);
-            // Nota: Ahora solo se cierra el modal padre cuando
-            // se marca realmente como recibido a través de handleSuccessSheetClose,
-            // no con el simple cierre del confirmation sheet
+            // Ya no cerramos el modal padre aquí, solo ocultamos el sheet de confirmación
           }}
           item={item}
           markAsReceivedMutation={markAsReceivedMutation}
