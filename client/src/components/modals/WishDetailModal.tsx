@@ -287,7 +287,11 @@ const DesktopView = ({
             isOpen={showReceivedConfirmation}
             onClose={() => {
               setShowReceivedConfirmation(false);
-              // Ya no cerramos el modal de detalle cuando se cierra el sheet de confirmación
+              // Si el item se marca como recibido, cerrar el modal de detalle después
+              // de que termine la animación del sheet de confirmación
+              setTimeout(() => {
+                onClose();
+              }, 300);
             }}
             item={item}
             markAsReceivedMutation={markAsReceivedMutation}
@@ -547,7 +551,11 @@ const MobileView = ({
           isOpen={showReceivedConfirmation}
           onClose={() => {
             setShowReceivedConfirmation(false);
-            // Ya no cerramos el modal de detalle cuando se cierra el sheet de confirmación
+            // Si el item se marca como recibido, cerrar el modal de detalle después
+            // de que termine la animación del sheet de confirmación
+            setTimeout(() => {
+              onClose();
+            }, 300);
           }}
           item={item}
           markAsReceivedMutation={markAsReceivedMutation}
