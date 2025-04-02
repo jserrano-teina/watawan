@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { WishItem } from '../../types';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -15,6 +15,8 @@ import {
   SheetDescription
 } from "@/components/ui/sheet";
 import { ItemOptionsSheet } from './ItemOptionsSheet';
+import { ReceivedConfirmationSheet } from './ReceivedConfirmationSheet';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -41,6 +43,25 @@ const DesktopView = ({
   onMarkAsReceived?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
+  const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Mutation para marcar como recibido
+  const markAsReceivedMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      const response = await fetch(`/api/wishlist/items/${itemId}/received`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Error al marcar como recibido');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+    }
+  });
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
@@ -143,10 +164,9 @@ const DesktopView = ({
                       setOpenSheet(false);
                       onClose();
                     }}
-                    onMarkAsReceived={onMarkAsReceived ? (id) => {
-                      onMarkAsReceived(id);
+                    onMarkAsReceived={item.isReserved && !item.isReceived && onMarkAsReceived ? (id) => {
                       setOpenSheet(false);
-                      onClose();
+                      setShowReceivedConfirmation(true);
                     } : undefined}
                     onExternalLinkClick={(url) => {
                       window.open(url, '_blank', 'noopener,noreferrer');
@@ -241,16 +261,34 @@ const DesktopView = ({
                 <ExternalLink size={16} className="mr-2" />
                 Ir al enlace de compra
               </a>
-              <button
-                onClick={handleEdit}
-                disabled={item.isReserved}
-                className={`px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
-              >
-                <Edit size={16} className="mr-2" />
-                Editar
-              </button>
+              {item.isReserved && !item.isReceived ? (
+                <button
+                  onClick={() => setShowReceivedConfirmation(true)}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                >
+                  <Check size={16} className="mr-2" />
+                  ¡Ya lo recibí!
+                </button>
+              ) : (
+                <button
+                  onClick={handleEdit}
+                  disabled={item.isReserved}
+                  className={`px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center ${item.isReserved ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                >
+                  <Edit size={16} className="mr-2" />
+                  Editar
+                </button>
+              )}
             </div>
           </div>
+          
+          {/* Sheet de confirmación de recibido */}
+          <ReceivedConfirmationSheet
+            isOpen={showReceivedConfirmation}
+            onClose={() => setShowReceivedConfirmation(false)}
+            item={item}
+            markAsReceivedMutation={markAsReceivedMutation}
+          />
         </div>
       </DialogContent>
     </Dialog>
@@ -271,6 +309,25 @@ const MobileView = ({
   onMarkAsReceived?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
+  const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
+  const queryClient = useQueryClient();
+  
+  // Mutation para marcar como recibido
+  const markAsReceivedMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      const response = await fetch(`/api/wishlist/items/${itemId}/received`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (!response.ok) throw new Error('Error al marcar como recibido');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+    }
+  });
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
     addSuffix: true,
@@ -377,10 +434,9 @@ const MobileView = ({
                   setOpenSheet(false);
                   onClose();
                 }}
-                onMarkAsReceived={onMarkAsReceived ? (id) => {
-                  onMarkAsReceived(id);
+                onMarkAsReceived={item.isReserved && !item.isReceived && onMarkAsReceived ? (id) => {
                   setOpenSheet(false);
-                  onClose();
+                  setShowReceivedConfirmation(true);
                 } : undefined}
                 onExternalLinkClick={(url) => {
                   window.open(url, '_blank', 'noopener,noreferrer');
@@ -466,7 +522,7 @@ const MobileView = ({
         
         {item.isReserved && !item.isReceived && onMarkAsReceived ? (
           <button
-            onClick={() => onMarkAsReceived(item.id)}
+            onClick={() => setShowReceivedConfirmation(true)}
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
           >
             <Check size={16} className="mr-2" />
@@ -482,6 +538,14 @@ const MobileView = ({
             Editar
           </button>
         )}
+        
+        {/* Sheet de confirmación de recibido */}
+        <ReceivedConfirmationSheet
+          isOpen={showReceivedConfirmation}
+          onClose={() => setShowReceivedConfirmation(false)}
+          item={item}
+          markAsReceivedMutation={markAsReceivedMutation}
+        />
       </div>
     </div>
   );
