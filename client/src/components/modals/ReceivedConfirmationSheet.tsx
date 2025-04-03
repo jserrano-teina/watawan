@@ -17,6 +17,7 @@ interface ReceivedConfirmationSheetProps {
   onClose: () => void;
   item: WishItem | null;
   markAsReceivedMutation: UseMutationResult<WishItem, Error, number>;
+  onItemReceived?: () => void; // Callback para notificar cuando el item se marca como recibido
 }
 
 export function ReceivedConfirmationSheet({
@@ -24,6 +25,7 @@ export function ReceivedConfirmationSheet({
   onClose,
   item,
   markAsReceivedMutation,
+  onItemReceived,
 }: ReceivedConfirmationSheetProps) {
   // Estado para controlar la visualización del sheet de éxito
   const [showSuccessSheet, setShowSuccessSheet] = useState(false);
@@ -86,6 +88,11 @@ export function ReceivedConfirmationSheet({
           // Guardamos el item recibido y mostramos el sheet de éxito
           setReceivedItem(receivedItem);
           setShowSuccessSheet(true);
+          
+          // Notificamos que el item ha sido marcado como recibido
+          if (onItemReceived) {
+            onItemReceived();
+          }
         },
       });
     }

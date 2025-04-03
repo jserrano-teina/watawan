@@ -291,6 +291,7 @@ const DesktopView = ({
             }}
             item={item}
             markAsReceivedMutation={markAsReceivedMutation}
+            onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
           />
         </div>
       </DialogContent>
@@ -551,6 +552,7 @@ const MobileView = ({
           }}
           item={item}
           markAsReceivedMutation={markAsReceivedMutation}
+          onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
         />
       </div>
     </div>
