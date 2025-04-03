@@ -88,7 +88,7 @@ export function UnreserveConfirmationSheet({
           <div className="mt-6 flex flex-col gap-3">
             <button 
               onClick={handleConfirm}
-              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
+              className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
             >
               Sí, desmarcar como reservado
             </button>
