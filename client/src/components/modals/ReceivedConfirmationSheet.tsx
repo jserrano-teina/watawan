@@ -69,14 +69,27 @@ export function ReceivedConfirmationSheet({
       ]).finally(() => {
         // Esperamos que se completen las solicitudes y luego cerramos
         setTimeout(() => {
-          // Cerramos el modal principal
+          // Cerramos el sheet de confirmación
           onClose();
+          
+          // Notificamos que el item ha sido marcado como recibido y el proceso ha terminado
+          // para que el modal de detalle pueda cerrarse
+          if (onItemReceived) {
+            onItemReceived();
+          }
+          
           lockInteraction(1000);
         }, 300);
       });
     } else {
       setShowSuccessSheet(false);
       onClose();
+      
+      // Notificamos que el item ha sido marcado como recibido y el proceso ha terminado
+      if (onItemReceived) {
+        onItemReceived();
+      }
+      
       lockInteraction(500);
     }
   };
@@ -88,11 +101,7 @@ export function ReceivedConfirmationSheet({
           // Guardamos el item recibido y mostramos el sheet de éxito
           setReceivedItem(receivedItem);
           setShowSuccessSheet(true);
-          
-          // Notificamos que el item ha sido marcado como recibido
-          if (onItemReceived) {
-            onItemReceived();
-          }
+          // No cerramos el modal de detalle aquí, lo haremos al cerrar el sheet de éxito
         },
       });
     }
