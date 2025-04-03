@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical, Undo } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Sheet,
@@ -270,13 +270,24 @@ const DesktopView = ({
                 Ir al enlace de compra
               </a>
               {item.isReserved && !item.isReceived ? (
-                <button
-                  onClick={() => setShowReceivedConfirmation(true)}
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
-                >
-                  <Check size={16} className="mr-2" />
-                  ¡Ya lo recibí!
-                </button>
+                <div className="flex gap-2">
+                  {onUnreserve && (
+                    <button
+                      onClick={() => onUnreserve(item.id)}
+                      className="px-4 py-2 border border-[#333] hover:bg-[#252525] text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                    >
+                      <Undo size={16} className="mr-2" />
+                      Desmarcar
+                    </button>
+                  )}
+                  <button
+                    onClick={() => setShowReceivedConfirmation(true)}
+                    className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
+                  >
+                    <Check size={16} className="mr-2" />
+                    ¡Ya lo recibí!
+                  </button>
+                </div>
               ) : (
                 <button
                   onClick={handleEdit}
@@ -539,14 +550,27 @@ const MobileView = ({
           Eliminar
         </button>
         
-        {item.isReserved && !item.isReceived && onMarkAsReceived ? (
-          <button
-            onClick={() => setShowReceivedConfirmation(true)}
-            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
-          >
-            <Check size={16} className="mr-2" />
-            ¡Ya lo recibí!
-          </button>
+        {item.isReserved && !item.isReceived ? (
+          <div className="flex gap-2">
+            {onUnreserve && (
+              <button
+                onClick={() => onUnreserve(item.id)}
+                className="px-4 py-3 border border-[#333] hover:bg-[#252525] text-white rounded-lg font-medium transition-colors flex items-center"
+              >
+                <Undo size={16} className="mr-2" />
+                Desmarcar
+              </button>
+            )}
+            {onMarkAsReceived && (
+              <button
+                onClick={() => setShowReceivedConfirmation(true)}
+                className="px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
+              >
+                <Check size={16} className="mr-2" />
+                ¡Ya lo recibí!
+              </button>
+            )}
+          </div>
         ) : (
           <button
             onClick={handleEdit}

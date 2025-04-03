@@ -88,27 +88,8 @@ export function UnreserveConfirmationSheet({
           <div className="mt-6 flex flex-col gap-3">
             <button 
               onClick={handleConfirm}
-              className="w-full px-4 py-3 bg-yellow-600 hover:bg-yellow-700 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
+              className="w-full px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
             >
-              <svg 
-                xmlns="http://www.w3.org/2000/svg" 
-                width="20" 
-                height="20" 
-                viewBox="0 0 24 24" 
-                fill="none" 
-                stroke="currentColor" 
-                strokeWidth="2" 
-                strokeLinecap="round" 
-                strokeLinejoin="round" 
-                className="mr-2"
-              >
-                <rect width="18" height="14" x="3" y="5" rx="2" ry="2"/>
-                <line x1="3" y1="10" x2="21" y2="10" />
-                <line x1="3" y1="14" x2="21" y2="14" />
-                <line x1="7" y1="19" x2="7" y2="21" />
-                <line x1="17" y1="19" x2="17" y2="21" />
-                <line x1="9" y1="9" x2="15" y2="9" strokeWidth="2" />
-              </svg>
               Sí, desmarcar como reservado
             </button>
             

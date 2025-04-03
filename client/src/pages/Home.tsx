@@ -195,6 +195,7 @@ const Home: React.FC = () => {
                   onClick={handleItemClick}
                   onSheetClose={handleSheetClosed}
                   onMarkAsReceived={handleMarkAsReceived}
+                  onUnreserve={handleUnreserve}
                 />
               ))}
             </div>

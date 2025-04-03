@@ -15,9 +15,10 @@ interface WishItemProps {
   onClick?: (item: WishItemType) => void;
   onSheetClose?: () => void; // Callback para notificar cuando se cierra el sheet
   onMarkAsReceived?: (itemId: number) => void; // Callback para marcar un item como recibido
+  onUnreserve?: (itemId: number) => void; // Callback para desmarcar un item como reservado
 }
 
-const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, onSheetClose, onMarkAsReceived }) => {
+const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, onSheetClose, onMarkAsReceived, onUnreserve }) => {
   const [open, setOpen] = useState(false);
   
   const formattedDate = formatDistanceToNow(new Date(item.createdAt), { 
@@ -175,6 +176,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onMarkAsReceived={onMarkAsReceived}
+                onUnreserve={onUnreserve}
                 onExternalLinkClick={(url) => {
                   window.open(url, '_blank', 'noopener,noreferrer');
                 }}
