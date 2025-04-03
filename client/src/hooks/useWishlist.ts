@@ -71,6 +71,18 @@ export function useWishlist() {
       queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
     },
   });
+  
+  // Unreserve item mutation
+  const unreserveItem = useMutation({
+    mutationFn: async (id: number) => {
+      const res = await apiRequest('POST', `/api/wishlist/items/${id}/unreserve`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    },
+  });
 
   return {
     user,
@@ -81,6 +93,7 @@ export function useWishlist() {
     updateWishItem,
     deleteWishItem,
     markAsReceived,
+    unreserveItem,
   };
 }
 

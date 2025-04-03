@@ -9,6 +9,7 @@ import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
 import WishDetailModal from '../components/modals/WishDetailModal';
 import { ReceivedConfirmationSheet } from '../components/modals/ReceivedConfirmationSheet';
+import { UnreserveConfirmationSheet } from '../components/modals/UnreserveConfirmationSheet';
 import Header from '../components/Header';
 import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
@@ -16,11 +17,12 @@ import { Toast, ToastContainer } from '@/components/ui/toast';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
 
 const Home: React.FC = () => {
-  const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem, markAsReceived } = useWishlist();
+  const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem, markAsReceived, unreserveItem } = useWishlist();
   const [showAddWishModal, setShowAddWishModal] = useState(false);
   const [showShareModal, setShowShareModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [showReceivedSheet, setShowReceivedSheet] = useState(false);
+  const [showUnreserveSheet, setShowUnreserveSheet] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItemType | null>(null);
   const [itemToEdit, setItemToEdit] = useState<WishItemType | undefined>(undefined);
   const [isSaving, setIsSaving] = useState(false);
@@ -124,6 +126,28 @@ const Home: React.FC = () => {
       setShowReceivedSheet(true);
     }
   };
+  
+  const handleUnreserve = (itemId: number) => {
+    const item = items?.find((item) => item.id === itemId);
+    if (item) {
+      setSelectedItem(item);
+      setShowUnreserveSheet(true);
+    }
+  };
+  
+  const handleConfirmUnreserve = async () => {
+    if (selectedItem) {
+      try {
+        await unreserveItem.mutateAsync(selectedItem.id);
+        showToast('Regalo desmarcado como reservado', 'success');
+        setShowUnreserveSheet(false);
+        setShowDetailModal(false); // Cerrar el modal de detalle también
+      } catch (error) {
+        console.error('Error unreserving item:', error);
+        showToast('Error al desmarcar el regalo como reservado', 'error');
+      }
+    }
+  };
 
   const showToast = (message: string, variant: 'success' | 'error' | 'warning' | 'info' = 'success') => {
     setToast({ visible: true, message, variant });
@@ -208,6 +232,7 @@ const Home: React.FC = () => {
         onEdit={handleEditWish}
         onDelete={handleDeleteWish}
         onMarkAsReceived={handleMarkAsReceived}
+        onUnreserve={handleUnreserve}
       />
       
       <ReceivedConfirmationSheet
@@ -215,6 +240,13 @@ const Home: React.FC = () => {
         onClose={() => setShowReceivedSheet(false)}
         item={selectedItem}
         markAsReceivedMutation={markAsReceived}
+      />
+      
+      <UnreserveConfirmationSheet
+        isOpen={showUnreserveSheet}
+        onClose={() => setShowUnreserveSheet(false)}
+        onConfirm={handleConfirmUnreserve}
+        item={selectedItem}
       />
       
       {toast.visible && (

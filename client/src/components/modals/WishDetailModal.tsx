@@ -25,6 +25,7 @@ interface WishDetailModalProps {
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
   onMarkAsReceived?: (itemId: number) => void;
+  onUnreserve?: (itemId: number) => void;
 }
 
 const DesktopView = ({ 
@@ -33,7 +34,8 @@ const DesktopView = ({
   onEdit, 
   onDelete,
   isOpen,
-  onMarkAsReceived
+  onMarkAsReceived,
+  onUnreserve
 }: { 
   item: WishItem;
   onClose: () => void;
@@ -41,6 +43,7 @@ const DesktopView = ({
   onDelete: (item: WishItem) => void;
   isOpen: boolean;
   onMarkAsReceived?: (itemId: number) => void;
+  onUnreserve?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
@@ -167,6 +170,11 @@ const DesktopView = ({
                     onMarkAsReceived={!item.isReceived && onMarkAsReceived ? (id) => {
                       setOpenSheet(false);
                       setShowReceivedConfirmation(true);
+                    } : undefined}
+                    onUnreserve={item.isReserved && !item.isReceived && onUnreserve ? (id) => {
+                      onUnreserve(id);
+                      setOpenSheet(false);
+                      onClose();
                     } : undefined}
                     onExternalLinkClick={(url) => {
                       window.open(url, '_blank', 'noopener,noreferrer');
@@ -304,13 +312,15 @@ const MobileView = ({
   onClose, 
   onEdit, 
   onDelete,
-  onMarkAsReceived
+  onMarkAsReceived,
+  onUnreserve
 }: {
   item: WishItem;
   onClose: () => void;
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
   onMarkAsReceived?: (itemId: number) => void;
+  onUnreserve?: (itemId: number) => void;
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
@@ -441,6 +451,11 @@ const MobileView = ({
                 onMarkAsReceived={!item.isReceived && onMarkAsReceived ? (id) => {
                   setOpenSheet(false);
                   setShowReceivedConfirmation(true);
+                } : undefined}
+                onUnreserve={item.isReserved && !item.isReceived && onUnreserve ? (id) => {
+                  onUnreserve(id);
+                  setOpenSheet(false);
+                  onClose();
                 } : undefined}
                 onExternalLinkClick={(url) => {
                   window.open(url, '_blank', 'noopener,noreferrer');

@@ -31,6 +31,7 @@ export interface IStorage {
   
   // Reservation operations
   reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation>;
+  unreserveWishItem(wishItemId: number): Promise<WishItem>;
   getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
   getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
 }
@@ -300,6 +301,34 @@ export class MemStorage implements IStorage {
     this.reservations.set(id, reservation);
     
     return reservation;
+  }
+
+  async unreserveWishItem(wishItemId: number): Promise<WishItem> {
+    const wishItem = await this.getWishItem(wishItemId);
+    if (!wishItem) {
+      throw new Error(`Wish item with ID ${wishItemId} not found`);
+    }
+    
+    if (!wishItem.isReserved) {
+      throw new Error("This item is not reserved");
+    }
+    
+    // Eliminar la reserva existente
+    const existingReservation = Array.from(this.reservations.values()).find(
+      (reservation) => reservation.wishItemId === wishItemId
+    );
+    
+    if (existingReservation) {
+      this.reservations.delete(existingReservation.id);
+    }
+    
+    // Actualizar el item para quitar la reserva
+    const updatedItem = await this.updateWishItem(wishItemId, { 
+      isReserved: false,
+      reserverName: undefined, // Limpiar el nombre de quien reservó
+    });
+    
+    return updatedItem;
   }
 
   async getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {

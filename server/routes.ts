@@ -328,6 +328,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
       throw error;
     }
   });
+  
+  // Unreserve a wish item
+  router.post("/wishlist/items/:id/unreserve", requireAuth, async (req: Request, res: Response) => {
+    const user = req.user as User;
+    const { id } = req.params;
+    const itemId = parseInt(id, 10);
+    
+    if (isNaN(itemId)) {
+      return res.status(400).json({ message: "ID de item inválido" });
+    }
+    
+    const item = await storage.getWishItem(itemId);
+    
+    if (!item) {
+      return res.status(404).json({ message: "Item no encontrado" });
+    }
+    
+    const wishlist = await storage.getWishlist(item.wishlistId);
+    
+    if (!wishlist || wishlist.userId !== user.id) {
+      return res.status(403).json({ message: "No tienes permiso para desmarcar este item como reservado" });
+    }
+    
+    if (!item.isReserved) {
+      return res.status(400).json({ message: "Este item no está reservado" });
+    }
+    
+    if (item.isReceived) {
+      return res.status(400).json({ message: "No se puede desmarcar como reservado un item que ya ha sido recibido" });
+    }
+    
+    try {
+      const updatedItem = await storage.unreserveWishItem(itemId);
+      res.json(updatedItem);
+    } catch (error) {
+      console.error("Error al desmarcar item como reservado:", error);
+      res.status(500).json({ message: "Error al desmarcar el item como reservado" });
+    }
+  });
 
   // Get reserved items for a user
   router.get("/reserved-items", async (req: Request & { user?: User }, res) => {

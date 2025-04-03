@@ -17,6 +17,7 @@ interface ItemOptionsSheetProps {
   onEdit: (item: WishItem) => void;
   onDelete: (item: WishItem) => void;
   onMarkAsReceived?: (itemId: number) => void;
+  onUnreserve?: (itemId: number) => void;
   onExternalLinkClick?: (url: string) => void;
 }
 
@@ -27,6 +28,7 @@ export function ItemOptionsSheet({
   onEdit,
   onDelete,
   onMarkAsReceived,
+  onUnreserve,
   onExternalLinkClick
 }: ItemOptionsSheetProps) {
   // Usamos el sistema de bloqueo global para evitar interacciones conflictivas
@@ -70,6 +72,13 @@ export function ItemOptionsSheet({
   const handleMarkAsReceived = () => {
     if (onMarkAsReceived) {
       onMarkAsReceived(item.id);
+      handleClose();
+    }
+  };
+  
+  const handleUnreserve = () => {
+    if (onUnreserve) {
+      onUnreserve(item.id);
       handleClose();
     }
   };
@@ -142,6 +151,34 @@ export function ItemOptionsSheet({
             >
               <Check size={22} className="mr-4" />
               ¡Ya lo recibí!
+            </button>
+          )}
+          
+          {onUnreserve && item.isReserved && !item.isReceived && (
+            <button 
+              onClick={handleUnreserve}
+              className="w-full text-left px-6 py-5 text-[17px] text-yellow-500 hover:bg-[#333] flex items-center"
+            >
+              <svg 
+                xmlns="http://www.w3.org/2000/svg" 
+                width="22" 
+                height="22" 
+                viewBox="0 0 24 24" 
+                fill="none" 
+                stroke="currentColor" 
+                strokeWidth="2" 
+                strokeLinecap="round" 
+                strokeLinejoin="round" 
+                className="mr-4"
+              >
+                <rect width="18" height="14" x="3" y="5" rx="2" ry="2"/>
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <line x1="3" y1="14" x2="21" y2="14" />
+                <line x1="7" y1="19" x2="7" y2="21" />
+                <line x1="17" y1="19" x2="17" y2="21" />
+                <line x1="9" y1="9" x2="15" y2="9" strokeWidth="2" />
+              </svg>
+              Desmarcar como reservado
             </button>
           )}
           
