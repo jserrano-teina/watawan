@@ -98,9 +98,16 @@ export function ReceivedConfirmationSheet({
     if (item) {
       markAsReceivedMutation.mutate(item.id, {
         onSuccess: (receivedItem) => {
-          // Guardamos el item recibido y mostramos el sheet de éxito
-          setReceivedItem(receivedItem);
-          setShowSuccessSheet(true);
+          // Cerramos el sheet de confirmación inmediatamente
+          onClose();
+          
+          // Guardamos el item recibido y mostramos el sheet de éxito después
+          // con un pequeño retraso para permitir que se cierre el anterior
+          setTimeout(() => {
+            setReceivedItem(receivedItem);
+            setShowSuccessSheet(true);
+          }, 100);
+          
           // No cerramos el modal de detalle aquí, lo haremos al cerrar el sheet de éxito
         },
       });
