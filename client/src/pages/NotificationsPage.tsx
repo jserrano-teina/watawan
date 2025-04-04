@@ -23,6 +23,18 @@ const NotificationsPage: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<WishItem | null>(null);
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [showReceivedSheet, setShowReceivedSheet] = useState(false);
+  const [showUnreserveSheet, setShowUnreserveSheet] = useState(false);
+  
+  // Variable para rastrear si una operación de Sheet se cerró recientemente
+  const [sheetRecentlyClosed, setSheetRecentlyClosed] = useState(false);
+  
+  // Función para avisar al componente que un Sheet se cerró
+  const handleSheetClosed = () => {
+    setSheetRecentlyClosed(true);
+    setTimeout(() => {
+      setSheetRecentlyClosed(false);
+    }, 300); // Prevenir clics por 300ms
+  };
   
   // Obtener todas las reservas
   const { data: rawNotifications = [], isLoading } = useQuery<any[]>({
@@ -106,7 +118,24 @@ const NotificationsPage: React.FC = () => {
   
   // Función para manejar desmarcar como reservado
   const handleUnreserve = (itemId: number) => {
-    unreserveMutation.mutate(itemId);
+    const item = notifications.find((n) => n.item.id === itemId)?.item;
+    if (item) {
+      setSelectedItem(item);
+      setShowUnreserveSheet(true);
+    }
+  };
+  
+  // Función para confirmar la acción de desmarcar como reservado
+  const handleConfirmUnreserve = async () => {
+    if (selectedItem) {
+      try {
+        await unreserveMutation.mutateAsync(selectedItem.id);
+        setShowUnreserveSheet(false);
+        setDetailModalOpen(false); // Cerrar el modal de detalle también
+      } catch (error) {
+        console.error('Error unreserving item:', error);
+      }
+    }
   };
   
   // Marcar como leídas automáticamente al visitar la página
@@ -215,7 +244,13 @@ const NotificationsPage: React.FC = () => {
         />
       )}
       
-      {/* El UnreserveConfirmationSheet ya está manejado por el WishDetailModal */}
+      {/* Sheet de confirmación para desmarcar como reservado */}
+      <UnreserveConfirmationSheet
+        isOpen={showUnreserveSheet}
+        onClose={() => setShowUnreserveSheet(false)}
+        onConfirm={handleConfirmUnreserve}
+        item={selectedItem}
+      />
       
       <ReceivedConfirmationSheet
         isOpen={showReceivedSheet}
