@@ -230,34 +230,20 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         price: data.price ? `${data.price}${data.currency}` : undefined
       };
       
-      // Enviar datos al componente padre
+      // Simplemente enviamos los datos al componente padre y dejamos que 
+      // él se encargue del proceso completo, incluyendo limpieza y cierre del modal
       onSubmit(formattedData);
       
-      // Limpiar el formulario 
-      resetStepOne({
-        purchaseLink: '',
-      });
-      resetStepTwo({
-        title: '',
-        description: '',
-        purchaseLink: '',
-        price: '',
-        currency: '€',
-        imageUrl: '',
-      });
-      
-      // Restablecer el paso
-      setStep(1);
-      setExtractedData({});
-      setPurchaseLinkValue('');
-      setShowImageUrlInput(false);
-      
-      // El cierre del modal lo manejará el componente padre después de completar la operación
+      // NO reseteamos el estado aquí para evitar que el usuario vea el paso 1 
+      // brevemente antes de que se cierre el modal
+      // La limpieza se realizará cuando el modal se cierre
     } catch (error) {
       console.error("Error al procesar el formulario:", error);
-    } finally {
+      // En caso de error, desactivamos el estado de carga
       setIsSaving(false);
     }
+    // No usamos finally porque queremos mantener el estado de carga 
+    // hasta que el padre cierre el modal
   };
 
   // Manejar el retroceso a paso 1
@@ -269,6 +255,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   // Manejar cierre del modal
   const handleClose = () => {
+    // Desactivar estado de carga si estaba activo
+    if (isSaving) {
+      setIsSaving(false);
+    }
+    
+    // Limpiar todos los formularios
     resetStepOne({
       purchaseLink: '',
     });
@@ -280,10 +272,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       currency: '€',
       imageUrl: '',
     });
+    
+    // Restablecer todos los estados a sus valores iniciales
     setStep(1);
     setExtractedData({});
     setPurchaseLinkValue('');
     setShowImageUrlInput(false);
+    
+    // Notificar al padre para cerrar el modal
     onClose();
   };
 

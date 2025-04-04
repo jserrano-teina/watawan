@@ -75,9 +75,10 @@ const Home: React.FC = () => {
   };
 
   const handleWishFormSubmit = async (data: any) => {
+    // Activar el estado de carga
+    setIsSaving(true);
+    
     try {
-      setIsSaving(true);
-      
       // Procesamos los datos antes de enviarlos
       const formattedData = {
         title: data.title?.trim() || 'Sin título',
@@ -87,22 +88,42 @@ const Home: React.FC = () => {
         imageUrl: data.imageUrl || '',
       };
       
+      // Console.log para debug
+      console.log('Datos a enviar:', formattedData);
+      
       if (itemToEdit) {
-        // No cerramos el modal hasta que la operación se complete correctamente
-        const result = await updateWishItem.mutateAsync({ id: itemToEdit.id, ...formattedData });
+        // Ejecutar la actualización
+        const result = await updateWishItem.mutateAsync({ 
+          id: itemToEdit.id, 
+          ...formattedData 
+        });
+        
+        console.log('Deseo actualizado correctamente:', result);
+        
+        // Cerrar el modal solo después de completar la actualización
         setShowAddWishModal(false);
         showToast('Deseo actualizado correctamente', 'success');
       } else {
-        // No cerramos el modal hasta que la operación se complete correctamente
+        // Ejecutar la creación
         const result = await addWishItem.mutateAsync(formattedData);
+        
+        console.log('Deseo añadido correctamente:', result);
+        
+        // Cerrar el modal solo después de completar la creación
         setShowAddWishModal(false);
         showToast('Deseo añadido correctamente', 'success');
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Log detallado del error para facilitar la depuración
       console.error('Error saving wish:', error);
-      showToast('Error al guardar el deseo', 'error');
+      console.error('Error details:', error.message || 'Error desconocido');
+      
+      // Mostrar un toast con más información si está disponible
+      showToast(`Error al guardar el deseo: ${error.message || 'Error desconocido'}`, 'error');
+      
+      // Importante: no cerramos el modal en caso de error para que el usuario pueda corregir
     } finally {
-      // Dar un pequeño tiempo antes de ocultar el loader para asegurar que los datos se han cargado
+      // Dar un pequeño tiempo antes de ocultar el loader
       setTimeout(() => {
         setIsSaving(false);
       }, 500);
