@@ -131,6 +131,47 @@
     background-color: #FFE066 !important;
   }
   
+  /* Aseguramos que todos los botones con fondo primario tengan texto negro */
+  .bg-primary * {
+    color: #000000 !important;
+  }
+  
+  /* También aseguramos que los botones de shadcn con texto blanco por defecto ahora tengan texto negro */
+  .bg-primary, 
+  [class*="bg-[#FFE066]"], 
+  button[type="submit"],
+  .bg-primary svg,
+  [class*="bg-[#FFE066]"] svg,
+  [data-color-scheme="dark"] .Button,
+  [data-color-scheme="light"] .Button {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+  }
+  
+  /* Reglas específicas para los componentes Button de shadcn */
+  button.bg-primary, 
+  button[class*="bg-primary"] {
+    color: #000000 !important;
+  }
+  
+  /* Sobrescribimos los estilos de Shadcn directamente */
+  :root {
+    --primary-foreground: #000000;
+  }
+  
+  /* Reglas específicas para botones de tipo submit */
+  button[type="submit"] {
+    background-color: #FFE066 !important;
+    color: #000000 !important;
+  }
+  
+  /* Específicamente para componentes de Shadcn */
+  button[class*="shadcn-button"] {
+    background-color: #FFE066 !important;
+    color: #000000 !important;
+  }
+  
   /* Para elementos que necesitan texto negro sobre fondo amarillo */
   .text-on-primary {
     color: #000000 !important;

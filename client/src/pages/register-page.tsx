@@ -130,7 +130,7 @@ export default function RegisterPage() {
             />
             <Button
               type="submit"
-              className="w-full"
+              className="w-full text-black"
               disabled={registerMutation.isPending}
             >
               {registerMutation.isPending ? "Creando cuenta..." : "Crear mi cuenta"}
