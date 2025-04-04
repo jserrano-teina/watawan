@@ -3,17 +3,26 @@ import { queryClient, apiRequest } from '../lib/queryClient';
 import { WishItem, Wishlist, User } from '../types';
 
 // Función de utilidad para invalidar todas las consultas relacionadas con items y notificaciones
-function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>) {
+function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>, wishlistId?: number) {
   // Aplicamos una estrategia de invalidación más amplia
   console.log('Invalidando todas las consultas de items y wishlist');
   
-  // Invalidar todas las consultas relacionadas con /api/wishlist
-  queryClient.invalidateQueries({ 
-    predicate: (query) => {
-      const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
-      return typeof queryKey === 'string' && queryKey.includes('/api/wishlist');
-    }
-  });
+  // Invalidar consultas de wishlist (incluidas todas las sublistas)
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  
+  // Si tenemos un ID de wishlist, invalidamos específicamente los items de esa wishlist
+  if (wishlistId) {
+    console.log(`Invalidando específicamente los items del wishlist ${wishlistId}`);
+    queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlistId}/items`] });
+  } else {
+    // Si no tenemos un ID específico, invalidamos todas las consultas relacionadas con /api/wishlist
+    queryClient.invalidateQueries({ 
+      predicate: (query) => {
+        const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+        return typeof queryKey === 'string' && queryKey.includes('/api/wishlist');
+      }
+    });
+  }
   
   // Invalidar explícitamente las otras rutas relacionadas
   queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
@@ -44,7 +53,7 @@ export function useWishlist() {
 
   // Get wish items for the user's wishlist
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: ['/api/wishlist', wishlist?.id, 'items'],
+    queryKey: [`/api/wishlist/${wishlist?.id}/items`],
     enabled: !!wishlist?.id,
   });
 
@@ -59,7 +68,7 @@ export function useWishlist() {
     onSuccess: (newItem) => {
       // Usamos la misma estrategia de invalidación completa para todos los tipos de mutaciones
       console.log('Deseo añadido, invalidando todas las consultas');
-      invalidateAllItemQueries(qc);
+      invalidateAllItemQueries(qc, wishlist?.id);
     },
   });
 
@@ -71,7 +80,7 @@ export function useWishlist() {
     },
     onSuccess: () => {
       // Invalidamos todas las consultas para asegurar que los cambios se reflejen
-      invalidateAllItemQueries(qc);
+      invalidateAllItemQueries(qc, wishlist?.id);
     },
   });
 
@@ -82,7 +91,7 @@ export function useWishlist() {
     },
     onSuccess: () => {
       // Invalidamos todas las consultas para asegurar que los cambios se reflejen
-      invalidateAllItemQueries(qc);
+      invalidateAllItemQueries(qc, wishlist?.id);
     },
   });
   
@@ -94,7 +103,7 @@ export function useWishlist() {
     },
     onSuccess: () => {
       // Invalidamos todas las consultas relevantes para asegurar actualización global
-      invalidateAllItemQueries(qc);
+      invalidateAllItemQueries(qc, wishlist?.id);
     },
   });
   
@@ -106,7 +115,7 @@ export function useWishlist() {
     },
     onSuccess: () => {
       // Invalidamos todas las consultas relevantes para asegurar actualización global
-      invalidateAllItemQueries(qc);
+      invalidateAllItemQueries(qc, wishlist?.id);
     },
   });
 
@@ -129,7 +138,7 @@ export function useSharedWishlist(shareableLink: string) {
   
   // Get shared wishlist and owner info
   const { data: sharedWishlistData, isLoading: sharedWishlistLoading } = useQuery({
-    queryKey: ['/api/wishlist/shared', shareableLink],
+    queryKey: [`/api/wishlist/shared/${shareableLink}`],
     queryFn: async () => {
       const res = await fetch(`/api/wishlist/shared/${shareableLink}`, {
         credentials: 'include',
@@ -143,7 +152,7 @@ export function useSharedWishlist(shareableLink: string) {
 
   // Get wish items for the shared wishlist (using the dedicated endpoint for shared lists)
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: ['/api/wishlist/shared', shareableLink, 'items'],
+    queryKey: [`/api/wishlist/shared/${shareableLink}/items`],
     enabled: !!shareableLink,
   });
 
@@ -157,6 +166,8 @@ export function useSharedWishlist(shareableLink: string) {
       // Invalidamos no solo los items de la lista compartida sino también cualquier 
       // otra consulta relacionada con items para que el propietario vea la actualización
       invalidateAllItemQueries(qc);
+      // También actualizamos específicamente la lista compartida actual
+      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/shared/${shareableLink}/items`] });
     },
   });
 
