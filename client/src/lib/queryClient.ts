@@ -89,6 +89,39 @@ export const getQueryFn: <T>(options: {
     return await res.json();
   };
 
+// Utilidad para invalidar todas las consultas relacionadas con los datos de la aplicación
+export function invalidateAllAppQueries(wishlistId?: number) {
+  console.log('Invalidando todas las consultas de la aplicación');
+  
+  // Invalidar consultas específicas
+  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/user'] });
+  
+  // Invalidar la wishlist completa
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  
+  // Si tenemos un ID específico, invalidamos los items de esa wishlist
+  if (wishlistId) {
+    console.log(`Invalidando específicamente los items del wishlist ${wishlistId}`);
+    queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlistId}/items`] });
+  }
+  
+  // Estrategia agresiva para invalidar absolutamente todas las consultas relacionadas
+  queryClient.invalidateQueries({
+    predicate: (query) => {
+      const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+      return typeof queryKey === 'string' && (
+        queryKey.includes('/api/wishlist') || 
+        queryKey.includes('/api/reserved-items') ||
+        queryKey.includes('/api/notifications')
+      );
+    }
+  });
+  
+  console.log('Invalidación completa realizada');
+}
+
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {

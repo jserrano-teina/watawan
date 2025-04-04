@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
 import Header from '@/components/Header';
 import { User, WishItem, Reservation } from '@/types';
 import { useAuth } from '@/hooks/use-auth';
@@ -75,12 +75,14 @@ const NotificationsPage: React.FC = () => {
       const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/received`, {});
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedItem) => {
       // Cerrar el sheet y refrescar los datos
       setShowReceivedSheet(false);
-      // Refrescar los datos de reservas y notificaciones
-      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      
+      console.log('Item marcado como recibido, invalidando todas las consultas relacionadas');
+      
+      // Usar la función de utilidad global para invalidar todas las consultas
+      invalidateAllAppQueries(updatedItem?.wishlistId);
     }
   });
   
@@ -105,14 +107,14 @@ const NotificationsPage: React.FC = () => {
       const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/unreserve`, {});
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (updatedItem) => {
       // Cerrar el modal y refrescar los datos
       setDetailModalOpen(false);
-      // Refrescar los datos de reservas y notificaciones
-      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
-      // También refrescamos las listas por si estamos mostrando el item en otra página
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+      
+      console.log('Unreserve exitoso, invalidando todas las consultas relacionadas');
+      
+      // Usar la función de utilidad global para invalidar todas las consultas
+      invalidateAllAppQueries(updatedItem?.wishlistId);
     }
   });
   
