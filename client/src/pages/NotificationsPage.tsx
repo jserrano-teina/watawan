@@ -11,6 +11,7 @@ import { Loader2, Bell } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
 import WishDetailModal from '@/components/modals/WishDetailModal';
 import { ReceivedConfirmationSheet } from '@/components/modals/ReceivedConfirmationSheet';
+import { UnreserveConfirmationSheet } from '@/components/modals/UnreserveConfirmationSheet';
 
 type NotificationItem = {
   item: WishItem;
@@ -84,6 +85,28 @@ const NotificationsPage: React.FC = () => {
       setSelectedItem(item);
       setShowReceivedSheet(true);
     }
+  };
+  
+  // Mutación para desmarcar un item como reservado
+  const unreserveMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/unreserve`, {});
+      return res.json();
+    },
+    onSuccess: () => {
+      // Cerrar el modal y refrescar los datos
+      setDetailModalOpen(false);
+      // Refrescar los datos de reservas y notificaciones
+      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      // También refrescamos las listas por si estamos mostrando el item en otra página
+      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+    }
+  });
+  
+  // Función para manejar desmarcar como reservado
+  const handleUnreserve = (itemId: number) => {
+    unreserveMutation.mutate(itemId);
   };
   
   // Marcar como leídas automáticamente al visitar la página
@@ -188,8 +211,11 @@ const NotificationsPage: React.FC = () => {
           onEdit={() => {}}
           onDelete={() => {}}
           onMarkAsReceived={handleMarkAsReceived}
+          onUnreserve={handleUnreserve}
         />
       )}
+      
+      {/* El UnreserveConfirmationSheet ya está manejado por el WishDetailModal */}
       
       <ReceivedConfirmationSheet
         isOpen={showReceivedSheet}
