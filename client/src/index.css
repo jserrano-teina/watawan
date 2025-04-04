@@ -121,9 +121,10 @@
   }
 
   /* Botones */
-  .btn-primary {
+  .btn-primary, button[class*="primary"], button.bg-primary {
     @apply bg-[#FFE066] text-black font-medium rounded-lg px-5 py-2.5 
            hover:opacity-90 transition-all duration-200;
+    color: #000000 !important;
   }
   
   /* Forzamos el color primario en los botones y elementos que usan la clase 'bg-primary' */
@@ -134,6 +135,62 @@
   /* Para elementos que necesitan texto negro sobre fondo amarillo */
   .text-on-primary {
     color: #000000 !important;
+  }
+  
+  /* Aseguramos que los botones con fondo amarillo tengan texto e iconos negros */
+  .bg-primary * {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+  }
+  
+  /* Botones con clase específica primary también tendrán texto e iconos negros */
+  .btn-primary *, button[class*="primary"] * {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+  }
+  
+  /* Sobreescribimos el color de los íconos en botones primarios */
+  .bg-primary svg, .btn-primary svg, button[class*="primary"] svg, 
+  [class*="destructive"] svg, 
+  .bg-primary path, .btn-primary path, button[class*="primary"] path,
+  [class*="primary-foreground"] {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
+  }
+  
+  /* Sobreescribe botones shadcn */
+  .btn-primary svg path, button[class*="primary"] svg path,
+  .floating-action-button svg path,
+  [role="dialog"] button[type="submit"] svg path {
+    stroke: #000000 !important;
+  }
+  
+  /* Color azul original para navegación seleccionada */
+  .nav-item-selected, .nav-item-selected svg, 
+  nav [data-state="selected"], nav [data-state="selected"] svg,
+  .bottom-navigation [data-state="selected"], .bottom-navigation [data-state="selected"] svg {
+    color: #5883C6 !important;
+    fill: #5883C6 !important;
+    stroke: #5883C6 !important;
+  }
+  
+  /* Reglas específicas para botones flotantes y componentes de shadcn */
+  [class*="-primary"] span, 
+  [class*="-primary"] div,
+  button[class*="primary"] span, 
+  button[class*="primary"] div,
+  button[class*="float"] span,
+  button[class*="float"] div,
+  button[class*="float"] svg,
+  .floating-action-button svg,
+  .floating-action-button span,
+  .floating-action-button div {
+    color: #000000 !important;
+    fill: #000000 !important;
+    stroke: #000000 !important;
   }
 
   .btn-secondary {
@@ -189,6 +246,20 @@
     @apply bg-[var(--color-bg-secondary)] border border-[var(--color-border)] 
            rounded-lg p-3 focus:ring-[#FFE066] focus:border-[#FFE066] 
            text-[var(--color-text-primary)];
+  }
+  
+  /* Elementos de formulario como radio buttons y checkboxes */
+  input[type="radio"]:checked, input[type="checkbox"]:checked {
+    background-color: #FFE066 !important;
+    border-color: #FFE066 !important;
+  }
+  
+  /* Elementos de interfaz estilo shadcn */
+  [data-state="checked"],
+  [data-state="on"],
+  [data-state="selected"]:not(nav *):not(.bottom-navigation *) {
+    background-color: #FFE066 !important;
+    color: #000000 !important;
   }
 
   /* Gradientes */
