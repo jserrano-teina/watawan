@@ -4,18 +4,22 @@ import { WishItem, Wishlist, User } from '../types';
 
 // Función de utilidad para invalidar todas las consultas relacionadas con items y notificaciones
 function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  // Invalidar consultas de items individuales (no podemos saber qué wishlistId, así que invalidamos todas)
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  // Invalidar todas las consultas de la API, ya que cualquier cambio en items puede afectar a múltiples vistas
+  queryClient.invalidateQueries();
+  
+  // Alternativamente, podríamos ser más específicos:
+  // Invalidar consultas de wishlist (incluidas todas las sublistas)
+  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
   
   // Invalidar la lista de items de cualquier wishlist
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
+  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
   
   // Invalidar listas compartidas
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
+  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
   
   // Invalidar reservas y notificaciones
-  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
-  queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+  // queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+  // queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
 }
 
 interface WishFormData {
@@ -54,9 +58,28 @@ export function useWishlist() {
       const res = await apiRequest('POST', `/api/wishlist/${wishlist.id}/items`, data);
       return res.json();
     },
-    onSuccess: () => {
-      // Solo necesitamos invalidar la lista del usuario actual
-      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+    onSuccess: (newItem) => {
+      // Invalidamos todas las consultas para asegurar que el nuevo elemento aparezca
+      invalidateAllItemQueries(qc);
+      
+      // También actualizamos directamente el caché con el nuevo elemento
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist', wishlist?.id, 'items'],
+        (oldItems = []) => {
+          // Asegurarnos de que el nuevo item no esté ya en la lista
+          const existingItemIndex = oldItems.findIndex(item => item.id === newItem.id);
+          
+          if (existingItemIndex !== -1) {
+            // Reemplazar el item existente
+            return oldItems.map(item => 
+              item.id === newItem.id ? newItem : item
+            );
+          } else {
+            // Añadir el nuevo item al principio de la lista
+            return [newItem, ...oldItems];
+          }
+        }
+      );
     },
   });
 
@@ -66,9 +89,19 @@ export function useWishlist() {
       const res = await apiRequest('PUT', `/api/wishlist/items/${id}`, data);
       return res.json();
     },
-    onSuccess: () => {
-      // Solo necesitamos invalidar la lista del usuario actual
-      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+    onSuccess: (updatedItem) => {
+      // Invalidamos todas las consultas para asegurar que los cambios se reflejen
+      invalidateAllItemQueries(qc);
+      
+      // También actualizamos directamente el caché con el item actualizado
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist', wishlist?.id, 'items'],
+        (oldItems = []) => {
+          return oldItems.map(item => 
+            item.id === updatedItem.id ? updatedItem : item
+          );
+        }
+      );
     },
   });
 
@@ -77,9 +110,17 @@ export function useWishlist() {
     mutationFn: async (id: number) => {
       await apiRequest('DELETE', `/api/wishlist/items/${id}`);
     },
-    onSuccess: () => {
-      // Solo necesitamos invalidar la lista del usuario actual
-      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
+    onSuccess: (_, deletedId) => {
+      // Invalidamos todas las consultas para asegurar que los cambios se reflejen
+      invalidateAllItemQueries(qc);
+      
+      // También eliminamos el item del caché directamente
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist', wishlist?.id, 'items'],
+        (oldItems = []) => {
+          return oldItems.filter(item => item.id !== deletedId);
+        }
+      );
     },
   });
   
