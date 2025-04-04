@@ -21,8 +21,8 @@ const stepTwoSchema = z.object({
   description: z.string().optional(),
   purchaseLink: z.string().optional(), // Hacemos opcional sin validación de URL
   price: z.string()
-    .optional() // Hacemos el precio opcional
-    .refine(val => !val || /^[0-9]+(,[0-9]+)?$/.test(val), { // Solo validamos si hay un valor
+    .min(1, 'El precio es obligatorio')
+    .refine(val => /^[0-9]+(,[0-9]+)?$/.test(val), {
       message: 'Solo se aceptan números con decimales separados por coma'
     }),
   currency: z.string().default('€'),
