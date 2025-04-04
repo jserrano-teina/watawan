@@ -23,8 +23,9 @@
   --transition-slow: 350ms ease;
   
   /* Color primario explícito de la aplicación */
-  --primary: 217 65% 56%;
-  --primary-color: #5883C6; /* RGB: 88/131/198 */
+  --primary: 48 100% 70%;
+  --primary-color: #FFE066; /* Amarillo */
+  --primary-foreground: #000000; /* Negro para el texto sobre fondo amarillo */
 }
 
 @layer base {
@@ -69,8 +70,8 @@
   input, textarea {
     @apply transition-colors duration-200 text-[var(--color-text-primary)] 
            placeholder:text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] 
-           border-[var(--color-border)] rounded-md focus:ring-[#5883C6] 
-           focus:border-[#5883C6];
+           border-[var(--color-border)] rounded-md focus:ring-[#FFE066] 
+           focus:border-[#FFE066];
   }
 
   button {
@@ -78,7 +79,7 @@
   }
 
   a {
-    @apply text-[#5883C6] hover:text-[#5883C6]/90 transition-colors;
+    @apply text-[#FFE066] hover:text-[#FFE066]/80 transition-colors;
   }
 }
 
@@ -121,13 +122,18 @@
 
   /* Botones */
   .btn-primary {
-    @apply bg-[#5883C6] text-white font-medium rounded-lg px-5 py-2.5 
+    @apply bg-[#FFE066] text-black font-medium rounded-lg px-5 py-2.5 
            hover:opacity-90 transition-all duration-200;
   }
   
   /* Forzamos el color primario en los botones y elementos que usan la clase 'bg-primary' */
   .bg-primary {
-    background-color: #5883C6 !important;
+    background-color: #FFE066 !important;
+  }
+  
+  /* Para elementos que necesitan texto negro sobre fondo amarillo */
+  .text-on-primary {
+    color: #000000 !important;
   }
 
   .btn-secondary {
@@ -158,12 +164,12 @@
   }
 
   .badge-primary {
-    @apply bg-[#5883C6]/20 text-[#5883C6];
+    @apply bg-[#FFE066]/20 text-[#FFE066];
   }
   
   /* Forzamos el color de texto primario en elementos que usan la clase 'text-primary' */
   .text-primary {
-    color: #5883C6 !important;
+    color: #FFE066 !important;
   }
 
   .badge-success {
@@ -181,12 +187,12 @@
   /* Inputs */
   .input-custom {
     @apply bg-[var(--color-bg-secondary)] border border-[var(--color-border)] 
-           rounded-lg p-3 focus:ring-[#5883C6] focus:border-[#5883C6] 
+           rounded-lg p-3 focus:ring-[#FFE066] focus:border-[#FFE066] 
            text-[var(--color-text-primary)];
   }
 
   /* Gradientes */
   .text-gradient {
-    @apply bg-gradient-to-r from-[#5883C6] to-[#5883C6]/70 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#FFE066] to-[#FFE066]/70 bg-clip-text text-transparent;
   }
 }
