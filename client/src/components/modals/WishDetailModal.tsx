@@ -508,15 +508,19 @@ const MobileView = ({
           {/* Enlace externo - ahora antes de la descripción */}
           <div className="mb-6">
             <h3 className="block text-white text-sm mb-2">Enlace de compra</h3>
-            <a 
-              href={item.purchaseLink} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center justify-between text-primary text-sm max-w-full"
-            >
-              <span className="truncate mr-2">{item.purchaseLink}</span>
-              <ExternalLink size={16} className="flex-shrink-0" />
-            </a>
+            {item.purchaseLink ? (
+              <a 
+                href={item.purchaseLink} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center justify-between text-primary text-sm max-w-full"
+              >
+                <span className="truncate mr-2">{item.purchaseLink}</span>
+                <ExternalLink size={16} className="flex-shrink-0" />
+              </a>
+            ) : (
+              <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
+            )}
           </div>
           
           {/* Descripción */}

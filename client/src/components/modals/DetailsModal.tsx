@@ -104,15 +104,19 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
-              <a 
-                href={item.purchaseLink}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary text-sm flex items-center justify-between truncate hover:underline"
-              >
-                <span className="truncate">{item.purchaseLink}</span>
-                <ExternalLink size={16} className="flex-shrink-0 ml-2" />
-              </a>
+              {item.purchaseLink ? (
+                <a 
+                  href={item.purchaseLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-primary text-sm flex items-center justify-between truncate hover:underline"
+                >
+                  <span className="truncate">{item.purchaseLink}</span>
+                  <ExternalLink size={16} className="flex-shrink-0 ml-2" />
+                </a>
+              ) : (
+                <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
+              )}
             </div>
             
             {item.description && (
