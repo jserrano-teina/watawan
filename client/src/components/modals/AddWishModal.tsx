@@ -223,17 +223,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     // Activar estado de carga
     setIsSaving(true);
     
-    // Formatear el precio con la moneda seleccionada solo si hay un precio
-    const formattedData = {
-      ...data,
-      price: data.price ? `${data.price}${data.currency}` : undefined
-    };
-    
-    // Simular un pequeño retraso para mostrar el estado de carga
-    setTimeout(() => {
+    try {
+      // Formatear el precio con la moneda seleccionada solo si hay un precio
+      const formattedData = {
+        ...data,
+        price: data.price ? `${data.price}${data.currency}` : undefined
+      };
+      
+      // Enviar datos al componente padre
       onSubmit(formattedData);
       
-      // Limpiar el formulario antes de cerrarlo
+      // Limpiar el formulario 
       resetStepOne({
         purchaseLink: '',
       });
@@ -246,14 +246,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         imageUrl: '',
       });
       
-      // Restablecer el paso y cerrar el modal
+      // Restablecer el paso
       setStep(1);
       setExtractedData({});
       setPurchaseLinkValue('');
       setShowImageUrlInput(false);
+      
+      // El cierre del modal lo manejará el componente padre después de completar la operación
+    } catch (error) {
+      console.error("Error al procesar el formulario:", error);
+    } finally {
       setIsSaving(false);
-      onClose();
-    }, 500);
+    }
   };
 
   // Manejar el retroceso a paso 1

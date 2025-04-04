@@ -4,22 +4,20 @@ import { WishItem, Wishlist, User } from '../types';
 
 // Función de utilidad para invalidar todas las consultas relacionadas con items y notificaciones
 function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  // Invalidar todas las consultas de la API, ya que cualquier cambio en items puede afectar a múltiples vistas
-  queryClient.invalidateQueries();
+  // Usamos un enfoque más específico y controlado de invalidación
   
-  // Alternativamente, podríamos ser más específicos:
   // Invalidar consultas de wishlist (incluidas todas las sublistas)
-  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
   
   // Invalidar la lista de items de cualquier wishlist
-  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
   
   // Invalidar listas compartidas
-  // queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
   
   // Invalidar reservas y notificaciones
-  // queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
-  // queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
 }
 
 interface WishFormData {

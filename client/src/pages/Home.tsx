@@ -77,13 +77,25 @@ const Home: React.FC = () => {
   const handleWishFormSubmit = async (data: any) => {
     try {
       setIsSaving(true);
-      setShowAddWishModal(false); // Cerrar modal al iniciar la operación
+      
+      // Procesamos los datos antes de enviarlos
+      const formattedData = {
+        title: data.title?.trim() || 'Sin título',
+        description: data.description?.trim() || '',
+        purchaseLink: data.purchaseLink?.trim() || '',
+        price: data.price || '',
+        imageUrl: data.imageUrl || '',
+      };
       
       if (itemToEdit) {
-        await updateWishItem.mutateAsync({ id: itemToEdit.id, ...data });
+        // No cerramos el modal hasta que la operación se complete correctamente
+        const result = await updateWishItem.mutateAsync({ id: itemToEdit.id, ...formattedData });
+        setShowAddWishModal(false);
         showToast('Deseo actualizado correctamente', 'success');
       } else {
-        await addWishItem.mutateAsync(data);
+        // No cerramos el modal hasta que la operación se complete correctamente
+        const result = await addWishItem.mutateAsync(formattedData);
+        setShowAddWishModal(false);
         showToast('Deseo añadido correctamente', 'success');
       }
     } catch (error) {
