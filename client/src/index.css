@@ -21,6 +21,10 @@
   --transition-fast: 150ms ease;
   --transition-normal: 250ms ease;
   --transition-slow: 350ms ease;
+  
+  /* Color primario explícito de la aplicación */
+  --primary: 217 65% 56%;
+  --primary-color: #5883C6; /* RGB: 88/131/198 */
 }
 
 @layer base {
@@ -65,8 +69,8 @@
   input, textarea {
     @apply transition-colors duration-200 text-[var(--color-text-primary)] 
            placeholder:text-[var(--color-text-muted)] bg-[var(--color-bg-secondary)] 
-           border-[var(--color-border)] rounded-md focus:ring-primary 
-           focus:border-primary;
+           border-[var(--color-border)] rounded-md focus:ring-[#5883C6] 
+           focus:border-[#5883C6];
   }
 
   button {
@@ -74,7 +78,7 @@
   }
 
   a {
-    @apply text-primary hover:text-primary/90 transition-colors;
+    @apply text-[#5883C6] hover:text-[#5883C6]/90 transition-colors;
   }
 }
 
@@ -117,8 +121,13 @@
 
   /* Botones */
   .btn-primary {
-    @apply bg-primary text-white font-medium rounded-lg px-5 py-2.5 
+    @apply bg-[#5883C6] text-white font-medium rounded-lg px-5 py-2.5 
            hover:opacity-90 transition-all duration-200;
+  }
+  
+  /* Forzamos el color primario en los botones y elementos que usan la clase 'bg-primary' */
+  .bg-primary {
+    background-color: #5883C6 !important;
   }
 
   .btn-secondary {
@@ -149,7 +158,12 @@
   }
 
   .badge-primary {
-    @apply bg-primary/20 text-primary;
+    @apply bg-[#5883C6]/20 text-[#5883C6];
+  }
+  
+  /* Forzamos el color de texto primario en elementos que usan la clase 'text-primary' */
+  .text-primary {
+    color: #5883C6 !important;
   }
 
   .badge-success {
@@ -167,12 +181,12 @@
   /* Inputs */
   .input-custom {
     @apply bg-[var(--color-bg-secondary)] border border-[var(--color-border)] 
-           rounded-lg p-3 focus:ring-primary focus:border-primary 
+           rounded-lg p-3 focus:ring-[#5883C6] focus:border-[#5883C6] 
            text-[var(--color-text-primary)];
   }
 
   /* Gradientes */
   .text-gradient {
-    @apply bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-[#5883C6] to-[#5883C6]/70 bg-clip-text text-transparent;
   }
 }
