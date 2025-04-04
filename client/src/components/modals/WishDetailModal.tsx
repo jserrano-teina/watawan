@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/sheet";
 import { ItemOptionsSheet } from './ItemOptionsSheet';
 import { ReceivedConfirmationSheet } from './ReceivedConfirmationSheet';
-import { UnreserveConfirmationSheet } from './UnreserveConfirmationSheet';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 interface WishDetailModalProps {
@@ -48,7 +47,6 @@ const DesktopView = ({
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
-  const [showUnreserveConfirmation, setShowUnreserveConfirmation] = useState(false);
   const queryClient = useQueryClient();
   
   // Mutation para marcar como recibido
@@ -109,25 +107,9 @@ const DesktopView = ({
     setOpenSheet(false);
   };
 
-  // Función para manejar el desmarcar como reservado
-  const handleUnreserve = () => {
-    setOpenSheet(false);
-    setShowUnreserveConfirmation(true);
-  };
-
-  // Función para confirmar el desmarcar como reservado
-  const handleConfirmUnreserve = () => {
-    if (onUnreserve) {
-      onUnreserve(item.id);
-      setShowUnreserveConfirmation(false);
-      onClose();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-[#121212] text-white border-[#333]" aria-describedby="product-details-description">
-        <DialogTitle className="sr-only">Detalle del producto</DialogTitle>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-[#121212] text-white border-[#333]">
         <div className="relative">
           {/* Header con título */}
           <div className="flex items-center justify-between p-4 border-b border-[#333]">
@@ -190,8 +172,9 @@ const DesktopView = ({
                       setShowReceivedConfirmation(true);
                     } : undefined}
                     onUnreserve={item.isReserved && !item.isReceived && onUnreserve ? (id) => {
+                      onUnreserve(id);
                       setOpenSheet(false);
-                      setShowUnreserveConfirmation(true);
+                      onClose();
                     } : undefined}
                     onExternalLinkClick={(url) => {
                       window.open(url, '_blank', 'noopener,noreferrer');
@@ -237,14 +220,6 @@ const DesktopView = ({
                   <Calendar size={14} className="mr-1" />
                   <span>Añadido {formattedDate}</span>
                 </div>
-              </div>
-              
-              {/* Descripción oculta para lectores de pantalla */}
-              <div id="product-details-description" className="sr-only">
-                Detalles del producto {item.title}. {item.description ? `Descripción: ${item.description}.` : ''} 
-                {item.price ? `Precio: ${item.price}.` : ''} Enlace de compra disponible.
-                {item.isReserved ? ' Este producto está reservado.' : ''}
-                {item.isReceived ? ' Este producto ya ha sido recibido.' : ''}
               </div>
               
               {/* Banner de recibido o reservado */}
@@ -326,14 +301,6 @@ const DesktopView = ({
             markAsReceivedMutation={markAsReceivedMutation}
             onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
           />
-          
-          {/* Sheet de confirmación para desmarcar como reservado */}
-          <UnreserveConfirmationSheet
-            isOpen={showUnreserveConfirmation}
-            onClose={() => setShowUnreserveConfirmation(false)}
-            onConfirm={handleConfirmUnreserve}
-            item={item}
-          />
         </div>
       </DialogContent>
     </Dialog>
@@ -357,7 +324,6 @@ const MobileView = ({
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
-  const [showUnreserveConfirmation, setShowUnreserveConfirmation] = useState(false);
   const queryClient = useQueryClient();
   
   // Mutation para marcar como recibido
@@ -416,21 +382,6 @@ const MobileView = ({
   const openExternalLink = () => {
     window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
     setOpenSheet(false);
-  };
-  
-  // Función para manejar el desmarcar como reservado
-  const handleUnreserve = () => {
-    setOpenSheet(false);
-    setShowUnreserveConfirmation(true);
-  };
-
-  // Función para confirmar el desmarcar como reservado
-  const handleConfirmUnreserve = () => {
-    if (onUnreserve) {
-      onUnreserve(item.id);
-      setShowUnreserveConfirmation(false);
-      onClose();
-    }
   };
 
   useEffect(() => {
@@ -502,8 +453,9 @@ const MobileView = ({
                   setShowReceivedConfirmation(true);
                 } : undefined}
                 onUnreserve={item.isReserved && !item.isReceived && onUnreserve ? (id) => {
+                  onUnreserve(id);
                   setOpenSheet(false);
-                  setShowUnreserveConfirmation(true);
+                  onClose();
                 } : undefined}
                 onExternalLinkClick={(url) => {
                   window.open(url, '_blank', 'noopener,noreferrer');
@@ -513,23 +465,47 @@ const MobileView = ({
             </Sheet>
           </div>
           
+          {/* Precio como texto normal de mayor tamaño */}
           {item.price && (
-            <div className="flex items-center mb-4">
-              <div className="inline-block px-3 py-1 bg-primary/20 rounded-lg text-primary font-medium text-sm">
+            <div className="mb-2">
+              <span className="text-white text-xl font-medium">
                 {item.price}
+              </span>
+            </div>
+          )}
+          
+          {/* Fecha de adición con color secundario y mejor formato */}
+          <div className="text-gray-400 text-sm mb-5">
+            Añadido {formattedDate}
+          </div>
+          
+          {/* Banner de recibido o reservado */}
+          {item.isReceived && (
+            <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-purple-400" />
+              </div>
+              <div>
+                {item.reserverName ? (
+                  <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> te lo regaló, ¡que lo disfrutes!</p>
+                ) : (
+                  <p className="font-medium text-white text-sm">Has recibido este regalo, ¡que lo disfrutes!</p>
+                )}
+              </div>
+            </div>
+          )}
+          {item.isReserved && !item.isReceived && (
+            <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-green-400" />
+              </div>
+              <div>
+                <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
               </div>
             </div>
           )}
           
-          {/* Descripción */}
-          {item.description && (
-            <div className="mb-6">
-              <h3 className="block text-white text-sm mb-2">Descripción</h3>
-              <p className="text-white/80 text-sm">{item.description}</p>
-            </div>
-          )}
-          
-          {/* Enlace externo */}
+          {/* Enlace externo - ahora antes de la descripción */}
           <div className="mb-6">
             <h3 className="block text-white text-sm mb-2">Enlace de compra</h3>
             <a 
@@ -543,112 +519,68 @@ const MobileView = ({
             </a>
           </div>
           
-          {/* Información adicional */}
-          <div className="flex items-center text-xs text-white/60 mb-3">
-            <div className="flex items-center">
-              <Calendar size={14} className="mr-1" />
-              <span>Añadido {formattedDate}</span>
-            </div>
-          </div>
-          
-          {/* Banner de recibido o reservado */}
-          {item.isReceived && (
-            <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-4 flex items-center">
-              <div className="w-9 h-9 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                <Check className="h-4 w-4 text-purple-400" />
-              </div>
-              <div>
-                {item.reserverName ? (
-                  <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> te lo regaló, ¡que lo disfrutes!</p>
-                ) : (
-                  <p className="font-medium text-white text-sm">Has recibido este regalo, ¡que lo disfrutes!</p>
-                )}
-              </div>
-            </div>
-          )}
-          {item.isReserved && !item.isReceived && (
-            <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
-              <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                <Check className="h-4 w-4 text-green-400" />
-              </div>
-              <div>
-                <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
-              </div>
+          {/* Descripción */}
+          {item.description && (
+            <div className="mb-6">
+              <h3 className="block text-white text-sm mb-2">Descripción</h3>
+              <p className="text-white/80 text-sm">{item.description}</p>
             </div>
           )}
         </div>
       </div>
       
-      {/* Botones flotantes en la parte inferior */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-between items-center p-4 bg-[#121212] border-t border-[#333] z-10">
+      {/* Footer con botones fijos */}
+      <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
         <button
           onClick={handleDelete}
-          className="w-12 h-12 flex flex-col items-center justify-center text-white/70 hover:text-white transition-colors"
+          className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
         >
-          <Trash2 size={20} />
-          <span className="text-xs mt-1">Eliminar</span>
+          <Trash2 size={16} className="mr-2" />
+          Eliminar
         </button>
         
-        <a 
-          href={item.purchaseLink} 
-          target="_blank" 
-          rel="noopener noreferrer"
-          className="w-12 h-12 flex flex-col items-center justify-center text-white/70 hover:text-white transition-colors"
-        >
-          <ExternalLink size={20} />
-          <span className="text-xs mt-1">Comprar</span>
-        </a>
-        
-        {item.isReserved && !item.isReceived ? (
+        {item.isReserved && !item.isReceived && onMarkAsReceived ? (
           <button
             onClick={() => setShowReceivedConfirmation(true)}
-            className="w-12 h-12 flex flex-col items-center justify-center text-green-400 hover:text-green-300 transition-colors"
+            className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
           >
-            <Check size={20} />
-            <span className="text-xs mt-1">Recibido</span>
+            <Check size={16} className="mr-2" />
+            ¡Ya lo recibí!
           </button>
         ) : (
           <button
             onClick={handleEdit}
             disabled={item.isReserved || item.isReceived}
-            className={`w-12 h-12 flex flex-col items-center justify-center transition-colors ${item.isReserved || item.isReceived ? 'text-white/30 pointer-events-none' : 'text-primary hover:text-primary/80'}`}
+            className={`px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
           >
-            <Edit size={20} />
-            <span className="text-xs mt-1">Editar</span>
+            <Edit size={16} className="mr-2" />
+            Editar
           </button>
         )}
+        
+        {/* Sheet de confirmación de recibido */}
+        <ReceivedConfirmationSheet
+          isOpen={showReceivedConfirmation}
+          onClose={() => {
+            setShowReceivedConfirmation(false);
+            // Ya no cerramos el modal padre aquí, solo ocultamos el sheet de confirmación
+          }}
+          item={item}
+          markAsReceivedMutation={markAsReceivedMutation}
+          onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
+        />
       </div>
-      
-      {/* Sheet de confirmación de recibido */}
-      <ReceivedConfirmationSheet
-        isOpen={showReceivedConfirmation}
-        onClose={() => {
-          setShowReceivedConfirmation(false);
-          // Ya no cerramos el modal padre aquí, solo ocultamos el sheet de confirmación
-        }}
-        item={item}
-        markAsReceivedMutation={markAsReceivedMutation}
-        onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
-      />
-      
-      {/* Sheet de confirmación para desmarcar como reservado */}
-      <UnreserveConfirmationSheet
-        isOpen={showUnreserveConfirmation}
-        onClose={() => setShowUnreserveConfirmation(false)}
-        onConfirm={handleConfirmUnreserve}
-        item={item}
-      />
     </div>
   );
 };
 
-export const WishDetailModal = (props: WishDetailModalProps) => {
+const WishDetailModal: React.FC<WishDetailModalProps> = (props) => {
+  const { isOpen, item } = props;
   const isMobile = useIsMobile();
-  const { item } = props;
   
-  if (!item) return null;
+  if (!isOpen || !item) return null;
+  
+  return isMobile ? <MobileView {...props} item={item} /> : <DesktopView {...props} item={item} />;
+}
 
-  return isMobile 
-    ? <MobileView {...props} item={item} /> 
-    : <DesktopView {...props} item={item} />;
-};
+export default WishDetailModal;

@@ -9,7 +9,7 @@ import { es } from 'date-fns/locale';
 import ProductImage from '@/components/ProductImage';
 import { Loader2, Bell } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
-import { WishDetailModal } from '@/components/modals/WishDetailModal';
+import WishDetailModal from '@/components/modals/WishDetailModal';
 import { ReceivedConfirmationSheet } from '@/components/modals/ReceivedConfirmationSheet';
 import { UnreserveConfirmationSheet } from '@/components/modals/UnreserveConfirmationSheet';
 
