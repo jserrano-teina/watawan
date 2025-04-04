@@ -32,7 +32,7 @@ const Home: React.FC = () => {
   // 1. Primero los no recibidos, luego los recibidos
   // 2. Dentro de cada grupo, primero los no reservados, luego los reservados
   // 3. Para cada subgrupo, ordenamos por fecha de creación (más nuevos primero)
-  const myWishItems = Array.isArray(items) 
+  const myWishItems = Array.isArray(items) && items.length > 0
     ? [...items].sort((a, b) => {
         // 1. Primero por estado de recibido
         if (a.isReceived !== b.isReceived) {
@@ -130,6 +130,13 @@ const Home: React.FC = () => {
     }
   };
   
+  // Efecto para monitorear cambios en la lista de items
+  useEffect(() => {
+    if (Array.isArray(items)) {
+      console.log(`Items actualizados: ${items.length} elementos en la lista`);
+    }
+  }, [items]);
+
   // Variable para rastrear si una operación de Sheet se cerró recientemente
   const [sheetRecentlyClosed, setSheetRecentlyClosed] = useState(false);
 

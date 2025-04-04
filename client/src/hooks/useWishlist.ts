@@ -4,18 +4,18 @@ import { WishItem, Wishlist, User } from '../types';
 
 // Función de utilidad para invalidar todas las consultas relacionadas con items y notificaciones
 function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>) {
-  // Usamos un enfoque más específico y controlado de invalidación
+  // Aplicamos una estrategia de invalidación más amplia
+  console.log('Invalidando todas las consultas de items y wishlist');
   
-  // Invalidar consultas de wishlist (incluidas todas las sublistas)
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  // Invalidar todas las consultas relacionadas con /api/wishlist
+  queryClient.invalidateQueries({ 
+    predicate: (query) => {
+      const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+      return typeof queryKey === 'string' && queryKey.includes('/api/wishlist');
+    }
+  });
   
-  // Invalidar la lista de items de cualquier wishlist
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
-  
-  // Invalidar listas compartidas
-  queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
-  
-  // Invalidar reservas y notificaciones
+  // Invalidar explícitamente las otras rutas relacionadas
   queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
   queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
 }
@@ -57,11 +57,9 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: (newItem) => {
-      // Sólo invalidamos las consultas específicas para este wishlist
-      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
-      
-      // No intentamos actualizar el caché directamente para evitar errores
-      // La invalidación anterior provocará una nueva consulta con los datos actualizados
+      // Usamos la misma estrategia de invalidación completa para todos los tipos de mutaciones
+      console.log('Deseo añadido, invalidando todas las consultas');
+      invalidateAllItemQueries(qc);
     },
   });
 
