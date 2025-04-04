@@ -57,27 +57,11 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: (newItem) => {
-      // Invalidamos todas las consultas para asegurar que el nuevo elemento aparezca
-      invalidateAllItemQueries(qc);
+      // Sólo invalidamos las consultas específicas para este wishlist
+      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
       
-      // También actualizamos directamente el caché con el nuevo elemento
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist', wishlist?.id, 'items'],
-        (oldItems = []) => {
-          // Asegurarnos de que el nuevo item no esté ya en la lista
-          const existingItemIndex = oldItems.findIndex(item => item.id === newItem.id);
-          
-          if (existingItemIndex !== -1) {
-            // Reemplazar el item existente
-            return oldItems.map(item => 
-              item.id === newItem.id ? newItem : item
-            );
-          } else {
-            // Añadir el nuevo item al principio de la lista
-            return [newItem, ...oldItems];
-          }
-        }
-      );
+      // No intentamos actualizar el caché directamente para evitar errores
+      // La invalidación anterior provocará una nueva consulta con los datos actualizados
     },
   });
 
@@ -87,19 +71,9 @@ export function useWishlist() {
       const res = await apiRequest('PUT', `/api/wishlist/items/${id}`, data);
       return res.json();
     },
-    onSuccess: (updatedItem) => {
+    onSuccess: () => {
       // Invalidamos todas las consultas para asegurar que los cambios se reflejen
       invalidateAllItemQueries(qc);
-      
-      // También actualizamos directamente el caché con el item actualizado
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist', wishlist?.id, 'items'],
-        (oldItems = []) => {
-          return oldItems.map(item => 
-            item.id === updatedItem.id ? updatedItem : item
-          );
-        }
-      );
     },
   });
 
@@ -108,17 +82,9 @@ export function useWishlist() {
     mutationFn: async (id: number) => {
       await apiRequest('DELETE', `/api/wishlist/items/${id}`);
     },
-    onSuccess: (_, deletedId) => {
+    onSuccess: () => {
       // Invalidamos todas las consultas para asegurar que los cambios se reflejen
       invalidateAllItemQueries(qc);
-      
-      // También eliminamos el item del caché directamente
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist', wishlist?.id, 'items'],
-        (oldItems = []) => {
-          return oldItems.filter(item => item.id !== deletedId);
-        }
-      );
     },
   });
   
@@ -128,19 +94,9 @@ export function useWishlist() {
       const res = await apiRequest('POST', `/api/wishlist/items/${id}/received`);
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidamos todas las consultas relevantes para asegurar actualización global
       invalidateAllItemQueries(qc);
-      
-      // También podemos actualizar directamente el caché con el nuevo estado del item
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist', wishlist?.id, 'items'], 
-        (oldItems = []) => {
-          return oldItems.map(item => 
-            item.id === data.id ? { ...item, isReceived: true } : item
-          );
-        }
-      );
     },
   });
   
@@ -150,19 +106,9 @@ export function useWishlist() {
       const res = await apiRequest('POST', `/api/wishlist/items/${id}/unreserve`);
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidamos todas las consultas relevantes para asegurar actualización global
       invalidateAllItemQueries(qc);
-      
-      // También podemos actualizar directamente el caché con el nuevo estado del item
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist', wishlist?.id, 'items'], 
-        (oldItems = []) => {
-          return oldItems.map(item => 
-            item.id === data.id ? { ...item, isReserved: false, reservedBy: undefined, reserverName: undefined } : item
-          );
-        }
-      );
     },
   });
 
@@ -209,22 +155,10 @@ export function useSharedWishlist(shareableLink: string) {
       const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/reserve`, { reserverName });
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       // Invalidamos no solo los items de la lista compartida sino también cualquier 
       // otra consulta relacionada con items para que el propietario vea la actualización
       invalidateAllItemQueries(qc);
-      
-      // Actualizamos directamente el caché de la lista compartida con el nuevo estado
-      qc.setQueryData<WishItem[]>(
-        ['/api/wishlist/shared', shareableLink, 'items'], 
-        (oldItems = []) => {
-          return oldItems.map(item => 
-            item.id === data.wishItemId ? 
-              { ...item, isReserved: true, reservedBy: data.id, reserverName: data.reserverName } : 
-              item
-          );
-        }
-      );
     },
   });
 
