@@ -1,6 +1,22 @@
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '../lib/queryClient';
 import { WishItem, Wishlist, User } from '../types';
+
+// Función de utilidad para invalidar todas las consultas relacionadas con items y notificaciones
+function invalidateAllItemQueries(queryClient: ReturnType<typeof useQueryClient>) {
+  // Invalidar consultas de items individuales (no podemos saber qué wishlistId, así que invalidamos todas)
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  
+  // Invalidar la lista de items de cualquier wishlist
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist', 'items'] });
+  
+  // Invalidar listas compartidas
+  queryClient.invalidateQueries({ queryKey: ['/api/wishlist/shared'] });
+  
+  // Invalidar reservas y notificaciones
+  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+}
 
 interface WishFormData {
   title: string;
@@ -10,6 +26,9 @@ interface WishFormData {
 }
 
 export function useWishlist() {
+  // Acceder al cliente de consultas
+  const qc = useQueryClient();
+  
   // Get current user
   const { data: user, isLoading: userLoading } = useQuery<User>({
     queryKey: ['/api/user'],
@@ -23,7 +42,7 @@ export function useWishlist() {
 
   // Get wish items for the user's wishlist
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: [`/api/wishlist/${wishlist?.id}/items`],
+    queryKey: ['/api/wishlist', wishlist?.id, 'items'],
     enabled: !!wishlist?.id,
   });
 
@@ -36,7 +55,8 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+      // Solo necesitamos invalidar la lista del usuario actual
+      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
     },
   });
 
@@ -47,7 +67,8 @@ export function useWishlist() {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+      // Solo necesitamos invalidar la lista del usuario actual
+      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
     },
   });
 
@@ -57,7 +78,8 @@ export function useWishlist() {
       await apiRequest('DELETE', `/api/wishlist/items/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+      // Solo necesitamos invalidar la lista del usuario actual
+      qc.invalidateQueries({ queryKey: ['/api/wishlist', wishlist?.id, 'items'] });
     },
   });
   
@@ -67,8 +89,19 @@ export function useWishlist() {
       const res = await apiRequest('POST', `/api/wishlist/items/${id}/received`);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
+    onSuccess: (data) => {
+      // Invalidamos todas las consultas relevantes para asegurar actualización global
+      invalidateAllItemQueries(qc);
+      
+      // También podemos actualizar directamente el caché con el nuevo estado del item
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist', wishlist?.id, 'items'], 
+        (oldItems = []) => {
+          return oldItems.map(item => 
+            item.id === data.id ? { ...item, isReceived: true } : item
+          );
+        }
+      );
     },
   });
   
@@ -78,9 +111,19 @@ export function useWishlist() {
       const res = await apiRequest('POST', `/api/wishlist/items/${id}/unreserve`);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wishlist?.id}/items`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+    onSuccess: (data) => {
+      // Invalidamos todas las consultas relevantes para asegurar actualización global
+      invalidateAllItemQueries(qc);
+      
+      // También podemos actualizar directamente el caché con el nuevo estado del item
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist', wishlist?.id, 'items'], 
+        (oldItems = []) => {
+          return oldItems.map(item => 
+            item.id === data.id ? { ...item, isReserved: false, reservedBy: undefined, reserverName: undefined } : item
+          );
+        }
+      );
     },
   });
 
@@ -98,6 +141,9 @@ export function useWishlist() {
 }
 
 export function useSharedWishlist(shareableLink: string) {
+  // Acceder al cliente de consultas
+  const qc = useQueryClient();
+  
   // Get shared wishlist and owner info
   const { data: sharedWishlistData, isLoading: sharedWishlistLoading } = useQuery({
     queryKey: ['/api/wishlist/shared', shareableLink],
@@ -114,7 +160,7 @@ export function useSharedWishlist(shareableLink: string) {
 
   // Get wish items for the shared wishlist (using the dedicated endpoint for shared lists)
   const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: [`/api/wishlist/shared/${shareableLink}/items`],
+    queryKey: ['/api/wishlist/shared', shareableLink, 'items'],
     enabled: !!shareableLink,
   });
 
@@ -124,8 +170,22 @@ export function useSharedWishlist(shareableLink: string) {
       const res = await apiRequest('POST', `/api/wishlist/items/${itemId}/reserve`, { reserverName });
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/shared/${shareableLink}/items`] });
+    onSuccess: (data) => {
+      // Invalidamos no solo los items de la lista compartida sino también cualquier 
+      // otra consulta relacionada con items para que el propietario vea la actualización
+      invalidateAllItemQueries(qc);
+      
+      // Actualizamos directamente el caché de la lista compartida con el nuevo estado
+      qc.setQueryData<WishItem[]>(
+        ['/api/wishlist/shared', shareableLink, 'items'], 
+        (oldItems = []) => {
+          return oldItems.map(item => 
+            item.id === data.wishItemId ? 
+              { ...item, isReserved: true, reservedBy: data.id, reserverName: data.reserverName } : 
+              item
+          );
+        }
+      );
     },
   });
 
