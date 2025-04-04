@@ -126,7 +126,8 @@ const DesktopView = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-[#121212] text-white border-[#333]">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-[#121212] text-white border-[#333]" aria-describedby="product-details-description">
+        <DialogTitle className="sr-only">Detalle del producto</DialogTitle>
         <div className="relative">
           {/* Header con título */}
           <div className="flex items-center justify-between p-4 border-b border-[#333]">
@@ -236,6 +237,14 @@ const DesktopView = ({
                   <Calendar size={14} className="mr-1" />
                   <span>Añadido {formattedDate}</span>
                 </div>
+              </div>
+              
+              {/* Descripción oculta para lectores de pantalla */}
+              <div id="product-details-description" className="sr-only">
+                Detalles del producto {item.title}. {item.description ? `Descripción: ${item.description}.` : ''} 
+                {item.price ? `Precio: ${item.price}.` : ''} Enlace de compra disponible.
+                {item.isReserved ? ' Este producto está reservado.' : ''}
+                {item.isReceived ? ' Este producto ya ha sido recibido.' : ''}
               </div>
               
               {/* Banner de recibido o reservado */}
@@ -633,7 +642,7 @@ const MobileView = ({
   );
 };
 
-const WishDetailModal = (props: WishDetailModalProps) => {
+export const WishDetailModal = (props: WishDetailModalProps) => {
   const isMobile = useIsMobile();
   const { item } = props;
   
@@ -643,5 +652,3 @@ const WishDetailModal = (props: WishDetailModalProps) => {
     ? <MobileView {...props} item={item} /> 
     : <DesktopView {...props} item={item} />;
 };
-
-export default WishDetailModal;

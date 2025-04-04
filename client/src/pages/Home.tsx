@@ -7,7 +7,7 @@ import FloatingActionButton from '../components/FloatingActionButton';
 import BottomNavigation from '../components/BottomNavigation';
 import AddWishModal from '../components/modals/AddWishModal';
 import ShareModal from '../components/modals/ShareModal';
-import WishDetailModal from '../components/modals/WishDetailModal';
+import { WishDetailModal } from '../components/modals/WishDetailModal';
 import { ReceivedConfirmationSheet } from '../components/modals/ReceivedConfirmationSheet';
 import { UnreserveConfirmationSheet } from '../components/modals/UnreserveConfirmationSheet';
 import Header from '../components/Header';
