@@ -29,13 +29,23 @@ const stepTwoSchema = z.object({
   imageUrl: z.string().optional(),
 });
 
+// Interfaz alineada con lo que espera el componente padre
+interface FormattedStepTwoValues {
+  title: string;
+  price: string; // Ya siempre será obligatorio
+  currency: string;
+  purchaseLink?: string;
+  description?: string;
+  imageUrl?: string;
+}
+
 type StepOneFormValues = z.infer<typeof stepOneSchema>;
 type StepTwoFormValues = z.infer<typeof stepTwoSchema>;
 
 interface AddWishModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: (data: StepTwoFormValues) => void;
+  onSubmit: (data: FormattedStepTwoValues) => void;
   itemToEdit?: WishItem;
 }
 
@@ -224,10 +234,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     setIsSaving(true);
     
     try {
-      // Formatear el precio con la moneda seleccionada solo si hay un precio
-      const formattedData = {
-        ...data,
-        price: data.price ? `${data.price}${data.currency}` : undefined
+      // Formatear el precio con la moneda seleccionada (ahora siempre hay un precio porque es obligatorio)
+      const formattedData: FormattedStepTwoValues = {
+        title: data.title,
+        price: `${data.price}${data.currency}`,
+        currency: data.currency,
+        purchaseLink: data.purchaseLink,
+        description: data.description,
+        imageUrl: data.imageUrl
       };
       
       // Simplemente enviamos los datos al componente padre y dejamos que 
