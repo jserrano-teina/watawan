@@ -241,7 +241,7 @@ const Home: React.FC = () => {
             </div>
           </div>
         ) : (
-          <div className="flex items-center justify-center h-[80vh]">
+          <div className="flex items-center justify-center h-[calc(100vh-180px)] mt-10">
             <EmptyWishlist onAddWish={handleAddWishClick} />
           </div>
         )}
