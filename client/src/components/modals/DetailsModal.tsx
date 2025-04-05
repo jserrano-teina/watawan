@@ -94,7 +94,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             {item.isReserved && (
               <div className="bg-[#5883C6]/20 border border-[#5883C6]/30 rounded-xl p-4 mb-6 flex items-center">
                 <div className="w-10 h-10 bg-[#5883C6]/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                  <Check className="h-5 w-5 text-[#5883C6]" />
+                  <Check className="h-5 w-5 text-[#89AADC]" />
                 </div>
                 <div>
                   <p className="font-medium text-white text-sm">Alguien ya ha reservado este regalo y no está disponible</p>

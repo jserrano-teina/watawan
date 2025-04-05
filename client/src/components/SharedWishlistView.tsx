@@ -200,7 +200,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
                   {/* Tag de reservado */}
                   {item.isReserved && (
-                    <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#5883C6] text-xs font-medium rounded-full inline-block w-fit">
+                    <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#89AADC] text-xs font-medium rounded-full inline-block w-fit">
                       Reservado
                     </span>
                   )}

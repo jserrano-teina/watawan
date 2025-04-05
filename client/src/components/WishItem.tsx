@@ -120,7 +120,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                 </span>
               )}
               {item.isReserved && !item.isReceived && (
-                <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#5883C6] text-xs font-medium rounded-full inline-block">
+                <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#89AADC] text-xs font-medium rounded-full inline-block">
                   Reservado
                 </span>
               )}
