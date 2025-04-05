@@ -47,12 +47,12 @@ export function LogoutSheet({ isOpen, onClose, logoutMutation }: LogoutSheetProp
           <div className="space-y-3">
             <button
               onClick={handleLogout}
-              className="bg-[#ff0055] text-white w-full h-[50px] rounded-lg font-medium flex items-center justify-center"
+              className="bg-primary text-black w-full h-[50px] rounded-lg font-medium flex items-center justify-center"
             >
               {logoutMutation.isPending ? (
                 <div className="flex items-center">
                   <svg
-                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                    className="animate-spin -ml-1 mr-2 h-4 w-4 text-black"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
@@ -75,7 +75,7 @@ export function LogoutSheet({ isOpen, onClose, logoutMutation }: LogoutSheetProp
                 </div>
               ) : (
                 <div className="flex items-center">
-                  <LogOut size={16} className="mr-2" />
+                  <LogOut size={16} className="mr-2 text-black" />
                   Cerrar sesión
                 </div>
               )}
