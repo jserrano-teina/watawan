@@ -147,7 +147,7 @@ export function ItemOptionsSheet({
           {onUnreserve && item.isReserved && !item.isReceived && (
             <button 
               onClick={handleUnreserve}
-              className="w-full text-left px-6 py-5 text-[17px] text-[#5883C6] hover:bg-[#333] flex items-center"
+              className="w-full text-left px-6 py-5 text-[17px] text-white hover:bg-[#333] flex items-center"
             >
               <Undo size={22} className="mr-4" />
               Desmarcar como reservado
