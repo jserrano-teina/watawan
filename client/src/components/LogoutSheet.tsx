@@ -47,7 +47,7 @@ export function LogoutSheet({ isOpen, onClose, logoutMutation }: LogoutSheetProp
           <div className="space-y-3">
             <button
               onClick={handleLogout}
-              className="bg-primary text-black w-full h-[50px] rounded-lg font-medium flex items-center justify-center"
+              className="bg-[#FFE066] text-black w-full h-[50px] rounded-lg font-medium flex items-center justify-center"
             >
               {logoutMutation.isPending ? (
                 <div className="flex items-center">
