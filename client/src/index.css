@@ -140,10 +140,16 @@
   .bg-primary, 
   [class*="bg-[#FFE066]"], 
   button[type="submit"],
-  .bg-primary svg,
-  [class*="bg-[#FFE066]"] svg,
   [data-color-scheme="dark"] .Button,
   [data-color-scheme="light"] .Button {
+    color: #000000 !important;
+  }
+  
+  /* Forzamos explícitamente el color negro para SVGs dentro de elementos con bg-primary */
+  .bg-primary svg, 
+  [class*="bg-[#FFE066]"] svg,
+  button.bg-primary svg,
+  [class*="bg-primary"] svg {
     color: #000000 !important;
     fill: #000000 !important;
     stroke: #000000 !important;
