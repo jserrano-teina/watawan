@@ -65,7 +65,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             <input 
               type="text" 
               id="reserverName" 
-              className="w-full h-[50px] px-3 py-2 border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-[#121212] text-white" 
+              className="w-full h-[50px] px-3 py-2 border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent bg-[#121212] text-white" 
               placeholder="¿Cómo te llama normalmente esta persona?"
               value={reserverName}
               onChange={(e) => setReserverName(e.target.value)}
