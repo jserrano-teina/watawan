@@ -196,7 +196,7 @@ export function CreateItemDialog({
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar
               </Button>
-              <Button type="submit">Guardar</Button>
+              <Button type="submit" className="bg-primary text-black hover:bg-primary/90">Guardar</Button>
             </DialogFooter>
           </form>
         </Form>
