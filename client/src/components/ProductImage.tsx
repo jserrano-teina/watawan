@@ -89,7 +89,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
   if (shouldUseInitialsPlaceholder()) {
     return (
       <div className={`relative flex flex-col items-center justify-center shadow-inner ${className}`}>
-        <ImageIcon size={54} className="text-white/50" strokeWidth={1} />
+        <ImageIcon size={42} className="text-[#444444]" strokeWidth={1.5} />
       </div>
     );
   }
@@ -117,7 +117,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
       {/* Mostrar placeholder si la imagen falla */}
       {imgState === 'error' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <ImageIcon size={54} className="text-white/50" strokeWidth={1} />
+          <ImageIcon size={42} className="text-[#444444]" strokeWidth={1.5} />
         </div>
       )}
     </div>
