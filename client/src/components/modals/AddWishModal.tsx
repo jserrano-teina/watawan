@@ -224,7 +224,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       }
       setStep(2);
     } finally {
+      // Asegurarnos de que los estados de carga estén desactivados
       setIsLoading(false);
+      // Importante: asegurarnos de que isSaving también esté reseteado cuando pasamos al paso 2
+      setIsSaving(false);
     }
   };
 
@@ -455,6 +458,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       // Ir al paso 2 sin enlace
                       setValueStepTwo('purchaseLink', '');
                       setStep(2);
+                      // Asegurarnos de que ambos estados de carga estén desactivados
+                      setIsLoading(false);
+                      setIsSaving(false);
                     }}
                     className="text-gray-400 underline hover:text-white focus:outline-none inline-block"
                   >
