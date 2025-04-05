@@ -148,11 +148,7 @@ export function ReceivedConfirmationSheet({
           </div>
 
           <div className="px-6 mt-2 flex flex-col gap-2">
-            {item.description && (
-              <p className="text-sm text-white/60 mb-2">{item.description}</p>
-            )}
-
-            <div className="mt-6 flex flex-col gap-3">
+            <div className="mt-4 flex flex-col gap-3">
               <button 
                 onClick={handleConfirm}
                 disabled={markAsReceivedMutation.isPending}
