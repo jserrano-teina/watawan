@@ -77,15 +77,12 @@ export function UnreserveConfirmationSheet({
         </div>
         
         <div className="px-6 py-4 text-white/90 text-base">
-          ¿Deseas desmarcar este regalo como reservado?
+          Este deseo fue reservado por alguien para regalártelo, ¿estás seguro de que quieras que vuelva a aparecer como disponible en tu lista de deseos?
         </div>
 
         <div className="px-6 mt-2 flex flex-col gap-2">
-          <p className="text-sm text-white/60 mb-2">
-            Al desmarcar este regalo, volverá a aparecer como disponible para que otra persona pueda reservarlo.
-          </p>
 
-          <div className="mt-6 flex flex-col gap-3">
+          <div className="mt-2 flex flex-col gap-3">
             <button 
               onClick={handleConfirm}
               className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg text-base font-medium transition-colors flex items-center justify-center"
