@@ -188,22 +188,16 @@ export class MemStorage implements IStorage {
       (item) => item.wishlistId === wishlistId && (includeReceived || !item.isReceived)
     );
     
-    // Luego ordenamos siguiendo los criterios:
+    // Luego ordenamos siguiendo los criterios actualizados:
     // 1. Primero los elementos no recibidos (isReceived = false)
-    // 2. Para cada grupo (recibidos/no recibidos), primero los no reservados (isReserved = false)
-    // 3. Para cada subgrupo, ordenamos por fecha de creación (más nuevos primero)
+    // 2. Dentro de cada grupo, ordenamos por fecha de creación (más nuevos primero)
     return items.sort((a, b) => {
       // 1. Primero si está recibido o no
       if (a.isReceived !== b.isReceived) {
         return a.isReceived ? 1 : -1; // No recibidos primero
       }
       
-      // 2. Luego por estado de reserva
-      if (a.isReserved !== b.isReserved) {
-        return a.isReserved ? 1 : -1; // No reservados primero
-      }
-      
-      // 3. Finalmente por fecha de creación
+      // 2. Finalmente por fecha de creación
       // Asumimos que los IDs más altos corresponden a items más nuevos
       return b.id - a.id; // ID mayor (más reciente) primero
     });
