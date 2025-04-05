@@ -152,9 +152,9 @@ export function ReceivedConfirmationSheet({
               <button 
                 onClick={handleConfirm}
                 disabled={markAsReceivedMutation.isPending}
-                className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg text-base font-medium transition-colors flex items-center justify-center"
+                className="w-full px-4 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
               >
-                <CheckCheck size={20} className="mr-2 text-black" />
+                <CheckCheck size={20} className="mr-2 text-white" />
                 {markAsReceivedMutation.isPending ? "Confirmando..." : "Sí, ya lo recibí"}
               </button>
               
