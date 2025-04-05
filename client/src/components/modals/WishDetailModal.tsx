@@ -224,9 +224,9 @@ const DesktopView = ({
               
               {/* Banner de recibido o reservado */}
               {item.isReceived && (
-                <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-4 flex items-center">
-                  <div className="w-9 h-9 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <Check className="h-4 w-4 text-purple-400" />
+                <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
+                  <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Check className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
                     {item.reserverName ? (
@@ -238,9 +238,9 @@ const DesktopView = ({
                 </div>
               )}
               {item.isReserved && !item.isReceived && (
-                <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
-                  <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <Check className="h-4 w-4 text-green-400" />
+                <div className="bg-[#5883C6]/20 border border-[#5883C6]/30 rounded-xl p-4 mb-4 flex items-center">
+                  <div className="w-9 h-9 bg-[#5883C6]/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Check className="h-4 w-4 text-[#5883C6]" />
                   </div>
                   <div>
                     <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
@@ -481,9 +481,9 @@ const MobileView = ({
           
           {/* Banner de recibido o reservado */}
           {item.isReceived && (
-            <div className="bg-purple-800/20 border border-purple-800/30 rounded-xl p-4 mb-6 flex items-center">
-              <div className="w-10 h-10 bg-purple-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                <Check className="h-5 w-5 text-purple-400" />
+            <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-green-400" />
               </div>
               <div>
                 {item.reserverName ? (
@@ -495,9 +495,9 @@ const MobileView = ({
             </div>
           )}
           {item.isReserved && !item.isReceived && (
-            <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
-              <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                <Check className="h-5 w-5 text-green-400" />
+            <div className="bg-[#5883C6]/20 border border-[#5883C6]/30 rounded-xl p-4 mb-6 flex items-center">
+              <div className="w-10 h-10 bg-[#5883C6]/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                <Check className="h-5 w-5 text-[#5883C6]" />
               </div>
               <div>
                 <p className="font-medium text-white text-sm">Alguien ha reservado este regalo para ti, ¡pronto sabrás quién es!</p>
