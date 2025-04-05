@@ -36,6 +36,25 @@ const NotificationsPage: React.FC = () => {
     }, 300); // Prevenir clics por 300ms
   };
   
+  // Mutación para eliminar un item
+  const deleteMutation = useMutation({
+    mutationFn: async (itemId: number) => {
+      const res = await apiRequest('DELETE', `/api/wishlist/items/${itemId}`, {});
+      return res;
+    },
+    onSuccess: (_data, variables) => {
+      console.log('Item eliminado correctamente, invalidando todas las consultas');
+      // Cerrar el modal de detalle
+      setDetailModalOpen(false);
+      
+      // Obtener el wishlistId del item eliminado
+      const wishlistId = notifications.find(n => n.item.id === variables)?.item.wishlistId;
+      
+      // Invalidar todas las consultas de la aplicación
+      invalidateAllAppQueries(wishlistId);
+    }
+  });
+  
   // Obtener todas las reservas
   const { data: rawNotifications = [], isLoading } = useQuery<any[]>({
     queryKey: ['/api/reserved-items'],
@@ -240,7 +259,7 @@ const NotificationsPage: React.FC = () => {
           onClose={() => setDetailModalOpen(false)}
           item={selectedItem}
           onEdit={() => {}}
-          onDelete={() => {}}
+          onDelete={(item) => deleteMutation.mutate(item.id)}
           onMarkAsReceived={handleMarkAsReceived}
           onUnreserve={handleUnreserve}
         />
