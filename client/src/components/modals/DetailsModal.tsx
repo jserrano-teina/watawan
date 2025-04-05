@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { WishItem } from '../../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { ExternalLink, ArrowLeft, Check } from 'lucide-react';
+import { ExternalLink, ArrowLeft, Check, CheckCheck } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { Button } from '@/components/ui/button';
 
@@ -90,8 +90,22 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
             
-            {/* Banner de reservado */}
-            {item.isReserved && (
+            {/* Banner de recibido o reservado */}
+            {item.isReceived && (
+              <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
+                <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                  <CheckCheck className="h-5 w-5 text-green-400" />
+                </div>
+                <div>
+                  {item.reserverName ? (
+                    <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> ya regaló este artículo</p>
+                  ) : (
+                    <p className="font-medium text-white text-sm">Este regalo ya ha sido recibido</p>
+                  )}
+                </div>
+              </div>
+            )}
+            {item.isReserved && !item.isReceived && (
               <div className="bg-[#5883C6]/20 border border-[#5883C6]/30 rounded-xl p-4 mb-6 flex items-center">
                 <div className="w-10 h-10 bg-[#5883C6]/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
                   <Check className="h-5 w-5 text-[#89AADC]" />

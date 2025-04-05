@@ -6,7 +6,7 @@ import {
   SheetDescription,
   SheetContent
 } from "@/components/ui/sheet";
-import { Check, Edit, ExternalLink, Trash, Undo, X } from 'lucide-react';
+import { Check, CheckCheck, Edit, ExternalLink, Trash, Undo, X } from 'lucide-react';
 import { WishItem } from '@/types';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
 
@@ -159,7 +159,7 @@ export function ItemOptionsSheet({
               onClick={handleMarkAsReceived}
               className="w-full text-left px-6 py-5 text-[17px] text-green-500 hover:bg-[#333] flex items-center"
             >
-              <Check size={22} className="mr-4" />
+              <CheckCheck size={22} className="mr-4" />
               ¡Ya lo recibí!
             </button>
           )}

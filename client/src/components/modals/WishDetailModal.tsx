@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import ProductImage from '../ProductImage';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, MoreVertical, Undo } from 'lucide-react';
+import { Edit, Trash2, ExternalLink, Calendar, X, ArrowLeft, Check, CheckCheck, MoreVertical, Undo } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Sheet,
@@ -226,7 +226,7 @@ const DesktopView = ({
               {item.isReceived && (
                 <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-4 flex items-center">
                   <div className="w-9 h-9 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <Check className="h-4 w-4 text-green-400" />
+                    <CheckCheck className="h-4 w-4 text-green-400" />
                   </div>
                   <div>
                     {item.reserverName ? (
@@ -274,7 +274,7 @@ const DesktopView = ({
                   onClick={() => setShowReceivedConfirmation(true)}
                   className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition-colors flex items-center"
                 >
-                  <Check size={16} className="mr-2" />
+                  <CheckCheck size={16} className="mr-2" />
                   ¡Ya lo recibí!
                 </button>
               ) : (
@@ -483,7 +483,7 @@ const MobileView = ({
           {item.isReceived && (
             <div className="bg-green-800/20 border border-green-800/30 rounded-xl p-4 mb-6 flex items-center">
               <div className="w-10 h-10 bg-green-800/30 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                <Check className="h-5 w-5 text-green-400" />
+                <CheckCheck className="h-5 w-5 text-green-400" />
               </div>
               <div>
                 {item.reserverName ? (
@@ -548,7 +548,7 @@ const MobileView = ({
             onClick={() => setShowReceivedConfirmation(true)}
             className="px-6 py-3 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium transition-colors flex items-center"
           >
-            <Check size={16} className="mr-2" />
+            <CheckCheck size={16} className="mr-2" />
             ¡Ya lo recibí!
           </button>
         ) : (

@@ -4,7 +4,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import { Check, X } from 'lucide-react';
+import { Check, CheckCheck, X } from 'lucide-react';
 import { UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { WishItem } from "@/types";
 import { useEffect, useState } from 'react';
@@ -158,7 +158,7 @@ export function ReceivedConfirmationSheet({
                 disabled={markAsReceivedMutation.isPending}
                 className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg text-base font-medium transition-colors flex items-center justify-center"
               >
-                <Check size={20} className="mr-2" />
+                <CheckCheck size={20} className="mr-2" />
                 {markAsReceivedMutation.isPending ? "Confirmando..." : "Sí, ya lo recibí"}
               </button>
               
