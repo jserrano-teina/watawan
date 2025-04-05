@@ -83,9 +83,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
             </div>
             <button 
               onClick={copyToClipboard}
-              className="bg-primary text-white h-[50px] px-5 rounded-r-lg hover:bg-primary/80 transition-colors flex items-center justify-center"
+              className="bg-primary text-black h-[50px] px-5 rounded-r-lg hover:bg-primary/80 transition-colors flex items-center justify-center"
             >
-              <Copy size={18} />
+              <Copy size={18} className="text-black" />
             </button>
           </div>
           

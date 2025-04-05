@@ -84,7 +84,7 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             </SheetClose>
             <Button 
               onClick={handleConfirm}
-              className="flex-1 bg-primary hover:bg-primary/90 text-white h-[50px]"
+              className="flex-1 bg-primary hover:bg-primary/90 text-black h-[50px]"
             >
               Confirmar reserva
             </Button>

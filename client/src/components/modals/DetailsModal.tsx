@@ -147,7 +147,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
           <div className="border-t border-[#333] p-4 flex justify-end">
             <Button 
               onClick={onReserveClick}
-              className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-white"
+              className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-black"
             >
               Lo regalaré yo
             </Button>

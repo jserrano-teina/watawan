@@ -281,7 +281,7 @@ const DesktopView = ({
                 <button
                   onClick={handleEdit}
                   disabled={item.isReserved || item.isReceived}
-                  className={`px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg text-sm font-medium transition-colors flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+                  className={`px-4 py-2 bg-primary hover:bg-primary/90 text-black rounded-lg text-sm font-medium transition-colors flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
                 >
                   <Edit size={16} className="mr-2" />
                   Editar
@@ -555,7 +555,7 @@ const MobileView = ({
           <button
             onClick={handleEdit}
             disabled={item.isReserved || item.isReceived}
-            className={`px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium transition-colors flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
+            className={`px-6 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg font-medium transition-colors flex items-center ${item.isReserved || item.isReceived ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''}`}
           >
             <Edit size={16} className="mr-2" />
             Editar
