@@ -27,7 +27,7 @@ const CustomInput = React.forwardRef<
 >(({ className, error, ...props }, ref) => {
   return (
     <input
-      className={`w-full h-[50px] px-4 rounded-lg bg-[#252525] text-white border-0 focus:ring-2 focus:ring-primary focus:outline-none ${
+      className={`w-full h-[50px] px-4 rounded-lg bg-[#252525] text-white border-0 focus:ring-2 focus:ring-[#5883C6] focus:outline-none ${
         error ? "border-red-500 border" : ""
       } ${className}`}
       ref={ref}
