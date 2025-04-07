@@ -72,7 +72,7 @@ export default function RegisterPage() {
           <img 
             src="/images/waw_logo.svg" 
             alt="Wish & Want" 
-            className="h-16 mx-auto mb-6" 
+            className="h-16 mx-auto mb-10" 
           />
           <h1 className="text-3xl font-bold mb-2 text-white">Crea tu cuenta</h1>
         </div>

@@ -69,7 +69,7 @@ export default function LoginPage() {
           <img 
             src="/images/waw_logo.svg" 
             alt="Wish & Want" 
-            className="h-16 mx-auto mb-6" 
+            className="h-16 mx-auto mb-10" 
           />
           <h1 className="text-3xl font-bold mb-2 text-white">Inicia sesión</h1>
         </div>
