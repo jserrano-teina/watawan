@@ -66,6 +66,11 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-background">
       <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
         <div className="w-full mb-8 text-center">
+          <img 
+            src="/images/waw_logo.svg" 
+            alt="Wish & Want" 
+            className="h-16 mx-auto mb-6" 
+          />
           <h1 className="text-3xl font-bold mb-2 text-white">Inicia sesión</h1>
         </div>
         

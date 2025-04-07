@@ -212,6 +212,13 @@ const Home: React.FC = () => {
       
       <Header user={user} />
       <main className="flex-grow container mx-auto px-4 pb-24">
+        <div className="w-full py-4 text-center">
+          <img 
+            src="/images/waw_logo.svg" 
+            alt="Wish & Want" 
+            className="h-10 mx-auto" 
+          />
+        </div>
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
         )}
