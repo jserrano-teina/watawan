@@ -296,6 +296,15 @@ const ProfilePage = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
+        
+        <div className="mt-16 flex flex-col items-center">
+          <img 
+            src="/images/waw_logo.svg" 
+            alt="Wish & Want" 
+            className="h-8 mx-auto mb-2" 
+          />
+          <span className="text-xs text-gray-500">Versión 1.0.0</span>
+        </div>
       </div>
 
       {/* Bottom Sheet para editar perfil */}
