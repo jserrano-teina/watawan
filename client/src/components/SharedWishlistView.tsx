@@ -110,7 +110,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 />
               </div>
             ) : (
-              <div className="w-24 h-24 rounded-full bg-gray-800/70 flex items-center justify-center">
+              <div className="w-24 h-24 rounded-full bg-[#5883C6] flex items-center justify-center">
                 <span className="text-xl font-medium text-white">
                   {owner.initials || owner.displayName?.charAt(0) || owner.email.charAt(0).toUpperCase()}
                 </span>

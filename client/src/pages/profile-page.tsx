@@ -243,7 +243,7 @@ const ProfilePage = () => {
             <div
               className={cn(
                 "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium text-white",
-                avatar ? "overflow-hidden" : "bg-gray-800/70"
+                avatar ? "overflow-hidden" : "bg-[#5883C6]"
               )}
             >
               {avatar ? (
