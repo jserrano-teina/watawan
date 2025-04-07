@@ -76,20 +76,12 @@ export function UnreserveConfirmationSheet({
           </button>
         </div>
         
-        <div className="px-6 py-4 text-white/90 text-base space-y-3">
+        <div className="px-6 py-4 text-white/90 text-base">
           <p>
-            Este deseo fue reservado por <span className="font-semibold">{item.reserverName || "alguien"}</span> para regalártelo.
+            ¿Estás seguro de que quieres desmarcar este regalo como reservado?
           </p>
-          <p>
-            Si lo desmarcas como reservado:
-          </p>
-          <ul className="list-disc pl-5 space-y-1 text-white/80">
-            <li>Volverá a aparecer como disponible para todos</li>
-            <li>La persona que lo había reservado no sabrá que lo desmarcaste</li>
-            <li>Podrías recibir el mismo regalo más de una vez</li>
-          </ul>
-          <p className="pt-2">
-            ¿Estás seguro de que quieres desmarcarlo?
+          <p className="mt-2">
+            Al confirmar, volverá a aparecer como disponible para ser reservado por otra persona.
           </p>
         </div>
 
