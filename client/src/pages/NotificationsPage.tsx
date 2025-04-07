@@ -238,7 +238,7 @@ const NotificationsPage: React.FC = () => {
         ) : (
           <div className="flex flex-col items-center justify-center h-[calc(100vh-220px)] p-6 text-center max-w-md mx-auto mt-12">
             {/* Imagen de notificaciones */}
-            <div className="mx-auto w-80 h-80 mb-8 flex items-center justify-center">
+            <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <img 
                 src="/images/notifications-empty.png" 
                 alt="Notificaciones" 

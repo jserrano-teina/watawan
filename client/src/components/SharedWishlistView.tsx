@@ -161,8 +161,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           </div>
         ) : sortedItems.length === 0 ? (
           // Mensaje cuando no hay resultados para el filtro aplicado
-          <div className="p-6 text-center my-6 flex flex-col justify-center items-center min-h-[500px]">
-            <div className="mx-auto w-80 h-80 mb-8 flex items-center justify-center">
+          <div className="p-6 text-center my-6 flex flex-col justify-center items-center min-h-[400px]">
+            <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <img 
                 src="/images/money.png" 
                 alt="Sin resultados" 
