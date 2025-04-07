@@ -235,8 +235,8 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 flex flex-col justify-center">
-      <div className="max-w-md mx-auto p-4 flex-1 flex flex-col justify-center">
+    <div className="min-h-screen pb-20 flex flex-col">
+      <div className="max-w-md mx-auto p-4 flex-grow flex flex-col">
         <div className="flex flex-col items-center py-6">
           {/* Avatar con botón de edición */}
           <div className="relative mb-6">
@@ -296,15 +296,6 @@ const ProfilePage = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
-        
-        <div className="mt-16 flex flex-col items-center">
-          <img 
-            src="/images/waw_logo.svg" 
-            alt="Wish & Want" 
-            className="h-8 mx-auto mb-2" 
-          />
-          <span className="text-xs text-gray-500">Versión 1.0.0</span>
-        </div>
       </div>
 
       {/* Bottom Sheet para editar perfil */}
@@ -322,6 +313,15 @@ const ProfilePage = () => {
         onClose={() => setIsLogoutDialogOpen(false)}
         logoutMutation={logoutMutation}
       />
+      
+      <div className="flex flex-col items-center mb-2 mt-auto">
+        <img 
+          src="/images/waw_logo.svg" 
+          alt="Wish & Want" 
+          className="h-6 mx-auto mb-1" 
+        />
+        <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
+      </div>
 
       <BottomNavigation />
 
