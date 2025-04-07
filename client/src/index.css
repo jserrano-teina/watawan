@@ -145,14 +145,17 @@
     color: #000000 !important;
   }
   
-  /* Forzamos explícitamente el color negro para SVGs dentro de elementos con bg-primary */
+  /* Aseguramos que los SVG en botones de fondo amarillo tengan el color negro correcto */
   .bg-primary svg, 
   [class*="bg-[#FFE066]"] svg,
   button.bg-primary svg,
   [class*="bg-primary"] svg {
-    color: #000000 !important;
-    fill: #000000 !important;
     stroke: #000000 !important;
+    stroke-width: 2 !important;
+    stroke-linecap: round !important;
+    stroke-linejoin: round !important;
+    fill: none !important;
+    color: transparent !important;
   }
   
   /* Reglas específicas para los componentes Button de shadcn */
