@@ -161,16 +161,15 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           </div>
         ) : sortedItems.length === 0 ? (
           // Mensaje cuando no hay resultados para el filtro aplicado
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-6 text-center my-6">
-            <div className="mx-auto w-16 h-16 flex items-center justify-center mb-3">
-              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/50">
-                <path d="M9 9.5L15 15.5M15 9.5L9 15.5M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
+          <div className="p-6 text-center my-6 flex flex-col justify-center items-center h-64">
+            <div className="mx-auto w-20 h-20 flex items-center justify-center mb-4">
+              <img 
+                src="/images/money.png" 
+                alt="Sin resultados" 
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h3 className="text-lg font-semibold mb-2 text-white">No hay regalos en este rango de precio</h3>
-            <p className="text-white/70 text-sm max-w-md mx-auto">
-              Prueba otro filtro para ver más opciones de regalo
-            </p>
+            <h3 className="text-xl font-semibold text-white">No hay regalos disponibles en este rango de precio</h3>
           </div>
         ) : (
           sortedItems.map(item => (
