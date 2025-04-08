@@ -242,8 +242,8 @@ const ProfilePage = () => {
           <div className="relative mb-6">
             <div
               className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium text-white",
-                avatar ? "overflow-hidden" : "bg-[#5883C6]"
+                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
+                avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
               )}
             >
               {avatar ? (
