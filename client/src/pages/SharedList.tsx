@@ -48,12 +48,16 @@ const SharedList: React.FC = () => {
   if (!owner) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
-        <div className="bg-[#1a1a1a] text-white rounded-lg border border-[#333] shadow-xl p-6 text-center max-w-md mx-4">
-          <div className="w-16 h-16 mx-auto bg-red-500/20 rounded-full flex items-center justify-center mb-4">
-            <AlertCircle className="text-red-500 h-8 w-8" />
+        <div className="p-6 text-center max-w-md mx-auto">
+          <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
+            <img 
+              src="/images/not_found.png" 
+              alt="Lista no encontrada" 
+              className="w-full h-full object-contain"
+            />
           </div>
-          <h2 className="text-xl font-semibold mb-2">Lista no encontrada</h2>
-          <p className="text-white/70">El enlace que has seguido no corresponde a ninguna lista de deseos activa.</p>
+          <h2 className="font-bold text-2xl text-white mb-3">Lista no encontrada</h2>
+          <p className="text-white/60 mb-6">El enlace que has seguido no corresponde a ninguna lista de deseos activa.</p>
         </div>
       </div>
     );
