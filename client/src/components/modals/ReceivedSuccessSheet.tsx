@@ -104,7 +104,7 @@ export function ReceivedSuccessSheet({
           <button 
             onClick={handleClose}
             disabled={refreshing}
-            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg text-base font-medium transition-colors flex items-center justify-center mt-6 relative"
+            className="w-full px-4 py-3 bg-primary hover:bg-primary/90 text-black rounded-lg text-base font-medium transition-colors flex items-center justify-center mt-10 relative"
           >
             {refreshing ? (
               <>
