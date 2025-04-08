@@ -26,6 +26,10 @@
   --primary: 48 100% 70%;
   --primary-color: #FFE066; /* Amarillo */
   --primary-foreground: #000000; /* Negro para el texto sobre fondo amarillo */
+  
+  /* Color destructive para mensajes de error */
+  --destructive: 354 70% 54%;
+  --destructive-foreground: 210 40% 98%;
 }
 
 @layer base {
@@ -232,6 +236,11 @@
 
   .badge-error {
     @apply bg-red-500/20 text-red-500;
+  }
+  
+  /* Forzamos el color de texto destructive */
+  .text-destructive {
+    color: #DC3545 !important;
   }
 
   /* Inputs */
