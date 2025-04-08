@@ -217,8 +217,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     </span>
                   )}
                   
-                  {/* Nombre del producto - con truncado explícito */}
-                  <h3 className="font-semibold text-lg text-white overflow-hidden overflow-ellipsis whitespace-nowrap max-w-full mr-2">{item.title}</h3>
+                  {/* Nombre del producto */}
+                  <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
                   
                   {/* Precio */}
                   {item.price && (
