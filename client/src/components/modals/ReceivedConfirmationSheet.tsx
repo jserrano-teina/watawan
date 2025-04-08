@@ -133,11 +133,11 @@ export function ReceivedConfirmationSheet({
             </SheetDescription>
           </SheetHeader>
           
-          <div className="text-left px-6 pt-6 pb-2 flex items-center justify-between">
+          <div className="text-left px-6 pt-6 pb-2 flex items-start justify-between">
             <h3 className="text-white text-xl font-medium">{item.title}</h3>
             <button 
               onClick={handleClose}
-              className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1"
+              className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1 ml-3 mt-1"
             >
               <X className="h-7 w-7" />
             </button>
