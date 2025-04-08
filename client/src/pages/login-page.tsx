@@ -8,7 +8,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { CustomInput } from "@/components/ui/custom-input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
@@ -21,6 +22,7 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, loginMutation } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -31,6 +33,9 @@ export default function LoginPage() {
   });
 
   const onLoginSubmit = (data: LoginFormValues) => {
+    // Limpiar cualquier error previo
+    setAuthError(null);
+    
     loginMutation.mutate(
       {
         email: data.email,
@@ -45,6 +50,9 @@ export default function LoginPage() {
           setLocation("/");
         },
         onError: (error: Error) => {
+          // Mostrar el error en el formulario
+          setAuthError("Correo electrónico o contraseña incorrectos");
+          
           toast({
             title: "Error al iniciar sesión",
             description: error.message || "Credenciales incorrectas",
@@ -75,6 +83,12 @@ export default function LoginPage() {
         </div>
         
         <Form {...form}>
+          {authError && (
+            <div className="bg-red-500/10 border border-red-500 text-destructive rounded-md p-3 mb-4 flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
           <form
             onSubmit={form.handleSubmit(onLoginSubmit)}
             className="space-y-5 w-full"

@@ -8,7 +8,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { CustomInput } from "@/components/ui/custom-input";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { AlertCircle } from "lucide-react";
 
 const registerSchema = z.object({
   email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
@@ -18,10 +19,20 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
+// Función para obtener las iniciales del nombre
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(part => part.charAt(0).toUpperCase())
+    .slice(0, 2)
+    .join('');
+}
+
 export default function RegisterPage() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const { user, registerMutation } = useAuth();
+  const [authError, setAuthError] = useState<string | null>(null);
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -33,11 +44,15 @@ export default function RegisterPage() {
   });
 
   const onRegisterSubmit = (data: RegisterFormValues) => {
+    // Limpiar cualquier error previo
+    setAuthError(null);
+    
     registerMutation.mutate(
       {
         email: data.email,
         password: data.password,
         displayName: data.displayName,
+        initials: getInitials(data.displayName),
       },
       {
         onSuccess: () => {
@@ -48,6 +63,13 @@ export default function RegisterPage() {
           setLocation("/");
         },
         onError: (error: Error) => {
+          // Mostrar el error en el formulario
+          if (error.message.includes("already exists")) {
+            setAuthError("Este correo electrónico ya está registrado");
+          } else {
+            setAuthError("No se pudo crear la cuenta. Inténtalo de nuevo más tarde.");
+          }
+          
           toast({
             title: "Error al registrarse",
             description: error.message || "No se pudo completar el registro",
@@ -78,6 +100,12 @@ export default function RegisterPage() {
         </div>
         
         <Form {...form}>
+          {authError && (
+            <div className="bg-red-500/10 border border-red-500 text-destructive rounded-md p-3 mb-4 flex items-start gap-2">
+              <AlertCircle className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <span>{authError}</span>
+            </div>
+          )}
           <form
             onSubmit={form.handleSubmit(onRegisterSubmit)}
             className="space-y-5 w-full"
