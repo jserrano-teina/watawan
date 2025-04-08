@@ -154,9 +154,9 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 className="w-full h-full object-contain"
               />
             </div>
-            <h3 className="text-xl font-semibold text-white">No hay deseos disponibles</h3>
+            <h3 className="text-xl font-semibold text-white">Esta lista está vacía</h3>
             <p className="text-white/70 text-base max-w-md mx-auto mt-2">
-              Esta lista está vacía. Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
+              Comprueba más tarde si esta persona ha añadido nuevos deseos.
             </p>
           </div>
         ) : sortedItems.length === 0 ? (
