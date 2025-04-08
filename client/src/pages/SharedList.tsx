@@ -72,7 +72,7 @@ const SharedList: React.FC = () => {
       />
       
       {toast.visible && (
-        <ToastContainer>
+        <ToastContainer className="z-[100]">
           <Toast visible={true} variant={toast.variant}>
             <div className="flex items-center">
               {toast.variant === 'success' ? (
