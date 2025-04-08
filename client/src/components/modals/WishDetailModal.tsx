@@ -139,7 +139,7 @@ const DesktopView = ({
 
             {/* Detalles del producto */}
             <div className="p-5">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-start justify-between mb-3">
                 <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
                 <Sheet 
                   open={openSheet} 
@@ -147,7 +147,7 @@ const DesktopView = ({
                 >
                   <SheetTrigger asChild>
                     <button 
-                      className="p-1 hover:bg-[#252525] rounded-full transition-colors"
+                      className="p-1 hover:bg-[#252525] rounded-full transition-colors ml-3 mt-1"
                       aria-label="Opciones"
                     >
                       <MoreVertical size={20} className="text-white/70" />
@@ -420,7 +420,7 @@ const MobileView = ({
         {/* Detalles del producto */}
         <div className="p-6">
           {/* Nombre del producto con mayor tamaño y peso */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-start justify-between mb-3">
             <h2 className="text-2xl font-semibold text-white">{item.title}</h2>
             <Sheet 
               open={openSheet} 
@@ -428,7 +428,7 @@ const MobileView = ({
             >
               <SheetTrigger asChild>
                 <button 
-                  className="p-1 hover:bg-[#252525] rounded-full transition-colors"
+                  className="p-1 hover:bg-[#252525] rounded-full transition-colors ml-3 mt-1"
                   aria-label="Opciones"
                 >
                   <MoreVertical size={20} className="text-white/70" />
