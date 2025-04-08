@@ -111,7 +111,7 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
         
         {/* Contenido a la derecha */}
         <div className="flex-grow min-w-0 flex flex-col my-auto w-full">
-          <div className="flex justify-between items-start w-full">
+          <div className="flex justify-between items-center w-full">
             <div className="min-w-0 flex-1 pr-3 w-[calc(100%-30px)]">
               {/* Tag de recibido o reservado encima del título */}
               {item.isReceived && (
