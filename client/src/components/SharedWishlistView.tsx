@@ -175,8 +175,21 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           sortedItems.map(item => (
             <div 
               key={item.id} 
-              className={`bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 ${item.isReserved ? 'opacity-75' : 'hover:bg-[#252525]'} transition-colors`}
+              className={`bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 ${item.isReserved ? 'opacity-75' : 'hover:bg-[#252525]'} transition-colors relative`}
             >
+              {/* Icono de enlace externo (solo para items no reservados con enlace) */}
+              {!item.isReserved && item.purchaseLink && item.purchaseLink.trim() !== "" && (
+                <a 
+                  href={item.purchaseLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute top-3 right-3 p-1.5 rounded-full bg-[#1a1a1a] hover:bg-[#252525] transition-colors z-10"
+                >
+                  <ExternalLink size={16} className="text-[#FFE066]" />
+                </a>
+              )}
+              
               <div 
                 className="flex cursor-pointer" 
                 onClick={() => {
@@ -228,7 +241,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     }}
                     className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
                   >
-                    Ver más
+                    Ver detalles
                   </button>
                   <button 
                     onClick={() => handleReserveClick(item)}
