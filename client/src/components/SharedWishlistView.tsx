@@ -5,7 +5,7 @@ import { es } from 'date-fns/locale';
 import ReservationModal from './modals/ReservationModal';
 import DetailsModal from './modals/DetailsModal';
 import ProductImage from './ProductImage';
-import { X, ExternalLink, ArrowLeft } from 'lucide-react';
+import { X, ExternalLink, ArrowLeft, Lock as LockIcon } from 'lucide-react';
 
 interface SharedWishlistViewProps {
   owner: User;
@@ -210,10 +210,10 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 
                 {/* Contenido a la derecha - Simplificado */}
                 <div className="flex-grow min-w-0 flex flex-col justify-center">
-                  {/* Tag de reservado */}
+                  {/* Tag de reservado con icono de candado cerrado */}
                   {item.isReserved && (
-                    <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#89AADC] text-xs font-medium rounded-full inline-block w-fit">
-                      Reservado
+                    <span className="px-2 py-0.5 mb-1 bg-[#5883C6]/30 text-[#89AADC] text-xs font-medium rounded-full inline-block w-fit flex items-center">
+                      <LockIcon size={10} className="mr-1 text-[#89AADC]" /> Reservado
                     </span>
                   )}
                   
