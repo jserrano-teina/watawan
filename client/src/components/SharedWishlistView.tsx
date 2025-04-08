@@ -133,8 +133,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     onClick={() => setPriceFilter(filter)}
                     className={`px-4 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                       priceFilter === filter 
-                        ? 'bg-white text-black font-medium border border-white' 
-                        : 'bg-[#1a1a1a] border border-[#333] text-white/80 hover:bg-[#252525]'
+                        ? 'bg-primary text-black font-medium border border-primary' 
+                        : 'bg-[#1a1a1a] border border-primary/30 text-white/80 hover:bg-[#252525]'
                     }`}
                   >
                     {filter}
