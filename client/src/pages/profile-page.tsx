@@ -323,7 +323,7 @@ const ProfilePage = () => {
       <div className="flex flex-col items-center mb-2 mt-auto">
         <img 
           src="/images/waw_logo.svg" 
-          alt="Wish & Want" 
+          alt="WataWan" 
           className="h-8 mx-auto mb-1" 
         />
         <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>

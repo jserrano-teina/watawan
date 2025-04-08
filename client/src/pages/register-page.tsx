@@ -58,7 +58,7 @@ export default function RegisterPage() {
         onSuccess: () => {
           toast({
             title: "Registro exitoso",
-            description: "¡Bienvenido a WishList!",
+            description: "¡Bienvenido a WataWan!",
           });
           setLocation("/");
         },
@@ -93,7 +93,7 @@ export default function RegisterPage() {
         <div className="w-full mb-8 text-center">
           <img 
             src="/images/waw_logo.svg" 
-            alt="Wish & Want" 
+            alt="WataWan" 
             className="h-16 mx-auto mb-10" 
           />
           <h1 className="text-3xl font-bold mb-2 text-white">Crea tu cuenta</h1>
