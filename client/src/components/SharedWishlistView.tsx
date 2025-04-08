@@ -146,16 +146,16 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         )}
         
         {items.length === 0 ? (
-          <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-8 text-center my-6">
-            <div className="mx-auto w-24 h-24 flex items-center justify-center mb-4">
-              <svg width="96" height="96" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-white/50">
-                <path d="M21 11.5C21.0034 12.8199 20.6951 14.1219 20.1 15.3C19.3944 16.7118 18.3098 17.8992 16.9674 18.7293C15.6251 19.5594 14.0782 19.9994 12.5 20C11.1801 20.0035 9.87812 19.6951 8.7 19.1L3 21L4.9 15.3C4.30493 14.1219 3.99656 12.8199 4 11.5C4.00061 9.92179 4.44061 8.37488 5.27072 7.03258C6.10083 5.69028 7.28825 4.6056 8.7 3.90003C9.87812 3.30496 11.1801 2.99659 12.5 3.00003H13C15.0843 3.11502 17.053 3.99479 18.5291 5.47089C20.0052 6.94699 20.885 8.91568 21 11V11.5Z" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
-                <path d="M11.6316 14.4865C11.2177 14.5023 10.4429 14.1896 9.72255 13.4693C9.00221 12.749 8.6895 11.9741 8.70533 11.5603C8.72116 11.1464 8.81192 11.111 9.25421 11.2756C9.6965 11.4403 10.8507 12.0324 10.9575 12.6563C11.0643 13.2802 12.0456 14.4708 11.6316 14.4865Z" fill="currentColor"/>
-                <path d="M13.1258 14.4866C13.5397 14.5023 14.3146 14.1897 15.0349 13.4693C15.7552 12.749 16.068 11.9742 16.0521 11.5603C16.0363 11.1464 15.9455 11.111 15.5032 11.2757C15.0609 11.4403 13.9068 12.0324 13.8 12.6563C13.6932 13.2802 13.1258 14.4866 13.1258 14.4866Z" fill="currentColor"/>
-              </svg>
+          <div className="p-6 text-center my-6 flex flex-col justify-center items-center min-h-[400px]">
+            <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
+              <img 
+                src="/images/eyes.png" 
+                alt="Lista vacía" 
+                className="w-full h-full object-contain"
+              />
             </div>
-            <h3 className="text-xl font-semibold mb-2 text-white">No hay deseos disponibles</h3>
-            <p className="text-white/70 text-base max-w-md mx-auto">
+            <h3 className="text-xl font-semibold text-white">No hay deseos disponibles</h3>
+            <p className="text-white/70 text-base max-w-md mx-auto mt-2">
               Esta lista está vacía. Puedes revisar más tarde para ver si hay nuevos regalos disponibles.
             </p>
           </div>
