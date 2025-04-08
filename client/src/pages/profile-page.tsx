@@ -324,7 +324,7 @@ const ProfilePage = () => {
         <img 
           src="/images/waw_logo.svg" 
           alt="Wish & Want" 
-          className="h-6 mx-auto mb-1" 
+          className="h-8 mx-auto mb-1" 
         />
         <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
       </div>
