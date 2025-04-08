@@ -125,8 +125,8 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                 </span>
               )}
               
-              {/* Nombre del producto con mayor tamaño y peso */}
-              <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
+              {/* Nombre del producto con mayor tamaño y peso - con truncado explícito */}
+              <h3 className="font-semibold text-lg text-white overflow-hidden overflow-ellipsis whitespace-nowrap max-w-full mr-2">{item.title}</h3>
               
               <div className="flex items-center mt-1 gap-2">
                 {/* Precio con mayor tamaño y color blanco */}
