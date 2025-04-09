@@ -520,7 +520,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             {/* Imagen */}
             <div className="mb-2">
               <label className="block text-sm font-medium mb-2">
-                Imagen del producto
+                Imagen del producto (opcional)
               </label>
             </div>
             {renderImage()}
@@ -538,7 +538,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             {showImageUrlInput && (
               <div className="mb-6">
                 <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
-                  URL de la imagen
+                  URL de la imagen (opcional)
                 </label>
                 <CustomInput
                   type="url" 
