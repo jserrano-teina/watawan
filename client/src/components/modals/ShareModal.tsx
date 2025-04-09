@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Copy, X, CheckCircle } from 'lucide-react';
+import { Copy, X, Check } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -26,11 +26,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
       linkRef.current.select();
       document.execCommand('copy');
       setCopied(true);
-      
-      // Ocultar el mensaje después de 3 segundos
-      setTimeout(() => {
-        setCopied(false);
-      }, 3000);
+      // El mensaje se mantendrá visible hasta que se cierre el sheet
     }
   };
   
@@ -91,7 +87,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
             
             {copied && (
               <div className="flex items-center mt-2 text-green-500">
-                <CheckCircle size={14} className="mr-1" />
+                <Check size={14} className="mr-1" />
                 <span className="text-sm">Enlace copiado al portapapeles</span>
               </div>
             )}
