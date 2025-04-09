@@ -65,7 +65,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   }>({});
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
-  const [showImageUrlInput, setShowImageUrlInput] = useState(false);
+  // Variable showImageUrlInput eliminada por ser legacy
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Formulario paso 1 (solo enlace)
@@ -167,7 +167,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setPurchaseLinkValue('');
       // Limpiar los datos extraídos
       setExtractedData({});
-      setShowImageUrlInput(false);
     }
   }, [itemToEdit, resetStepOne, resetStepTwo, isOpen]);
 
@@ -294,7 +293,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     setStep(1);
     setExtractedData({});
     setPurchaseLinkValue('');
-    setShowImageUrlInput(false);
     
     // Notificar al padre para cerrar el modal
     onClose();
@@ -334,10 +332,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     fileInputRef.current?.click();
   };
 
-  // Manejar clic en botón de editar URL de imagen
-  const handleEditImageUrlClick = () => {
-    setShowImageUrlInput(!showImageUrlInput);
-  };
+  // La función de editar URL de imagen ha sido eliminada por ser legacy
   
   // Renderizar imagen o placeholder
   const renderImage = () => {
@@ -534,20 +529,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               className="hidden" 
             />
             
-            {/* Campo de URL de imagen (oculto por defecto) */}
-            {showImageUrlInput && (
-              <div className="mb-6">
-                <label htmlFor="imageUrl" className="block text-sm font-medium mb-2">
-                  URL de la imagen (opcional)
-                </label>
-                <CustomInput
-                  type="url" 
-                  id="imageUrl" 
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                  {...registerStepTwo('imageUrl')}
-                />
-              </div>
-            )}
+            {/* Se ha eliminado el campo de URL de imagen por ser legacy */}
             
             <div className="mb-6">
               <label htmlFor="title" className="block text-sm font-medium mb-2">
