@@ -27,7 +27,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
       linkRef.current.select();
       
       try {
-        // Primero intentar con execCommand para mayor compatibilidad
+        // Intentar con execCommand para mayor compatibilidad
         document.execCommand('copy');
         
         // Mostrar toast usando el sistema estándar
