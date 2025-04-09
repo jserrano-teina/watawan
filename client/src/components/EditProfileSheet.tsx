@@ -23,14 +23,14 @@ interface EditProfileSheetProps {
 // Importamos el CustomInput desde el componente ui compartido
 import { CustomInput as UICustomInput } from "@/components/ui/custom-input";
 
-// Creamos una versión adaptada del CustomInput que soporte el parámetro 'error'
+// Utilizamos directamente el CustomInput de UI
 const CustomInput = React.forwardRef<
   HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement> & { error?: boolean }
->(({ className, error, ...props }, ref) => {
+  React.InputHTMLAttributes<HTMLInputElement>
+>(({ className, ...props }, ref) => {
   return (
     <UICustomInput
-      className={`${error ? "border-red-500" : ""} ${className}`}
+      className={`${className}`}
       ref={ref}
       {...props}
     />
@@ -142,7 +142,7 @@ export function EditProfileSheet({
         </div>
         
         <form onSubmit={handleSubmit} className="px-6 mt-4">
-          {error && (
+          {error && !error.includes("email") && !error.includes("contraseña") && (
             <div className="text-sm text-red-500 font-medium mb-4">{error}</div>
           )}
           
@@ -169,9 +169,13 @@ export function EditProfileSheet({
                 placeholder="ejemplo@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                error={error.includes("email")}
                 required
               />
+              {error.includes("email") && (
+                <p className="text-xs text-red-500 mt-1">
+                  {error}
+                </p>
+              )}
               <p className="text-xs text-white/60 mt-1">
                 Para cambiar tu email deberás confirmar tu contraseña
               </p>
@@ -193,9 +197,13 @@ export function EditProfileSheet({
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={!emailChanged}
                 required={emailChanged}
-                error={error.includes("contraseña")}
                 className={`${!emailChanged ? 'opacity-50' : ''}`}
               />
+              {error.includes("contraseña") && (
+                <p className="text-xs text-red-500 mt-1">
+                  {error}
+                </p>
+              )}
             </div>
           </div>
           
