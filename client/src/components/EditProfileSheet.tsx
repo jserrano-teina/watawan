@@ -57,7 +57,7 @@ export function EditProfileSheet({
       return;
     }
     
-    if (!validateEmail(email)) {
+    if (!validateEmail(email.trim())) {
       setError("emailInvalido");
       return;
     }
@@ -177,7 +177,7 @@ export function EditProfileSheet({
               />
               {(error === "emailVacio" || error === "emailInvalido") && (
                 <p className="text-xs text-red-500 mt-1">
-                  {error === "emailVacio" ? "Completa este campo" : getEmailErrorMessage(email)}
+                  {error === "emailVacio" ? "Completa este campo" : "Introduce un email válido"}
                 </p>
               )}
               <p className="text-xs text-white/60 mt-1">
