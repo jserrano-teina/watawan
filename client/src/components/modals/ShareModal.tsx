@@ -49,12 +49,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
         className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
       >
         <SheetHeader className="sr-only">
-          <SheetTitle>Compartir lista de deseos</SheetTitle>
+          <SheetTitle>Comparte tu lista</SheetTitle>
           <SheetDescription>Opciones para compartir tu lista de deseos</SheetDescription>
         </SheetHeader>
         
         <div className="text-left px-6 pt-6 pb-2 flex items-start justify-between">
-          <h3 className="text-white text-xl font-medium">Compartir tu lista</h3>
+          <h3 className="text-white text-xl font-medium">Comparte tu lista</h3>
           <button 
             onClick={onClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1 ml-3 mt-1"
