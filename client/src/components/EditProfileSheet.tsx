@@ -51,7 +51,7 @@ export function EditProfileSheet({
       return;
     }
     
-    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!email.trim() || !email.includes('@')) {
       setError("emailInvalido");
       return;
     }
@@ -164,14 +164,14 @@ export function EditProfileSheet({
               <Label htmlFor="email" className="text-white/80">Email</Label>
               <CustomInput
                 id="email"
-                type="email"
+                type="text"
                 placeholder="ejemplo@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
               {error === "emailInvalido" && (
                 <p className="text-xs text-red-500 mt-1">
-                  Email inválido o ya está en uso
+                  Incluye un signo "@" en la dirección de correo electrónico
                 </p>
               )}
               <p className="text-xs text-white/60 mt-1">
