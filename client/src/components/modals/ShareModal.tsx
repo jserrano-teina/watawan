@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { Copy, X, Share2, Mail } from 'lucide-react';
+import { Copy, X, CheckCircle } from 'lucide-react';
 import {
   Sheet,
   SheetContent,
@@ -17,6 +17,7 @@ interface ShareModalProps {
 
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink }) => {
   const linkRef = useRef<HTMLInputElement>(null);
+  const [copied, setCopied] = useState(false);
   
   const fullShareableLink = `${window.location.origin}/s/${shareableLink}`;
   
@@ -24,7 +25,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
     if (linkRef.current) {
       linkRef.current.select();
       document.execCommand('copy');
-      alert('¡Enlace copiado al portapapeles!');
+      setCopied(true);
+      
+      // Ocultar el mensaje después de 3 segundos
+      setTimeout(() => {
+        setCopied(false);
+      }, 3000);
     }
   };
   
@@ -38,13 +44,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   const shareOnFacebook = () => {
     const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullShareableLink)}`;
     window.open(facebookUrl, '_blank');
-  };
-  
-  const shareByEmail = () => {
-    const subject = 'Mi lista de deseos';
-    const body = `¡Hola! He creado una lista de deseos. Puedes verla aquí: ${fullShareableLink}`;
-    const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoUrl;
   };
 
   return (
@@ -71,22 +70,31 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
         <div className="px-6 mt-4">
           <p className="text-white/80 mb-6">Comparte este enlace con amigos y familiares para que puedan ver tu lista de deseos</p>
           
-          <div className="flex items-center mb-6">
-            <div className="flex-grow relative">
-              <CustomInput 
-                ref={linkRef}
-                type="text" 
-                value={fullShareableLink} 
-                readOnly 
-                className="rounded-r-none bg-[#252525]"
-              />
+          <div className="flex flex-col mb-6">
+            <div className="flex items-center">
+              <div className="flex-grow relative">
+                <CustomInput 
+                  ref={linkRef}
+                  type="text" 
+                  value={fullShareableLink} 
+                  readOnly 
+                  className="rounded-r-none bg-[#252525]"
+                />
+              </div>
+              <button 
+                onClick={copyToClipboard}
+                className="bg-primary text-black h-[50px] px-5 rounded-r-lg hover:bg-primary/80 transition-colors flex items-center justify-center"
+              >
+                <Copy size={18} className="text-black" />
+              </button>
             </div>
-            <button 
-              onClick={copyToClipboard}
-              className="bg-primary text-black h-[50px] px-5 rounded-r-lg hover:bg-primary/80 transition-colors flex items-center justify-center"
-            >
-              <Copy size={18} className="text-black" />
-            </button>
+            
+            {copied && (
+              <div className="flex items-center mt-2 text-green-500">
+                <CheckCircle size={14} className="mr-1" />
+                <span className="text-sm">Enlace copiado al portapapeles</span>
+              </div>
+            )}
           </div>
           
           <div className="flex flex-col gap-4 mt-6">
@@ -112,14 +120,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
                 <line x1="12" x2="12" y1="2" y2="15"/>
               </svg>
               Compartir en Facebook
-            </button>
-            
-            <button 
-              onClick={shareByEmail}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-[#202020] hover:bg-[#303030] text-white rounded-xl font-medium transition-colors"
-            >
-              <Mail size={18} className="mr-2" />
-              Enviar por email
             </button>
           </div>
         </div>
