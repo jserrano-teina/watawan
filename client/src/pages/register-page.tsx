@@ -12,15 +12,11 @@ import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { validateEmail, getEmailErrorMessage } from "@/lib/validation";
 
-// Validador personalizado para email
-const emailValidator = (email: string) => {
-  return validateEmail(email) || getEmailErrorMessage(email);
-};
-
 const registerSchema = z.object({
-  email: z.string().refine(emailValidator, { 
-    message: "Ingresa un correo electrónico válido"
-  }),
+  email: z.string().min(1, { message: "Completa este campo" })
+    .refine((email) => validateEmail(email), { 
+      message: "Introduce un email válido"
+    }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
   displayName: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres" }),
 });

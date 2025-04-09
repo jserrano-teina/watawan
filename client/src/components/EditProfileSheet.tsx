@@ -52,6 +52,11 @@ export function EditProfileSheet({
       return;
     }
     
+    if (!email.trim()) {
+      setError("emailVacio");
+      return;
+    }
+    
     if (!validateEmail(email)) {
       setError("emailInvalido");
       return;
@@ -138,7 +143,7 @@ export function EditProfileSheet({
         </div>
         
         <form onSubmit={handleSubmit} className="px-6 mt-4">
-          {error && error !== "nombreVacio" && error !== "emailInvalido" && error !== "passwordVacio" && error !== "passwordIncorrecto" && (
+          {error && error !== "nombreVacio" && error !== "emailVacio" && error !== "emailInvalido" && error !== "passwordVacio" && error !== "passwordIncorrecto" && (
             <div className="text-sm text-red-500 font-medium mb-4">{error}</div>
           )}
           
@@ -170,9 +175,9 @@ export function EditProfileSheet({
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
-              {error === "emailInvalido" && (
+              {(error === "emailVacio" || error === "emailInvalido") && (
                 <p className="text-xs text-red-500 mt-1">
-                  {getEmailErrorMessage(email)}
+                  {error === "emailVacio" ? "Completa este campo" : getEmailErrorMessage(email)}
                 </p>
               )}
               <p className="text-xs text-white/60 mt-1">
