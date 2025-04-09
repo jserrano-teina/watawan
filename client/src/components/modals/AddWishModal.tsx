@@ -116,6 +116,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   // Reset forms when editing an item
   useEffect(() => {
+    // Asegurarnos de que isSaving está siempre en false cuando se abre el modal
+    setIsSaving(false);
+    
     if (itemToEdit) {
       // Para edición, colocamos ambos pasos en un solo paso
       // Usamos el paso 2 para mantener la lógica pero modificaremos su presentación
