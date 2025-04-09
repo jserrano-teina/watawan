@@ -97,7 +97,28 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   };
 
   return (
-    <div className="flex-grow container mx-auto px-4 pb-20">
+    <>
+      {/* Banner flotante superior */}
+      <div className="fixed top-0 left-0 right-0 bg-[#5883C6] py-3 px-4 shadow-lg z-[100]">
+        <div className="flex items-center justify-center mx-auto">
+          <a 
+            href="/auth" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center justify-center text-white hover:text-white/90 transition"
+          >
+            <span className="text-sm md:text-base font-medium">Crea y comparte tu lista con</span>
+            <img 
+              src="/images/waw_logo.svg" 
+              alt="WataWan" 
+              className="h-7 ml-2"
+            />
+          </a>
+        </div>
+      </div>
+      
+      {/* Contenido principal con margen superior para el banner */}
+      <div className="flex-grow container mx-auto px-4 pb-20 pt-16">
       <div className="max-w-[500px] mx-auto w-full">
         <div className="flex flex-col items-center mb-5 pt-10">
           <div className="mb-4">
@@ -273,6 +294,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
         }}
       />
     </div>
+    </>
   );
 };
 
