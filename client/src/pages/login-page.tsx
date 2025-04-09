@@ -10,9 +10,17 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
+import { validateEmail, getEmailErrorMessage } from "@/lib/validation";
+
+// Validador personalizado para email
+const emailValidator = (email: string) => {
+  return validateEmail(email) || getEmailErrorMessage(email);
+};
 
 const loginSchema = z.object({
-  email: z.string().email({ message: "Ingresa un correo electrónico válido" }),
+  email: z.string().refine(emailValidator, { 
+    message: "Ingresa un correo electrónico válido"
+  }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres" }),
 });
 
@@ -102,7 +110,7 @@ export default function LoginPage() {
                   <FormControl>
                     <CustomInput
                       placeholder="tu@email.com"
-                      type="email"
+                      type="text"
                       {...field}
                     />
                   </FormControl>

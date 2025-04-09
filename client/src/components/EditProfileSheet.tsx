@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { validateEmail, getEmailErrorMessage } from "@/lib/validation";
 import { User } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -51,7 +52,7 @@ export function EditProfileSheet({
       return;
     }
     
-    if (!email.trim() || !email.includes('@')) {
+    if (!validateEmail(email)) {
       setError("emailInvalido");
       return;
     }
@@ -171,7 +172,7 @@ export function EditProfileSheet({
               />
               {error === "emailInvalido" && (
                 <p className="text-xs text-red-500 mt-1">
-                  Incluye un signo "@" en la dirección de correo electrónico
+                  {getEmailErrorMessage(email)}
                 </p>
               )}
               <p className="text-xs text-white/60 mt-1">
