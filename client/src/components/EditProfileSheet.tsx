@@ -20,24 +20,8 @@ interface EditProfileSheetProps {
   updateEmailMutation: UseMutationResult<any, Error, any>;
 }
 
-// Importamos el CustomInput desde el componente ui compartido
-import { CustomInput as UICustomInput } from "@/components/ui/custom-input";
-
-// Utilizamos directamente el CustomInput de UI
-const CustomInput = React.forwardRef<
-  HTMLInputElement,
-  React.InputHTMLAttributes<HTMLInputElement>
->(({ className, ...props }, ref) => {
-  return (
-    <UICustomInput
-      className={`${className}`}
-      ref={ref}
-      {...props}
-    />
-  );
-});
-
-CustomInput.displayName = "CustomInput";
+// Importamos el CustomInput directamente
+import { CustomInput } from "@/components/ui/custom-input";
 
 export function EditProfileSheet({
   user,
@@ -173,7 +157,7 @@ export function EditProfileSheet({
               />
               {error.includes("email") && (
                 <p className="text-xs text-red-500 mt-1">
-                  {error}
+                  Email inválido o ya está en uso
                 </p>
               )}
               <p className="text-xs text-white/60 mt-1">
@@ -201,7 +185,7 @@ export function EditProfileSheet({
               />
               {error.includes("contraseña") && (
                 <p className="text-xs text-red-500 mt-1">
-                  {error}
+                  La contraseña es incorrecta
                 </p>
               )}
             </div>
