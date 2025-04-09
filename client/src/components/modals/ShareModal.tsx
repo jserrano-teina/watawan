@@ -25,12 +25,23 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   const copyToClipboard = () => {
     if (linkRef.current) {
       linkRef.current.select();
-      document.execCommand('copy');
       
-      // Mostrar toast en lugar de alerta nativa
-      toast({
-        title: "Enlace copiado al portapapeles"
-      });
+      // Usar clipboard API moderna
+      navigator.clipboard.writeText(fullShareableLink)
+        .then(() => {
+          // Mostrar toast en lugar de alerta nativa
+          toast({
+            title: "Enlace copiado al portapapeles",
+            description: "Ya puedes compartirlo con quien quieras"
+          });
+        })
+        .catch(() => {
+          // Fallback al método antiguo si la API moderna falla
+          document.execCommand('copy');
+          toast({
+            title: "Enlace copiado al portapapeles"
+          });
+        });
     }
   };
   
@@ -47,10 +58,18 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   };
   
   const shareByEmail = () => {
-    const subject = 'Mi lista de deseos';
-    const body = `¡Hola! He creado una lista de deseos. Puedes verla aquí: ${fullShareableLink}`;
+    const subject = 'Mi lista de deseos en WataWan';
+    const body = `¡Hola!\n\nHe creado una lista de deseos en WataWan.\n\nPuedes verla aquí: ${fullShareableLink}\n\n¡Gracias!`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoUrl;
+    
+    // Abrir en nueva pestaña para evitar problemas si el usuario cancela la acción
+    window.open(mailtoUrl, '_blank');
+    
+    // Notificar con toast que se abrió el cliente de correo
+    toast({
+      title: "Abriendo cliente de correo",
+      description: "Se abrirá tu cliente de correo predeterminado"
+    });
   };
 
   return (
