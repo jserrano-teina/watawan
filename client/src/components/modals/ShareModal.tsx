@@ -41,12 +41,10 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   };
   
   const shareByEmail = () => {
-    const subject = 'Mi lista de deseos en WataWan';
-    const body = `¡Hola!\n\nHe creado una lista de deseos en WataWan. Puedes verla aquí:\n${fullShareableLink}\n\nSaludos!`;
+    const subject = 'Mi lista de deseos';
+    const body = `¡Hola! He creado una lista de deseos. Puedes verla aquí: ${fullShareableLink}`;
     const mailtoUrl = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    
-    // Usar window.open en lugar de window.location.href para no interrumpir la experiencia actual
-    window.open(mailtoUrl, '_blank');
+    window.location.href = mailtoUrl;
   };
 
   return (
@@ -97,7 +95,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
               className="flex items-center justify-center gap-2 w-full py-4 bg-[#25D366] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M3 20.01c2.887-1.186 4.347-2.34 5.52-5 .32-.724-3.52-1-3.52-5a7 7 0 0 1 14 0c0 4-3.84 4.276-3.52 5 1.173 2.66 2.633 3.814 5.52 5" />
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" x2="12" y1="2" y2="15"/>
               </svg>
               Compartir por WhatsApp
             </button>
@@ -107,7 +107,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
               className="flex items-center justify-center gap-2 w-full py-4 bg-[#3b5998] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+                <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                <polyline points="16 6 12 2 8 6"/>
+                <line x1="12" x2="12" y1="2" y2="15"/>
               </svg>
               Compartir en Facebook
             </button>
