@@ -45,10 +45,21 @@ export function EditProfileSheet({
     e.preventDefault();
     setError("");
     
+    // Validar campos manualmente
+    if (!displayName.trim()) {
+      setError("nombreVacio");
+      return;
+    }
+    
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("emailInvalido");
+      return;
+    }
+    
     // Si el email ha cambiado, necesitamos validar contraseña
     if (emailChanged) {
       if (!password) {
-        setError("La contraseña es requerida para cambiar el email");
+        setError("passwordVacio");
         return;
       }
       
@@ -68,7 +79,7 @@ export function EditProfileSheet({
             setPassword("");
           },
           onError: (err: Error) => {
-            setError(err.message || "Error al actualizar el email");
+            setError("passwordIncorrecto");
           },
         }
       );
@@ -126,7 +137,7 @@ export function EditProfileSheet({
         </div>
         
         <form onSubmit={handleSubmit} className="px-6 mt-4">
-          {error && !error.includes("email") && !error.includes("contraseña") && (
+          {error && error !== "nombreVacio" && error !== "emailInvalido" && error !== "passwordVacio" && error !== "passwordIncorrecto" && (
             <div className="text-sm text-red-500 font-medium mb-4">{error}</div>
           )}
           
@@ -140,8 +151,12 @@ export function EditProfileSheet({
                 placeholder="Tu nombre"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                required
               />
+              {error === "nombreVacio" && (
+                <p className="text-xs text-red-500 mt-1">
+                  El nombre es obligatorio
+                </p>
+              )}
             </div>
             
             {/* Campo de email */}
@@ -153,9 +168,8 @@ export function EditProfileSheet({
                 placeholder="ejemplo@correo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                required
               />
-              {error.includes("email") && (
+              {error === "emailInvalido" && (
                 <p className="text-xs text-red-500 mt-1">
                   Email inválido o ya está en uso
                 </p>
@@ -180,12 +194,11 @@ export function EditProfileSheet({
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={!emailChanged}
-                required={emailChanged}
                 className={`${!emailChanged ? 'opacity-50' : ''}`}
               />
-              {error.includes("contraseña") && (
+              {(error === "passwordVacio" || error === "passwordIncorrecto") && (
                 <p className="text-xs text-red-500 mt-1">
-                  La contraseña es incorrecta
+                  {error === "passwordVacio" ? "La contraseña es obligatoria" : "La contraseña es incorrecta"}
                 </p>
               )}
             </div>
