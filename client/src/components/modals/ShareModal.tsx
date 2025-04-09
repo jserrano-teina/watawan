@@ -96,9 +96,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
           <div className="flex flex-col gap-4 mt-6">
             <button 
               onClick={shareOnWhatsApp}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-[#25D366] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#25D366] text-black rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2 text-black">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
                 <polyline points="16 6 12 2 8 6"/>
                 <line x1="12" x2="12" y1="2" y2="15"/>
@@ -108,7 +108,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
             
             <button 
               onClick={shareOnFacebook}
-              className="flex items-center justify-center gap-2 w-full py-4 bg-[#3b5998] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
+              className="flex items-center justify-center gap-2 w-full py-3 bg-[#3b5998] text-white rounded-xl font-medium hover:bg-opacity-90 transition-colors"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
                 <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
