@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef } from 'react';
 import { Copy, X, Share2, Mail } from 'lucide-react';
 import {
   Sheet,
@@ -8,6 +8,7 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { CustomInput } from "@/components/ui/custom-input";
+import { useToast } from "@/hooks/use-toast";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface ShareModalProps {
 
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink }) => {
   const linkRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
   const fullShareableLink = `${window.location.origin}/s/${shareableLink}`;
   
@@ -24,7 +26,11 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
     if (linkRef.current) {
       linkRef.current.select();
       document.execCommand('copy');
-      alert('¡Enlace copiado al portapapeles!');
+      
+      // Mostrar toast en lugar de alerta nativa
+      toast({
+        title: "Enlace copiado al portapapeles"
+      });
     }
   };
   
@@ -59,7 +65,7 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
         </SheetHeader>
         
         <div className="text-left px-6 pt-6 pb-2 flex items-start justify-between">
-          <h3 className="text-white text-xl font-medium">Compartir tu lista</h3>
+          <h3 className="text-white text-xl font-medium">Comparte tu lista</h3>
           <button 
             onClick={onClose}
             className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1 ml-3 mt-1"
