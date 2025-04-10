@@ -98,8 +98,8 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
 
   return (
     <>
-      {/* Banner flotante superior */}
-      <div className="fixed top-0 left-0 right-0 bg-[#1a1a1a] border-b border-[#333] py-3 px-4 z-[100]">
+      {/* Banner flotante superior - z-index reducido para que quede por debajo de modales y sheets */}
+      <div className="fixed top-0 left-0 right-0 bg-[#1a1a1a] border-b border-[#333] py-3 px-4 z-[10]">
         <div className="flex items-center justify-center mx-auto">
           <a 
             href="/auth" 
