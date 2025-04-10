@@ -87,19 +87,24 @@ export function ReservationDialog({
               </label>
             </div>
             
-            <DialogFooter className="flex gap-3 mt-6">
-              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                Cancelar
-              </Button>
+            <div className="mt-6 flex flex-col gap-3">
               <Button 
                 type="button"
                 onClick={onConfirm}
                 disabled={!confirmed}
-                className={!confirmed ? "opacity-50 cursor-not-allowed" : ""}
+                className={`w-full h-12 ${!confirmed ? "opacity-50 cursor-not-allowed" : ""}`}
               >
                 Reservar
               </Button>
-            </DialogFooter>
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                className="w-full h-12 border-[#333] hover:bg-[#252525] text-white/90"
+              >
+                Cancelar
+              </Button>
+            </div>
           </div>
         )}
       </DialogContent>
