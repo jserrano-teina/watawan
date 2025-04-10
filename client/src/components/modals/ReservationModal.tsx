@@ -73,21 +73,21 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
             <p className="text-white/50 text-xs mt-1">Tranquilo, no le mostraremos tu nombre hasta que lo reciba</p>
           </div>
           
-          <div className="flex gap-3 pt-2">
+          <div className="flex flex-col gap-3 pt-2">
+            <Button 
+              onClick={handleConfirm}
+              className="w-full bg-primary hover:bg-primary/90 text-black h-[50px]"
+            >
+              Confirmar reserva
+            </Button>
             <SheetClose asChild>
               <Button 
                 variant="outline" 
-                className="flex-1 border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white h-[50px]"
+                className="w-full border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white h-[50px]"
               >
                 Cancelar
               </Button>
             </SheetClose>
-            <Button 
-              onClick={handleConfirm}
-              className="flex-1 bg-primary hover:bg-primary/90 text-black h-[50px]"
-            >
-              Confirmar reserva
-            </Button>
           </div>
         </div>
       </SheetContent>
