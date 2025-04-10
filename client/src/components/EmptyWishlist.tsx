@@ -10,7 +10,7 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
       {/* Imagen de elementos deseados */}
       <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
         <img 
-          src="/images/wishlist-empty.png" 
+          src="/images/empty_list.png" 
           alt="Elementos deseados" 
           className="w-full h-full object-contain"
         />

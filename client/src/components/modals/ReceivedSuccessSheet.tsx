@@ -86,7 +86,7 @@ export function ReceivedSuccessSheet({
           {/* Imagen de celebración */}
           <div className="mx-auto w-64 h-64 mb-6 flex items-center justify-center">
             <img 
-              src="/images/received-celebration.png" 
+              src="/images/success.png" 
               alt="Celebración" 
               className="w-full h-full object-contain"
             />

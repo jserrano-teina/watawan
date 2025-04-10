@@ -240,7 +240,7 @@ const NotificationsPage: React.FC = () => {
             {/* Imagen de notificaciones */}
             <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <img 
-                src="/images/notifications-empty.png" 
+                src="/images/no_notifications.png" 
                 alt="Notificaciones" 
                 className="w-full h-full object-contain"
               />
