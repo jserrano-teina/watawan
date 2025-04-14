@@ -236,7 +236,7 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen pb-20 flex flex-col">
-      <div className="max-w-md mx-auto p-4 flex-grow flex flex-col justify-center">
+      <div className="max-w-[500px] mx-auto p-4 flex-grow flex flex-col justify-center">
         <div className="flex flex-col items-center py-6">
           {/* Avatar con botón de edición */}
           <div className="relative mb-6">

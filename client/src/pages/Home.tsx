@@ -211,7 +211,7 @@ const Home: React.FC = () => {
       )}
       
       <Header user={user} />
-      <main className="flex-grow container mx-auto px-4 pb-24">
+      <main className="flex-grow container mx-auto px-4 pb-24 max-w-[500px]">
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
         )}

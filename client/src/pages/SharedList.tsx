@@ -48,7 +48,7 @@ const SharedList: React.FC = () => {
   if (!owner) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
-        <div className="p-6 text-center max-w-md mx-auto">
+        <div className="p-6 text-center max-w-[500px] mx-auto">
           <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
             <img 
               src="/images/not_found.png" 
