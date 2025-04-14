@@ -403,6 +403,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     );
   };
 
+  // Estructura del modal con overlay y botón fijo
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
@@ -420,7 +421,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               onClick={handleClose} 
               className="p-2 hover:bg-[#252525] rounded-full transition-colors"
             >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
