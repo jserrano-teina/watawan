@@ -393,7 +393,7 @@ const MobileView = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] text-white flex flex-col animate-slide-up">
-      <div className="flex-1 overflow-auto pb-28">
+      <div className="flex-1 overflow-auto pb-28 max-w-[500px] mx-auto w-full">
         {/* Imagen principal a sangre */}
         <div className="w-full bg-[#202020] relative">
           {/* Botón de regreso flotante, ahora fixed para mantenerlo visible al hacer scroll */}
@@ -534,7 +534,7 @@ const MobileView = ({
       </div>
       
       {/* Footer con botones fijos */}
-      <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
+      <div className="fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto w-full">
         <button
           onClick={handleDelete}
           className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"

@@ -4,8 +4,8 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-  SheetContent
 } from "@/components/ui/sheet";
+import { CustomSheetContent } from '@/components/CustomSheetContent';
 import { Check, CheckCheck, Edit, ExternalLink, Trash, Undo, X } from 'lucide-react';
 import { WishItem } from '@/types';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
@@ -106,9 +106,10 @@ export function ItemOptionsSheet({
         }
       }}
     >
-      <SheetContent 
+      <CustomSheetContent 
         side="bottom" 
         className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0"
+        onCloseComplete={handleClose}
         // Evento para evitar propagación de clics a través del contenido
         onClick={(e: React.MouseEvent<HTMLDivElement>) => e.stopPropagation()}
       >
@@ -172,7 +173,7 @@ export function ItemOptionsSheet({
             Eliminar
           </button>
         </div>
-      </SheetContent>
+      </CustomSheetContent>
     </Sheet>
   );
 }
