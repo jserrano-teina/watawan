@@ -10,7 +10,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { insertWishlistSchema } from "@shared/schema";
 
-const formSchema = insertWishlistSchema.omit({ userId: true, shareableId: true }).extend({
+// Esquema personalizado que incluye los campos necesarios para el formulario
+const formSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  description: z.string().optional(),
   isPublic: z.boolean().default(true)
 });
 

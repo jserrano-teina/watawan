@@ -8,11 +8,16 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { insertWishlistItemSchema } from "@shared/schema";
-
-const formSchema = insertWishlistItemSchema.omit({ wishlistId: true }).extend({
-  wishlistId: z.number().optional(),
-  price: z.string().optional()
+// Esquema personalizado para el formulario
+const formSchema = z.object({
+  name: z.string().min(1, "El nombre es obligatorio"),
+  description: z.string().optional(),
+  price: z.string().optional(),
+  link: z.string().min(1, "El enlace es obligatorio"),
+  store: z.string().optional(),
+  imageUrl: z.string().optional(),
+  isPriority: z.boolean().default(false),
+  wishlistId: z.number().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
