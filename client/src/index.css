@@ -100,6 +100,53 @@
   }
 }
 
+/* Estilos específicos para PWA */
+.pwa-mode {
+  /* Sin barras de navegación del navegador, usamos más espacio */
+  height: 100vh;
+  overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Asegura que el contenido PWA no queda debajo de la barra de navegación */
+.pwa-mode .app-container {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+  padding-top: env(safe-area-inset-top, 0);
+  padding-left: env(safe-area-inset-left, 0);
+  padding-right: env(safe-area-inset-right, 0);
+}
+
+/* Deshabilita los gestos del sistema que podrían interferir */
+.pwa-mode {
+  overscroll-behavior: none;
+}
+
+/* Previene que el texto se seleccione accidentalmente en la app móvil */
+.pwa-mode * {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Permitir selección de texto solo en campos editables */
+.pwa-mode input,
+.pwa-mode textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Toque más sensible para dispositivos táctiles */
+.pwa-mode button,
+.pwa-mode a {
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* Eliminar delay de 300ms en toques móviles */
+html {
+  touch-action: manipulation;
+}
+
 @layer components {
   /* Cards */
   .card {
