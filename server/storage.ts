@@ -75,10 +75,12 @@ export class DatabaseStorage implements IStorage {
     
     // Crear wishlist por defecto para el usuario
     const shareableLink = nanoid(10);
-    await db.insert(wishlists).values({
+    const [wishlist] = await db.insert(wishlists).values({
       userId: user.id,
       shareableLink
-    });
+    }).returning();
+    
+    console.log(`Wishlist creada para usuario ${user.id}: ${wishlist.id} con link ${wishlist.shareableLink}`);
     
     return user;
   }
@@ -117,7 +119,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserWishlists(userId: number): Promise<Wishlist[]> {
-    return await db.select().from(wishlists).where(eq(wishlists.userId, userId));
+    const userWishlists = await db.select().from(wishlists).where(eq(wishlists.userId, userId));
+    
+    // Si no se encuentra ninguna wishlist para el usuario, crear una por defecto
+    if (userWishlists.length === 0) {
+      console.log(`No se encontraron wishlists para el usuario ${userId}. Creando una por defecto.`);
+      const shareableLink = nanoid(10);
+      const [newWishlist] = await db.insert(wishlists).values({
+        userId,
+        shareableLink
+      }).returning();
+      
+      console.log(`Wishlist creada para usuario ${userId}: ${newWishlist.id} con link ${newWishlist.shareableLink}`);
+      return [newWishlist];
+    }
+    
+    return userWishlists;
   }
 
   async createWishlist(wishlist: InsertWishlist): Promise<Wishlist> {
