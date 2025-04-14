@@ -42,6 +42,7 @@ const MobileView = ({
 }) => {
   const [openSheet, setOpenSheet] = useState(false);
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
   
   // Mutation para marcar como recibido
@@ -104,15 +105,18 @@ const MobileView = ({
 
   useEffect(() => {
     document.body.style.overflow = 'hidden';
+    // Animación de entrada después del montaje
+    setTimeout(() => setModalVisible(true), 10);
+    
     return () => {
       document.body.style.overflow = '';
     };
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
-        {/* Botón flotante para volver - ahora dentro del contenedor max-width */}
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300">
+      <div className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto overflow-hidden transform transition-transform duration-300 ease-out">
+        {/* Botón flotante para volver */}
         <button 
           onClick={onClose}
           className="fixed top-4 left-4 z-40 p-2 rounded-full flex items-center justify-center bg-[#1a1a1a]/80 hover:bg-[#252525] transition-colors shadow-lg backdrop-blur-sm"
@@ -120,7 +124,7 @@ const MobileView = ({
           <ArrowLeft size={20} className="text-white" />
         </button>
         
-        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up">
+        <div className="w-full h-full flex flex-col">
         
           <div className="flex-1 overflow-auto pb-28">
             {/* Imagen principal a sangre */}
