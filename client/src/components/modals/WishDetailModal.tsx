@@ -580,11 +580,11 @@ const MobileView = ({
 
 const WishDetailModal: React.FC<WishDetailModalProps> = (props) => {
   const { isOpen, item } = props;
-  const isMobile = useIsMobile();
   
   if (!isOpen || !item) return null;
   
-  return isMobile ? <MobileView {...props} item={item} /> : <DesktopView {...props} item={item} />;
+  // Siempre usamos la vista móvil para mantener consistencia en todos los dispositivos
+  return <MobileView {...props} item={item} />;
 }
 
 export default WishDetailModal;
