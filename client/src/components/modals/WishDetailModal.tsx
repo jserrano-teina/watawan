@@ -116,10 +116,10 @@ const MobileView = ({
           <div className="flex-1 overflow-auto pb-28">
             {/* Imagen principal a sangre */}
             <div className="w-full bg-[#202020] relative">
-              {/* Botón de regreso flotante fijo, independiente del scroll */}
+              {/* Botón de regreso flotante, ahora alineado dentro del contenedor */}
               <button 
                 onClick={onClose}
-                className="fixed top-4 left-4 z-50 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+                className="absolute top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
               >
                 <ArrowLeft size={20} />
               </button>
