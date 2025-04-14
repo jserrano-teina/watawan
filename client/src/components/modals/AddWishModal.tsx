@@ -406,9 +406,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
-        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto flex flex-col bg-[#121212] animate-slide-up">
+        <div className="relative w-full flex-1 flex flex-col h-full overflow-hidden">
           <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
             <h2 className="text-xl font-semibold text-white">
               {itemToEdit 
@@ -431,7 +431,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           
           {step === 1 ? (
             // Formulario paso 1 (solo para añadir nuevo, no para editar)
-            <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col">
+            <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col overflow-y-auto">
               <div className="flex-1 flex flex-col justify-center">
                 <div>
                   <div className="mb-4">
@@ -496,7 +496,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             </form>
           ) : (
             // Formulario paso 2 (usado para añadir paso 2 y para editar en un solo paso)
-            <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col">
+            <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col overflow-y-auto">
               {/* Campo de enlace para edición (solo visible en modo edición) */}
               {itemToEdit && (
                 <div className="mb-6">

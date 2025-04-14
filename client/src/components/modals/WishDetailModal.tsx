@@ -110,10 +110,10 @@ const MobileView = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
-        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up">
-          <div className="flex-1 overflow-auto pb-28">
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm">
+      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto flex flex-col bg-[#121212] animate-slide-up">
+        <div className="relative w-full flex-1 flex flex-col h-full overflow-hidden">
+          <div className="flex-1 overflow-y-auto pb-28">
             {/* Imagen principal a sangre */}
             <div className="w-full bg-[#202020] relative">
               {/* Botón de regreso flotante, ahora alineado dentro del contenedor */}
