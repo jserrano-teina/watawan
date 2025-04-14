@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
-import { Package, Image, Edit3, ChevronLeft } from 'lucide-react';
+import { Package, Image, Edit3, ChevronLeft, X, ArrowLeft } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
@@ -407,7 +407,25 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
         <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-auto">
-          <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
+          {/* Botón de cierre fixed */}
+          <button 
+            onClick={handleClose} 
+            className="fixed top-4 right-4 z-50 p-2 hover:bg-[#252525] bg-[#252525]/80 rounded-full transition-colors shadow-lg backdrop-blur-sm"
+          >
+            <X size={20} className="text-white/90" />
+          </button>
+          
+          {/* Botón de retroceso fixed (solo en paso 2 y no en edición) */}
+          {step === 2 && !itemToEdit && (
+            <button 
+              onClick={goBackToStepOne}
+              className="fixed top-4 left-4 z-50 p-2 hover:bg-[#252525] bg-[#252525]/80 rounded-full transition-colors shadow-lg backdrop-blur-sm"
+            >
+              <ArrowLeft size={20} className="text-white/90" />
+            </button>
+          )}
+          
+          <div className="pt-16 pb-4 px-4 border-b border-[#333] bg-[#121212]">
             <h2 className="text-xl font-semibold text-white">
               {itemToEdit 
                 ? 'Editar deseo' 
@@ -416,15 +434,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   : 'Añadir deseo 2/2'
               }
             </h2>
-            <button 
-              onClick={handleClose} 
-              className="p-2 hover:bg-[#252525] rounded-full transition-colors"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
           </div>
           
           {step === 1 ? (
@@ -606,11 +615,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto">
                 <Button 
                   type="button" 
-                  onClick={itemToEdit ? handleClose : goBackToStepOne}
+                  onClick={handleClose}
                   variant="outline"
                 >
-                  {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
-                  {itemToEdit ? 'Cancelar' : 'Atrás'}
+                  Cancelar
                 </Button>
                 <Button 
                   type="submit"
