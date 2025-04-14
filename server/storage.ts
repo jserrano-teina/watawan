@@ -70,19 +70,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    // Crear el usuario
-    const [user] = await db.insert(users).values(insertUser).returning();
-    
-    // Crear wishlist por defecto para el usuario
-    const shareableLink = nanoid(10);
-    const [wishlist] = await db.insert(wishlists).values({
-      userId: user.id,
-      shareableLink
-    }).returning();
-    
-    console.log(`Wishlist creada para usuario ${user.id}: ${wishlist.id} con link ${wishlist.shareableLink}`);
-    
-    return user;
+    try {
+      // Crear el usuario
+      console.log(`Creando nuevo usuario con email: ${insertUser.email}`);
+      const [user] = await db.insert(users).values(insertUser).returning();
+      console.log(`Usuario creado con ID: ${user.id}`);
+      
+      // Crear wishlist por defecto para el usuario
+      const shareableLink = nanoid(10);
+      console.log(`Creando wishlist predeterminada para usuario ${user.id} con link ${shareableLink}`);
+      
+      try {
+        const [wishlist] = await db.insert(wishlists).values({
+          userId: user.id,
+          shareableLink
+        }).returning();
+        
+        console.log(`Wishlist creada para usuario ${user.id}: ${wishlist.id} con link ${wishlist.shareableLink}`);
+      } catch (wishlistError) {
+        console.error(`Error al crear wishlist para usuario ${user.id}:`, wishlistError);
+        // Intentar de nuevo con un nuevo shareableLink
+        try {
+          const newShareableLink = nanoid(10);
+          console.log(`Reintentando crear wishlist para usuario ${user.id} con nuevo link ${newShareableLink}`);
+          
+          const [retryWishlist] = await db.insert(wishlists).values({
+            userId: user.id,
+            shareableLink: newShareableLink
+          }).returning();
+          
+          console.log(`Wishlist creada en segundo intento para usuario ${user.id}: ${retryWishlist.id}`);
+        } catch (retryError) {
+          console.error(`Error en segundo intento de crear wishlist para usuario ${user.id}:`, retryError);
+          // Continuamos con la ejecución a pesar del error - el mecanismo de seguridad
+          // en getUserWishlists creará una wishlist cuando sea necesario
+        }
+      }
+      
+      return user;
+    } catch (error) {
+      console.error(`Error en createUser:`, error);
+      throw error;
+    }
   }
   
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
@@ -119,22 +148,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserWishlists(userId: number): Promise<Wishlist[]> {
-    const userWishlists = await db.select().from(wishlists).where(eq(wishlists.userId, userId));
-    
-    // Si no se encuentra ninguna wishlist para el usuario, crear una por defecto
-    if (userWishlists.length === 0) {
-      console.log(`No se encontraron wishlists para el usuario ${userId}. Creando una por defecto.`);
-      const shareableLink = nanoid(10);
-      const [newWishlist] = await db.insert(wishlists).values({
-        userId,
-        shareableLink
-      }).returning();
+    try {
+      console.log(`[getUserWishlists] Buscando wishlists para usuario ${userId}`);
+      const userWishlists = await db.select().from(wishlists).where(eq(wishlists.userId, userId));
       
-      console.log(`Wishlist creada para usuario ${userId}: ${newWishlist.id} con link ${newWishlist.shareableLink}`);
-      return [newWishlist];
+      // Si no se encuentra ninguna wishlist para el usuario, crear una por defecto
+      if (userWishlists.length === 0) {
+        console.log(`[getUserWishlists] No se encontraron wishlists para el usuario ${userId}. Creando una por defecto.`);
+        
+        try {
+          const shareableLink = nanoid(10);
+          console.log(`[getUserWishlists] Generado shareableLink: ${shareableLink}`);
+          
+          const [newWishlist] = await db.insert(wishlists).values({
+            userId,
+            shareableLink
+          }).returning();
+          
+          console.log(`[getUserWishlists] Wishlist creada para usuario ${userId}: ${newWishlist.id} con link ${newWishlist.shareableLink}`);
+          return [newWishlist];
+        } catch (createError) {
+          console.error(`[getUserWishlists] Error al crear wishlist para usuario ${userId}:`, createError);
+          
+          // Intentar de nuevo con un nuevo shareableLink en caso de error de duplicación
+          try {
+            const newShareableLink = nanoid(10);
+            console.log(`[getUserWishlists] Reintentando con nuevo shareableLink: ${newShareableLink}`);
+            
+            const [retryWishlist] = await db.insert(wishlists).values({
+              userId,
+              shareableLink: newShareableLink
+            }).returning();
+            
+            console.log(`[getUserWishlists] Wishlist creada en segundo intento para usuario ${userId}: ${retryWishlist.id}`);
+            return [retryWishlist];
+          } catch (retryError) {
+            console.error(`[getUserWishlists] Error en segundo intento de crear wishlist:`, retryError);
+            throw new Error(`No se pudo crear una wishlist para el usuario ${userId} después de varios intentos`);
+          }
+        }
+      }
+      
+      console.log(`[getUserWishlists] Se encontraron ${userWishlists.length} wishlists para el usuario ${userId}`);
+      return userWishlists;
+    } catch (error) {
+      console.error(`[getUserWishlists] Error general:`, error);
+      throw error;
     }
-    
-    return userWishlists;
   }
 
   async createWishlist(wishlist: InsertWishlist): Promise<Wishlist> {

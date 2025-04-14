@@ -23,20 +23,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // En este punto sabemos que req.user existe porque requireAuth lo verifica
     const user = req.user as User;
     
-    const wishlists = await storage.getUserWishlists(user.id);
+    console.log(`[GET /wishlist] Obteniendo wishlists para el usuario ${user.id}`);
     
-    if (wishlists.length === 0) {
-      // Create a default wishlist if none exists
-      const shareableLink = nanoid(10);
-      const newWishlist = await storage.createWishlist({
-        userId: user.id,
-        shareableLink
-      });
-      return res.json(newWishlist);
+    try {
+      // getUserWishlists ya creará una wishlist por defecto si no existe ninguna
+      const wishlists = await storage.getUserWishlists(user.id);
+      
+      if (wishlists.length === 0) {
+        // Este caso no debería ocurrir ahora, pero mantenemos el código por seguridad
+        console.log(`[GET /wishlist] No se encontró ninguna wishlist para el usuario ${user.id}, creando una nueva`);
+        const shareableLink = nanoid(10);
+        const newWishlist = await storage.createWishlist({
+          userId: user.id,
+          shareableLink
+        });
+        console.log(`[GET /wishlist] Nueva wishlist creada para el usuario ${user.id}: ${newWishlist.id}`);
+        return res.json(newWishlist);
+      }
+      
+      console.log(`[GET /wishlist] Devolviendo wishlist ${wishlists[0].id} para el usuario ${user.id}`);
+      // Return the first wishlist (most users will only have one)
+      res.json(wishlists[0]);
+    } catch (error) {
+      console.error(`[GET /wishlist] Error obteniendo wishlists para el usuario ${user.id}:`, error);
+      
+      // Intento de último recurso para crear una wishlist
+      try {
+        console.log(`[GET /wishlist] Intento de recuperación: creando una nueva wishlist para el usuario ${user.id}`);
+        const shareableLink = nanoid(10);
+        const newWishlist = await storage.createWishlist({
+          userId: user.id,
+          shareableLink
+        });
+        console.log(`[GET /wishlist] Wishlist de recuperación creada: ${newWishlist.id}`);
+        return res.json(newWishlist);
+      } catch (recoveryError) {
+        console.error(`[GET /wishlist] Error en intento de recuperación:`, recoveryError);
+        return res.status(500).json({ 
+          message: "Error al obtener o crear wishlist",
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
     }
-    
-    // Return the first wishlist (most users will only have one)
-    res.json(wishlists[0]);
   });
 
   // Get wishlist by shareable link

@@ -6,6 +6,7 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as UserType } from "@shared/schema";
+import { nanoid } from "nanoid";
 
 // Para poder extender el tipo Request con user
 declare global {
@@ -151,6 +152,14 @@ export function setupAuth(app: Express) {
         initials
       });
 
+      // Asegurarse de que el usuario tenga una wishlist por defecto
+      console.log(`Creando wishlist por defecto para el nuevo usuario ${user.id} (${user.email})`);
+      const shareableLink = nanoid(10);
+      await storage.createWishlist({
+        userId: user.id,
+        shareableLink
+      });
+      
       // Iniciar sesión automáticamente después del registro
       req.login(user, (err) => {
         if (err) return next(err);
@@ -174,8 +183,25 @@ export function setupAuth(app: Express) {
         });
       }
       
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) return next(err);
+        
+        try {
+          // Asegurarse de que el usuario tenga una wishlist
+          const wishlists = await storage.getUserWishlists(user.id);
+          
+          if (wishlists.length === 0) {
+            console.log(`No se encontraron wishlists para el usuario ${user.id}. Creando una nueva durante el login.`);
+            const shareableLink = nanoid(10);
+            await storage.createWishlist({
+              userId: user.id,
+              shareableLink
+            });
+          }
+        } catch (error) {
+          console.error(`Error al verificar/crear wishlist para usuario ${user.id}:`, error);
+          // No fallar el login si esto falla
+        }
         
         // No enviar la contraseña al cliente
         const { password, ...userWithoutPassword } = user;
