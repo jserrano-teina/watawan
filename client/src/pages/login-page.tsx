@@ -76,7 +76,7 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen bg-background">
-      <div className="flex flex-col w-full max-w-md mx-auto items-center justify-center px-4 py-12">
+      <div className="flex flex-col w-full max-w-[500px] mx-auto items-center justify-center px-4 py-12">
         <div className="w-full mb-8 text-center">
           <img 
             src="/images/waw_logo.svg" 

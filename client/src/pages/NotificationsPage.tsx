@@ -190,7 +190,7 @@ const NotificationsPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
       <Header user={user as User} />
       
-      <main className="flex-grow container mx-auto px-4 pb-24">
+      <main className="flex-grow container mx-auto px-4 pb-24 max-w-[500px]">
         {/* Mostramos el título solo cuando hay notificaciones */}
         {notifications.length > 0 && (
           <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
@@ -236,7 +236,7 @@ const NotificationsPage: React.FC = () => {
             ))}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center h-[calc(100vh-220px)] p-6 text-center max-w-md mx-auto mt-12">
+          <div className="flex flex-col items-center justify-center h-[calc(100vh-220px)] p-6 text-center max-w-[500px] mx-auto mt-12">
             {/* Imagen de notificaciones */}
             <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <img 
