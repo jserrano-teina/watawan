@@ -105,63 +105,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create a new wish item
   router.post("/wishlist/:id/items", async (req: Request & { user?: User }, res) => {
+    console.log(`[POST /wishlist/:id/items] Iniciando creación de nuevo deseo`);
+    
     if (!req.user) {
+      console.log(`[POST /wishlist/:id/items] Error: Usuario no autenticado`);
       return res.status(401).json({ message: "Unauthorized" });
     }
     
-    const { id } = req.params;
-    const wishlistId = parseInt(id, 10);
-    
-    if (isNaN(wishlistId)) {
-      return res.status(400).json({ message: "Invalid wishlist ID" });
-    }
-    
-    const wishlist = await storage.getWishlist(wishlistId);
-    
-    if (!wishlist) {
-      return res.status(404).json({ message: "Wishlist not found" });
-    }
-    
-    if (wishlist.userId !== req.user.id) {
-      return res.status(403).json({ message: "You don't have permission to add items to this wishlist" });
-    }
+    console.log(`[POST /wishlist/:id/items] Usuario autenticado: ${req.user.id} (${req.user.email})`);
     
     try {
+      const { id } = req.params;
+      const wishlistId = parseInt(id, 10);
+      
+      if (isNaN(wishlistId)) {
+        console.log(`[POST /wishlist/:id/items] Error: ID de wishlist inválido: ${id}`);
+        return res.status(400).json({ message: "Invalid wishlist ID" });
+      }
+      
+      console.log(`[POST /wishlist/:id/items] Buscando wishlist con ID: ${wishlistId}`);
+      let targetWishlist = await storage.getWishlist(wishlistId);
+      
+      if (!targetWishlist) {
+        console.log(`[POST /wishlist/:id/items] Wishlist ${wishlistId} no encontrada, obteniendo wishlists del usuario`);
+        
+        // Obtener todas las wishlists del usuario
+        const userWishlists = await storage.getUserWishlists(req.user.id);
+        
+        if (userWishlists.length === 0) {
+          console.log(`[POST /wishlist/:id/items] No se encontraron wishlists para el usuario, creando una nueva`);
+          
+          // Si no hay ninguna wishlist, crear una por defecto
+          const shareableLink = nanoid(10);
+          targetWishlist = await storage.createWishlist({
+            userId: req.user.id,
+            shareableLink
+          });
+          
+          console.log(`[POST /wishlist/:id/items] Nueva wishlist creada: ${targetWishlist.id}`);
+        } else {
+          // Usar la primera wishlist del usuario
+          targetWishlist = userWishlists[0];
+          console.log(`[POST /wishlist/:id/items] Usando primera wishlist del usuario: ${targetWishlist.id}`);
+        }
+      } else {
+        // Verificar que la wishlist pertenece al usuario
+        if (targetWishlist.userId !== req.user.id) {
+          console.log(`[POST /wishlist/:id/items] Error: La wishlist pertenece a otro usuario (${targetWishlist.userId})`);
+          return res.status(403).json({ message: "You don't have permission to add items to this wishlist" });
+        }
+      }
+      
       // Guardar los datos originales del cuerpo de la solicitud
       let itemData = { ...req.body };
+      console.log(`[POST /wishlist/:id/items] Datos recibidos:`, itemData);
+      
       const originalImageUrl = itemData.imageUrl;
       const originalPrice = itemData.price;
       
       // Solo intentar extraer la imagen y el precio si no se proporcionaron manualmente
       if (itemData.purchaseLink) {
         try {
-          console.log(`Intentando extraer metadata de: ${itemData.purchaseLink}`);
+          console.log(`[POST /wishlist/:id/items] Intentando extraer metadata de: ${itemData.purchaseLink}`);
           const { getUrlMetadata } = await import('./metascraper');
           const metadata = await getUrlMetadata(itemData.purchaseLink);
           
           // Usar la imagen extraída solo si no se proporcionó una manualmente
           if (!originalImageUrl && metadata.imageUrl) {
-            console.log(`Imagen extraída correctamente: ${metadata.imageUrl}`);
+            console.log(`[POST /wishlist/:id/items] Imagen extraída correctamente: ${metadata.imageUrl}`);
             itemData.imageUrl = metadata.imageUrl;
           } else if (originalImageUrl) {
-            console.log(`Usando imagen proporcionada manualmente: ${originalImageUrl}`);
+            console.log(`[POST /wishlist/:id/items] Usando imagen proporcionada manualmente: ${originalImageUrl}`);
             itemData.imageUrl = originalImageUrl;
           } else {
-            console.log(`No se pudo extraer imagen para: ${itemData.purchaseLink}`);
+            console.log(`[POST /wishlist/:id/items] No se pudo extraer imagen para: ${itemData.purchaseLink}`);
           }
           
           // Usar el precio extraído solo si no se proporcionó uno manualmente
           if (!originalPrice && metadata.price) {
-            console.log(`Precio extraído correctamente: ${metadata.price}`);
+            console.log(`[POST /wishlist/:id/items] Precio extraído correctamente: ${metadata.price}`);
             itemData.price = metadata.price;
           } else if (originalPrice) {
-            console.log(`Usando precio proporcionado manualmente: ${originalPrice}`);
+            console.log(`[POST /wishlist/:id/items] Usando precio proporcionado manualmente: ${originalPrice}`);
             itemData.price = originalPrice;
           } else {
-            console.log(`No se pudo extraer precio para: ${itemData.purchaseLink}`);
+            console.log(`[POST /wishlist/:id/items] No se pudo extraer precio para: ${itemData.purchaseLink}`);
           }
         } catch (metaError) {
-          console.error('Error al extraer metadatos:', metaError);
+          console.error('[POST /wishlist/:id/items] Error al extraer metadatos:', metaError);
           // Restaurar los valores originales si hay error
           if (originalImageUrl) itemData.imageUrl = originalImageUrl;
           if (originalPrice) itemData.price = originalPrice;
@@ -172,16 +203,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (originalPrice) itemData.price = originalPrice;
       }
       
+      // Ajustar el ID de la wishlist al que realmente vamos a usar
+      const finalWishlistId = targetWishlist.id;
+      console.log(`[POST /wishlist/:id/items] Usando wishlist ID para el item: ${finalWishlistId}`);
+      
       // Validar y crear el item
-      const validatedItemData = insertWishItemSchema.parse({ ...itemData, wishlistId });
+      console.log(`[POST /wishlist/:id/items] Validando datos de item antes de crear`);
+      const validatedItemData = insertWishItemSchema.parse({ ...itemData, wishlistId: finalWishlistId });
+      
+      console.log(`[POST /wishlist/:id/items] Creando nuevo item en wishlist ${finalWishlistId}`);
       const newItem = await storage.createWishItem(validatedItemData);
+      
+      console.log(`[POST /wishlist/:id/items] Item creado exitosamente con ID: ${newItem.id}`);
       res.status(201).json(newItem);
     } catch (error) {
       if (error instanceof z.ZodError) {
         const validationError = fromZodError(error);
+        console.log(`[POST /wishlist/:id/items] Error de validación: ${validationError.message}`);
         return res.status(400).json({ message: validationError.message });
       }
-      throw error;
+      
+      console.error(`[POST /wishlist/:id/items] Error inesperado:`, error);
+      res.status(500).json({ 
+        message: "Ha ocurrido un error al crear el deseo", 
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
   });
 
