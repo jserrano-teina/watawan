@@ -113,13 +113,12 @@ const MobileView = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
         <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up">
-          {/* Botón de regreso fijo que se mantiene durante el scroll */}
+          {/* Botón flotante para volver */}
           <button 
             onClick={onClose}
-            className="fixed top-4 left-4 z-40 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
-            style={{ maxWidth: "calc(500px - 1rem)", marginLeft: "calc(50% - 250px + 1rem)" }}
+            className="fixed top-4 left-4 z-40 p-2 rounded-full flex items-center justify-center bg-[#1a1a1a]/80 hover:bg-[#252525] transition-colors shadow-lg backdrop-blur-sm"
           >
-            <ArrowLeft size={20} />
+            <ArrowLeft size={20} className="text-white" />
           </button>
         
           <div className="flex-1 overflow-auto pb-28">
