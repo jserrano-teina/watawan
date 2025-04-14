@@ -83,17 +83,23 @@ const MobileView = ({
 
   const productId = getProductId();
 
+  // Función que maneja el cierre del modal con animación
+  const handleClose = () => {
+    setModalVisible(false);
+    setTimeout(() => onClose(), 300); // Esperamos a que termine la animación
+  };
+
   const handleEdit = () => {
     onEdit(item);
     setOpenSheet(false);
-    onClose();
+    handleClose();
   };
 
   const handleDelete = () => {
     if (window.confirm('¿Estás seguro de que quieres eliminar este deseo?')) {
       onDelete(item);
       setOpenSheet(false);
-      onClose();
+      handleClose();
     }
   };
   
@@ -114,11 +120,17 @@ const MobileView = ({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300">
-      <div className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto overflow-hidden transform transition-transform duration-300 ease-out">
+    <div 
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 overflow-hidden"
+      style={{ opacity: modalVisible ? 1 : 0 }}
+    >
+      <div 
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto overflow-hidden transform transition-transform duration-300 ease-out"
+        style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
+      >
         {/* Botón flotante para volver */}
         <button 
-          onClick={onClose}
+          onClick={handleClose}
           className="fixed top-4 left-4 z-40 p-2 rounded-full flex items-center justify-center bg-[#1a1a1a]/80 hover:bg-[#252525] transition-colors shadow-lg backdrop-blur-sm"
         >
           <ArrowLeft size={20} className="text-white" />
@@ -165,12 +177,12 @@ const MobileView = ({
                     onEdit={(item) => {
                       onEdit(item);
                       setOpenSheet(false);
-                      onClose();
+                      handleClose();
                     }}
                     onDelete={(item) => {
                       onDelete(item);
                       setOpenSheet(false);
-                      onClose();
+                      handleClose();
                     }}
                     onMarkAsReceived={!item.isReceived && onMarkAsReceived ? (id) => {
                       setOpenSheet(false);
@@ -179,7 +191,7 @@ const MobileView = ({
                     onUnreserve={item.isReserved && !item.isReceived && onUnreserve ? (id) => {
                       onUnreserve(id);
                       setOpenSheet(false);
-                      onClose();
+                      handleClose();
                     } : undefined}
                     onExternalLinkClick={(url) => {
                       window.open(url, '_blank', 'noopener,noreferrer');
@@ -295,7 +307,7 @@ const MobileView = ({
               }}
               item={item}
               markAsReceivedMutation={markAsReceivedMutation}
-              onItemReceived={() => onClose()} // Cerrar el modal cuando el item se marca como recibido
+              onItemReceived={() => handleClose()} // Cerrar el modal cuando el item se marca como recibido
             />
           </div>
         </div>
