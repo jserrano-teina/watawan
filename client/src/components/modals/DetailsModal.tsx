@@ -53,7 +53,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
       style={{ opacity: modalVisible ? 1 : 0 }}
     >
       <div 
-        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out"
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out max-w-[500px] mx-auto"
         style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
       >
         {/* Botón flotante para volver */}
