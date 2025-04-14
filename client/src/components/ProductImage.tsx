@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { ImageIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Package, ImageIcon } from 'lucide-react';
 
 type ImageState = 'loading' | 'loaded' | 'error';
 
@@ -22,10 +22,18 @@ const ProductImage: React.FC<ProductImageProps> = ({
   className = "w-full h-full object-cover",
   purchaseLink 
 }) => {
-  const [imgState, setImgState] = useState<ImageState>('loading');
-  const [imgSrc, setImgSrc] = useState<string | undefined>(undefined);
-  const imgRef = useRef<HTMLImageElement>(null);
-  const timeoutRef = useRef<number | null>(null);
+  const [imgState, setImgState] = useState<ImageState>(imageUrl ? 'loading' : 'error');
+  const [imgSrc, setImgSrc] = useState<string | undefined>(imageUrl);
+  
+  // Generar un color consistente basado en el título del producto
+  const getConsistentColor = (text: string): string => {
+    let hash = 0;
+    for (let i = 0; i < text.length; i++) {
+      hash = text.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const color = Math.abs(hash) % 360;
+    return `hsl(${color}, 70%, 60%)`;
+  };
   
   // Determinar si es una tienda problemática que sabemos que bloquea las imágenes
   const isProblematicStore = (): boolean => {
@@ -52,76 +60,33 @@ const ProductImage: React.FC<ProductImageProps> = ({
       return false;
     }
     
-    return isProblematicStore() || !imageUrl;
+    return isProblematicStore() || !imageUrl || imgState === 'error';
   };
   
   // Comprobar errores al cargar la imagen
   const handleImageError = () => {
-    console.log(`Error cargando imagen: ${imageUrl}`);
     setImgState('error');
+    setImgSrc(undefined);
   };
   
   // Cuando la imagen carga correctamente
   const handleImageLoad = () => {
-    console.log(`Imagen cargada correctamente: ${imageUrl}`);
     setImgState('loaded');
-
-    // Limpiar cualquier temporizador pendiente
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
   };
-
-  // Limpiar recursos cuando el componente se desmonta
-  useEffect(() => {
-    return () => {
-      // Limpiar cualquier temporizador pendiente
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
 
   // Actualizar el estado cuando cambia la URL de la imagen
   useEffect(() => {
-    // Reiniciar el estado cuando cambia la URL
-    setImgState('loading');
-    
-    // Limpiar cualquier temporizador pendiente
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    // Si no hay URL o es una tienda problemática, mostrar error directamente
-    if (!imageUrl || isProblematicStore()) {
-      setImgSrc(undefined);
+    if (imageUrl) {
+      setImgSrc(imageUrl);
+      setImgState('loading');
+    } else {
       setImgState('error');
-      return;
+      setImgSrc(undefined);
     }
-    
-    // Si hay una imagen válida, configurar un temporizador de seguridad
-    // para evitar que se quede cargando infinitamente
-    setImgSrc(imageUrl);
-    
-    // Agregar un tiempo de espera máximo para evitar carga infinita
-    timeoutRef.current = window.setTimeout(() => {
-      // Si después de 5 segundos sigue en estado de carga, forzar error
-      if (imgState === 'loading') {
-        console.log('Tiempo de espera agotado para carga de imagen');
-        setImgState('error');
-      }
-    }, 5000);
-    
-    // Verificar si la imagen ya está en caché del navegador
-    if (imgRef.current && imgRef.current.complete) {
-      handleImageLoad();
-    }
-  }, [imageUrl, isProblematicStore]);
+  }, [imageUrl]);
   
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder
-  if (shouldUseInitialsPlaceholder() || imgState === 'error') {
+  if (shouldUseInitialsPlaceholder()) {
     return (
       <div className={`relative flex flex-col items-center justify-center shadow-inner ${className}`}>
         <ImageIcon size={42} className="text-[#444444]" strokeWidth={1.5} />
@@ -134,13 +99,11 @@ const ProductImage: React.FC<ProductImageProps> = ({
     <div className={`relative flex items-center justify-center ${className}`}>
       {imgSrc && (
         <img 
-          ref={imgRef}
           src={imgSrc} 
           alt={title} 
           className="w-full h-full object-cover"
           onLoad={handleImageLoad}
           onError={handleImageError}
-          crossOrigin="anonymous"
         />
       )}
       
@@ -148,6 +111,13 @@ const ProductImage: React.FC<ProductImageProps> = ({
       {imgState === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#252525]">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+        </div>
+      )}
+      
+      {/* Mostrar placeholder si la imagen falla */}
+      {imgState === 'error' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <ImageIcon size={42} className="text-[#444444]" strokeWidth={1.5} />
         </div>
       )}
     </div>
