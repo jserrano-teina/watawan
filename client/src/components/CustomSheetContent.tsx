@@ -27,7 +27,11 @@ export function CustomSheetContent({
     <Dialog.Portal>
       <CustomSheetOverlay onOverlayClick={onCloseComplete || (() => {})} />
       <Dialog.Content
-        className={cn(sheetVariants({ side }), className)}
+        className={cn(
+          sheetVariants({ side }), 
+          side === "bottom" ? "max-w-[500px] mx-auto w-full" : "",
+          className
+        )}
         // No usamos los eventos específicos de Radix UI para evitar problemas de tipado
         // En su lugar, usamos el onOpenChange del componente Sheet
         {...props}
