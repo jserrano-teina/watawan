@@ -408,7 +408,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#121212] min-h-screen overflow-auto animate-slide-up">
-      <div ref={modalRef} className="flex flex-col h-full text-white">
+      <div ref={modalRef} className="flex flex-col h-full text-white max-w-[500px] mx-auto w-full">
         <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
           <h2 className="text-xl font-semibold">
             {itemToEdit 
@@ -468,7 +468,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
             </div>
             
-            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
+            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto">
               <Button 
                 type="button" 
                 onClick={handleClose}
@@ -607,7 +607,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               />
             )}
             
-            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333]">
+            <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto">
               <Button 
                 type="button" 
                 onClick={itemToEdit ? handleClose : goBackToStepOne}
