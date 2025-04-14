@@ -8,16 +8,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-// Esquema personalizado para el formulario
-const formSchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio"),
-  description: z.string().optional(),
-  price: z.string().optional(),
-  link: z.string().min(1, "El enlace es obligatorio"),
-  store: z.string().optional(),
-  imageUrl: z.string().optional(),
-  isPriority: z.boolean().default(false),
-  wishlistId: z.number().optional()
+import { insertWishlistItemSchema } from "@shared/schema";
+
+const formSchema = insertWishlistItemSchema.omit({ wishlistId: true }).extend({
+  wishlistId: z.number().optional(),
+  price: z.string().optional()
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -83,7 +78,7 @@ export function CreateItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{editItem ? "Editar artículo" : "Añadir artículo"}</DialogTitle>
         </DialogHeader>

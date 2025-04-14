@@ -10,10 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { insertWishlistSchema } from "@shared/schema";
 
-// Esquema personalizado que incluye los campos necesarios para el formulario
-const formSchema = z.object({
-  name: z.string().min(1, "El nombre es obligatorio"),
-  description: z.string().optional(),
+const formSchema = insertWishlistSchema.omit({ userId: true, shareableId: true }).extend({
   isPublic: z.boolean().default(true)
 });
 
@@ -63,7 +60,7 @@ export function CreateListDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{editList ? "Editar lista de deseos" : "Crear lista de deseos"}</DialogTitle>
         </DialogHeader>
