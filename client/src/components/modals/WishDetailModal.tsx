@@ -113,16 +113,18 @@ const MobileView = ({
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
         <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up">
+          {/* Botón de regreso fijo que se mantiene durante el scroll */}
+          <button 
+            onClick={onClose}
+            className="fixed top-4 left-4 z-40 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
+            style={{ maxWidth: "calc(500px - 1rem)", marginLeft: "calc(50% - 250px + 1rem)" }}
+          >
+            <ArrowLeft size={20} />
+          </button>
+        
           <div className="flex-1 overflow-auto pb-28">
             {/* Imagen principal a sangre */}
             <div className="w-full bg-[#202020] relative">
-              {/* Botón de regreso flotante, ahora alineado dentro del contenedor */}
-              <button 
-                onClick={onClose}
-                className="absolute top-4 left-4 z-30 bg-[#252525]/80 p-2 rounded-full text-white/90 hover:bg-[#333] transition-colors shadow-lg backdrop-blur-sm"
-              >
-                <ArrowLeft size={20} />
-              </button>
 
               <div className="h-80 w-full">
                 <ProductImage 
