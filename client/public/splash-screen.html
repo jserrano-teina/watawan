@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Wishlist - Cargando...</title>
+  <style>
+    body, html {
+      height: 100%;
+      width: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: #121212;
+      color: white;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    #splash-container {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: relative;
+      z-index: 9999;
+    }
+    
+    #logo {
+      width: 180px;
+      height: 180px;
+      margin-bottom: 2rem;
+      animation: pulse 2s infinite ease-in-out;
+    }
+    
+    #loading {
+      font-size: 1rem;
+      letter-spacing: 1px;
+      margin-top: 1.5rem;
+      opacity: 0.8;
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid rgba(255, 224, 102, 0.3);
+      border-radius: 50%;
+      border-top-color: #FFE066;
+      animation: spin 1s ease-in-out infinite;
+      margin-top: 1.5rem;
+    }
+    
+    @keyframes pulse {
+      0% {
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+      }
+      100% {
+        transform: scale(1);
+        opacity: 1;
+      }
+    }
+    
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+    
+    /* Para ocultar cuando la app esté lista */
+    .hidden {
+      opacity: 0;
+      transition: opacity 0.5s ease-out;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="splash-container">
+    <img id="logo" src="./icons/logo.svg" alt="Wishlist Logo">
+    <div class="spinner"></div>
+    <div id="loading">Cargando...</div>
+  </div>
+  
+  <script>
+    // Escuchar el evento que indica que la app está lista 
+    window.addEventListener('appReady', function() {
+      const splash = document.getElementById('splash-container');
+      splash.classList.add('hidden');
+    });
+    
+    // También escuchar el mensaje del iframe padre
+    window.addEventListener('message', function(event) {
+      if (event.data === 'appReady') {
+        const splash = document.getElementById('splash-container');
+        splash.classList.add('hidden');
+      }
+    });
+    
+    // Por seguridad, si no se recibe el evento en 5 segundos, ocultamos el splash
+    setTimeout(function() {
+      const splash = document.getElementById('splash-container');
+      if (splash) {
+        splash.classList.add('hidden');
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
