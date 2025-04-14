@@ -49,11 +49,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
 
   return (
     <div 
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300 overflow-hidden"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
       style={{ opacity: modalVisible ? 1 : 0 }}
     >
       <div 
-        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out max-w-[500px] mx-auto"
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] transform transition-transform duration-300 ease-out max-w-[500px] mx-auto"
         style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
       >
         {/* Botón flotante para volver */}
