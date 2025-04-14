@@ -34,7 +34,7 @@ export const sessions = pgTable("sessions", {
 // Wishlist schema
 export const wishlists = pgTable("wishlists", {
   id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
+  userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
   shareableLink: text("shareable_link").notNull().unique(),
   createdAt: timestamp("created_at").defaultNow(),
 });
@@ -47,7 +47,7 @@ export const insertWishlistSchema = createInsertSchema(wishlists).pick({
 // Wish item schema
 export const wishItems = pgTable("wish_items", {
   id: serial("id").primaryKey(),
-  wishlistId: integer("wishlist_id").notNull(),
+  wishlistId: integer("wishlist_id").notNull().references(() => wishlists.id, { onDelete: 'cascade' }),
   title: text("title").notNull(),
   description: text("description"),
   purchaseLink: text("purchase_link").notNull(),
@@ -72,7 +72,7 @@ export const insertWishItemSchema = createInsertSchema(wishItems).pick({
 // Reservation schema
 export const reservations = pgTable("reservations", {
   id: serial("id").primaryKey(),
-  wishItemId: integer("wish_item_id").notNull().unique(),
+  wishItemId: integer("wish_item_id").notNull().unique().references(() => wishItems.id, { onDelete: 'cascade' }),
   reserverName: text("reserver_name"),
   reservedAt: timestamp("reserved_at").defaultNow(),
 });
@@ -83,19 +83,17 @@ export const insertReservationSchema = createInsertSchema(reservations).pick({
 });
 
 // Export types
-// Cuando estamos usando MemStorage en lugar de una base de datos real, 
-// necesitamos ajustar los tipos para manejar undefined en lugar de null
 export type User = {
   id: number;
   email: string;
   password: string;
-  displayName?: string;
-  initials?: string;
-  avatar?: string;
-  createdAt?: Date;
-  lastLogin?: Date;
-  lastNotificationsView?: Date;
-  settings?: Record<string, any>;
+  displayName: string | null;
+  initials: string | null;
+  avatar: string | null;
+  createdAt: Date | null;
+  lastLogin: Date | null;
+  lastNotificationsView: Date | null;
+  settings: Record<string, any> | null;
 };
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
@@ -103,7 +101,7 @@ export type Wishlist = {
   id: number;
   userId: number;
   shareableLink: string;
-  createdAt: Date;
+  createdAt: Date | null;
 };
 export type InsertWishlist = z.infer<typeof insertWishlistSchema>;
 
@@ -111,22 +109,22 @@ export type WishItem = {
   id: number;
   wishlistId: number;
   title: string;
-  description?: string;
+  description: string | null;
   purchaseLink: string;
-  imageUrl?: string;
-  price?: string;
+  imageUrl: string | null;
+  price: string | null;
   isReserved: boolean;
   isReceived: boolean;
-  reservedBy?: string;
-  reserverName?: string;
-  createdAt: Date;
+  reservedBy: string | null;
+  reserverName: string | null;
+  createdAt: Date | null;
 };
 export type InsertWishItem = z.infer<typeof insertWishItemSchema>;
 
 export type Reservation = {
   id: number;
   wishItemId: number;
-  reserverName?: string;
-  reservedAt: Date;
+  reserverName: string | null;
+  reservedAt: Date | null;
 };
 export type InsertReservation = z.infer<typeof insertReservationSchema>;

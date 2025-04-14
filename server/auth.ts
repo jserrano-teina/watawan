@@ -6,7 +6,6 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User as UserType } from "@shared/schema";
-import createMemoryStore from "memorystore";
 
 // Para poder extender el tipo Request con user
 declare global {
@@ -52,10 +51,7 @@ export async function comparePasswords(supplied: string, stored: string): Promis
  * Configura la autenticación para la aplicación Express
  */
 export function setupAuth(app: Express) {
-  // Crear almacén de sesiones
-  const MemoryStore = createMemoryStore(session);
-  
-  // Configuración de sesión
+  // Configuración de sesión usando el store de PostgreSQL
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "tu-secreto-super-secreto", // Usar variable de entorno en producción
     resave: false,
@@ -64,9 +60,7 @@ export function setupAuth(app: Express) {
       secure: process.env.NODE_ENV === "production", // Usar HTTPS en producción
       maxAge: 1000 * 60 * 60 * 24 * 7, // 1 semana
     },
-    store: new MemoryStore({
-      checkPeriod: 86400000 // Limpia sesiones expiradas cada 24h
-    })
+    store: storage.sessionStore
   };
 
   // Configurar middleware de sesión

@@ -2,9 +2,15 @@ import {
   User, InsertUser, 
   Wishlist, InsertWishlist, 
   WishItem, InsertWishItem, 
-  Reservation, InsertReservation
+  Reservation, InsertReservation,
+  users, wishlists, wishItems, reservations
 } from "@shared/schema";
 import { nanoid } from "nanoid";
+import { db } from "./db";
+import { eq, and, desc, sql, asc, lt, gt } from "drizzle-orm";
+import connectPgSimple from "connect-pg-simple";
+import session from "express-session";
+import { pool } from "./db";
 
 export interface IStorage {
   // User operations
@@ -34,337 +40,255 @@ export interface IStorage {
   unreserveWishItem(wishItemId: number): Promise<WishItem>;
   getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
   getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private wishlists: Map<number, Wishlist>;
-  private wishItems: Map<number, WishItem>;
-  private reservations: Map<number, Reservation>;
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
   
-  currentUserId: number;
-  currentWishlistId: number;
-  currentWishItemId: number;
-  currentReservationId: number;
-
   constructor() {
-    this.users = new Map();
-    this.wishlists = new Map();
-    this.wishItems = new Map();
-    this.reservations = new Map();
-    
-    this.currentUserId = 1;
-    this.currentWishlistId = 1;
-    this.currentWishItemId = 1;
-    this.currentReservationId = 1;
-    
-    // Create a default user
-    this.createUser({
-      email: "demo@example.com",
-      password: "password",
-      displayName: "Demo User",
-      initials: "DU"
+    // Configurar el store de sesiones con PostgreSQL
+    const PostgresSessionStore = connectPgSimple(session);
+    this.sessionStore = new PostgresSessionStore({
+      pool,
+      tableName: 'sessions',
+      createTableIfMissing: true,
     });
   }
 
   // User operations
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result.length ? result[0] : undefined;
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.email === email,
-    );
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result.length ? result[0] : undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const now = new Date();
+    // Crear el usuario
+    const [user] = await db.insert(users).values(insertUser).returning();
     
-    // Create user
-    // Aseguramos que los campos opcionales sean string o undefined, nunca null
-    const displayName = insertUser.displayName || undefined;
-    const initials = insertUser.initials || undefined;
-    const avatar = insertUser.avatar || undefined;
-    
-    const user: User = { 
-      ...insertUser, 
-      id,
-      displayName,
-      initials,
-      avatar,
-      createdAt: now,
-      lastLogin: now,
-      settings: {}
-    };
-    
-    this.users.set(id, user);
-    
-    // Create default wishlist for the user
+    // Crear wishlist por defecto para el usuario
     const shareableLink = nanoid(10);
-    const wishlist: Wishlist = {
-      id: this.currentWishlistId++,
-      userId: id,
-      shareableLink,
-      createdAt: now,
-    };
-    this.wishlists.set(wishlist.id, wishlist);
+    await db.insert(wishlists).values({
+      userId: user.id,
+      shareableLink
+    });
     
     return user;
   }
   
   async updateUser(id: number, userData: Partial<User>): Promise<User> {
-    const existingUser = this.users.get(id);
-    if (!existingUser) {
+    const [updatedUser] = await db
+      .update(users)
+      .set(userData)
+      .where(eq(users.id, id))
+      .returning();
+      
+    if (!updatedUser) {
       throw new Error(`User with ID ${id} not found`);
     }
     
-    const updatedUser = { ...existingUser, ...userData };
-    this.users.set(id, updatedUser);
     return updatedUser;
   }
   
   async updateLastLogin(id: number): Promise<User> {
-    const existingUser = this.users.get(id);
-    if (!existingUser) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    
-    const updatedUser = { 
-      ...existingUser, 
-      lastLogin: new Date() 
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    return this.updateUser(id, { lastLogin: new Date() });
   }
   
   async updateLastNotificationsView(id: number): Promise<User> {
-    const existingUser = this.users.get(id);
-    if (!existingUser) {
-      throw new Error(`User with ID ${id} not found`);
-    }
-    
-    const updatedUser = { 
-      ...existingUser, 
-      lastNotificationsView: new Date() 
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    return this.updateUser(id, { lastNotificationsView: new Date() });
   }
 
   // Wishlist operations
   async getWishlist(id: number): Promise<Wishlist | undefined> {
-    return this.wishlists.get(id);
+    const result = await db.select().from(wishlists).where(eq(wishlists.id, id));
+    return result.length ? result[0] : undefined;
   }
 
   async getWishlistByShareableLink(link: string): Promise<Wishlist | undefined> {
-    return Array.from(this.wishlists.values()).find(
-      (wishlist) => wishlist.shareableLink === link
-    );
+    const result = await db.select().from(wishlists).where(eq(wishlists.shareableLink, link));
+    return result.length ? result[0] : undefined;
   }
 
   async getUserWishlists(userId: number): Promise<Wishlist[]> {
-    return Array.from(this.wishlists.values()).filter(
-      (wishlist) => wishlist.userId === userId
-    );
+    return await db.select().from(wishlists).where(eq(wishlists.userId, userId));
   }
 
   async createWishlist(wishlist: InsertWishlist): Promise<Wishlist> {
-    const id = this.currentWishlistId++;
-    const newWishlist: Wishlist = { 
-      ...wishlist, 
-      id,
-      createdAt: new Date(),
-    };
-    this.wishlists.set(id, newWishlist);
+    const [newWishlist] = await db.insert(wishlists).values(wishlist).returning();
     return newWishlist;
   }
 
   // WishItem operations
   async getWishItemsForWishlist(wishlistId: number, includeReceived: boolean = false): Promise<WishItem[]> {
-    // Primero obtenemos todos los items del wishlist
-    const items = Array.from(this.wishItems.values()).filter(
-      (item) => item.wishlistId === wishlistId && (includeReceived || !item.isReceived)
-    );
+    // Construir la consulta base
+    let items: WishItem[] = [];
     
-    // Luego ordenamos siguiendo los criterios actualizados:
-    // 1. Primero los elementos no recibidos (isReceived = false)
-    // 2. Dentro de cada grupo, ordenamos por fecha de creación (más nuevos primero)
+    if (includeReceived) {
+      items = await db.select().from(wishItems).where(eq(wishItems.wishlistId, wishlistId));
+    } else {
+      items = await db.select().from(wishItems)
+        .where(and(
+          eq(wishItems.wishlistId, wishlistId),
+          eq(wishItems.isReceived, false)
+        ));
+    }
+    
+    // Ordenar según los criterios:
+    // 1. Primero los no recibidos
+    // 2. Dentro de cada grupo, ordenar por fecha de creación (más recientes primero)
     return items.sort((a, b) => {
-      // 1. Primero si está recibido o no
+      // Primero ordenar por recibido/no recibido
       if (a.isReceived !== b.isReceived) {
         return a.isReceived ? 1 : -1; // No recibidos primero
       }
       
-      // 2. Finalmente por fecha de creación
-      // Asumimos que los IDs más altos corresponden a items más nuevos
-      return b.id - a.id; // ID mayor (más reciente) primero
+      // Luego por fecha de creación (más recientes primero)
+      const aTime = a.createdAt ? a.createdAt.getTime() : 0;
+      const bTime = b.createdAt ? b.createdAt.getTime() : 0;
+      return bTime - aTime;
     });
   }
 
   async getWishItem(id: number): Promise<WishItem | undefined> {
-    return this.wishItems.get(id);
+    const result = await db.select().from(wishItems).where(eq(wishItems.id, id));
+    return result.length ? result[0] : undefined;
   }
 
   async createWishItem(item: InsertWishItem): Promise<WishItem> {
-    const id = this.currentWishItemId++;
-    
-    // Aseguramos que los campos opcionales sean string o undefined, nunca null
-    const description = item.description || undefined;
-    const imageUrl = item.imageUrl || undefined;
-    const price = item.price || undefined;
-    
-    const newItem: WishItem = { 
-      ...item, 
-      id,
-      description,
-      imageUrl,
-      price,
+    const [newItem] = await db.insert(wishItems).values({
+      ...item,
       isReserved: false,
-      isReceived: false,
-      createdAt: new Date(),
-    };
-    this.wishItems.set(id, newItem);
+      isReceived: false
+    }).returning();
+    
     return newItem;
   }
 
   async updateWishItem(id: number, itemUpdate: Partial<WishItem>): Promise<WishItem> {
-    const existingItem = this.wishItems.get(id);
-    if (!existingItem) {
+    const [updatedItem] = await db
+      .update(wishItems)
+      .set(itemUpdate)
+      .where(eq(wishItems.id, id))
+      .returning();
+      
+    if (!updatedItem) {
       throw new Error(`Wish item with ID ${id} not found`);
     }
     
-    const updatedItem = { ...existingItem, ...itemUpdate };
-    this.wishItems.set(id, updatedItem);
     return updatedItem;
   }
 
   async deleteWishItem(id: number): Promise<boolean> {
-    const existingReservation = Array.from(this.reservations.values()).find(
-      (reservation) => reservation.wishItemId === id
-    );
-    
-    // Delete any associated reservation
-    if (existingReservation) {
-      this.reservations.delete(existingReservation.id);
-    }
-    
-    return this.wishItems.delete(id);
+    // Las restricciones de clave foránea se encargarán de eliminar las reservas asociadas
+    const result = await db.delete(wishItems).where(eq(wishItems.id, id)).returning();
+    return result.length > 0;
   }
   
   async markWishItemAsReceived(id: number): Promise<WishItem> {
-    const existingItem = this.wishItems.get(id);
-    if (!existingItem) {
-      throw new Error(`Wish item with ID ${id} not found`);
-    }
-    
-    const updatedItem = { 
-      ...existingItem, 
-      isReceived: true 
-    };
-    this.wishItems.set(id, updatedItem);
-    return updatedItem;
+    return this.updateWishItem(id, { isReceived: true });
   }
 
   // Reservation operations
   async reserveWishItem(wishItemId: number, reserverName?: string): Promise<Reservation> {
-    const wishItem = await this.getWishItem(wishItemId);
-    if (!wishItem) {
+    // Verificar si el item existe y no está reservado
+    const item = await this.getWishItem(wishItemId);
+    if (!item) {
       throw new Error(`Wish item with ID ${wishItemId} not found`);
     }
     
-    if (wishItem.isReserved) {
+    if (item.isReserved) {
       throw new Error("This item is already reserved");
     }
     
-    // Update wish item to reserved status
+    // Actualizar el item como reservado
     await this.updateWishItem(wishItemId, { 
       isReserved: true,
-      reserverName,
+      reserverName 
     });
     
-    // Create reservation
-    const id = this.currentReservationId++;
-    const reservation: Reservation = {
-      id,
+    // Crear la reserva
+    const [reservation] = await db.insert(reservations).values({
       wishItemId,
-      reserverName, // Puede ser undefined, lo cual es válido para el tipo text
-      reservedAt: new Date(),
-    };
-    this.reservations.set(id, reservation);
+      reserverName
+    }).returning();
     
     return reservation;
   }
 
   async unreserveWishItem(wishItemId: number): Promise<WishItem> {
-    const wishItem = await this.getWishItem(wishItemId);
-    if (!wishItem) {
+    // Verificar si el item existe y está reservado
+    const item = await this.getWishItem(wishItemId);
+    if (!item) {
       throw new Error(`Wish item with ID ${wishItemId} not found`);
     }
     
-    if (!wishItem.isReserved) {
+    if (!item.isReserved) {
       throw new Error("This item is not reserved");
     }
     
-    // Eliminar la reserva existente
-    const existingReservation = Array.from(this.reservations.values()).find(
-      (reservation) => reservation.wishItemId === wishItemId
-    );
-    
-    if (existingReservation) {
-      this.reservations.delete(existingReservation.id);
-    }
+    // Eliminar la reserva existente (las cascadas se ocuparán de esto)
+    await db.delete(reservations).where(eq(reservations.wishItemId, wishItemId));
     
     // Actualizar el item para quitar la reserva
     const updatedItem = await this.updateWishItem(wishItemId, { 
       isReserved: false,
-      reserverName: undefined, // Limpiar el nombre de quien reservó
+      reserverName: null 
     });
     
     return updatedItem;
   }
 
   async getReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {
-    // Get all user's wishlists
+    // Obtenemos todos los wishlists del usuario
     const userWishlists = await this.getUserWishlists(userId);
     const wishlistIds = userWishlists.map(wl => wl.id);
     
-    // Find all wish items from these wishlists that are reserved
-    const reservedItems = Array.from(this.wishItems.values()).filter(
-      item => wishlistIds.includes(item.wishlistId) && item.isReserved
-    );
-    
-    // Get the corresponding reservations
-    const result: {item: WishItem, reservation: Reservation}[] = [];
-    for (const item of reservedItems) {
-      const reservation = Array.from(this.reservations.values()).find(
-        r => r.wishItemId === item.id
-      );
-      if (reservation) {
-        result.push({ item, reservation });
-      }
+    if (wishlistIds.length === 0) {
+      return [];
     }
+    
+    // Consulta compleja para obtener los items reservados y sus reservas
+    const result = await db
+      .select({
+        item: wishItems,
+        reservation: reservations
+      })
+      .from(wishItems)
+      .innerJoin(reservations, eq(wishItems.id, reservations.wishItemId))
+      .where(
+        and(
+          sql`${wishItems.wishlistId} IN (${sql.join(wishlistIds, sql`, `)})`,
+          eq(wishItems.isReserved, true)
+        )
+      );
     
     return result;
   }
   
   async getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {
-    // Get all reservations
+    // Obtener todas las reservas
     const allReservations = await this.getReservationsForUser(userId);
     
-    // Get user data to check last notifications view
+    // Obtener datos del usuario para comprobar la última visualización de notificaciones
     const user = await this.getUser(userId);
     if (!user || !user.lastNotificationsView) {
-      // If user doesn't exist or has never viewed notifications, return all reservations
+      // Si el usuario no existe o nunca ha visto notificaciones, devolver todas las reservas
       return allReservations;
     }
     
-    // Filter only those reservations that happened after the last time the user viewed notifications
+    // Filtrar sólo aquellas reservas que ocurrieron después de la última visualización
     return allReservations.filter(({ reservation }) => {
-      return new Date(reservation.reservedAt) > new Date(user.lastNotificationsView!);
+      if (!reservation.reservedAt || !user.lastNotificationsView) return false;
+      return reservation.reservedAt > user.lastNotificationsView;
     });
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
