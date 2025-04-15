@@ -51,11 +51,8 @@ const MobileView = ({
   // Mutation para marcar como recibido
   const markAsReceivedMutation = useMutation({
     mutationFn: async (itemId: number) => {
-      const response = await fetch(`/api/wishlist/items/${itemId}/received`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (!response.ok) throw new Error('Error al marcar como recibido');
+      // Utilizamos apiRequest para manejar CSRF adecuadamente
+      const response = await apiRequest('POST', `/api/wishlist/items/${itemId}/received`, {});
       return response.json();
     },
     onSuccess: () => {
