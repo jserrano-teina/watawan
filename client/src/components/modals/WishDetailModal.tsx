@@ -17,7 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeLink } from '@/components/ui/SafeLink';
 import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
 import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
-import { apiRequest } from '@/lib/queryClient';
+import { apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -335,6 +335,16 @@ const MobileView = ({
 
 const WishDetailModal = (props: WishDetailModalProps) => {
   const { isOpen, item } = props;
+  
+  // Cuando se abre el modal, forzamos un refresco de los datos
+  // para asegurar que el estado mostrado sea el más reciente
+  React.useEffect(() => {
+    if (isOpen && item) {
+      console.log('Abriendo modal de detalle - actualizando datos para mostrar estado más reciente');
+      // Forzar refresco de todos los datos relevantes
+      invalidateAllAppQueries(item.wishlistId);
+    }
+  }, [isOpen, item]);
   
   if (!isOpen || !item) return null;
   

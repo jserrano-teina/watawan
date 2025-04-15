@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
 import { WishItem, Reservation } from '@/types';
 import { useAuth } from './use-auth';
 import { useEffect, useRef } from 'react';
@@ -20,10 +20,13 @@ export function useNotifications() {
     data: rawUnreadNotifications = [], 
     isLoading: unreadLoading,
     error: unreadError,
+    refetch: refetchUnread,
   } = useQuery<any[]>({
     queryKey: ['/api/notifications/unread'],
     enabled: !!user,
-    staleTime: 1000 * 60, // 1 minuto
+    staleTime: 1000 * 20, // 20 segundos - reducido para detectar cambios más rápido
+    refetchInterval: 5000, // Verificación agresiva cada 5 segundos
+    refetchIntervalInBackground: false, // Solo verificar cuando la pestaña es visible
   });
   
   // Adaptar las notificaciones no leídas al formato del frontend

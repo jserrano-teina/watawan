@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { User, Bell, Home } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useNotifications } from '@/hooks/useNotifications';
+import { invalidateAllAppQueries } from '@/lib/queryClient';
 
 interface BottomNavigationProps {
   onAddWishClick?: () => void;
@@ -11,9 +12,18 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   const [location, setLocation] = useLocation();
   const { unreadCount, isLoading } = useNotifications();
   
-  const navigateTo = (path: string) => {
+  // Método mejorado para navegar entre tabs con actualización de datos
+  const navigateTo = useCallback((path: string) => {
+    // Refrescamos todos los datos antes de cambiar de ubicación para garantizar
+    // que siempre se muestren los datos más actualizados
+    console.log(`Cambiando a ${path} - actualizando datos...`);
+    
+    // Forzar actualización de todas las consultas relevantes
+    invalidateAllAppQueries();
+    
+    // Navegamos a la nueva ubicación
     setLocation(path);
-  };
+  }, [setLocation]);
   
   const isActive = (path: string) => {
     return location === path;
