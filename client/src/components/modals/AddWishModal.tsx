@@ -436,7 +436,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           {step === 1 ? (
             <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
-              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[90px] flex items-center">
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
                 <div className="flex flex-col justify-center w-full">
                   <div className="mb-0">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
@@ -503,7 +503,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             // Formulario paso 2
             <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
-              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[90px]">
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px]">
                 {/* Campo de enlace para edición (solo visible en modo edición) */}
                 {itemToEdit && (
                   <div className="mb-6">
