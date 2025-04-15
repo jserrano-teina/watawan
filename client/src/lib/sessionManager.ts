@@ -10,6 +10,9 @@
 
 import { queryClient } from "./queryClient";
 
+// Para asegurar CORS y CSRFToken se incluyen en las peticiones de verificación
+import { updateTokenFromResponse, addTokenToHeaders } from './csrfManager';
+
 // Intervalo de ping cuando el usuario está activo (2 minutos)
 const ACTIVE_PING_INTERVAL = 2 * 60 * 1000;
 
@@ -124,14 +127,23 @@ const checkForUpdates = async (): Promise<boolean> => {
     console.log('Verificando actualizaciones en tiempo real...');
     
     // 1. Verificar notificaciones no leídas (nuevas reservas)
+    // Incluir token CSRF para evitar problemas de autorización
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store'
+    };
+    
+    // Añadir token CSRF para evitar problemas de autorización
+    addTokenToHeaders(headers);
+    
     const unreadResponse = await fetch('/api/notifications/unread', {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store'
-      },
+      headers
     });
+    
+    // Actualizar el token CSRF para futuras peticiones
+    updateTokenFromResponse(unreadResponse);
     
     if (unreadResponse.ok) {
       const unreadData = await unreadResponse.json();
@@ -253,14 +265,23 @@ const startNotificationChecker = async (): Promise<void> => {
 
   try {
     // Solo verificar notificaciones no leídas (que indican reservas nuevas)
+    // Incluir token CSRF para evitar problemas de autorización
+    const headers: Record<string, string> = {
+      'Accept': 'application/json',
+      'Cache-Control': 'no-cache, no-store'
+    };
+    
+    // Añadir token CSRF para evitar problemas de autorización
+    addTokenToHeaders(headers);
+    
     const unreadResponse = await fetch('/api/notifications/unread', {
       method: 'GET',
       credentials: 'include',
-      headers: {
-        'Accept': 'application/json',
-        'Cache-Control': 'no-cache, no-store'
-      },
+      headers
     });
+    
+    // Actualizar el token CSRF para futuras peticiones
+    updateTokenFromResponse(unreadResponse);
     
     if (unreadResponse.ok) {
       const unreadData = await unreadResponse.json();
