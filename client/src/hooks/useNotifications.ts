@@ -70,8 +70,9 @@ export function useNotifications() {
       return res.json();
     },
     onSuccess: () => {
-      // Invalidar la consulta de notificaciones no leídas
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      // Cuando se marcan como leídas, invalidamos todas las consultas relacionadas
+      // para asegurarnos de que los estados se actualizan en todas las vistas
+      invalidateAllAppQueries();
     }
   });
   

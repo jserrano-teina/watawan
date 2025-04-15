@@ -120,16 +120,34 @@ export const getQueryFn: <T>(options: {
   };
 
 // Utilidad para invalidar todas las consultas relacionadas con los datos de la aplicación
+// Implementación mejorada para garantizar sincronización en tiempo real
 export function invalidateAllAppQueries(wishlistId?: number) {
   console.log('Invalidando todas las consultas de la aplicación');
   
-  // Invalidar consultas específicas
-  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+  // Invalidar consultas específicas - orden optimizado por prioridad
   queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+  queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
   queryClient.invalidateQueries({ queryKey: ['/api/user'] });
   
-  // Invalidar la wishlist completa
+  // Invalidar todas las wishlists
   queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+  
+  // Estrategia agresiva: Invalidar TODAS las wishlists por ID para asegurar sincronización
+  // Esto es crucial cuando se ha reservado un deseo desde otro dispositivo
+  const wishlistQueries = queryClient.getQueriesData({ 
+    queryKey: ['/api/wishlist'] 
+  });
+  
+  // Buscar IDs de wishlists activas del usuario actual
+  wishlistQueries.forEach(([_, data]) => {
+    if (data && typeof data === 'object' && 'id' in data) {
+      const wlId = (data as any).id;
+      if (wlId && typeof wlId === 'number') {
+        console.log(`Invalidando items de wishlist encontrada en caché: ${wlId}`);
+        queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wlId}/items`] });
+      }
+    }
+  });
   
   // Si tenemos un ID específico, invalidamos los items de esa wishlist
   if (wishlistId) {
@@ -138,13 +156,15 @@ export function invalidateAllAppQueries(wishlistId?: number) {
   }
   
   // Estrategia agresiva para invalidar absolutamente todas las consultas relacionadas
+  // incluyendo listas compartidas que el usuario podría estar viendo
   queryClient.invalidateQueries({
     predicate: (query) => {
       const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
       return typeof queryKey === 'string' && (
         queryKey.includes('/api/wishlist') || 
         queryKey.includes('/api/reserved-items') ||
-        queryKey.includes('/api/notifications')
+        queryKey.includes('/api/notifications') ||
+        queryKey.includes('/shared/')
       );
     }
   });
