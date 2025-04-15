@@ -15,6 +15,7 @@ import { WishItem as WishItemType } from '../types';
 import { useToast } from '@/hooks/use-toast';
 import { Toast, ToastContainer } from '@/components/ui/toast';
 import { AlertCircle, Check, Loader2 } from 'lucide-react';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 const Home: React.FC = () => {
   const { user, wishlist, items, isLoading, addWishItem, updateWishItem, deleteWishItem, markAsReceived, unreserveItem } = useWishlist();
@@ -177,6 +178,9 @@ const Home: React.FC = () => {
 
   // Variable para rastrear si una operación de Sheet se cerró recientemente
   const [sheetRecentlyClosed, setSheetRecentlyClosed] = useState(false);
+  
+  // Bloquear el scroll del body cuando hay modales abiertos
+  useScrollLock(showDetailModal || showAddWishModal || showShareModal || showReceivedSheet || showUnreserveSheet);
 
   // Función para avisar al componente Home que un Sheet se cerró
   const handleSheetClosed = () => {
@@ -255,7 +259,12 @@ const Home: React.FC = () => {
       )}
       
       <Header user={user} />
-      <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-content">
+      <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch', 
+          height: 'calc(100vh - 56px)', 
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+        }}>
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
         )}

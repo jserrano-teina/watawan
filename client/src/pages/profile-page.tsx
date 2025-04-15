@@ -32,6 +32,7 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { useMutation } from "@tanstack/react-query";
 import { EditProfileSheet } from "@/components/EditProfileSheet";
 import { LogoutSheet } from "@/components/LogoutSheet";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 // Función para generar iniciales automáticamente desde el nombre o email
 const getInitials = (displayName: string | undefined, email: string) => {
@@ -56,6 +57,9 @@ const ProfilePage = () => {
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
   const [avatar, setAvatar] = useState<string | undefined>(user?.avatar);
+  
+  // Bloquear el scroll cuando los modales están abiertos
+  useScrollLock(isEditingProfile || isLogoutDialogOpen);
   
   // Efecto para hacer que el toast desaparezca después de 3 segundos
   useEffect(() => {
@@ -235,8 +239,15 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 flex flex-col">
-      <div className="max-w-[500px] mx-auto p-4 flex-grow flex flex-col justify-center">
+    <div className="min-h-screen flex flex-col bg-[#121212] text-white">
+      <main 
+        className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch', 
+          height: 'calc(100vh - 56px)', 
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+        }}
+      >
         <div className="flex flex-col items-center py-6">
           {/* Avatar con botón de edición */}
           <div className="relative mb-6">
@@ -302,7 +313,16 @@ const ProfilePage = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
-      </div>
+        
+        <div className="flex flex-col items-center mb-2 mt-6">
+          <img 
+            src="/images/waw_logo.svg" 
+            alt="WataWan" 
+            className="h-8 mx-auto mb-1" 
+          />
+          <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
+        </div>
+      </main>
 
       {/* Bottom Sheet para editar perfil */}
       <EditProfileSheet
@@ -319,15 +339,6 @@ const ProfilePage = () => {
         onClose={() => setIsLogoutDialogOpen(false)}
         logoutMutation={logoutMutation}
       />
-      
-      <div className="flex flex-col items-center mb-2 mt-auto">
-        <img 
-          src="/images/waw_logo.svg" 
-          alt="WataWan" 
-          className="h-8 mx-auto mb-1" 
-        />
-        <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
-      </div>
 
       <BottomNavigation />
 

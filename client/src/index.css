@@ -98,6 +98,18 @@
   .scrollbar-none::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
   }
+  
+  /* Contenedores scrollables optimizados */
+  .scrollable-container {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: none;
+    scroll-behavior: smooth;
+    touch-action: pan-y;
+    transform: translateZ(0);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
 }
 
 /* Estilos específicos para PWA */
@@ -390,5 +402,21 @@ html {
     overscroll-behavior: none;
     -webkit-overflow-scrolling: auto;
     touch-action: none;
+  }
+  
+  /* Navegación fija que no se mueve al hacer scroll */
+  .fixed-navigation {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    transform: translateZ(0);
+    will-change: transform;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transform: translate3d(0, 0, 0);
+    overflow: hidden;
+    transition: none;
   }
 }
