@@ -67,7 +67,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get wishlist by shareable link
+  // Get wishlist by shareable link (legacy format)
   router.get("/wishlist/shared/:link", async (req, res) => {
     const { link } = req.params;
     
@@ -88,11 +88,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ wishlist, owner: ownerInfo });
   });
   
-  // Get items for a shared wishlist - never includes received items
+  // Get wishlist by username and slug (new friendly URL format)
+  router.get("/lista/:username/:slug", async (req, res) => {
+    const { username, slug } = req.params;
+    
+    // Buscar la wishlist usando el nuevo método
+    const wishlist = await storage.getWishlistByUserAndSlug(username, slug);
+    
+    if (!wishlist) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+    
+    const owner = await storage.getUser(wishlist.userId);
+    if (!owner) {
+      return res.status(404).json({ message: "Wishlist owner not found" });
+    }
+    
+    // Don't include password in response
+    const { password, ...ownerInfo } = owner;
+    
+    res.json({ wishlist, owner: ownerInfo });
+  });
+  
+  // Get items for a shared wishlist - never includes received items (legacy format)
   router.get("/wishlist/shared/:link/items", async (req, res) => {
     const { link } = req.params;
     
     const wishlist = await storage.getWishlistByShareableLink(link);
+    
+    if (!wishlist) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+    
+    // Para listas compartidas, nunca incluimos los elementos recibidos
+    const includeReceived = false;
+    
+    const items = await storage.getWishItemsForWishlist(wishlist.id, includeReceived);
+    res.json(items);
+  });
+  
+  // Get items for a shared wishlist with friendly URL - never includes received items
+  router.get("/lista/:username/:slug/items", async (req, res) => {
+    const { username, slug } = req.params;
+    
+    const wishlist = await storage.getWishlistByUserAndSlug(username, slug);
     
     if (!wishlist) {
       return res.status(404).json({ message: "Wishlist not found" });
@@ -363,7 +402,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(204).send();
   });
 
-  // Reserve a wish item
+  // Reserve a wish item (legacy format)
   router.post("/wishlist/items/:id/reserve", async (req, res) => {
     const { id } = req.params;
     const itemId = parseInt(id, 10);
@@ -376,6 +415,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     if (!item) {
       return res.status(404).json({ message: "Wish item not found" });
+    }
+    
+    if (item.isReserved) {
+      return res.status(400).json({ message: "This item is already reserved" });
+    }
+    
+    try {
+      // Validate the reservation data
+      const parsedData = insertReservationSchema.parse({ 
+        ...req.body, 
+        wishItemId: itemId 
+      });
+      
+      // Nos aseguramos de que reserverName sea string o undefined, no null
+      const reserverName = parsedData.reserverName === null ? undefined : parsedData.reserverName;
+      
+      const reservation = await storage.reserveWishItem(itemId, reserverName);
+      res.status(201).json(reservation);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const validationError = fromZodError(error);
+        return res.status(400).json({ message: validationError.message });
+      }
+      throw error;
+    }
+  });
+  
+  // Reserve a wish item from friendly URL format
+  router.post("/lista/:username/:slug/items/:id/reserve", async (req, res) => {
+    const { id, username, slug } = req.params;
+    const itemId = parseInt(id, 10);
+    
+    if (isNaN(itemId)) {
+      return res.status(400).json({ message: "Invalid item ID" });
+    }
+    
+    // Verificar que la wishlist existe
+    const wishlist = await storage.getWishlistByUserAndSlug(username, slug);
+    if (!wishlist) {
+      return res.status(404).json({ message: "Wishlist not found" });
+    }
+    
+    // Verificar que el item existe y pertenece a esta wishlist
+    const item = await storage.getWishItem(itemId);
+    if (!item) {
+      return res.status(404).json({ message: "Wish item not found" });
+    }
+    
+    if (item.wishlistId !== wishlist.id) {
+      return res.status(400).json({ message: "Item does not belong to this wishlist" });
     }
     
     if (item.isReserved) {

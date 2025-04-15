@@ -7,7 +7,7 @@ import {
 } from "@shared/schema";
 import { nanoid } from "nanoid";
 import { db } from "./db";
-import { eq, and, desc, sql, asc, lt, gt } from "drizzle-orm";
+import { eq, and, or, desc, sql, asc, lt, gt } from "drizzle-orm";
 import connectPgSimple from "connect-pg-simple";
 import session from "express-session";
 import { pool } from "./db";
@@ -155,6 +155,30 @@ export class DatabaseStorage implements IStorage {
 
   async getWishlistByShareableLink(link: string): Promise<Wishlist | undefined> {
     const result = await db.select().from(wishlists).where(eq(wishlists.shareableLink, link));
+    return result.length ? result[0] : undefined;
+  }
+  
+  async getWishlistByUserAndSlug(username: string, slug: string): Promise<Wishlist | undefined> {
+    // Primero, buscar el usuario por nombre de usuario (displayName) o por email
+    const user = await db.select().from(users).where(
+      or(
+        eq(users.displayName, username),
+        eq(users.email, username)
+      )
+    ).limit(1);
+    
+    if (!user.length) {
+      return undefined;
+    }
+    
+    // Buscar la wishlist por userId y slug
+    const result = await db.select().from(wishlists).where(
+      and(
+        eq(wishlists.userId, user[0].id),
+        eq(wishlists.slug, slug)
+      )
+    );
+    
     return result.length ? result[0] : undefined;
   }
 
