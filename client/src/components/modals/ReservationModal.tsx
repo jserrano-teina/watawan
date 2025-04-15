@@ -10,6 +10,7 @@ import {
   SheetDescription,
   SheetClose
 } from "@/components/ui/sheet";
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface ReservationModalProps {
   isOpen: boolean;
@@ -27,7 +28,9 @@ const ReservationModal: React.FC<ReservationModalProps> = ({
   const [reserverName, setReserverName] = useState('');
 
   const handleConfirm = () => {
-    onConfirm(reserverName);
+    // Sanitizar el nombre antes de enviarlo
+    const sanitizedName = sanitizeInput(reserverName);
+    onConfirm(sanitizedName);
     setReserverName('');
     // Ya no llamamos a onClose() aquí porque el componente padre
     // se encargará de cerrar este modal manteniendo abierto el de detalles

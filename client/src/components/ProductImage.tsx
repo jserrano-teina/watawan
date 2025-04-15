@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ImageIcon } from 'lucide-react';
+import { sanitizeUrl } from '@/lib/sanitize';
 
 type ImageState = 'loading' | 'loaded' | 'error';
 
@@ -45,11 +46,17 @@ const ProductImage: React.FC<ProductImageProps> = ({
   
   // Verificar si es un blob URL o una URL local (no una URL remota de una tienda)
   const isBlobOrLocalUrl = (): boolean => {
-    return !!imageUrl && (
-      imageUrl.startsWith('blob:') || 
-      imageUrl.startsWith('data:') || 
-      imageUrl.startsWith('/') ||
-      imageUrl.startsWith('http://localhost')
+    if (!imageUrl) return false;
+    
+    const url = imageUrl;
+    // Consideramos URLs locales seguras, pero igual verificamos que no tengan protocolos peligrosos
+    const isSafe = !/^(?:javascript|data|vbscript|file):/i.test(url);
+    
+    return isSafe && (
+      url.startsWith('blob:') || 
+      url.startsWith('data:image/') || // Solo permitimos data: URLs para imágenes
+      url.startsWith('/') ||
+      url.startsWith('http://localhost')
     );
   };
   
@@ -77,8 +84,16 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Actualizar el estado cuando cambia la URL de la imagen
   useEffect(() => {
     if (imageUrl) {
-      setImgSrc(imageUrl);
-      setImgState('loading');
+      // Sanitizar la URL antes de usarla
+      const safeUrl = sanitizeUrl(imageUrl);
+      if (safeUrl) {
+        setImgSrc(safeUrl);
+        setImgState('loading');
+      } else {
+        console.warn('URL de imagen no segura bloqueada:', imageUrl);
+        setImgState('error');
+        setImgSrc(undefined);
+      }
     } else {
       setImgState('error');
       setImgSrc(undefined);
