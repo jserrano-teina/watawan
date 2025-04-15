@@ -12,6 +12,7 @@ import BottomNavigation from '@/components/BottomNavigation';
 import WishDetailModal from '@/components/modals/WishDetailModal';
 import { ReceivedConfirmationSheet } from '@/components/modals/ReceivedConfirmationSheet';
 import { UnreserveConfirmationSheet } from '@/components/modals/UnreserveConfirmationSheet';
+import { useScrollLock } from '@/hooks/useScrollLock';
 
 type NotificationItem = {
   item: WishItem;
@@ -27,6 +28,9 @@ const NotificationsPage: React.FC = () => {
   
   // Variable para rastrear si una operación de Sheet se cerró recientemente
   const [sheetRecentlyClosed, setSheetRecentlyClosed] = useState(false);
+  
+  // Bloquear el scroll del body cuando el modal de detalle está abierto
+  useScrollLock(detailModalOpen || showReceivedSheet || showUnreserveSheet);
   
   // Función para avisar al componente que un Sheet se cerró
   const handleSheetClosed = () => {
@@ -190,7 +194,14 @@ const NotificationsPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
       <Header user={user as User} />
       
-      <main className="flex-grow container mx-auto px-4 pb-24 max-w-[500px]">
+      <main 
+        className="flex-grow container mx-auto px-4 pb-24 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+        style={{ 
+          WebkitOverflowScrolling: 'touch', 
+          height: 'calc(100vh - 56px)', 
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+        }}
+      >
         {/* Mostramos el título solo cuando hay notificaciones */}
         {notifications.length > 0 && (
           <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
