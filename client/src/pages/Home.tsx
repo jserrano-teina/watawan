@@ -272,7 +272,7 @@ const Home: React.FC = () => {
         {myWishItems.length > 0 ? (
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
-            <div className="grid gap-2">
+            <div className="grid gap-2 pb-24">
               {myWishItems.map(item => (
                 <WishItem 
                   key={item.id} 

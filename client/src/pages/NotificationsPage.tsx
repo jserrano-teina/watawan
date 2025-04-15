@@ -212,7 +212,7 @@ const NotificationsPage: React.FC = () => {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : notifications.length > 0 ? (
-          <div className="space-y-3">
+          <div className="space-y-3 pb-24">
             {notifications.map(({ item, reservation }) => (
               <div 
                 key={reservation.id} 
