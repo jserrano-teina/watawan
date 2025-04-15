@@ -1,4 +1,4 @@
-import express, { type Express, Request, Response } from "express";
+import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -10,9 +10,20 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, requireAuth } from "./auth";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
+  
+  // Middleware para redirigir URLs amigables a la página principal
+  app.use('/lista/:username/:slug', (req, res, next) => {
+    if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+      console.log(`[Middleware] Redirigiendo URL amigable a index.html: ${req.url}`);
+      return res.sendFile(path.resolve(process.cwd(), 'client/dist/index.html'));
+    }
+    next();
+  });
+  
   const router = express.Router();
 
   // Configurar autenticación
@@ -89,7 +100,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get wishlist by username and slug (new friendly URL format)
-  router.get("/lista/:username/:slug", async (req, res) => {
+  router.get("/wl/:username/:slug", async (req, res) => {
     const { username, slug } = req.params;
     
     // Buscar la wishlist usando el nuevo método
@@ -128,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Get items for a shared wishlist with friendly URL - never includes received items
-  router.get("/lista/:username/:slug/items", async (req, res) => {
+  router.get("/wl/:username/:slug/items", async (req, res) => {
     const { username, slug } = req.params;
     
     const wishlist = await storage.getWishlistByUserAndSlug(username, slug);
@@ -443,7 +454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reserve a wish item from friendly URL format
-  router.post("/lista/:username/:slug/items/:id/reserve", async (req, res) => {
+  router.post("/wl/:username/:slug/items/:id/reserve", async (req, res) => {
     const { id, username, slug } = req.params;
     const itemId = parseInt(id, 10);
     
