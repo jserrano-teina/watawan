@@ -436,8 +436,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           {step === 1 ? (
             <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
-              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px]">
-                <div className="flex flex-col justify-center">
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
+                <div className="flex flex-col justify-center w-full">
                   <div className="mb-4">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
                       Enlace de compra
