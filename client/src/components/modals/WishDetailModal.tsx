@@ -14,6 +14,9 @@ import {
 import { ItemOptionsSheet } from './ItemOptionsSheet';
 import { ReceivedConfirmationSheet } from './ReceivedConfirmationSheet';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { SafeLink } from '@/components/ui/SafeLink';
+import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
+import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -105,7 +108,15 @@ const MobileView = ({
   
   // Función para abrir enlace externamente
   const openExternalLink = () => {
-    window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
+    // Sanitizar la URL antes de abrirla
+    const safeUrl = sanitizeUrl(item.purchaseLink);
+    if (!safeUrl) {
+      console.warn('Se intentó abrir una URL no segura:', item.purchaseLink);
+      setOpenSheet(false);
+      return;
+    }
+    
+    window.open(safeUrl, '_blank', 'noopener,noreferrer');
     setOpenSheet(false);
   };
 
@@ -194,7 +205,13 @@ const MobileView = ({
                       handleClose();
                     } : undefined}
                     onExternalLinkClick={(url) => {
-                      window.open(url, '_blank', 'noopener,noreferrer');
+                      // Sanitizar la URL antes de abrirla
+                      const safeUrl = sanitizeUrl(url);
+                      if (safeUrl) {
+                        window.open(safeUrl, '_blank', 'noopener,noreferrer');
+                      } else {
+                        console.warn('Se intentó abrir una URL no segura:', url);
+                      }
                       setOpenSheet(false);
                     }}
                   />
@@ -245,15 +262,13 @@ const MobileView = ({
               <div className="mb-6">
                 <h3 className="block text-white text-sm mb-2">Enlace de compra</h3>
                 {item.purchaseLink ? (
-                  <a 
+                  <SafeLink 
                     href={item.purchaseLink} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
                     className="flex items-center justify-between text-primary text-sm max-w-full"
                   >
-                    <span className="truncate mr-2">{item.purchaseLink}</span>
+                    <span className="truncate mr-2">{sanitizeInput(item.purchaseLink)}</span>
                     <ExternalLink size={16} className="flex-shrink-0" />
-                  </a>
+                  </SafeLink>
                 ) : (
                   <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
                 )}
@@ -263,7 +278,11 @@ const MobileView = ({
               {item.description && (
                 <div className="mb-6">
                   <h3 className="block text-white text-sm mb-2">Descripción</h3>
-                  <p className="text-white/80 text-sm">{item.description}</p>
+                  <SanitizedHTML 
+                    html={item.description} 
+                    className="text-white/80 text-sm"
+                    tag="p"
+                  />
                 </div>
               )}
             </div>

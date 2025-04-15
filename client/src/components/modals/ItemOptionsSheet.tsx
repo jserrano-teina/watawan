@@ -9,6 +9,8 @@ import { CustomSheetContent } from '@/components/CustomSheetContent';
 import { Check, CheckCheck, Edit, ExternalLink, Trash, Undo, X } from 'lucide-react';
 import { WishItem } from '@/types';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
+import { SafeLink } from '@/components/ui/SafeLink';
+import { sanitizeUrl } from '@/lib/sanitize';
 
 interface ItemOptionsSheetProps {
   isOpen: boolean;
@@ -61,10 +63,18 @@ export function ItemOptionsSheet({
   };
   
   const handleOpenExternalLink = () => {
+    // Sanitizar la URL antes de abrirla
+    const safeUrl = sanitizeUrl(item.purchaseLink);
+    if (!safeUrl) {
+      console.warn('Se intentó abrir una URL no segura:', item.purchaseLink);
+      handleClose();
+      return;
+    }
+    
     if (onExternalLinkClick) {
-      onExternalLinkClick(item.purchaseLink);
+      onExternalLinkClick(safeUrl);
     } else {
-      window.open(item.purchaseLink, '_blank', 'noopener,noreferrer');
+      window.open(safeUrl, '_blank', 'noopener,noreferrer');
     }
     handleClose();
   };

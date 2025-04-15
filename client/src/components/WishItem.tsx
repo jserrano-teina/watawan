@@ -7,6 +7,7 @@ import { MoreVertical, X } from 'lucide-react';
 import { Sheet, SheetTrigger } from "@/components/ui/sheet";
 import { ItemOptionsSheet } from './modals/ItemOptionsSheet';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface WishItemProps {
   item: WishItemType;
