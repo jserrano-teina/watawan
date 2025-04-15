@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { sanitizeObject } from './sanitize';
 
 /**
  * Comprueba si la respuesta HTTP es correcta, en caso contrario extrae el mensaje de error
@@ -26,6 +27,7 @@ async function throwIfResNotOk(res: Response) {
  * Función para realizar solicitudes a la API con manejo de errores mejorado.
  * Utiliza credenciales automáticamente e incluye headers adecuados.
  */
+
 export async function apiRequest(
   method: string,
   url: string,
@@ -34,13 +36,19 @@ export async function apiRequest(
   try {
     console.log(`Realizando ${method} a ${url}${data ? ' con datos' : ''}`);
     
+    // Sanitizar datos antes de enviarlos si es un objeto
+    let sanitizedData = data;
+    if (data && typeof data === 'object') {
+      sanitizedData = sanitizeObject(data as Record<string, any>);
+    }
+    
     const res = await fetch(url, {
       method,
       headers: data ? { 
         "Content-Type": "application/json",
         "Accept": "application/json"
       } : {},
-      body: data ? JSON.stringify(data) : undefined,
+      body: sanitizedData ? JSON.stringify(sanitizedData) : undefined,
       credentials: "include",
     });
 

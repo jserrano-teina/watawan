@@ -16,13 +16,42 @@ export function sanitizeInput(input: string | undefined | null): string {
 }
 
 /**
+ * Sanitiza una URL para prevenir ataques XSS vía javascript: URLs
+ * @param url - URL a sanitizar
+ * @returns URL sanitizada segura para usar en links
+ */
+export function sanitizeUrl(url: string | undefined | null): string {
+  if (!url) return '';
+  
+  // Eliminar espacios en blanco
+  const trimmedUrl = url.trim();
+  
+  // Verificar si la URL es segura (no permite javascript:, data:, vbscript:, etc)
+  const urlPattern = /^(?:(?:https?|ftp):\/\/|www\.)[^\s/$.?#].[^\s]*$/i;
+  const isValid = urlPattern.test(trimmedUrl);
+  
+  // Si no es una URL válida o empieza con un protocolo peligroso, devolver vacío
+  if (!isValid || /^(?:javascript|data|vbscript|file):/i.test(trimmedUrl)) {
+    console.warn('URL insegura detectada y bloqueada:', trimmedUrl);
+    return '';
+  }
+  
+  // Asegurar que la URL tiene un protocolo
+  if (trimmedUrl.startsWith('www.')) {
+    return `https://${trimmedUrl}`;
+  }
+  
+  return trimmedUrl;
+}
+
+/**
  * Sanitiza un objeto completo, recorriendo sus propiedades que sean strings
  * @param data - Objeto a sanitizar
  * @returns Una copia del objeto con todas sus propiedades string sanitizadas
  */
 export function sanitizeObject<T extends Record<string, any>>(data: T): T {
-  // Crear una copia del objeto
-  const sanitized = { ...data };
+  // Crear una copia del objeto como any para poder modificarlo
+  const sanitized = { ...data } as Record<string, any>;
   
   // Recorrer todas las propiedades del objeto
   Object.keys(sanitized).forEach(key => {
@@ -48,5 +77,6 @@ export function sanitizeObject<T extends Record<string, any>>(data: T): T {
     }
   });
   
-  return sanitized;
+  // Devolver el objeto ya sanitizado, convertido de nuevo al tipo original
+  return sanitized as T;
 }
