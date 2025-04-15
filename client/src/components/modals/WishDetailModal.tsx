@@ -300,8 +300,8 @@ const MobileView = ({
             </div>
           </div>
           
-          {/* Footer con botones fijos */}
-          <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333]">
+          {/* Footer con botones fijos que respeta el área segura */}
+          <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom">
             <button
               onClick={handleDelete}
               className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"

@@ -13,6 +13,7 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { NetworkMonitor } from "@/components/NetworkMonitor";
 import React, { useEffect } from "react";
+import { useSafeArea } from "@/hooks/useSafeArea";
 
 /**
  * Router principal de la aplicación con rutas protegidas y públicas
@@ -38,8 +39,14 @@ function Router() {
  * Implementa el sistema de autenticación, monitoreo de red y enrutamiento
  */
 function App() {
+  // Inicializar el sistema de áreas seguras
+  const safeArea = useSafeArea();
+  
   // Iniciar el sistema de gestión de sesiones para mantener la conexión automáticamente
   useEffect(() => {
+    // Registrar los valores de área segura
+    console.log('Áreas seguras inicializadas:', safeArea);
+    
     // Importar el gestor de sesiones de forma dinámica para no bloquear el renderizado
     import('./lib/sessionManager').then(({ startSessionManager, stopSessionManager }) => {
       console.log('Iniciando sistema de gestión de sesiones');
@@ -53,7 +60,7 @@ function App() {
     }).catch(error => {
       console.error('Error al iniciar el gestor de sesiones:', error);
     });
-  }, []);
+  }, [safeArea]);
 
   return (
     <QueryClientProvider client={queryClient}>
