@@ -2,6 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { WishItem, Reservation } from '@/types';
 import { useAuth } from './use-auth';
+import { useEffect, useRef } from 'react';
 
 type NotificationItem = {
   item: WishItem;
@@ -10,6 +11,9 @@ type NotificationItem = {
 
 export function useNotifications() {
   const { user } = useAuth();
+  
+  // Referencia al último número de notificaciones no leídas detectadas
+  const prevUnreadCountRef = useRef(0);
   
   // Obtener notificaciones no leídas
   const { 
@@ -63,6 +67,32 @@ export function useNotifications() {
     return new Date(b.reservation.reservedAt).getTime() - new Date(a.reservation.reservedAt).getTime();
   }) : [];
   
+  // Efecto para detectar cambios en las notificaciones no leídas
+  // y sincronizar el estado en tiempo real
+  useEffect(() => {
+    const currentUnreadCount = unreadNotifications.length;
+    
+    // Si detectamos nuevas notificaciones (más que antes)
+    if (currentUnreadCount > prevUnreadCountRef.current) {
+      console.log(`Se detectaron ${currentUnreadCount - prevUnreadCountRef.current} nuevas notificaciones`);
+      
+      // Invalidar todas las consultas relacionadas con wishlists para reflejar 
+      // los cambios inmediatamente en todas las vistas
+      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+      
+      // Invalidar todos los items de wishlist para actualizar el estado reservado
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+          return typeof queryKey === 'string' && queryKey.includes('/items');
+        }
+      });
+    }
+    
+    // Actualizar la referencia para la próxima comparación
+    prevUnreadCountRef.current = currentUnreadCount;
+  }, [unreadNotifications.length]);
+
   // Marcar notificaciones como leídas
   const markAsRead = useMutation({
     mutationFn: async () => {
@@ -72,7 +102,17 @@ export function useNotifications() {
     onSuccess: () => {
       // Cuando se marcan como leídas, invalidamos todas las consultas relacionadas
       // para asegurarnos de que los estados se actualizan en todas las vistas
-      invalidateAllAppQueries();
+      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+      
+      // Invalidar también las listas de deseos para actualizar estado en todas las vistas
+      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+          return typeof queryKey === 'string' && queryKey.includes('/items');
+        }
+      });
     }
   });
   
