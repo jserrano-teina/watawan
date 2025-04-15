@@ -56,7 +56,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
       style={{ opacity: modalVisible ? 1 : 0 }}
     >
       <div 
-        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out max-w-[500px] mx-auto"
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] overflow-hidden transform transition-transform duration-300 ease-out w-full"
         style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
       >
         {/* Botón flotante para volver */}
@@ -68,7 +68,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         </button>
         
         {/* Contenido scrolleable */}
-        <div className="flex-grow overflow-auto">
+        <div className="flex-grow overflow-auto scrollable-container pb-[180px]">
           {/* Imagen a sangre al inicio */}
           <div className="w-full h-80 bg-[#252525] relative">
             <ProductImage 
@@ -153,7 +153,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         
         {/* Barra inferior fija con botones - Solo visible si el item no está reservado */}
         {!item.isReserved && (
-          <div className="border-t border-[#333] p-4 flex justify-end">
+          <div className="border-t border-[#333] p-4 flex justify-end fixed-navigation w-full left-0 right-0 bottom-0 safe-area-bottom">
             <Button 
               onClick={onReserveClick}
               className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-black"
