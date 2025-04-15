@@ -19,6 +19,7 @@ import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
 import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
 import { apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import useScrollLock from "@/hooks/useScrollLock";
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -129,14 +130,11 @@ const MobileView = ({
     setOpenSheet(false);
   };
 
+  // El bloqueo de scroll está manejado por el componente padre
+  
   useEffect(() => {
-    document.body.style.overflow = 'hidden';
     // Animación de entrada después del montaje
     setTimeout(() => setModalVisible(true), 10);
-    
-    return () => {
-      document.body.style.overflow = '';
-    };
   }, []);
 
   return (
@@ -349,6 +347,9 @@ const MobileView = ({
 
 const WishDetailModal = (props: WishDetailModalProps) => {
   const { isOpen, item } = props;
+  
+  // Bloquear scroll cuando el modal está abierto
+  useScrollLock(isOpen);
   
   // Cuando se abre el modal, forzamos un refresco de los datos
   // para asegurar que el estado mostrado sea el más reciente
