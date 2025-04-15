@@ -53,20 +53,22 @@ export async function comparePasswords(supplied: string, stored: string): Promis
  * Configura la autenticación para la aplicación Express
  */
 export function setupAuth(app: Express) {
-  // Configuración de sesión usando el store de PostgreSQL
+  // Configuración de sesión usando el store de PostgreSQL con mayor robustez
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET || "tu-secreto-super-secreto", // Usar variable de entorno en producción
-    resave: true, // Forzar guardado de sesión incluso si no hay cambios
-    saveUninitialized: true, // Guardar sesiones no inicializadas
+    resave: false, // No guardar la sesión si no hay cambios
+    saveUninitialized: false, // No guardar sesiones que no se han inicializado
     rolling: true, // Renovar la cookie en cada petición
     cookie: {
       secure: process.env.NODE_ENV === "production", // Usar HTTPS en producción
-      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 días
-      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 30, // 30 días (más largo para evitar expiraciones inesperadas)
+      httpOnly: true, // No accesible desde JavaScript
       sameSite: 'lax', // Permite que la cookie se envíe en navegación entre sitios
-      path: '/'
+      path: '/',
     },
-    store: storage.sessionStore
+    store: storage.sessionStore,
+    name: 'wataWanSession', // Nombre personalizado para la cookie
+    proxy: true, // Confiar en el proxy para conexiones seguras, importante en producción
   };
 
   // Configurar middleware de sesión

@@ -35,7 +35,7 @@ export const AuthContext = createContext<AuthContextType | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
-  // Consulta para obtener el usuario actual
+  // Consulta para obtener el usuario actual con mecanismo de reintento
   const {
     data: user,
     error,
@@ -43,6 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    refetchOnReconnect: true,
+    retry: 3, // Reintentar hasta 3 veces si falla
+    retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Backoff exponencial
+    staleTime: 5 * 60 * 1000, // 5 minutos de datos frescos
   });
 
   // Mutación para inicio de sesión
