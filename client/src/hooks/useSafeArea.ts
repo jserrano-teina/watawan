@@ -55,12 +55,38 @@ export function useSafeArea() {
     
     // Actualizar valores al montar y cuando cambie la orientación
     updateSafeArea();
-    window.addEventListener('resize', updateSafeArea);
-    window.addEventListener('orientationchange', updateSafeArea);
+    
+    // Manejar cambios de orientación con un pequeño retraso para permitir que el navegador se actualice
+    const handleResize = () => {
+      // Actualizar inmediatamente
+      updateSafeArea();
+      
+      // Y luego otra vez después de un pequeño retraso para asegurar valores correctos
+      // después de que se complete la animación de cambio de orientación
+      setTimeout(updateSafeArea, 300);
+    };
+    
+    const handleOrientationChange = () => {
+      // Orientación es un evento especial que necesita más tiempo para estabilizarse
+      setTimeout(updateSafeArea, 100);
+      setTimeout(updateSafeArea, 300);
+      setTimeout(updateSafeArea, 500);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('orientationchange', handleOrientationChange);
+    
+    // Si hay una API específica de iOS disponible, la utilizamos también
+    if ("ondeviceorientation" in window) {
+      window.addEventListener('deviceorientation', handleOrientationChange);
+    }
     
     return () => {
-      window.removeEventListener('resize', updateSafeArea);
-      window.removeEventListener('orientationchange', updateSafeArea);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      if ("ondeviceorientation" in window) {
+        window.removeEventListener('deviceorientation', handleOrientationChange);
+      }
     };
   }, []);
 
