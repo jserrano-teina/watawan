@@ -36,50 +36,21 @@ function Router() {
  * Implementa el sistema de autenticación, monitoreo de red y enrutamiento
  */
 function App() {
-  // Configurar listeners globales para regenerar automáticamente sesiones
+  // Iniciar el sistema de gestión de sesiones para mantener la conexión automáticamente
   useEffect(() => {
-    // Refrescar sesión después de eventos de interacción del usuario
-    // para prevenir expiración de sesión cuando la app está activa
-    const sessionRefreshEvents = [
-      'mousedown', 'keydown', 'touchstart', 'scroll',
-      'visibilitychange', 'focus', 'storage'
-    ];
-    
-    // Usar debounce para limitar la cantidad de peticiones
-    let debounceTimer: number | null = null;
-    
-    const refreshSessionActivity = () => {
-      if (debounceTimer !== null) {
-        clearTimeout(debounceTimer);
-      }
+    // Importar el gestor de sesiones de forma dinámica para no bloquear el renderizado
+    import('./lib/sessionManager').then(({ startSessionManager, stopSessionManager }) => {
+      console.log('Iniciando sistema de gestión de sesiones');
+      startSessionManager();
       
-      debounceTimer = window.setTimeout(() => {
-        // Solo enviar ping cuando el usuario está activo y la pestaña está visible
-        if (document.visibilityState === 'visible') {
-          fetch('/api/ping', { 
-            method: 'GET',
-            credentials: 'include'
-          }).catch(() => {
-            // Ignorar errores - esto es solo un ping para mantener la sesión
-          });
-        }
-      }, 30000); // 30 segundos de debounce
-    };
-    
-    // Registrar listeners para eventos que indican actividad del usuario
-    sessionRefreshEvents.forEach(eventType => {
-      window.addEventListener(eventType, refreshSessionActivity, { passive: true });
+      // Detener el gestor cuando el componente se desmonte
+      return () => {
+        console.log('Deteniendo sistema de gestión de sesiones');
+        stopSessionManager();
+      };
+    }).catch(error => {
+      console.error('Error al iniciar el gestor de sesiones:', error);
     });
-    
-    return () => {
-      sessionRefreshEvents.forEach(eventType => {
-        window.removeEventListener(eventType, refreshSessionActivity);
-      });
-      
-      if (debounceTimer !== null) {
-        clearTimeout(debounceTimer);
-      }
-    };
   }, []);
 
   return (

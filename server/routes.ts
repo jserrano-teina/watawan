@@ -202,7 +202,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Función para obtener o crear una wishlist válida para el usuario
-      async function getOrCreateWishlist(userId: number, requestedWishlistId?: number): Promise<Wishlist> {
+      const getOrCreateWishlist = async (userId: number, requestedWishlistId?: number) => {
         console.log(`[getOrCreateWishlist] Obteniendo wishlist para usuario ${userId}${requestedWishlistId ? `, wishlist solicitada: ${requestedWishlistId}` : ''}`);
         
         try {
@@ -232,6 +232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           console.log(`[getOrCreateWishlist] No se encontraron wishlists, creando una nueva para usuario ${userId}`);
           const shareableLink = nanoid(10);
           const defaultName = "Mi lista de deseos";
+          // Importar la función de utilidades
+          const { generateSlug } = await import('./utils');
           const slug = generateSlug(defaultName);
           
           // Crear wishlist con todos los campos necesarios
@@ -729,6 +731,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         error: error instanceof Error ? error.message : String(error)
       });
     }
+  });
+
+  // Endpoint simple de ping para mantener activa la sesión
+  router.get("/ping", (req: Request, res: Response) => {
+    // Si el usuario está autenticado, actualizar la marca de tiempo
+    // de la cookie de sesión para mantenerla activa
+    if (req.isAuthenticated()) {
+      console.log(`Ping recibido: manteniendo sesión activa para usuario ${(req.user as any)?.id || 'desconocido'}`);
+      
+      // Tocar la sesión para renovar la cookie
+      if (req.session) {
+        req.session.touch();
+      }
+    }
+    
+    // Respuesta mínima para el cliente
+    res.status(200).json({ ok: true, timestamp: new Date().toISOString() });
   });
 
   app.use("/api", router);
