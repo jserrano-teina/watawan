@@ -26,12 +26,24 @@ export function sanitizeUrl(url: string | undefined | null): string {
   // Eliminar espacios en blanco
   const trimmedUrl = url.trim();
   
-  // Verificar si la URL es segura (no permite javascript:, data:, vbscript:, etc)
-  const urlPattern = /^(?:(?:https?|ftp):\/\/|www\.)[^\s/$.?#].[^\s]*$/i;
+  // Permitir explícitamente URLs de blob para imágenes subidas por el usuario
+  if (trimmedUrl.startsWith('blob:')) {
+    console.log('Permitiendo URL de blob:', trimmedUrl);
+    return trimmedUrl;
+  }
+  
+  // Permitir URLs de data para imágenes (pero solo las que realmente son imágenes)
+  if (trimmedUrl.startsWith('data:image/')) {
+    console.log('Permitiendo URL de data image:', trimmedUrl.substring(0, 30) + '...');
+    return trimmedUrl;
+  }
+  
+  // Verificar si la URL es segura (no permite javascript:, vbscript:, etc)
+  const urlPattern = /^(?:(?:https?|ftp):\/\/|www\.|\/)[^\s/$.?#].[^\s]*$/i;
   const isValid = urlPattern.test(trimmedUrl);
   
   // Si no es una URL válida o empieza con un protocolo peligroso, devolver vacío
-  if (!isValid || /^(?:javascript|data|vbscript|file):/i.test(trimmedUrl)) {
+  if (!isValid || /^(?:javascript|vbscript|file):/i.test(trimmedUrl)) {
     console.warn('URL insegura detectada y bloqueada:', trimmedUrl);
     return '';
   }

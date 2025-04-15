@@ -50,7 +50,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
     
     const url = imageUrl;
     // Consideramos URLs locales seguras, pero igual verificamos que no tengan protocolos peligrosos
-    const isSafe = !/^(?:javascript|data|vbscript|file):/i.test(url);
+    const isSafe = !/^(?:javascript|vbscript|file):/i.test(url);
     
     return isSafe && (
       url.startsWith('blob:') || 
@@ -64,10 +64,19 @@ const ProductImage: React.FC<ProductImageProps> = ({
   const shouldUseInitialsPlaceholder = (): boolean => {
     // Si es un blob URL o URL local, NO usamos placeholder
     if (isBlobOrLocalUrl()) {
+      console.log('Es una URL local o blob, mostrando imagen:', imageUrl);
       return false;
     }
     
-    return isProblematicStore() || !imageUrl || imgState === 'error';
+    // Para tiendas problemáticas, sin URL o con errores, usamos placeholder
+    const shouldUsePlaceholder = isProblematicStore() || !imageUrl || imgState === 'error';
+    if (shouldUsePlaceholder) {
+      console.log('Usando placeholder porque:', 
+        isProblematicStore() ? 'es tienda problemática' : 
+        !imageUrl ? 'no hay URL' : 
+        'hubo error al cargar');
+    }
+    return shouldUsePlaceholder;
   };
   
   // Comprobar errores al cargar la imagen
