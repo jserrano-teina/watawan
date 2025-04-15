@@ -451,7 +451,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     // Consulta compleja para obtener los items reservados y sus reservas
-    const result = await db
+    const rawResult = await db
       .select({
         item: wishItems,
         reservation: reservations
@@ -465,7 +465,15 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
-    return result;
+    // Convertir los items a tipos correctos
+    return rawResult.map(record => ({
+      item: {
+        ...record.item,
+        isReserved: record.item.isReserved === null ? false : !!record.item.isReserved,
+        isReceived: record.item.isReceived === null ? false : !!record.item.isReceived
+      } as WishItem,
+      reservation: record.reservation
+    }));
   }
   
   async getUnreadReservationsForUser(userId: number): Promise<{item: WishItem, reservation: Reservation}[]> {
