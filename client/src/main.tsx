@@ -10,16 +10,37 @@ function AppWithReadyNotification() {
     const readyEvent = new Event('appReady');
     window.dispatchEvent(readyEvent);
     
-    // Establecer algunos comportamientos para PWA
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      // La app está corriendo en modo standalone (como PWA instalada)
-      document.body.classList.add('pwa-mode');
+    // Mejorada detección de PWA que incluye iOS en pantalla completa
+    const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
+                 (window.navigator.standalone === true) || 
+                 document.referrer.includes('ios-app://');
+    
+    if (isPWA) {
+      console.log('📱 Ejecutando en modo PWA/aplicación instalada');
       
-      // Prevenir pulldown refresh en iOS
-      document.body.addEventListener('touchmove', function(e) {
-        if (window.pageYOffset === 0 && e.touches[0].clientY > 0) {
+      // Aplicar clase PWA al cuerpo del documento para estilos específicos
+      document.body.classList.add('pwa-mode');
+      document.documentElement.classList.add('pwa-html-mode');
+      
+      // Prevenir comportamientos no deseados específicos de iOS
+      document.addEventListener('touchmove', function(e) {
+        // Permitir scroll en elementos con scroll establecido explícitamente
+        const target = e.target as HTMLElement;
+        const isScrollable = 
+          target.closest('.overflow-auto') || 
+          target.closest('.overflow-y-auto') || 
+          target.closest('.overflow-scroll') ||
+          target.closest('.scrollable-content');
+          
+        // Si estamos en la parte superior y no es un elemento scrollable, prevenir rebote
+        if (!isScrollable && window.pageYOffset === 0 && e.touches[0].clientY > 0) {
           e.preventDefault();
         }
+      }, { passive: false });
+      
+      // Asegurar que los eventos de touch funcionen correctamente 
+      document.addEventListener('gesturestart', function(e) {
+        e.preventDefault(); // Prevenir zoom con gesto de pellizco
       }, { passive: false });
     }
   }, []);

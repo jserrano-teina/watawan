@@ -101,31 +101,69 @@
 }
 
 /* Estilos específicos para PWA */
-.pwa-mode {
-  /* Sin barras de navegación del navegador, usamos más espacio */
-  height: 100vh;
-  overflow-y: auto;
-  touch-action: pan-y;
-  -webkit-overflow-scrolling: touch;
+/* Ajustes a nivel de documento HTML para PWAs */
+.pwa-html-mode {
+  height: 100%;
+  width: 100%;
+  position: fixed;
+  overflow: hidden;
+  touch-action: manipulation;
+  -webkit-text-size-adjust: 100%; /* Previene aumento de texto al girar en iOS */
 }
 
-/* Asegura que el contenido PWA no queda debajo de la barra de navegación */
+/* Ajustes específicos para iOS en PWA */
+@supports (-webkit-touch-callout: none) {
+  .pwa-html-mode {
+    /* Soporte para bordes redondeados en iOS */
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+}
+
+.pwa-mode {
+  /* Configuración principal del body para PWA */
+  height: 100%;
+  width: 100%;
+  overflow-y: auto; /* Auto permite scroll vertical */
+  overflow-x: hidden; /* Previene scroll horizontal */
+  touch-action: pan-y; /* Sólo permitir scroll vertical */
+  -webkit-overflow-scrolling: touch; /* Scroll con inercia en iOS */
+  overscroll-behavior: none; /* Previene rebote */
+  position: relative;
+  /* Mejora de rendimiento en dispositivos móviles */
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+}
+
+/* Asegura que el contenido PWA respeta las áreas seguras del dispositivo */
+.pwa-mode #root,
 .pwa-mode .app-container {
-  padding-bottom: env(safe-area-inset-bottom, 16px);
+  min-height: 100%;
+  width: 100%;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
   padding-top: env(safe-area-inset-top, 0);
   padding-left: env(safe-area-inset-left, 0);
   padding-right: env(safe-area-inset-right, 0);
 }
 
-/* Deshabilita los gestos del sistema que podrían interferir */
-.pwa-mode {
-  overscroll-behavior: none;
+/* Mejora el comportamiento de scroll en contenedores específicos */
+.pwa-mode .overflow-auto,
+.pwa-mode .overflow-y-auto,
+.pwa-mode .overflow-scroll,
+.pwa-mode .scrollable-content {
+  -webkit-overflow-scrolling: touch !important;
+  overscroll-behavior: contain;
+  /* Mejora de rendimiento para scrolling */
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 /* Previene que el texto se seleccione accidentalmente en la app móvil */
 .pwa-mode * {
   -webkit-user-select: none;
   user-select: none;
+  /* Elimina highlight al tocar en iOS */
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Permitir selección de texto solo en campos editables */
