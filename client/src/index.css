@@ -380,4 +380,15 @@ html {
   .text-gradient {
     @apply bg-gradient-to-r from-[#FFE066] to-[#FFE066]/70 bg-clip-text text-transparent;
   }
+  
+  /* Bloqueo de scroll para modales */
+  .body-scroll-lock {
+    overflow: hidden !important;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overscroll-behavior: none;
+    -webkit-overflow-scrolling: auto;
+    touch-action: none;
+  }
 }

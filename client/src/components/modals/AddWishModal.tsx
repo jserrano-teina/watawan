@@ -9,6 +9,7 @@ import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
 import { CustomTextarea } from "@/components/ui/custom-textarea";
+import useScrollLock from "@/hooks/useScrollLock";
 
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
@@ -66,6 +67,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  // Bloquear scroll del body cuando el modal está abierto
+  useScrollLock(isOpen);
   
   // Formulario paso 1 (solo enlace)
   const {
