@@ -1,11 +1,18 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import cookieParser from "cookie-parser";
+import { setupCsrf, verifyCsrf } from "./csrf";
 
 const app = express();
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
+// Parsear cookies
+app.use(cookieParser());
+// Configurar protección CSRF
+app.use(setupCsrf);  // Genera y proporciona el token CSRF
+app.use('/api', verifyCsrf);  // Verifica el token para rutas de API (excepto GET)
 
 app.use((req, res, next) => {
   const start = Date.now();
