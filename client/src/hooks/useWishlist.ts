@@ -36,8 +36,33 @@ export function useWishlist() {
   // Add wish item mutation
   const addWishItem = useMutation({
     mutationFn: async (data: WishFormData) => {
-      if (!wishlist) throw new Error('No wishlist found');
+      console.log('Iniciando añadir deseo con wishlist:', wishlist);
+      
+      // Si no hay wishlist, intentar obtenerla primero
+      if (!wishlist) {
+        console.log('No se encontró wishlist, intentando obtener una del servidor');
+        try {
+          // Intentar obtener/crear la wishlist primero
+          const wishlistRes = await apiRequest('GET', '/api/wishlist');
+          const fetchedWishlist = await wishlistRes.json();
+          console.log('Wishlist obtenida:', fetchedWishlist);
+          
+          if (fetchedWishlist && fetchedWishlist.id) {
+            // Usar la wishlist que acabamos de obtener
+            console.log(`Usando wishlist recién obtenida con ID ${fetchedWishlist.id}`);
+            const res = await apiRequest('POST', `/api/wishlist/${fetchedWishlist.id}/items`, data);
+            return res.json();
+          } else {
+            throw new Error('No se pudo obtener o crear una wishlist válida');
+          }
+        } catch (error) {
+          console.error('Error al intentar obtener wishlist:', error);
+          throw new Error('No se pudo obtener o crear una wishlist: ' + (error instanceof Error ? error.message : String(error)));
+        }
+      }
 
+      // Usar la wishlist existente en estado
+      console.log(`Usando wishlist existente con ID ${wishlist.id}`);
       const res = await apiRequest('POST', `/api/wishlist/${wishlist.id}/items`, data);
       return res.json();
     },

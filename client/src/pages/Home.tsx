@@ -98,9 +98,39 @@ const Home: React.FC = () => {
         setShowAddWishModal(false);
         showToast('Deseo actualizado correctamente', 'success');
       } else {
-        // Ejecutar la creación
-        const result = await addWishItem.mutateAsync(formattedData);
+        // Verificación adicional si la wishlist no está disponible
+        if (!wishlist || !wishlist.id) {
+          console.log('⚠️ Se va a añadir un deseo sin wishlist confirmada en el estado', 
+            'La función en useWishlist intentará recuperarla automáticamente');
+        }
         
+        // Ejecutar la creación con manejo mejorado de errores
+        let retryCount = 0;
+        const maxRetries = 2;
+        
+        const attemptAddWish = async (): Promise<any> => {
+          try {
+            return await addWishItem.mutateAsync(formattedData);
+          } catch (e) {
+            // Capturar específicamente errores relacionados con "No wishlist found"
+            const error = e as Error;
+            if (retryCount < maxRetries && 
+                (error.message.includes('No wishlist found') || 
+                 error.message.includes('No se pudo obtener o crear una wishlist'))) {
+              
+              retryCount++;
+              console.log(`Reintentando añadir deseo (intento ${retryCount}/${maxRetries})...`);
+              
+              // Pequeña pausa antes de reintentar
+              await new Promise(resolve => setTimeout(resolve, 1000));
+              return attemptAddWish();
+            }
+            throw error;
+          }
+        };
+        
+        // Intentar añadir el deseo con reintentos automáticos
+        const result = await attemptAddWish();
         console.log('Deseo añadido correctamente:', result);
         
         // Cerrar el modal solo después de completar la creación
@@ -112,8 +142,22 @@ const Home: React.FC = () => {
       console.error('Error saving wish:', error);
       console.error('Error details:', error.message || 'Error desconocido');
       
+      // Mensajes más amigables para el usuario según el tipo de error
+      let errorMessage: string;
+      
+      if (error.message?.includes('No wishlist found') || 
+          error.message?.includes('No se pudo obtener o crear una wishlist')) {
+        errorMessage = 'No pudimos encontrar tu lista de deseos. Por favor, recarga la aplicación e inténtalo de nuevo.';
+      } else if (error.message?.includes('401') || error.message?.includes('No autenticado')) {
+        errorMessage = 'Tu sesión ha caducado. Por favor, inicia sesión de nuevo.';
+      } else if (error.message?.includes('timeout') || error.message?.includes('ECONNREFUSED')) {
+        errorMessage = 'Parece que hay problemas de conexión. Verifica tu red e inténtalo de nuevo.';
+      } else {
+        errorMessage = error.message || 'Ocurrió un error inesperado';
+      }
+      
       // Mostrar un toast con más información si está disponible
-      showToast(`Error al guardar el deseo: ${error.message || 'Error desconocido'}`, 'error');
+      showToast(`Error al guardar el deseo: ${errorMessage}`, 'error');
       
       // Importante: no cerramos el modal en caso de error para que el usuario pueda corregir
     } finally {
