@@ -320,7 +320,7 @@ const ProfilePage = () => {
         logoutMutation={logoutMutation}
       />
       
-      <div className="flex flex-col items-center mb-2 mt-6 pb-16">
+      <div className="flex flex-col items-center mb-2 mt-6 pb-4">
         <img 
           src="/images/waw_logo.svg" 
           alt="WataWan" 
