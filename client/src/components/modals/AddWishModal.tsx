@@ -473,7 +473,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
               {/* Barra de navegación fija inferior */}
-              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] w-full left-0 right-0 safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={handleClose}
@@ -614,7 +614,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
               {/* Barra de navegación fija inferior */}
-              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] w-full left-0 right-0 safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={itemToEdit ? handleClose : goBackToStepOne}
