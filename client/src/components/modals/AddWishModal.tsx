@@ -438,7 +438,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {/* Contenido scrollable */}
               <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
                 <div className="flex flex-col justify-center w-full">
-                  <div className="mb-4">
+                  <div className="mb-0">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
                       Enlace de compra
                     </label>
