@@ -5,6 +5,9 @@ import { es } from 'date-fns/locale';
 import { ExternalLink, ArrowLeft, Check, CheckCheck, Lock as LockIcon } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { Button } from '@/components/ui/button';
+import { SafeLink } from '@/components/ui/SafeLink';
+import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface DetailsModalProps {
   isOpen: boolean;
@@ -98,7 +101,9 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                 </div>
                 <div>
                   {item.reserverName ? (
-                    <p className="font-medium text-white text-sm"><span className="font-bold">{item.reserverName}</span> ya regaló este artículo</p>
+                    <p className="font-medium text-white text-sm">
+                      <span className="font-bold">{sanitizeInput(item.reserverName)}</span> ya regaló este artículo
+                    </p>
                   ) : (
                     <p className="font-medium text-white text-sm">Este regalo ya ha sido recibido</p>
                   )}
@@ -119,7 +124,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
               {item.purchaseLink ? (
-                <a 
+                <SafeLink 
                   href={item.purchaseLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -127,7 +132,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                 >
                   <span className="truncate">{item.purchaseLink}</span>
                   <ExternalLink size={16} className="flex-shrink-0 ml-2" />
-                </a>
+                </SafeLink>
               ) : (
                 <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
               )}
@@ -136,7 +141,11 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             {item.description && (
               <div className="mb-6">
                 <h3 className="text-sm font-medium mb-2 text-white">Descripción</h3>
-                <p className="text-sm text-white/80 whitespace-pre-line">{item.description}</p>
+                <SanitizedHTML 
+                  html={item.description} 
+                  className="text-sm text-white/80 whitespace-pre-line" 
+                  tag="p"
+                />
               </div>
             )}
           </div>

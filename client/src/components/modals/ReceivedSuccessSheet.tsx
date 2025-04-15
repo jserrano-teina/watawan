@@ -9,6 +9,7 @@ import { WishItem } from "@/types";
 import { useEffect, useState } from 'react';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
 import { CustomSheetContent } from '@/components/CustomSheetContent';
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface ReceivedSuccessSheetProps {
   isOpen: boolean;
@@ -97,7 +98,7 @@ export function ReceivedSuccessSheet({
           {/* Mostrar mensaje de agradecimiento solo si hay reserverName */}
           {item.reserverName && (
             <p className="text-white/80 mb-8">
-              No olvides dar las gracias a <span className="font-semibold">{item.reserverName}</span>
+              No olvides dar las gracias a <span className="font-semibold">{sanitizeInput(item.reserverName)}</span>
             </p>
           )}
           

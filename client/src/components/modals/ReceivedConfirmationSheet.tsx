@@ -11,6 +11,8 @@ import { useEffect, useState } from 'react';
 import { useInteractionLock } from '@/hooks/use-interaction-lock';
 import { CustomSheetContent } from '@/components/CustomSheetContent';
 import { ReceivedSuccessSheet } from './ReceivedSuccessSheet';
+import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
+import { sanitizeInput } from '@/lib/sanitize';
 
 interface ReceivedConfirmationSheetProps {
   isOpen: boolean;
@@ -134,7 +136,9 @@ export function ReceivedConfirmationSheet({
           </SheetHeader>
           
           <div className="text-left px-6 pt-6 pb-2 flex items-start justify-between">
-            <h3 className="text-white text-xl font-medium">{item.title}</h3>
+            <h3 className="text-white text-xl font-medium">
+              {sanitizeInput(item.title)}
+            </h3>
             <button 
               onClick={handleClose}
               className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1 ml-3 mt-1"
