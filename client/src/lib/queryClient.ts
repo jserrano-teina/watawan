@@ -1,5 +1,6 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { sanitizeObject } from './sanitize';
+import { updateTokenFromResponse, addTokenToHeaders } from './csrfManager';
 
 /**
  * Comprueba si la respuesta HTTP es correcta, en caso contrario extrae el mensaje de error
@@ -42,15 +43,30 @@ export async function apiRequest(
       sanitizedData = sanitizeObject(data as Record<string, any>);
     }
     
-    const res = await fetch(url, {
-      method,
-      headers: data ? { 
+    // Crear headers base y añadir el token CSRF para métodos no seguros
+    let headers: Record<string, string> = {};
+    
+    if (data) {
+      headers = { 
         "Content-Type": "application/json",
         "Accept": "application/json"
-      } : {},
+      };
+    }
+    
+    // Añadir token CSRF para métodos no seguros (POST, PUT, DELETE, etc.)
+    if (!['GET', 'HEAD', 'OPTIONS'].includes(method.toUpperCase())) {
+      headers = addTokenToHeaders(headers);
+    }
+    
+    const res = await fetch(url, {
+      method,
+      headers,
       body: sanitizedData ? JSON.stringify(sanitizedData) : undefined,
       credentials: "include",
     });
+    
+    // Actualizar el token CSRF si está presente en la respuesta
+    updateTokenFromResponse(res.headers);
 
     await throwIfResNotOk(res);
     console.log(`Éxito en ${method} a ${url}`);
@@ -82,7 +98,13 @@ export const getQueryFn: <T>(options: {
     console.log(`Realizando petición a: ${url}`);
     const res = await fetch(url, {
       credentials: "include",
+      headers: {
+        "Accept": "application/json"
+      }
     });
+    
+    // Actualizar el token CSRF si está presente en la respuesta
+    updateTokenFromResponse(res.headers);
 
     // Manejar respuesta 401 (no autorizado)
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {

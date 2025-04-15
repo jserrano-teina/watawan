@@ -62,12 +62,26 @@ export class DatabaseStorage implements IStorage {
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
-    return result.length ? result[0] : undefined;
+    if (!result.length) return undefined;
+    
+    // Asegurarnos de que los tipos coinciden con la interfaz User
+    return {
+      ...result[0],
+      // Convertir explícitamente el campo settings a Record<string, any> | null
+      settings: result[0].settings as Record<string, any> | null
+    };
   }
   
   async getUserByEmail(email: string): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.email, email));
-    return result.length ? result[0] : undefined;
+    if (!result.length) return undefined;
+    
+    // Asegurarnos de que los tipos coinciden con la interfaz User
+    return {
+      ...result[0],
+      // Convertir explícitamente el campo settings a Record<string, any> | null
+      settings: result[0].settings as Record<string, any> | null
+    };
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
@@ -77,48 +91,54 @@ export class DatabaseStorage implements IStorage {
       const [user] = await db.insert(users).values(insertUser).returning();
       console.log(`Usuario creado con ID: ${user.id}`);
       
+      // Convertir el objeto user al tipo User
+      const typedUser: User = {
+        ...user,
+        settings: user.settings as Record<string, any> | null
+      };
+      
       // Crear wishlist por defecto para el usuario
       const shareableLink = nanoid(10);
-      console.log(`Creando wishlist predeterminada para usuario ${user.id} con link ${shareableLink}`);
+      console.log(`Creando wishlist predeterminada para usuario ${typedUser.id} con link ${shareableLink}`);
       
       try {
         const defaultName = "Mi lista de deseos";
         const slug = generateSlug(defaultName);
         
         const [wishlist] = await db.insert(wishlists).values({
-          userId: user.id,
+          userId: typedUser.id,
           name: defaultName,
           slug,
           shareableLink
         }).returning();
         
-        console.log(`Wishlist creada para usuario ${user.id}: ${wishlist.id} con link ${wishlist.shareableLink}`);
+        console.log(`Wishlist creada para usuario ${typedUser.id}: ${wishlist.id} con link ${wishlist.shareableLink}`);
       } catch (wishlistError) {
-        console.error(`Error al crear wishlist para usuario ${user.id}:`, wishlistError);
+        console.error(`Error al crear wishlist para usuario ${typedUser.id}:`, wishlistError);
         // Intentar de nuevo con un nuevo shareableLink
         try {
           const newShareableLink = nanoid(10);
-          console.log(`Reintentando crear wishlist para usuario ${user.id} con nuevo link ${newShareableLink}`);
+          console.log(`Reintentando crear wishlist para usuario ${typedUser.id} con nuevo link ${newShareableLink}`);
           
           const defaultName = "Mi lista de deseos";
           const slug = generateSlug(defaultName);
           
           const [retryWishlist] = await db.insert(wishlists).values({
-            userId: user.id,
+            userId: typedUser.id,
             name: defaultName,
             slug,
             shareableLink: newShareableLink
           }).returning();
           
-          console.log(`Wishlist creada en segundo intento para usuario ${user.id}: ${retryWishlist.id}`);
+          console.log(`Wishlist creada en segundo intento para usuario ${typedUser.id}: ${retryWishlist.id}`);
         } catch (retryError) {
-          console.error(`Error en segundo intento de crear wishlist para usuario ${user.id}:`, retryError);
+          console.error(`Error en segundo intento de crear wishlist para usuario ${typedUser.id}:`, retryError);
           // Continuamos con la ejecución a pesar del error - el mecanismo de seguridad
           // en getUserWishlists creará una wishlist cuando sea necesario
         }
       }
       
-      return user;
+      return typedUser;
     } catch (error) {
       console.error(`Error en createUser:`, error);
       throw error;
@@ -136,7 +156,11 @@ export class DatabaseStorage implements IStorage {
       throw new Error(`User with ID ${id} not found`);
     }
     
-    return updatedUser;
+    // Convertir el objeto a tipo User
+    return {
+      ...updatedUser,
+      settings: updatedUser.settings as Record<string, any> | null
+    };
   }
   
   async updateLastLogin(id: number): Promise<User> {
@@ -276,17 +300,24 @@ export class DatabaseStorage implements IStorage {
   // WishItem operations
   async getWishItemsForWishlist(wishlistId: number, includeReceived: boolean = false): Promise<WishItem[]> {
     // Construir la consulta base
-    let items: WishItem[] = [];
+    let rawItems = [];
     
     if (includeReceived) {
-      items = await db.select().from(wishItems).where(eq(wishItems.wishlistId, wishlistId));
+      rawItems = await db.select().from(wishItems).where(eq(wishItems.wishlistId, wishlistId));
     } else {
-      items = await db.select().from(wishItems)
+      rawItems = await db.select().from(wishItems)
         .where(and(
           eq(wishItems.wishlistId, wishlistId),
           eq(wishItems.isReceived, false)
         ));
     }
+    
+    // Convertir los ítems al tipo correcto
+    const items: WishItem[] = rawItems.map(item => ({
+      ...item,
+      isReserved: item.isReserved === null ? false : !!item.isReserved,
+      isReceived: item.isReceived === null ? false : !!item.isReceived
+    }));
     
     // Ordenar según los criterios:
     // 1. Primero los no recibidos
@@ -306,31 +337,48 @@ export class DatabaseStorage implements IStorage {
 
   async getWishItem(id: number): Promise<WishItem | undefined> {
     const result = await db.select().from(wishItems).where(eq(wishItems.id, id));
-    return result.length ? result[0] : undefined;
+    if (!result.length) return undefined;
+    
+    // Convertir al tipo correcto
+    return {
+      ...result[0],
+      isReserved: result[0].isReserved === null ? false : !!result[0].isReserved,
+      isReceived: result[0].isReceived === null ? false : !!result[0].isReceived
+    };
   }
 
   async createWishItem(item: InsertWishItem): Promise<WishItem> {
-    const [newItem] = await db.insert(wishItems).values({
+    const [rawItem] = await db.insert(wishItems).values({
       ...item,
       isReserved: false,
       isReceived: false
     }).returning();
     
-    return newItem;
+    // Convertir al tipo correcto
+    return {
+      ...rawItem,
+      isReserved: rawItem.isReserved === null ? false : !!rawItem.isReserved,
+      isReceived: rawItem.isReceived === null ? false : !!rawItem.isReceived
+    };
   }
 
   async updateWishItem(id: number, itemUpdate: Partial<WishItem>): Promise<WishItem> {
-    const [updatedItem] = await db
+    const [rawItem] = await db
       .update(wishItems)
       .set(itemUpdate)
       .where(eq(wishItems.id, id))
       .returning();
       
-    if (!updatedItem) {
+    if (!rawItem) {
       throw new Error(`Wish item with ID ${id} not found`);
     }
     
-    return updatedItem;
+    // Convertir al tipo correcto
+    return {
+      ...rawItem,
+      isReserved: rawItem.isReserved === null ? false : !!rawItem.isReserved,
+      isReceived: rawItem.isReceived === null ? false : !!rawItem.isReceived
+    };
   }
 
   async deleteWishItem(id: number): Promise<boolean> {
