@@ -466,7 +466,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 </div>
               </div>
               
-              <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto">
+              <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom">
                 <Button 
                   type="button" 
                   onClick={handleClose}
@@ -603,7 +603,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 />
               )}
               
-              <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto">
+              <div className="mt-auto pt-4 fixed bottom-0 left-0 right-0 flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom">
                 <Button 
                   type="button" 
                   onClick={itemToEdit ? handleClose : goBackToStepOne}
