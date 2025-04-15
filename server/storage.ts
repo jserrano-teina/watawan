@@ -11,6 +11,7 @@ import { eq, and, desc, sql, asc, lt, gt } from "drizzle-orm";
 import connectPgSimple from "connect-pg-simple";
 import session from "express-session";
 import { pool } from "./db";
+import { generateSlug, generateShareableId } from "./utils";
 
 export interface IStorage {
   // User operations
@@ -81,8 +82,13 @@ export class DatabaseStorage implements IStorage {
       console.log(`Creando wishlist predeterminada para usuario ${user.id} con link ${shareableLink}`);
       
       try {
+        const defaultName = "Mi lista de deseos";
+        const slug = generateSlug(defaultName);
+        
         const [wishlist] = await db.insert(wishlists).values({
           userId: user.id,
+          name: defaultName,
+          slug,
           shareableLink
         }).returning();
         
@@ -94,8 +100,13 @@ export class DatabaseStorage implements IStorage {
           const newShareableLink = nanoid(10);
           console.log(`Reintentando crear wishlist para usuario ${user.id} con nuevo link ${newShareableLink}`);
           
+          const defaultName = "Mi lista de deseos";
+          const slug = generateSlug(defaultName);
+          
           const [retryWishlist] = await db.insert(wishlists).values({
             userId: user.id,
+            name: defaultName,
+            slug,
             shareableLink: newShareableLink
           }).returning();
           
@@ -160,8 +171,13 @@ export class DatabaseStorage implements IStorage {
           const shareableLink = nanoid(10);
           console.log(`[getUserWishlists] Generado shareableLink: ${shareableLink}`);
           
+          const defaultName = "Mi lista de deseos";
+          const slug = generateSlug(defaultName);
+          
           const [newWishlist] = await db.insert(wishlists).values({
             userId,
+            name: defaultName,
+            slug,
             shareableLink
           }).returning();
           
@@ -175,8 +191,13 @@ export class DatabaseStorage implements IStorage {
             const newShareableLink = nanoid(10);
             console.log(`[getUserWishlists] Reintentando con nuevo shareableLink: ${newShareableLink}`);
             
+            const defaultName = "Mi lista de deseos";
+            const slug = generateSlug(defaultName);
+            
             const [retryWishlist] = await db.insert(wishlists).values({
               userId,
+              name: defaultName,
+              slug,
               shareableLink: newShareableLink
             }).returning();
             
@@ -198,6 +219,21 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWishlist(wishlist: InsertWishlist): Promise<Wishlist> {
+    // Si no se proporcionó un nombre personalizado, usar uno por defecto
+    if (!wishlist.name) {
+      wishlist.name = "Mi lista de deseos";
+    }
+    
+    // Si no hay slug, generarlo a partir del nombre
+    if (!wishlist.slug) {
+      wishlist.slug = generateSlug(wishlist.name);
+    }
+    
+    // Si no hay shareableLink, generarlo usando nanoid para compatibilidad
+    if (!wishlist.shareableLink) {
+      wishlist.shareableLink = generateShareableId(10);
+    }
+    
     const [newWishlist] = await db.insert(wishlists).values(wishlist).returning();
     return newWishlist;
   }
