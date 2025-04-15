@@ -263,7 +263,7 @@ const Home: React.FC = () => {
         style={{ 
           WebkitOverflowScrolling: 'touch', 
           height: 'calc(100vh - 56px)', 
-          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+          paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' 
         }}>
         {myWishItems.length > 0 && (
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
