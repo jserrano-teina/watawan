@@ -220,59 +220,114 @@ export class DatabaseStorage implements IStorage {
   async getUserWishlists(userId: number): Promise<Wishlist[]> {
     try {
       console.log(`[getUserWishlists] Buscando wishlists para usuario ${userId}`);
-      const userWishlists = await db.select().from(wishlists).where(eq(wishlists.userId, userId));
       
-      // Si no se encuentra ninguna wishlist para el usuario, crear una por defecto
-      if (userWishlists.length === 0) {
-        console.log(`[getUserWishlists] No se encontraron wishlists para el usuario ${userId}. Creando una por defecto.`);
+      // Primero verificamos si el usuario tiene wishlist, ordenando por fecha de creación descendente
+      const userWishlists = await db
+        .select()
+        .from(wishlists)
+        .where(eq(wishlists.userId, userId))
+        .orderBy(desc(wishlists.createdAt));
+      
+      // Si ya hay wishlists, simplemente las devolvemos
+      if (userWishlists.length > 0) {
+        console.log(`[getUserWishlists] Se encontraron ${userWishlists.length} wishlists para el usuario ${userId}`);
+        return userWishlists;
+      }
+      
+      // Si no hay wishlists, implementamos un sistema de creación con reintentos
+      console.log(`[getUserWishlists] No se encontraron wishlists para el usuario ${userId}. Creando una por defecto.`);
+      
+      // Función para crear una wishlist con reintentos automáticos
+      const createWishlistWithRetry = async (maxAttempts = 3): Promise<Wishlist> => {
+        let lastError: any = null;
         
-        try {
-          const shareableLink = nanoid(10);
-          console.log(`[getUserWishlists] Generado shareableLink: ${shareableLink}`);
-          
-          const defaultName = "Mi lista de deseos";
-          const slug = generateSlug(defaultName);
-          
-          const [newWishlist] = await db.insert(wishlists).values({
-            userId,
-            name: defaultName,
-            slug,
-            shareableLink
-          }).returning();
-          
-          console.log(`[getUserWishlists] Wishlist creada para usuario ${userId}: ${newWishlist.id} con link ${newWishlist.shareableLink}`);
-          return [newWishlist];
-        } catch (createError) {
-          console.error(`[getUserWishlists] Error al crear wishlist para usuario ${userId}:`, createError);
-          
-          // Intentar de nuevo con un nuevo shareableLink en caso de error de duplicación
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
           try {
-            const newShareableLink = nanoid(10);
-            console.log(`[getUserWishlists] Reintentando con nuevo shareableLink: ${newShareableLink}`);
+            // Generar un identificador único para cada intento
+            const shareableLink = nanoid(10);
+            console.log(`[getUserWishlists] Intento ${attempt}/${maxAttempts} - Generado shareableLink: ${shareableLink}`);
             
             const defaultName = "Mi lista de deseos";
             const slug = generateSlug(defaultName);
             
-            const [retryWishlist] = await db.insert(wishlists).values({
+            // Crear la wishlist
+            const [newWishlist] = await db.insert(wishlists).values({
               userId,
               name: defaultName,
               slug,
-              shareableLink: newShareableLink
+              shareableLink,
+              createdAt: new Date() // Aseguramos fecha de creación explícita
             }).returning();
             
-            console.log(`[getUserWishlists] Wishlist creada en segundo intento para usuario ${userId}: ${retryWishlist.id}`);
-            return [retryWishlist];
-          } catch (retryError) {
-            console.error(`[getUserWishlists] Error en segundo intento de crear wishlist:`, retryError);
-            throw new Error(`No se pudo crear una wishlist para el usuario ${userId} después de varios intentos`);
+            console.log(`[getUserWishlists] Intento ${attempt}: Wishlist creada para usuario ${userId}: ${newWishlist.id}`);
+            
+            // Verificar que la wishlist realmente se haya creado haciendo una consulta adicional
+            const verifyWishlist = await db
+              .select()
+              .from(wishlists)
+              .where(eq(wishlists.id, newWishlist.id))
+              .limit(1);
+            
+            if (verifyWishlist.length === 0) {
+              throw new Error(`La wishlist ${newWishlist.id} parece haberse creado pero no se puede verificar`);
+            }
+            
+            return newWishlist;
+          } catch (error) {
+            lastError = error;
+            console.error(`[getUserWishlists] Error en intento ${attempt}/${maxAttempts}:`, error);
+            
+            // Si no es el último intento, esperar un poco antes de reintentar
+            if (attempt < maxAttempts) {
+              const backoffMs = 100 * Math.pow(2, attempt - 1); // Backoff exponencial
+              console.log(`[getUserWishlists] Esperando ${backoffMs}ms antes del siguiente intento...`);
+              await new Promise(resolve => setTimeout(resolve, backoffMs));
+              
+              // Verificar una vez más si mientras tanto se creó una wishlist (otro proceso podría haberla creado)
+              const checkAgain = await db
+                .select()
+                .from(wishlists)
+                .where(eq(wishlists.userId, userId))
+                .limit(1);
+              
+              if (checkAgain.length > 0) {
+                console.log(`[getUserWishlists] Se encontró una wishlist mientras se esperaba para reintentar`);
+                return checkAgain[0];
+              }
+            }
           }
         }
+        
+        // Si llegamos aquí, todos los intentos fallaron
+        throw new Error(`No se pudo crear una wishlist para el usuario ${userId} después de ${maxAttempts} intentos: ${lastError?.message || 'Error desconocido'}`);
+      };
+      
+      // Intentar crear la wishlist con el sistema de reintentos
+      const newWishlist = await createWishlistWithRetry();
+      
+      // Devolver la wishlist creada como un array
+      return [newWishlist];
+    } catch (error) {
+      console.error(`[getUserWishlists] Error crítico:`, error);
+      
+      // Como último recurso, hacer una verificación final antes de fallar
+      try {
+        console.log(`[getUserWishlists] Verificación final para usuario ${userId} antes de fallar`);
+        const finalCheck = await db
+          .select()
+          .from(wishlists)
+          .where(eq(wishlists.userId, userId))
+          .limit(1);
+        
+        if (finalCheck.length > 0) {
+          console.log(`[getUserWishlists] En verificación final, se encontró wishlist: ${finalCheck[0].id}`);
+          return finalCheck;
+        }
+      } catch (finalError) {
+        console.error(`[getUserWishlists] Error en verificación final:`, finalError);
       }
       
-      console.log(`[getUserWishlists] Se encontraron ${userWishlists.length} wishlists para el usuario ${userId}`);
-      return userWishlists;
-    } catch (error) {
-      console.error(`[getUserWishlists] Error general:`, error);
+      // No hay más opciones, lanzar el error original
       throw error;
     }
   }

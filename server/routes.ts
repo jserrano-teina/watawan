@@ -201,38 +201,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid wishlist ID" });
       }
       
-      console.log(`[POST /wishlist/:id/items] Buscando wishlist con ID: ${wishlistId}`);
-      let targetWishlist = await storage.getWishlist(wishlistId);
-      
-      if (!targetWishlist) {
-        console.log(`[POST /wishlist/:id/items] Wishlist ${wishlistId} no encontrada, obteniendo wishlists del usuario`);
+      // Función para obtener o crear una wishlist válida para el usuario
+      async function getOrCreateWishlist(userId: number, requestedWishlistId?: number): Promise<Wishlist> {
+        console.log(`[getOrCreateWishlist] Obteniendo wishlist para usuario ${userId}${requestedWishlistId ? `, wishlist solicitada: ${requestedWishlistId}` : ''}`);
         
-        // Obtener todas las wishlists del usuario
-        const userWishlists = await storage.getUserWishlists(req.user.id);
-        
-        if (userWishlists.length === 0) {
-          console.log(`[POST /wishlist/:id/items] No se encontraron wishlists para el usuario, creando una nueva`);
+        try {
+          // Paso 1: Si se solicitó una wishlist específica, intentar obtenerla
+          if (requestedWishlistId) {
+            const specificWishlist = await storage.getWishlist(requestedWishlistId);
+            
+            // Verificar si existe y pertenece al usuario
+            if (specificWishlist && specificWishlist.userId === userId) {
+              console.log(`[getOrCreateWishlist] Wishlist específica encontrada y verificada: ${specificWishlist.id}`);
+              return specificWishlist;
+            } else {
+              console.log(`[getOrCreateWishlist] La wishlist solicitada ${requestedWishlistId} no existe o no pertenece al usuario ${userId}`);
+            }
+          }
           
-          // Si no hay ninguna wishlist, crear una por defecto
+          // Paso 2: Intentar obtener cualquier wishlist del usuario
+          console.log(`[getOrCreateWishlist] Buscando wishlists existentes para usuario ${userId}`);
+          const userWishlists = await storage.getUserWishlists(userId);
+          
+          if (userWishlists.length > 0) {
+            console.log(`[getOrCreateWishlist] Se encontraron ${userWishlists.length} wishlists, usando la primera: ${userWishlists[0].id}`);
+            return userWishlists[0];
+          }
+          
+          // Paso 3: Como último recurso, intentar crear una nueva wishlist
+          console.log(`[getOrCreateWishlist] No se encontraron wishlists, creando una nueva para usuario ${userId}`);
           const shareableLink = nanoid(10);
-          targetWishlist = await storage.createWishlist({
-            userId: req.user.id,
+          const defaultName = "Mi lista de deseos";
+          const slug = generateSlug(defaultName);
+          
+          // Crear wishlist con todos los campos necesarios
+          const newWishlist = await storage.createWishlist({
+            userId,
+            name: defaultName,
+            slug,
             shareableLink
           });
           
-          console.log(`[POST /wishlist/:id/items] Nueva wishlist creada: ${targetWishlist.id}`);
-        } else {
-          // Usar la primera wishlist del usuario
-          targetWishlist = userWishlists[0];
-          console.log(`[POST /wishlist/:id/items] Usando primera wishlist del usuario: ${targetWishlist.id}`);
-        }
-      } else {
-        // Verificar que la wishlist pertenece al usuario
-        if (targetWishlist.userId !== req.user.id) {
-          console.log(`[POST /wishlist/:id/items] Error: La wishlist pertenece a otro usuario (${targetWishlist.userId})`);
-          return res.status(403).json({ message: "You don't have permission to add items to this wishlist" });
+          console.log(`[getOrCreateWishlist] Nueva wishlist creada: ${newWishlist.id}`);
+          return newWishlist;
+        } catch (error) {
+          console.error(`[getOrCreateWishlist] Error crítico:`, error);
+          throw new Error(`No se pudo obtener o crear una wishlist válida: ${error instanceof Error ? error.message : String(error)}`);
         }
       }
+      
+      // Usar la función para obtener o crear una wishlist válida
+      console.log(`[POST /wishlist/:id/items] Obteniendo wishlist para deseo`);
+      const targetWishlist = await getOrCreateWishlist(req.user.id, wishlistId);
+      
+      // Log para confirmar qué wishlist se está usando
+      console.log(`[POST /wishlist/:id/items] Usando wishlist: ${targetWishlist.id} para la creación del deseo`);
       
       // Guardar los datos originales del cuerpo de la solicitud
       let itemData = { ...req.body };
