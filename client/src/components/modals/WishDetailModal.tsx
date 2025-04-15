@@ -18,6 +18,7 @@ import { SafeLink } from '@/components/ui/SafeLink';
 import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
 import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
 import { apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
+import { useToast } from '@/hooks/use-toast';
 
 interface WishDetailModalProps {
   isOpen: boolean;
@@ -48,6 +49,7 @@ const MobileView = ({
   const [showReceivedConfirmation, setShowReceivedConfirmation] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const queryClient = useQueryClient();
+  const { toast } = useToast();
   
   // Mutation para marcar como recibido
   const markAsReceivedMutation = useMutation({
@@ -64,7 +66,7 @@ const MobileView = ({
       invalidateAllAppQueries(item.wishlistId);
       
       // Mostrar un mensaje de éxito al usuario
-      toast({
+      toast?.({
         title: "¡Regalo recibido!",
         description: "Se ha marcado el elemento como recibido correctamente.",
         variant: "success"
