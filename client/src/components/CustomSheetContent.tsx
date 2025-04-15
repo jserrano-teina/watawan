@@ -29,8 +29,8 @@ export function CustomSheetContent({
       <Dialog.Content
         className={cn(
           sheetVariants({ side }), 
-          side === "bottom" ? "w-full safe-area-bottom" : "",
-          side === "top" ? "w-full safe-area-top" : "",
+          side === "bottom" ? "max-w-[500px] mx-auto w-full safe-area-bottom" : "",
+          side === "top" ? "max-w-[500px] mx-auto w-full safe-area-top" : "",
           side === "left" ? "safe-area-left safe-area-top safe-area-bottom" : "",
           side === "right" ? "safe-area-right safe-area-top safe-area-bottom" : "",
           className

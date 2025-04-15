@@ -409,7 +409,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-      <div className="fixed inset-0 z-50 overflow-hidden w-full">
+      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
         <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-hidden">
           {/* Header con título y botón cerrar */}
           <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
@@ -473,7 +473,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
               {/* Barra de navegación fija inferior */}
-              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] w-full left-0 right-0 safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={handleClose}
@@ -614,7 +614,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
               {/* Barra de navegación fija inferior */}
-              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] w-full left-0 right-0 safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={itemToEdit ? handleClose : goBackToStepOne}

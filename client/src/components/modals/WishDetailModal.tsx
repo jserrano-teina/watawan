@@ -143,7 +143,7 @@ const MobileView = ({
       style={{ opacity: modalVisible ? 1 : 0 }}
     >
       <div 
-        className="fixed inset-0 z-50 flex flex-col bg-[#121212] w-full overflow-hidden transform transition-transform duration-300 ease-out"
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto overflow-hidden transform transition-transform duration-300 ease-out"
         style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
       >
         {/* Botón flotante para volver */}
@@ -299,7 +299,7 @@ const MobileView = ({
           </div>
           
           {/* Footer con botones fijos que respeta el área segura */}
-          <div className="fixed bottom-0 left-0 right-0 w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom fixed-navigation">
+          <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom">
             <button
               onClick={handleDelete}
               className="px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
