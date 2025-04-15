@@ -6,6 +6,9 @@ import ReservationModal from './modals/ReservationModal';
 import DetailsModal from './modals/DetailsModal';
 import ProductImage from './ProductImage';
 import { X, ExternalLink, ArrowLeft, Lock as LockIcon } from 'lucide-react';
+import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
+import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
+import { SafeLink } from '@/components/ui/SafeLink';
 
 interface SharedWishlistViewProps {
   owner: User;
@@ -86,7 +89,9 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   
   const handleConfirmReservation = async (reserverName: string) => {
     if (selectedItem) {
-      await onReserveItem(selectedItem.id, reserverName);
+      // Sanitizar el nombre del reservante antes de enviarlo
+      const sanitizedName = sanitizeInput(reserverName);
+      await onReserveItem(selectedItem.id, sanitizedName);
       // Solo cerrar el modal de reserva, mantener abierto el modal de detalles
       setShowReservationModal(false);
       
@@ -101,7 +106,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
       {/* Banner flotante superior - z-index reducido para que quede por debajo de modales y sheets */}
       <div className="fixed top-0 left-0 right-0 bg-[#1a1a1a] border-b border-[#333] py-3 px-4 z-[10]">
         <div className="flex items-center justify-center mx-auto">
-          <a 
+          <SafeLink 
             href="/auth" 
             target="_blank" 
             rel="noopener noreferrer"
@@ -113,7 +118,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
               alt="WataWan" 
               className="h-7 ml-2"
             />
-          </a>
+          </SafeLink>
         </div>
       </div>
       
@@ -200,7 +205,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
             >
               {/* Icono de enlace externo (solo para items no reservados con enlace) */}
               {!item.isReserved && item.purchaseLink && item.purchaseLink.trim() !== "" && (
-                <a 
+                <SafeLink 
                   href={item.purchaseLink}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -208,7 +213,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   className="absolute top-3 right-3 p-1.5 rounded-full bg-[#1a1a1a] hover:bg-[#252525] transition-colors z-10"
                 >
                   <ExternalLink size={16} className="text-[#FFE066]" />
-                </a>
+                </SafeLink>
               )}
               
               <div 
