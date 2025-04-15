@@ -302,15 +302,6 @@ const ProfilePage = () => {
             <span>Cerrar sesión</span>
           </button>
         </div>
-        
-        <div className="flex flex-col items-center mb-2 mt-6">
-          <img 
-            src="/images/waw_logo.svg" 
-            alt="WataWan" 
-            className="h-8 mx-auto mb-1" 
-          />
-          <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
-        </div>
       </main>
 
       {/* Bottom Sheet para editar perfil */}
@@ -328,6 +319,15 @@ const ProfilePage = () => {
         onClose={() => setIsLogoutDialogOpen(false)}
         logoutMutation={logoutMutation}
       />
+      
+      <div className="flex flex-col items-center mb-2 mt-6 pb-16">
+        <img 
+          src="/images/waw_logo.svg" 
+          alt="WataWan" 
+          className="h-8 mx-auto mb-1" 
+        />
+        <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
+      </div>
 
       <BottomNavigation />
 
