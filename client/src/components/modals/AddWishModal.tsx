@@ -410,7 +410,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
-        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-auto">
+        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-hidden">
+          {/* Header con título y botón cerrar */}
           <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
             <h2 className="text-xl font-semibold text-white">
               {itemToEdit 
@@ -431,11 +432,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             </button>
           </div>
           
+          {/* Formulario paso 1 */}
           {step === 1 ? (
-            // Formulario paso 1 (solo para añadir nuevo, no para editar)
-            <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 p-4 pb-24 flex flex-col">
-              <div className="flex-1 flex flex-col justify-center">
-                <div>
+            <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 flex flex-col h-full">
+              {/* Contenido scrollable */}
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[100px]">
+                <div className="flex flex-col justify-center">
                   <div className="mb-4">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
                       Enlace de compra
@@ -470,6 +472,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 </div>
               </div>
               
+              {/* Barra de navegación fija inferior */}
               <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
@@ -497,116 +500,120 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
             </form>
           ) : (
-            // Formulario paso 2 (usado para añadir paso 2 y para editar en un solo paso)
-            <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 p-4 pb-24 flex flex-col">
-              {/* Campo de enlace para edición (solo visible en modo edición) */}
-              {itemToEdit && (
+            // Formulario paso 2
+            <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 flex flex-col h-full">
+              {/* Contenido scrollable */}
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[100px]">
+                {/* Campo de enlace para edición (solo visible en modo edición) */}
+                {itemToEdit && (
+                  <div className="mb-6">
+                    <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
+                      Enlace de compra
+                    </label>
+                    <CustomInput
+                      type="url" 
+                      id="purchaseLink" 
+                      placeholder="https://..."
+                      {...registerStepTwo('purchaseLink')}
+                    />
+                    {errorsStepTwo.purchaseLink && (
+                      <p className="text-destructive text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
+                    )}
+                  </div>
+                )}
+                
+                {/* Imagen */}
+                <div className="mb-2">
+                  <label className="block text-sm font-medium mb-2 text-white">
+                    Imagen del producto (opcional)
+                  </label>
+                </div>
+                {renderImage()}
+                
+                {/* Input oculto para subir imagen */}
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  onChange={handleImageChange} 
+                  accept="image/*" 
+                  className="hidden" 
+                />
+                
                 <div className="mb-6">
-                  <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
-                    Enlace de compra
+                  <label htmlFor="title" className="block text-sm font-medium mb-2 text-white">
+                    Nombre del producto
                   </label>
                   <CustomInput
-                    type="url" 
-                    id="purchaseLink" 
-                    placeholder="https://..."
-                    {...registerStepTwo('purchaseLink')}
+                    type="text" 
+                    id="title" 
+                    placeholder="Introduce un nombre"
+                    {...registerStepTwo('title')}
                   />
-                  {errorsStepTwo.purchaseLink && (
-                    <p className="text-destructive text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
+                  {errorsStepTwo.title && (
+                    <p className="text-destructive text-sm mt-2">{errorsStepTwo.title.message}</p>
                   )}
                 </div>
-              )}
-              
-              {/* Imagen */}
-              <div className="mb-2">
-                <label className="block text-sm font-medium mb-2 text-white">
-                  Imagen del producto (opcional)
-                </label>
-              </div>
-              {renderImage()}
-              
-              {/* Input oculto para subir imagen */}
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleImageChange} 
-                accept="image/*" 
-                className="hidden" 
-              />
-              
-              <div className="mb-6">
-                <label htmlFor="title" className="block text-sm font-medium mb-2 text-white">
-                  Nombre del producto
-                </label>
-                <CustomInput
-                  type="text" 
-                  id="title" 
-                  placeholder="Introduce un nombre"
-                  {...registerStepTwo('title')}
-                />
-                {errorsStepTwo.title && (
-                  <p className="text-destructive text-sm mt-2">{errorsStepTwo.title.message}</p>
-                )}
-              </div>
-              
-              <div className="mb-6">
-                <label htmlFor="price" className="block text-sm font-medium mb-2 text-white">
-                  Precio
-                </label>
-                <div className="flex">
-                  <div className="flex-1 relative">
-                    <CustomInput
-                      type="text" 
-                      id="price" 
-                      className="rounded-r-none"
-                      placeholder="Introduce un número"
-                      inputMode="decimal"
-                      pattern="[0-9]+(,[0-9]+)?"
-                      {...registerStepTwo('price')}
-                    />
+                
+                <div className="mb-6">
+                  <label htmlFor="price" className="block text-sm font-medium mb-2 text-white">
+                    Precio
+                  </label>
+                  <div className="flex">
+                    <div className="flex-1 relative">
+                      <CustomInput
+                        type="text" 
+                        id="price" 
+                        className="rounded-r-none"
+                        placeholder="Introduce un número"
+                        inputMode="decimal"
+                        pattern="[0-9]+(,[0-9]+)?"
+                        {...registerStepTwo('price')}
+                      />
+                    </div>
+                    <select 
+                      className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent text-white appearance-none" 
+                      style={{ backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23a0aec0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em" }}
+                      {...registerStepTwo('currency')}
+                    >
+                      <option value="€">€</option>
+                      <option value="$">$</option>
+                      <option value="£">£</option>
+                    </select>
                   </div>
-                  <select 
-                    className="w-20 pl-3 pr-7 py-3 bg-[#252525] border border-[#333] border-l-0 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent text-white appearance-none" 
-                    style={{ backgroundImage: "url(\"data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3E%3Cpath stroke='%23a0aec0' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3E%3C/svg%3E\")", backgroundPosition: "right 0.5rem center", backgroundRepeat: "no-repeat", backgroundSize: "1.5em 1.5em" }}
-                    {...registerStepTwo('currency')}
-                  >
-                    <option value="€">€</option>
-                    <option value="$">$</option>
-                    <option value="£">£</option>
-                  </select>
+                  {errorsStepTwo.price && (
+                    <p className="text-destructive text-sm mt-2">{errorsStepTwo.price.message}</p>
+                  )}
+                  <p className="text-gray-400 text-sm mt-2">
+                    El precio de compra actual o un precio aproximado.
+                  </p>
                 </div>
-                {errorsStepTwo.price && (
-                  <p className="text-destructive text-sm mt-2">{errorsStepTwo.price.message}</p>
+                
+                <div className="mb-6">
+                  <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
+                    Descripción (opcional)
+                  </label>
+                  <CustomTextarea 
+                    id="description" 
+                    rows={4}
+                    className="resize-none"
+                    placeholder="Añade detalles como color, talla, modelo..."
+                    {...registerStepTwo('description')}
+                  />
+                  {errorsStepTwo.description && (
+                    <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
+                  )}
+                </div>
+                
+                {/* Campo oculto para mantener el enlace de compra (solo para el flujo de creación) */}
+                {!itemToEdit && (
+                  <input 
+                    type="hidden" 
+                    {...registerStepTwo('purchaseLink')}
+                  />
                 )}
-                <p className="text-gray-400 text-sm mt-2">
-                  El precio de compra actual o un precio aproximado.
-                </p>
               </div>
               
-              <div className="mb-6">
-                <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
-                  Descripción (opcional)
-                </label>
-                <CustomTextarea 
-                  id="description" 
-                  rows={4}
-                  className="resize-none"
-                  placeholder="Añade detalles como color, talla, modelo..."
-                  {...registerStepTwo('description')}
-                />
-                {errorsStepTwo.description && (
-                  <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
-                )}
-              </div>
-              
-              {/* Campo oculto para mantener el enlace de compra (solo para el flujo de creación) */}
-              {!itemToEdit && (
-                <input 
-                  type="hidden" 
-                  {...registerStepTwo('purchaseLink')}
-                />
-              )}
-              
+              {/* Barra de navegación fija inferior */}
               <div className="mt-auto pt-4 fixed-navigation flex justify-between bg-[#121212] p-4 border-t border-[#333] max-w-[500px] mx-auto safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
