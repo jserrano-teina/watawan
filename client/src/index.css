@@ -431,5 +431,8 @@ html {
     /* Propiedades específicas para iOS */
     position: -webkit-sticky !important;
     touch-action: none !important;
+    /* Garantizar ancho completo en móviles */
+    width: 100% !important;
+    max-width: 100% !important;
   }
 }
