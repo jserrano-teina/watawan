@@ -158,7 +158,10 @@ const MobileView = ({
         
         <div className="w-full h-full flex flex-col">
         
-          <div className="flex-1 overflow-auto pb-28">
+          <div className="flex-1 overflow-auto scrollable-content pb-28" style={{
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain'
+          }}>
             {/* Imagen principal a sangre */}
             <div className="w-full bg-[#202020] relative">
 

@@ -58,9 +58,12 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        <Router />
-        <NetworkMonitor />
-        <Toaster />
+        {/* Contenedor principal con clase app-container para PWA */}
+        <div className="app-container">
+          <Router />
+          <NetworkMonitor />
+          <Toaster />
+        </div>
       </AuthProvider>
     </QueryClientProvider>
   );

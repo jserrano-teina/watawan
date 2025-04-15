@@ -3,6 +3,13 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 
+// Declaración para la propiedad standalone en Navigator para Safari en iOS
+declare global {
+  interface Navigator {
+    standalone?: boolean;
+  }
+}
+
 // Componente wrapper para notificar cuando la app está lista
 function AppWithReadyNotification() {
   useEffect(() => {
