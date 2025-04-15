@@ -17,6 +17,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { SafeLink } from '@/components/ui/SafeLink';
 import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
 import { sanitizeInput, sanitizeUrl } from '@/lib/sanitize';
+import { apiRequest } from '@/lib/queryClient';
 
 interface WishDetailModalProps {
   isOpen: boolean;
