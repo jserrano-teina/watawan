@@ -199,7 +199,7 @@ const NotificationsPage: React.FC = () => {
         style={{ 
           WebkitOverflowScrolling: 'touch', 
           height: 'calc(100vh - 56px)', 
-          paddingBottom: 'calc(2.5rem + env(safe-area-inset-bottom))' 
+          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
         }}
       >
         {/* Mostramos el título solo cuando hay notificaciones */}
