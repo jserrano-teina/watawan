@@ -10,17 +10,22 @@
 
 import { queryClient } from "./queryClient";
 
-// Intervalo de ping cuando el usuario está activo (5 minutos)
-const ACTIVE_PING_INTERVAL = 5 * 60 * 1000;
+// Intervalo de ping cuando el usuario está activo (2 minutos)
+const ACTIVE_PING_INTERVAL = 2 * 60 * 1000;
 
-// Intervalo más corto cuando detectamos señales de inactividad (1 minuto)
-const RISK_PING_INTERVAL = 60 * 1000;
+// Intervalo más corto para verificar actualizaciones (10 segundos)
+const RISK_PING_INTERVAL = 10 * 1000;
+
+// Intervalo ultrarrápido para verificar notificaciones nuevas (5 segundos)
+const NOTIFICATION_CHECK_INTERVAL = 5 * 1000;
 
 // Estado del gestor de sesión
 interface SessionState {
   isActive: boolean;
   lastPingTime: number;
   pingIntervalId: number | null;
+  notificationCheckIntervalId: number | null;
+  lastNotificationCount: number;
   sessionKey: string | null;
 }
 
@@ -29,6 +34,8 @@ const state: SessionState = {
   isActive: false,
   lastPingTime: 0,
   pingIntervalId: null,
+  notificationCheckIntervalId: null,
+  lastNotificationCount: 0,
   sessionKey: null,
 };
 
@@ -108,11 +115,52 @@ const sendPing = async (): Promise<void> => {
 };
 
 /**
- * Verifica si hay actualizaciones desde el último ping
+ * Sistema de verificación de actualizaciones en tiempo real
+ * Permite detectar cambios como nuevas reservas o marcados como recibidos
+ * y actualizar la interfaz inmediatamente sin necesidad de refrescar
  */
 const checkForUpdates = async (): Promise<boolean> => {
-  // Implementación básica - podría ampliarse para verificar cambios específicos
-  return false;
+  try {
+    console.log('Verificando actualizaciones en tiempo real...');
+    
+    // 1. Verificar notificaciones no leídas (nuevas reservas)
+    const unreadResponse = await fetch('/api/notifications/unread', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store'
+      },
+    });
+    
+    if (unreadResponse.ok) {
+      const unreadData = await unreadResponse.json();
+      
+      if (Array.isArray(unreadData) && unreadData.length > 0) {
+        console.log(`Se encontraron ${unreadData.length} notificaciones nuevas - actualizando todas las vistas`);
+        
+        // Invalidar TODAS las consultas relacionadas para forzar actualización en todas las vistas
+        queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
+        queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+        
+        // También invalidar los endpoints de items
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
+            return typeof queryKey === 'string' && queryKey.includes('/items');
+          }
+        });
+        
+        return true;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Error verificando actualizaciones:', error);
+    return false;
+  }
 };
 
 /**
@@ -125,6 +173,9 @@ export const startSessionManager = (): void => {
     state.sessionKey = storedKey;
     state.isActive = true;
   }
+  
+  // Inicializar contador de notificaciones en 0
+  state.lastNotificationCount = 0;
   
   // Configurar ping inicial
   sendPing();
@@ -146,6 +197,22 @@ export const startSessionManager = (): void => {
     
     sendPing();
   }, RISK_PING_INTERVAL);
+  
+  // Configurar verificador de notificaciones (mucho más frecuente)
+  if (state.notificationCheckIntervalId) {
+    window.clearInterval(state.notificationCheckIntervalId);
+  }
+  
+  // Ejecutar verificación inicial de notificaciones
+  startNotificationChecker();
+  
+  // Configurar verificación periódica de notificaciones cada 5 segundos
+  state.notificationCheckIntervalId = window.setInterval(() => {
+    // Solo verificar si la pestaña está visible y hay conexión
+    if (document.visibilityState === 'visible' && navigator.onLine) {
+      startNotificationChecker();
+    }
+  }, NOTIFICATION_CHECK_INTERVAL);
   
   // Configurar listener para eventos de red
   window.addEventListener('online', () => {
@@ -176,6 +243,68 @@ export const startSessionManager = (): void => {
 };
 
 /**
+ * Verifica periódicamente solo las notificaciones para actualizaciones en tiempo real
+ * Optimizado para detección inmediata de reservas
+ */
+const startNotificationChecker = async (): Promise<void> => {
+  if (!navigator.onLine || !state.isActive) {
+    return;
+  }
+
+  try {
+    // Solo verificar notificaciones no leídas (que indican reservas nuevas)
+    const unreadResponse = await fetch('/api/notifications/unread', {
+      method: 'GET',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Cache-Control': 'no-cache, no-store'
+      },
+    });
+    
+    if (unreadResponse.ok) {
+      const unreadData = await unreadResponse.json();
+      const currentCount = Array.isArray(unreadData) ? unreadData.length : 0;
+      
+      // Si el número de notificaciones cambió, actualizar la interfaz
+      if (currentCount !== state.lastNotificationCount) {
+        console.log(`Cambio en notificaciones detectado: ${state.lastNotificationCount} → ${currentCount}`);
+        
+        if (currentCount > state.lastNotificationCount) {
+          console.log('Nuevas notificaciones detectadas - actualizando inmediatamente todas las vistas');
+          
+          // Actualización inmediata y agresiva de TODAS las vistas relacionadas
+          queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
+          queryClient.invalidateQueries({ queryKey: [`/api/notifications/unread`] });
+          queryClient.invalidateQueries({ queryKey: [`/api/reserved-items`] });
+          
+          // Actualizar vistas de elementos específicos
+          const wishlistQueries = queryClient.getQueriesData({ 
+            queryKey: ['/api/wishlist'] 
+          });
+          
+          // Actualizar todas las wishlists encontradas en caché
+          wishlistQueries.forEach(([_, data]) => {
+            if (data && typeof data === 'object' && 'id' in data) {
+              const wlId = (data as any).id;
+              if (wlId && typeof wlId === 'number') {
+                console.log(`Actualizando items de wishlist ${wlId} por notificación nueva`);
+                queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${wlId}/items`] });
+              }
+            }
+          });
+        }
+        
+        // Actualizar el contador para la próxima comparación
+        state.lastNotificationCount = currentCount;
+      }
+    }
+  } catch (error) {
+    console.error('Error verificando notificaciones:', error);
+  }
+};
+
+/**
  * Detiene el sistema de gestión de sesión
  */
 export const stopSessionManager = (): void => {
@@ -183,6 +312,12 @@ export const stopSessionManager = (): void => {
     window.clearInterval(state.pingIntervalId);
     state.pingIntervalId = null;
   }
+  
+  if (state.notificationCheckIntervalId) {
+    window.clearInterval(state.notificationCheckIntervalId);
+    state.notificationCheckIntervalId = null;
+  }
+  
   state.isActive = false;
 };
 
