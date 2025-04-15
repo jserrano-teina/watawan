@@ -9,8 +9,16 @@
 // Nombre del header que se recibe del servidor y se envía en las peticiones
 export const CSRF_HEADER = "X-CSRF-Token";
 
-// Almacenamiento del token actual
-let currentToken: string | null = null;
+// Intentar cargar el token desde localStorage si existe
+let storedToken: string | null = null;
+try {
+  storedToken = localStorage.getItem('csrf_token');
+} catch (error) {
+  console.error('Error al recuperar token CSRF de localStorage:', error);
+}
+
+// Almacenamiento del token actual, inicializado con el valor de localStorage
+let currentToken: string | null = storedToken;
 
 /**
  * Obtiene el token CSRF actual, o null si no hay uno
@@ -30,6 +38,14 @@ export function updateTokenFromResponse(headers: Headers): void {
       console.log(`Token CSRF actualizado`);
     }
     currentToken = token;
+    
+    // Almacenar en localStorage para persistencia entre sesiones
+    // Esto es útil para garantizar que tengamos siempre un token disponible
+    try {
+      localStorage.setItem('csrf_token', token);
+    } catch (error) {
+      console.error('Error al guardar token CSRF en localStorage:', error);
+    }
   }
 }
 
