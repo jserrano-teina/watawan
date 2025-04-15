@@ -159,17 +159,22 @@ export class DatabaseStorage implements IStorage {
   }
   
   async getWishlistByUserAndSlug(username: string, slug: string): Promise<Wishlist | undefined> {
+    console.log(`[getWishlistByUserAndSlug] Buscando wishlist para usuario=${username}, slug=${slug}`);
     // Primero, buscar el usuario por nombre de usuario (displayName) o por email
     const user = await db.select().from(users).where(
       or(
-        eq(users.displayName, username),
-        eq(users.email, username)
+        eq(users.email, username),
+        sql`LOWER(${users.email}) = LOWER(${username})`,
+        sql`LOWER(${users.displayName}) = LOWER(${username})`
       )
     ).limit(1);
     
     if (!user.length) {
+      console.log(`[getWishlistByUserAndSlug] No se encontró usuario con username=${username}`);
       return undefined;
     }
+    
+    console.log(`[getWishlistByUserAndSlug] Usuario encontrado: id=${user[0].id}, email=${user[0].email}`);
     
     // Buscar la wishlist por userId y slug
     const result = await db.select().from(wishlists).where(
@@ -178,6 +183,12 @@ export class DatabaseStorage implements IStorage {
         eq(wishlists.slug, slug)
       )
     );
+    
+    if (!result.length) {
+      console.log(`[getWishlistByUserAndSlug] No se encontró wishlist para userId=${user[0].id}, slug=${slug}`);
+    } else {
+      console.log(`[getWishlistByUserAndSlug] Wishlist encontrada: id=${result[0].id}`);
+    }
     
     return result.length ? result[0] : undefined;
   }
