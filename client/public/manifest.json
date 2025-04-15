@@ -1,6 +1,6 @@
 {
-  "name": "Wishlist",
-  "short_name": "Wishlist",
+  "name": "WataWan",
+  "short_name": "WataWan",
   "description": "Crea y comparte listas de deseos con amigos y familiares",
   "start_url": "/",
   "display": "standalone",
