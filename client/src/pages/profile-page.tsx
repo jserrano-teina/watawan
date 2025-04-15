@@ -235,9 +235,9 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen pb-20 flex flex-col bg-[#121212] text-white">
-      <main className="max-w-[500px] mx-auto p-4 flex-grow flex flex-col justify-center">
-        <div className="flex flex-col items-center py-3">
+    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
+      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col overflow-hidden">
+        <div className="flex flex-col items-center justify-center h-full py-3">
           {/* Avatar con botón de edición */}
           <div className="relative mb-6">
             <div
@@ -287,24 +287,25 @@ const ProfilePage = () => {
             </svg>
             Editar perfil
           </button>
-        </div>
+        
 
-        <div className="mt-4 flex justify-center">
-          <button
-            onClick={() => setIsLogoutDialogOpen(true)}
-            className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Cerrar sesión</span>
-          </button>
+          <div className="mt-4 flex justify-center">
+            <button
+              onClick={() => setIsLogoutDialogOpen(true)}
+              className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <span>Cerrar sesión</span>
+            </button>
+          </div>
         </div>
         
-        {/* Logo y versión (ahora dentro del main pero absoluto) */}
-        <div className="absolute bottom-[80px] left-0 right-0 flex flex-col items-center mb-2 pb-4">
+        {/* Logo y versión (ahora dentro del main, al final) */}
+        <div className="flex flex-col items-center mt-auto mb-16">
           <img 
             src="/images/waw_logo.svg" 
             alt="WataWan" 
@@ -330,7 +331,9 @@ const ProfilePage = () => {
         logoutMutation={logoutMutation}
       />
 
-      <BottomNavigation />
+      <div className="fixed bottom-0 left-0 right-0 z-40">
+        <BottomNavigation />
+      </div>
 
       {toastState && (
         <ToastContainer>
