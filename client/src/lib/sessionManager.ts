@@ -143,7 +143,7 @@ const checkForUpdates = async (): Promise<boolean> => {
     });
     
     // Actualizar el token CSRF para futuras peticiones
-    updateTokenFromResponse(unreadResponse);
+    updateTokenFromResponse(unreadResponse.headers);
     
     if (unreadResponse.ok) {
       const unreadData = await unreadResponse.json();
@@ -281,7 +281,7 @@ const startNotificationChecker = async (): Promise<void> => {
     });
     
     // Actualizar el token CSRF para futuras peticiones
-    updateTokenFromResponse(unreadResponse);
+    updateTokenFromResponse(unreadResponse.headers);
     
     if (unreadResponse.ok) {
       const unreadData = await unreadResponse.json();
