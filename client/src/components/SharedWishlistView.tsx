@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, WishItem } from '../types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -25,6 +25,14 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<WishItem | undefined>(undefined);
   const [priceFilter, setPriceFilter] = useState<string>("Todo");
+  const [registerUrl, setRegisterUrl] = useState("/auth");
+  
+  // Determinar la URL de registro correcta en función del entorno actual
+  useEffect(() => {
+    // Construir la URL absoluta para asegurarnos de que funcione en todos los entornos
+    const origin = window.location.origin;
+    setRegisterUrl(`${origin}/auth`);
+  }, []);
   
   // Función para extraer un número de precio de una cadena (ej: "32,99€" -> 32.99)
   const extractPriceNumber = (priceString?: string): number => {
@@ -107,7 +115,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
       <div className="fixed top-0 left-0 right-0 bg-[#1a1a1a] border-b border-[#333] py-3 px-4 z-[10]">
         <div className="flex items-center justify-center mx-auto">
           <SafeLink 
-            href="/auth" 
+            href={registerUrl} 
             target="_blank" 
             rel="noopener noreferrer"
             className="flex items-center justify-center text-white hover:text-white/90 transition"
