@@ -110,7 +110,7 @@
     -webkit-backface-visibility: hidden !important;
     backface-visibility: hidden !important;
     -webkit-transform: translate3d(0, 0, 0) !important;
-    padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 80px) !important; /* Espacio extra al final */
+    padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 120px) !important; /* Espacio extra al final */
     position: relative !important;
     z-index: 1 !important; /* Menor que la barra de navegación */
   }
