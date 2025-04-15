@@ -152,19 +152,69 @@ export function invalidateAllAppQueries(wishlistId?: number) {
   console.log('Invalidación completa realizada');
 }
 
+/**
+ * Detecta si la aplicación está desconectada de la red
+ */
+function isOffline(): boolean {
+  return !navigator.onLine;
+}
+
+/**
+ * Cliente de consulta configurado para la aplicación con manejo de desconexión mejorado.
+ * Proporciona mejor manejo de errores, reintentos y estado de sesión para evitar cierres inesperados.
+ */
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       queryFn: getQueryFn({ on401: "throw" }),
       refetchInterval: false,
       refetchOnWindowFocus: true, // Refetch al volver a la ventana o tab
-      staleTime: 30000, // 30 segundos antes de considerar los datos obsoletos
-      retry: 1, // Un reintento si la consulta falla
-      retryDelay: 1000, // 1 segundo entre reintentos
+      staleTime: 1000 * 60 * 5, // 5 minutos antes de considerar los datos obsoletos
+      gcTime: 1000 * 60 * 30, // 30 minutos de caché de datos aunque sean stale (antes cacheTime)
+      retry: (failureCount, error) => {
+        // No reintentar si estamos desconectados
+        if (isOffline()) return false;
+        
+        // Reintentar un máximo de 3 veces para problemas de red
+        if (failureCount >= 3) return false;
+        
+        // No reintentar si es un error 403 (problemas de autorización)
+        if (error instanceof Error) {
+          const errorMessage = error.message || '';
+          if (errorMessage.startsWith('403:')) {
+            return false;
+          }
+          
+          // Para errores 401, intentar solo una vez más para verificar si realmente expiró la sesión
+          if (errorMessage.startsWith('401:') && failureCount >= 1) {
+            return false;
+          }
+        }
+        
+        return true;
+      },
+      retryDelay: attemptIndex => Math.min(1000 * 2 ** attemptIndex, 30000), // Backoff exponencial
       refetchOnMount: true, // Refetch cuando el componente se monte
+      refetchOnReconnect: true, // Refetch cuando se recupere la conexión a Internet
     },
     mutations: {
-      retry: 1, // Un reintento si la mutación falla
+      retry: (failureCount, error) => {
+        // No reintentar si estamos desconectados
+        if (isOffline()) return false;
+        
+        // Solo reintentar una vez para mutaciones
+        if (failureCount >= 1) return false;
+        
+        // No reintentar errores de autenticación
+        if (error instanceof Error) {
+          const errorMessage = error.message || '';
+          if (errorMessage.startsWith('401:') || errorMessage.startsWith('403:')) {
+            return false;
+          }
+        }
+        
+        return true;
+      },
       retryDelay: 1000, // 1 segundo entre reintentos
     },
   },

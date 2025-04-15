@@ -1,7 +1,17 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import { useEffect, useState } from "react";
 
+/**
+ * Componente mejorado para rutas protegidas que requieren autenticación
+ * 
+ * Características:
+ * - Muestra estado de carga con un spinner
+ * - Retrasa la redirección para evitar parpadeos durante la verificación de sesión
+ * - Proporciona transiciones suaves entre estados
+ * - Maneja mejor las reconexiones después de pérdida de red
+ */
 export function ProtectedRoute({
   path,
   component: Component,
@@ -10,17 +20,47 @@ export function ProtectedRoute({
   component: React.ComponentType<any>;
 }) {
   const { user, isLoading } = useAuth();
+  const [shouldRedirect, setShouldRedirect] = useState(false);
+
+  // Solo redirigir a login después de verificar que realmente no hay usuario
+  // y ha pasado un tiempo suficiente para evitar parpadeos en la carga
+  useEffect(() => {
+    let redirectTimer: number;
+    
+    if (!isLoading && !user) {
+      // Esperar un pequeño tiempo antes de redirigir
+      // para dar oportunidad a la reconexión tras problemas de red
+      redirectTimer = window.setTimeout(() => {
+        setShouldRedirect(true);
+      }, 300);  // 300ms de espera
+    } else {
+      setShouldRedirect(false);
+    }
+    
+    return () => {
+      if (redirectTimer) {
+        window.clearTimeout(redirectTimer);
+      }
+    };
+  }, [user, isLoading]);
 
   return (
     <Route path={path}>
       {isLoading ? (
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground text-sm">Cargando...</p>
         </div>
       ) : user ? (
         <Component />
-      ) : (
+      ) : shouldRedirect ? (
         <Redirect to="/login" />
+      ) : (
+        // Estado intermedio mientras se decide si redirigir
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
+          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground text-sm">Verificando sesión...</p>
+        </div>
       )}
     </Route>
   );
