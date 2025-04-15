@@ -156,7 +156,7 @@ const MobileView = ({
         
         <div className="w-full h-full flex flex-col">
         
-          <div className="flex-1 overflow-auto scrollable-content pb-28" style={{
+          <div className="flex-1 overflow-auto scrollable-content pb-36" style={{
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain'
           }}>
