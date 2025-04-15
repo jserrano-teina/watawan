@@ -29,9 +29,46 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
   
   // Determinar la URL de registro correcta en función del entorno actual
   useEffect(() => {
-    // Construir la URL absoluta para asegurarnos de que funcione en todos los entornos
-    const origin = window.location.origin;
-    setRegisterUrl(`${origin}/auth`);
+    // Verificamos si estamos en un entorno de iframe compartido 
+    // o en la aplicación principal
+    const inIframe = () => {
+      try {
+        return window !== window.parent;
+      } catch (e) {
+        return true; // Si hay un error al acceder a window.parent, estamos en un iframe cross-origin
+      }
+    };
+    
+    const isEmbedded = inIframe();
+    
+    // Detectamos el entorno de ejecución
+    const hostname = window.location.hostname;
+    const isProduction = hostname.includes('.replit.app') || hostname.includes('watawan.app');
+    
+    let targetUrl = '/auth'; // Valor por defecto para desarrollo local
+    
+    if (isProduction) {
+      // En producción, determinamos la URL base del sitio principal (no del frame)
+      if (hostname.includes('watawan.app')) {
+        // En el dominio de producción final
+        targetUrl = 'https://app.watawan.app/auth';
+      } else {
+        // En un entorno de Replit
+        targetUrl = `${window.location.origin}/auth`;
+      }
+    }
+    
+    // Si estamos en un iframe, necesitamos asegurarnos de abrir en una pestaña nueva
+    // modificando directamente los atributos del enlace
+    if (isEmbedded) {
+      console.log('Vista compartida detectada en iframe - configurando enlace para abrir en pestaña nueva');
+    }
+    
+    // Actualizamos el estado y mostramos información de depuración
+    setRegisterUrl(targetUrl);
+    console.log('URL de registro configurada:', targetUrl, 
+                'Entorno:', isProduction ? 'Producción' : 'Desarrollo',
+                'Embedded:', isEmbedded);
   }, []);
   
   // Función para extraer un número de precio de una cadena (ej: "32,99€" -> 32.99)

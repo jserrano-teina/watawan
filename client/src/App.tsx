@@ -25,7 +25,9 @@ function Router() {
       <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
+      <Route path="/auth" component={LoginPage} />
       <Route path="/s/:id" component={SharedList} />
+      <Route path="/shared/:id" component={SharedList} />
       <Route component={NotFound} />
     </Switch>
   );
