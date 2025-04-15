@@ -57,9 +57,18 @@ const MobileView = ({
       return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/wishlist/${item.wishlistId}/items`] });
-      queryClient.invalidateQueries({ queryKey: ['/api/notifications/unread'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/reserved-items'] });
+      console.log(`Item ${item.id} marcado como recibido - actualizando todas las vistas...`);
+      
+      // Utilizamos la función global de invalidación para asegurar una 
+      // actualización completa y consistente en todas las vistas
+      invalidateAllAppQueries(item.wishlistId);
+      
+      // Mostrar un mensaje de éxito al usuario
+      toast({
+        title: "¡Regalo recibido!",
+        description: "Se ha marcado el elemento como recibido correctamente.",
+        variant: "success"
+      });
     }
   });
   

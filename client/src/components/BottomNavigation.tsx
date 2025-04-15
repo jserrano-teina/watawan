@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useEffect } from 'react';
 import { User, Bell, Home } from 'lucide-react';
 import { useLocation } from 'wouter';
 import { useNotifications } from '@/hooks/useNotifications';
@@ -10,7 +10,24 @@ interface BottomNavigationProps {
 
 const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   const [location, setLocation] = useLocation();
-  const { unreadCount, isLoading } = useNotifications();
+  const { unreadCount, isLoading, forceRefresh } = useNotifications();
+  
+  // Efecto para actualizar los datos cuando el usuario vuelve a la aplicación
+  // después de que la pestaña ha estado inactiva
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        console.log('Usuario volvió a la aplicación - actualizando datos...');
+        forceRefresh();
+      }
+    };
+    
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [forceRefresh]);
   
   // Método mejorado para navegar entre tabs con actualización de datos
   const navigateTo = useCallback((path: string) => {

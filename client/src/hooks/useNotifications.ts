@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest, invalidateAllAppQueries } from '@/lib/queryClient';
 import { WishItem, Reservation } from '@/types';
 import { useAuth } from './use-auth';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 type NotificationItem = {
   item: WishItem;
@@ -75,26 +75,30 @@ export function useNotifications() {
   useEffect(() => {
     const currentUnreadCount = unreadNotifications.length;
     
-    // Si detectamos nuevas notificaciones (más que antes)
-    if (currentUnreadCount > prevUnreadCountRef.current) {
-      console.log(`Se detectaron ${currentUnreadCount - prevUnreadCountRef.current} nuevas notificaciones`);
+    // Si detectamos nuevas notificaciones o cualquier cambio en las notificaciones
+    // Ahora actualizamos tanto al incrementar como al decrementar para asegurar
+    // sincronización bidireccional
+    if (currentUnreadCount !== prevUnreadCountRef.current) {
+      console.log(`Cambio en notificaciones detectado: ${prevUnreadCountRef.current} → ${currentUnreadCount}`);
       
-      // Invalidar todas las consultas relacionadas con wishlists para reflejar 
-      // los cambios inmediatamente en todas las vistas
-      queryClient.invalidateQueries({ queryKey: ['/api/wishlist'] });
-      
-      // Invalidar todos los items de wishlist para actualizar el estado reservado
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const queryKey = Array.isArray(query.queryKey) ? query.queryKey[0] : query.queryKey;
-          return typeof queryKey === 'string' && queryKey.includes('/items');
-        }
-      });
+      // Usar nuestra función global de invalidación para una actualización completa
+      // Esto garantiza que todas las vistas muestren el estado más reciente
+      invalidateAllAppQueries();
     }
     
     // Actualizar la referencia para la próxima comparación
     prevUnreadCountRef.current = currentUnreadCount;
-  }, [unreadNotifications.length]);
+    
+    // Forzar una verificación periódica proactiva para casos donde
+    // el contador no cambió pero los items podrían haber sido modificados
+    const checkTimer = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        refetchUnread();
+      }
+    }, 10000); // Verificación de respaldo cada 10 segundos
+    
+    return () => clearInterval(checkTimer);
+  }, [unreadNotifications.length, refetchUnread]);
 
   // Marcar notificaciones como leídas
   const markAsRead = useMutation({
@@ -119,6 +123,13 @@ export function useNotifications() {
     }
   });
   
+  // Función para forzar una actualización manual de las notificaciones
+  const forceRefresh = useCallback(() => {
+    console.log('Forzando actualización manual de notificaciones');
+    refetchUnread();
+    invalidateAllAppQueries();
+  }, [refetchUnread]);
+
   return {
     unreadNotifications,
     unreadCount: unreadNotifications.length,
@@ -126,5 +137,6 @@ export function useNotifications() {
     isLoading: unreadLoading || allLoading,
     error: unreadError || allError,
     markAsRead,
+    forceRefresh, // Exponemos la función para actualizaciones manuales
   };
 }
