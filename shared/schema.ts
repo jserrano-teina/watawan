@@ -35,13 +35,17 @@ export const sessions = pgTable("sessions", {
 export const wishlists = pgTable("wishlists", {
   id: serial("id").primaryKey(),
   userId: integer("user_id").notNull().references(() => users.id, { onDelete: 'cascade' }),
-  shareableLink: text("shareable_link").notNull().unique(),
+  name: text("name").default("Mi lista de deseos"),  // Nombre de la lista
+  slug: text("slug"),  // Slug para URL amigable
+  shareableLink: text("shareable_link").notNull().unique(),  // Mantenemos para compatibilidad
   createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertWishlistSchema = createInsertSchema(wishlists).pick({
   userId: true,
   shareableLink: true,
+  name: true,
+  slug: true,
 });
 
 // Wish item schema
@@ -100,6 +104,8 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type Wishlist = {
   id: number;
   userId: number;
+  name: string | null;
+  slug: string | null;
   shareableLink: string;
   createdAt: Date | null;
 };
