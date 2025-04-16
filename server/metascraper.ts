@@ -370,6 +370,9 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     // Log genérico para diagnóstico del proceso
     console.log("🔎 Procesando enlace de Amazon:", url.substring(0, 100) + "...");
     
+    // Variable para configurar logs detallados
+    const enableDetailedLogs = true;
+    
     let productHtml = html;
     
     // Si no tenemos el HTML, lo obtenemos con cabeceras que simulan un navegador real
@@ -754,7 +757,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     
     // Patrones para extraer precios de Amazon (fallback)
     const pricePatterns = [
-      // Nuevo patrón basado en la estructura vista en el monitor Hercules
+      // Patrón genérico para descuentos (busca precios que aparecen después de un porcentaje)
       /-[0-9]+[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/i,
       /price_inside_buybox['"]\s*:\s*['"]([^'"]+)['"]/i,
       /a-price-whole[^>]*>([^<]+).*a-price-fraction[^>]*>([^<]+)/i,
