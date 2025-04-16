@@ -722,7 +722,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({
         imageUrl: metadata.imageUrl,
         price: metadata.price,
-        title: metadata.title || title || undefined
+        title: title || undefined
       });
     } catch (error) {
       console.error('Error extrayendo metadatos:', error);
