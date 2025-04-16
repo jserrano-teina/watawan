@@ -1096,17 +1096,49 @@ export async function getUrlMetadata(url: string): Promise<{
               
             // Verificar que el título no sea solo un código de producto
             const productCodeRegex = /^[A-Za-z]\d+(-\d+)?$/;
-            if (productCodeRegex.test(title)) {
-              // Si es solo un código, intentar usar la última parte descriptiva de la URL
-              const urlPathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
-              for (let i = urlPathParts.length - 2; i >= 0; i--) {
-                const part = urlPathParts[i];
-                if (part && !productCodeRegex.test(part) && !/^\d+$/.test(part)) {
-                  title = part
-                    .replace(/-/g, ' ')
-                    .replace(/\b\w/g, match => match.toUpperCase())
-                    .trim();
-                  break;
+            if (productCodeRegex.test(title) || title.length < 10) {
+              // Si es solo un código o un título muy corto, intentar usar parte descriptiva de la URL
+              
+              // Caso especial de Nike: buscar la sección con "zapatillas" o "vintage" en la URL
+              if (urlObj.hostname.includes('nike.com')) {
+                const nikePathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+                for (const part of nikePathParts) {
+                  if (part && (part.includes('zapatillas') || part.includes('vintage') || 
+                      part.length > 10 && !part.startsWith('BQ') && !/^\d+(-\d+)?$/.test(part))) {
+                    title = part
+                      .replace(/-/g, ' ')
+                      .replace(/\b\w/g, match => match.toUpperCase())
+                      .trim();
+                    
+                    // Si encontramos una buena parte descriptiva, usamos esa
+                    if (title.length > 10) {
+                      break;
+                    }
+                  }
+                }
+              }
+              
+              // Búsqueda general de parte descriptiva en la URL
+              if (title.length < 10 || productCodeRegex.test(title)) {
+                const urlPathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+                for (let i = urlPathParts.length - 2; i >= 0; i--) {
+                  const part = urlPathParts[i];
+                  if (part && !productCodeRegex.test(part) && !/^\d+$/.test(part) && part.length > 5) {
+                    const candidateTitle = part
+                      .replace(/-/g, ' ')
+                      .replace(/\b\w/g, match => match.toUpperCase())
+                      .trim();
+                    
+                    // Si encontramos un título mejor, lo usamos
+                    if (candidateTitle.length > title.length) {
+                      title = candidateTitle;
+                    }
+                    
+                    // Si el título es suficientemente bueno, salimos
+                    if (title.length > 15) {
+                      break;
+                    }
+                  }
                 }
               }
             }
