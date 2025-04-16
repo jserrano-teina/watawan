@@ -507,41 +507,61 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
     if (!html) {
       try {
         // Intentamos con un enfoque de navegador móvil, a veces más tolerado
-        const response = await fetch(url, {
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Referer': 'https://www.google.com/search?q=pc+componentes',
-            'Connection': 'keep-alive'
-          }
-        });
+        // Añadir timeout para evitar peticiones que se quedan colgadas
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
         
-        if (response.ok) {
-          productHtml = await response.text();
-          debug(`Contenido de PCComponentes obtenido: ${productHtml.length} bytes`);
+        let fetchResponse: Response;
+        try {
+          fetchResponse = await fetch(url, {
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
+              'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+              'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+              'Cache-Control': 'no-cache',
+              'Pragma': 'no-cache',
+              'Referer': 'https://www.google.com/search?q=pc+componentes',
+              'Connection': 'keep-alive'
+            },
+            signal: controller.signal
+          });
           
-          // Buscar el precio en el HTML
-          const pricePatterns = [
-            /<div[^>]*class=["'].*?sale-price.*?["'][^>]*>([\d.,]+)[ \t]*€/i,
-            /<span[^>]*class=["']sale-price["'][^>]*>([\d.,]+)[ \t]*€/i,
-            /"price":[ \t]*([\d.,]+)/i,
-            /<meta[^>]*itemprop=["']price["'][^>]*content=["']([\d.,]+)["'][^>]*>/i,
-            /<div[^>]*class=["'].*?current-price.*?["'][^>]*>.*?([\d.,]+)[ \t]*€/i
-          ];
-          
-          for (const pattern of pricePatterns) {
-            const match = productHtml.match(pattern);
-            if (match && match[1]) {
-              const priceValue = match[1].trim();
-              debug(`Precio extraído de PCComponentes: ${priceValue}€`);
-              return `${priceValue}€`;
+          clearTimeout(timeoutId); // Limpiar el timeout si la petición fue exitosa
+        } catch (error: any) {
+          clearTimeout(timeoutId);
+          // Si fue un error de timeout, devolvemos un error específico
+          if (error.name === 'AbortError') {
+            debug(`Timeout al obtener contenido de ${url}`);
+            return undefined;
+          }
+          throw error;
+        }
+        
+        if (fetchResponse.ok) {
+          productHtml = await fetchResponse.text();
+          if (productHtml) {
+            debug(`Contenido de PCComponentes obtenido: ${productHtml.length} bytes`);
+            
+            // Buscar el precio en el HTML
+            const pricePatterns = [
+              /<div[^>]*class=["'].*?sale-price.*?["'][^>]*>([\d.,]+)[ \t]*€/i,
+              /<span[^>]*class=["']sale-price["'][^>]*>([\d.,]+)[ \t]*€/i,
+              /"price":[ \t]*([\d.,]+)/i,
+              /<meta[^>]*itemprop=["']price["'][^>]*content=["']([\d.,]+)["'][^>]*>/i,
+              /<div[^>]*class=["'].*?current-price.*?["'][^>]*>.*?([\d.,]+)[ \t]*€/i
+            ];
+            
+            for (const pattern of pricePatterns) {
+              const match = productHtml.match(pattern);
+              if (match && match[1]) {
+                const priceValue = match[1].trim();
+                debug(`Precio extraído de PCComponentes: ${priceValue}€`);
+                return `${priceValue}€`;
+              }
             }
           }
         } else {
-          debug(`PCComponentes rechazó la petición: ${response.status}`);
+          debug(`PCComponentes rechazó la petición: ${fetchResponse.status}`);
         }
       } catch (error) {
         debug(`Error al obtener HTML de PCComponentes: ${error}`);
