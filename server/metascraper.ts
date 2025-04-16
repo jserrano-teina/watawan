@@ -445,9 +445,9 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       const match = productHtml.match(pattern);
       if (match && match[1]) {
         let price = match[1].trim();
-        if (false) {
-          console.log(`🔄 Probando patrón de descuento: ${pattern}`);
-          console.log(`🔄 Resultado: ${match[1]}`);
+        if (enableDetailedLogs) {
+          console.log(`🔄 Patrón de extracción: ${pattern.toString()}`);
+          console.log(`🔄 Precio encontrado: ${match[1]}`);
         }
         debug(`Precio con descuento de Amazon encontrado: ${price}`);
         
@@ -494,16 +494,13 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       }
     }
     
-    // Patrón específico para el precio que vemos en la imagen (63,42€)
-    if (false) {
-      // Intentamos extraer directamente el precio que vemos en la imagen
-      const herculesPattern = /-21[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/;
-      const herculesMatch = productHtml.match(herculesPattern);
-      if (herculesMatch && herculesMatch[1]) {
-        const price = `${herculesMatch[1]}€`;
-        console.log(`🎯 Encontrado precio con el nuevo patrón específico: ${price}`);
-        return price;
-      }
+    // Patrón genérico para precios que aparecen después de un descuento
+    const discountPattern = /-\d+[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/;
+    const discountMatch = productHtml.match(discountPattern);
+    if (discountMatch && discountMatch[1]) {
+      const price = `${discountMatch[1]}€`;
+      console.log(`🎯 Encontrado precio después de descuento: ${price}`);
+      return price;
     }
     
     // Intentar extraer información de producto desde los datos estructurados JSON-LD
@@ -598,8 +595,8 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             const jsonContent = jsonLdMatch.replace(/<script type="application\/ld\+json">/, '').replace(/<\/script>/, '');
             const jsonData = JSON.parse(jsonContent.trim());
             
-            if (false) {
-              console.log("📊 Datos estructurados JSON-LD encontrados:", JSON.stringify(jsonData, null, 2));
+            if (enableDetailedLogs) {
+              console.log("📊 Datos estructurados JSON-LD encontrados");
             }
             
             // Buscar precios en diferentes formatos de datos estructurados
@@ -648,7 +645,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
                 price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
               }
               
-              if (false) {
+              if (enableDetailedLogs) {
                 console.log(`💰 Precio extraído de datos estructurados: ${price}`);
               }
               
@@ -670,8 +667,8 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (dataMainMatch && dataMainMatch[1]) {
         try {
           const dataMain = JSON.parse(dataMainMatch[1].replace(/&quot;/g, '"'));
-          if (false) {
-            console.log("🔍 Datos main encontrados:", dataMain);
+          if (enableDetailedLogs) {
+            console.log("🔍 Datos main encontrados");
           }
           
           if (dataMain.price) {
@@ -686,8 +683,8 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       const priceBlockMatch = productHtml.match(/\\"priceblock_([^"\\]+)\\":[\s]*\\"([^"\\]+)\\"/);
       if (priceBlockMatch && priceBlockMatch[2]) {
         const price = priceBlockMatch[2].trim();
-        if (false) {
-          console.log(`💲 Precio encontrado en priceblock_${priceBlockMatch[1]}: ${price}`);
+        if (enableDetailedLogs) {
+          console.log(`💲 Precio encontrado en priceblock: ${price}`);
         }
         return price.replace(/\./, ',');
       }
@@ -697,8 +694,8 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (configMatch && configMatch[1]) {
         try {
           const configData = JSON.parse(configMatch[1].replace(/&quot;/g, '"'));
-          if (false) {
-            console.log("💰 Datos de configuración encontrados:", configData);
+          if (enableDetailedLogs) {
+            console.log("💰 Datos de configuración encontrados");
           }
           
           if (configData.dollars && configData.cents) {
@@ -718,7 +715,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (scriptConfigMatch && scriptConfigMatch.length > 2) {
         try {
           const [_, configName, price, currency] = scriptConfigMatch;
-          if (false) {
+          if (enableDetailedLogs) {
             console.log(`🔢 Precio encontrado en configuración P.${configName}: ${price} ${currency}`);
           }
           
@@ -740,7 +737,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             .replace(/:\s*'([^']*)'/g, ':"$1"'); // Cambiar comillas simples a dobles
           
           const aodData = JSON.parse(cleanJson);
-          if (false) {
+          if (enableDetailedLogs) {
             console.log("🔄 Datos AOD encontrados:", aodData);
           }
           
