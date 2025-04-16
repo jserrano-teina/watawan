@@ -373,41 +373,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     // Variable para configurar logs detallados
     const enableDetailedLogs = true;
     
-    // Factor de corrección para Amazon: Los precios extraídos son aproximadamente un 17% más bajos
-    // que los reales, basado en los ejemplos detectados
-    const AMAZON_PRICE_CORRECTION_FACTOR = 1.17;
-    
-    // Función auxiliar para aplicar el factor de corrección a un precio
-    const applyPriceCorrection = (priceString: string): string => {
-      // Si el precio ya incluye el símbolo de euro, extraerlo primero
-      let numericPrice: number;
-      let hasCurrency = false;
-      
-      if (priceString.includes('€')) {
-        numericPrice = parseFloat(priceString.replace('€', '').replace(',', '.').trim());
-        hasCurrency = true;
-      } else if (priceString.includes('$')) {
-        // Convertir de dólares a euros y luego aplicar la corrección
-        numericPrice = parseFloat(priceString.replace('$', '').replace(',', '.').trim()) * 0.92;
-        hasCurrency = true;
-      } else {
-        // No tiene símbolo, asumimos que es un valor numérico
-        numericPrice = parseFloat(priceString.replace(',', '.').trim());
-      }
-      
-      // Aplicar el factor de corrección
-      const correctedPrice = numericPrice * AMAZON_PRICE_CORRECTION_FACTOR;
-      
-      // Formatear el precio corregido en formato español (coma decimal)
-      const formattedPrice = correctedPrice.toFixed(2).replace('.', ',');
-      
-      if (enableDetailedLogs) {
-        console.log(`💰 Precio original: ${priceString}, Precio corregido: ${formattedPrice}€`);
-      }
-      
-      return hasCurrency && priceString.includes('€') ? `${formattedPrice}€` : formattedPrice + '€';
-    };
-    
     let productHtml = html;
     
     // Si no tenemos el HTML, lo obtenemos con cabeceras que simulan un navegador real
@@ -885,16 +850,6 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         'i5': '699,00€',
         'ryzen7': '849,00€',
         'ryzen5': '649,00€',
-        'ultrabook': '799,00€',
-        'default': '599,00€'
-      },
-      'laptop': {
-        'gaming': '999,00€',
-        'i7': '899,00€',
-        'i5': '699,00€',
-        'ryzen7': '849,00€',
-        'ryzen5': '649,00€',
-        'ultrabook': '799,00€',
         'default': '599,00€'
       }
     };
@@ -906,10 +861,9 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
     let category = '';
     if (urlLower.includes('monitor')) category = 'monitor';
     else if (urlLower.includes('procesador') || urlLower.includes('cpu')) category = 'procesador';
-    else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) category = 'grafica';
+    else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx')) category = 'grafica';
     else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr')) category = 'ram';
-    else if (urlLower.includes('portatil')) category = 'portatil';
-    else if (urlLower.includes('laptop') || urlLower.includes('ordenador-portatil')) category = 'laptop';
+    else if (urlLower.includes('portatil') || urlLower.includes('laptop')) category = 'portatil';
     
     // Extracción de marca
     let brand = '';
@@ -968,28 +922,8 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
       // Usamos los default values de cada categoría para un precio base aproximado
       if (urlLower.includes('monitor')) {
         return "179,99€";
-      } else if (urlLower.includes('portatil') || urlLower.includes('notebook')) {
-        // Detectar las subcategorías de portátiles
-        if (urlLower.includes('gaming')) {
-          return "999,00€";
-        } else if (urlLower.includes('i7') || urlLower.includes('ryzen7')) {
-          return "899,00€";
-        } else if (urlLower.includes('ultrabook') || urlLower.includes('ultrafino')) {
-          return "799,00€";
-        } else {
-          return "599,00€";
-        }
-      } else if (urlLower.includes('laptop') || urlLower.includes('ordenador-portatil')) {
-        // Detectar las subcategorías de laptops
-        if (urlLower.includes('gaming')) {
-          return "999,00€";
-        } else if (urlLower.includes('i7') || urlLower.includes('ryzen7')) {
-          return "899,00€";
-        } else if (urlLower.includes('ultrabook') || urlLower.includes('ultrafino')) {
-          return "799,00€";
-        } else {
-          return "599,00€";
-        }
+      } else if (urlLower.includes('portatil') || urlLower.includes('laptop')) {
+        return "599,00€";
       } else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) {
         return "399,00€";
       } else if (urlLower.includes('procesador') || urlLower.includes('cpu')) {
@@ -1497,48 +1431,9 @@ export async function getUrlMetadata(url: string): Promise<{
       if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
         // Extraer precio y título específicos de Amazon
         price = await extractAmazonPrice(url, productHtml);
-        
-        // Aplicar factor de corrección para los precios de Amazon (17% más altos)
-        if (price) {
-          // Factor de corrección para Amazon: Los precios extraídos son aproximadamente un 15-20% más bajos
-          // que los reales, basado en los ejemplos detectados, aplicamos un 17% como factor de corrección
-          const AMAZON_PRICE_CORRECTION_FACTOR = 1.17;
-          
-          try {
-            // Extraer el valor numérico
-            let numericPrice;
-            
-            if (price.includes('€')) {
-              numericPrice = parseFloat(price.replace('€', '').replace(',', '.').trim());
-            } else if (price.includes('$')) {
-              // Ya convertido a euros en la función de extracción (con factor 0.92)
-              numericPrice = parseFloat(price.replace('$', '').replace(',', '.').trim());
-            } else {
-              // Intentar extraer un valor numérico directamente
-              numericPrice = parseFloat(price.replace(',', '.').trim());
-            }
-            
-            if (!isNaN(numericPrice)) {
-              // Aplicar el factor de corrección
-              const correctedPrice = numericPrice * AMAZON_PRICE_CORRECTION_FACTOR;
-              
-              // Formatear el precio según el formato español (coma decimal)
-              if (price.includes('€')) {
-                price = `${correctedPrice.toFixed(2).replace('.', ',')}€`;
-              } else {
-                price = `${correctedPrice.toFixed(2).replace('.', ',')}€`;
-              }
-              
-              console.log(`🔄 Precio Amazon corregido: Original=${numericPrice}€, Corregido=${price}`);
-            }
-          } catch (error) {
-            console.error("Error al aplicar corrección de precio Amazon:", error);
-          }
-        }
-        
         // También intentamos extraer el título específico de Amazon (lo asignaremos más adelante)
         const amazonTitle = await extractAmazonTitle(url, productHtml);
-        debug(`Precio de Amazon extraído (con corrección): ${price}`);
+        debug(`Precio de Amazon extraído: ${price}`);
         debug(`Título de Amazon extraído: ${amazonTitle}`);
       } else if (url.match(/pccomponentes\.com/i)) {
         price = await extractPCComponentesPrice(url, productHtml);
