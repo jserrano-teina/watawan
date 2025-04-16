@@ -1,6 +1,7 @@
 import metascraper from 'metascraper';
 import metascraperImage from 'metascraper-image';
 import fetch from 'node-fetch';
+import type { Response as NodeFetchResponse } from 'node-fetch';
 import { extractMetadataWithAI } from './openai-utils';
 
 // Activamos el modo debug para ver detalles de la extracción
