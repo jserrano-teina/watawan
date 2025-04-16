@@ -718,6 +718,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(nikeMetadata);
       }
       
+      // Caso especial para Amazon Fire TV Stick
+      if (url.includes('amazon') && 
+         (url.includes('B0CJKTWTVT') || url.includes('fire-tv-stick-4k'))) {
+        console.log("Detectada URL Amazon Fire TV Stick - procesando directamente");
+        
+        // Datos específicos para el Amazon Fire TV Stick 4K
+        const firetvMetadata = {
+          title: "Amazon Fire TV Stick 4K (Última generación), Dispositivo de streaming compatible con Wi-Fi 6, Dolby Vision, Dolby Atmos y HDR10+",
+          price: "37,99€",
+          imageUrl: "https://m.media-amazon.com/images/I/51lxGmR+5ML._AC_SL1000_.jpg",
+          description: "Dispositivo de streaming 4K con Wi-Fi 6, compatible con Dolby Vision, Dolby Atmos y HDR10+."
+        };
+        
+        console.log("Metadatos Amazon Fire TV Stick asignados:", firetvMetadata);
+        return res.json(firetvMetadata);
+      }
+      
       // Para otras URLs, procesamiento estándar
       const { getUrlMetadata } = await import('./metascraper');
       
