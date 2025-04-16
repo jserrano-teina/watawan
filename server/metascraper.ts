@@ -1007,6 +1007,12 @@ export async function getUrlMetadata(url: string): Promise<{
       if (titleMatch && titleMatch[1]) {
         title = titleMatch[1].trim();
         debug(`Título extraído de etiqueta <title>: ${title}`);
+        
+        // Verificar si el título es válido (caso especial de Zara y otros)
+        if (title === '&nbsp;' || title.trim() === '' || title.includes('&nbsp;')) {
+          title = undefined; // Forzar a usar la URL o IA más adelante
+          debug('Título no válido encontrado, usando alternativa');
+        }
       }
       
       const ogTitleMatch = productHtml.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
@@ -1083,8 +1089,27 @@ export async function getUrlMetadata(url: string): Promise<{
             // Convertir formatos como "zapatillas-running-nike" a "Zapatillas Running Nike"
             title = lastPart
               .replace(/\.html$|\.htm$|\.php$/, '')
+              .replace(/p\d+/i, '')  // Eliminar códigos de producto como p02288851
               .replace(/-/g, ' ')
-              .replace(/\b\w/g, match => match.toUpperCase());
+              .replace(/\b\w/g, match => match.toUpperCase())
+              .trim();
+              
+            // Verificar que el título no sea solo un código de producto
+            const productCodeRegex = /^[A-Za-z]\d+(-\d+)?$/;
+            if (productCodeRegex.test(title)) {
+              // Si es solo un código, intentar usar la última parte descriptiva de la URL
+              const urlPathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+              for (let i = urlPathParts.length - 2; i >= 0; i--) {
+                const part = urlPathParts[i];
+                if (part && !productCodeRegex.test(part) && !/^\d+$/.test(part)) {
+                  title = part
+                    .replace(/-/g, ' ')
+                    .replace(/\b\w/g, match => match.toUpperCase())
+                    .trim();
+                  break;
+                }
+              }
+            }
             debug(`Título generado a partir de la URL: ${title}`);
           }
         } catch (e) {
