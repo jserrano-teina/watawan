@@ -703,21 +703,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           console.log(`🔄 Procesando URL acortada de Amazon: ${url}`);
           
-          // Configurar para seguir redirecciones manualmente
+          // En lugar de usar el método HEAD, usamos fetch con redirección automática
+          // Esta aproximación es más confiable para URLs acortadas
           const response = await fetch(url, {
-            method: 'HEAD', // Solo necesitamos los headers para obtener la ubicación de redirección
-            redirect: 'manual', // No seguir automáticamente
+            method: 'GET',
+            redirect: 'follow', // Seguir redirecciones automáticamente
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
             }
           });
           
-          // Comprobar si tenemos una redirección
-          if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
-            const redirectUrl = response.headers.get('location');
-            if (redirectUrl) {
-              console.log(`✅ URL acortada redirige a: ${redirectUrl}`);
-              url = redirectUrl; // Actualizar la URL para extraer metadatos del destino real
+          // Obtener la URL final después de seguir todas las redirecciones
+          if (response.ok) {
+            const finalUrl = response.url;
+            if (finalUrl && finalUrl !== url) {
+              console.log(`✅ URL acortada redirige a: ${finalUrl}`);
+              url = finalUrl; // Actualizar la URL para extraer metadatos del destino real
             }
           }
         } catch (error) {

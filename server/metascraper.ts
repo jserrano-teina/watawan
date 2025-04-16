@@ -516,18 +516,51 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         const allPricesInHtml = extractAllPricesFromHtml(productHtml);
         if (allPricesInHtml.length > 0) {
           // Función para convertir un precio a formato numérico para comparación
+          // Mejorada para manejar múltiples formatos y limpiar los precios adecuadamente
           const toNumber = (price: string): number => {
-            return parseFloat(price.replace(/[^0-9,.]/g, '').replace(',', '.'));
+            // Eliminar todo excepto dígitos, punto y coma
+            const cleanPrice = price.replace(/[^0-9,.]/g, '');
+            
+            // Si tiene coma decimal, convertirla a punto para parseo correcto
+            // Si hay múltiples comas o puntos, consideramos solo el último como decimal
+            const parts = cleanPrice.split(/[,.]/);
+            if (parts.length === 1) {
+              // No hay decimales
+              return parseInt(cleanPrice, 10);
+            } else {
+              // Unir todas las partes excepto la última como números enteros
+              // y la última como decimales
+              const integerPart = parts.slice(0, -1).join('');
+              const decimalPart = parts[parts.length - 1];
+              return parseFloat(`${integerPart}.${decimalPart}`);
+            }
           };
           
+          // Para detectar precios Amazon con IVA vs sin IVA, necesitamos verificar
+          // casos específicos de diferencia porcentual
           const mainPriceValue = toNumber(mainPrice);
           
           // Buscar si hay algún precio visiblemente mayor en la página
-          // Esto ayuda a solucionar casos donde el precio JSON es sin IVA
+          // Se han identificado varias diferencias: 17.4%, 21%, 32%, etc.
+          // Utilizamos una estrategia general: buscar cualquier precio significativamente mayor
           const higherVisiblePrices = allPricesInHtml.filter(p => {
             const numericPrice = toNumber(p);
-            // Comprobamos si es significativamente mayor (>5%)
-            return numericPrice > mainPriceValue * 1.05;
+            
+            // Diferencia porcentual entre precios
+            const percentDiff = (numericPrice - mainPriceValue) / mainPriceValue * 100;
+            
+            // Rangos comunes observados para precios con/sin IVA
+            // Comprobamos si está en alguno de estos rangos típicos
+            return (
+              // Diferencia de 17-19% (IVA básico)
+              (percentDiff >= 16 && percentDiff <= 19) ||
+              // Diferencia de 20-22% (IVA estándar)
+              (percentDiff >= 20 && percentDiff <= 22) ||
+              // Diferencia de 30-33% (otros casos especiales)
+              (percentDiff >= 30 && percentDiff <= 33) ||
+              // O cualquier precio con más de 15% de diferencia
+              percentDiff > 15
+            );
           });
           
           if (higherVisiblePrices.length > 0) {
@@ -637,14 +670,41 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           // Formato de Amazon España: NN,NN € (con espacio antes del símbolo)
           if (price.includes('€')) {
             // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-            price = price.replace(/\s+€/, '€').replace(/\./, ',');
+            price = price.replace(/\s+€/, '€');
+            
+            // Normalizar formato decimal (punto a coma)
+            price = price.replace(/\./, ',');
+            
+            // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
+            if (price.includes(',')) {
+              const [euros, cents] = price.split(',');
+              if (cents.length > 2) {
+                // Truncar a 2 decimales
+                price = `${euros},${cents.substring(0, 2)}€`;
+              }
+            }
           } else if (price.includes('$')) {
             // Convertir de dólares a euros (aprox)
             const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
             price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
           } else {
             // No tiene símbolo, asumimos euros
-            price = `${price}€`.replace(/\./, ',');
+            // Para precios sin decimales, añadir ceros
+            if (!price.includes(',') && !price.includes('.')) {
+              price = `${price},00€`;
+            } else {
+              price = `${price}€`.replace(/\./, ',');
+              
+              // Asegurar que solo haya 2 decimales
+              if (price.includes(',')) {
+                const [euros, cents] = price.split(',');
+                if (cents.length > 2) {
+                  price = `${euros},${cents.substring(0, 2)}€`;
+                } else if (cents.length === 1) {
+                  price = `${euros},${cents}0€`;
+                }
+              }
+            }
           }
           return price;
         }
@@ -661,14 +721,41 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         // Asegurarnos que el precio tiene el formato correcto para España
         if (price.includes('€')) {
           // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-          price = price.replace(/\s+€/, '€').replace(/\./, ',');
+          price = price.replace(/\s+€/, '€');
+          
+          // Normalizar formato decimal (punto a coma)
+          price = price.replace(/\./, ',');
+          
+          // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
+          if (price.includes(',')) {
+            const [euros, cents] = price.split(',');
+            if (cents.length > 2) {
+              // Truncar a 2 decimales
+              price = `${euros},${cents.substring(0, 2)}€`;
+            }
+          }
         } else if (price.includes('$')) {
           // Convertir de dólares a euros (aprox)
           const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
           price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
         } else {
           // No tiene símbolo, asumimos euros
-          price = `${price}€`.replace(/\./, ',');
+          // Para precios sin decimales, añadir ceros
+          if (!price.includes(',') && !price.includes('.')) {
+            price = `${price},00€`;
+          } else {
+            price = `${price}€`.replace(/\./, ',');
+            
+            // Asegurar que solo haya 2 decimales
+            if (price.includes(',')) {
+              const [euros, cents] = price.split(',');
+              if (cents.length > 2) {
+                price = `${euros},${cents.substring(0, 2)}€`;
+              } else if (cents.length === 1) {
+                price = `${euros},${cents}0€`;
+              }
+            }
+          }
         }
         return price;
       }
@@ -974,14 +1061,41 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           // Asegurarnos que el precio tiene el formato correcto para España
           if (price.includes('€')) {
             // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-            price = price.replace(/\s+€/, '€').replace(/\./, ',');
+            price = price.replace(/\s+€/, '€');
+            
+            // Normalizar formato decimal (punto a coma)
+            price = price.replace(/\./, ',');
+            
+            // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
+            if (price.includes(',')) {
+              const [euros, cents] = price.split(',');
+              if (cents.length > 2) {
+                // Truncar a 2 decimales
+                price = `${euros},${cents.substring(0, 2)}€`;
+              }
+            }
           } else if (price.includes('$')) {
             // Convertir de dólares a euros (aprox)
             const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
             price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
           } else {
             // No tiene símbolo, asumimos euros
-            price = `${price}€`.replace(/\./, ',');
+            // Para precios sin decimales, añadir ceros
+            if (!price.includes(',') && !price.includes('.')) {
+              price = `${price},00€`;
+            } else {
+              price = `${price}€`.replace(/\./, ',');
+              
+              // Asegurar que solo haya 2 decimales
+              if (price.includes(',')) {
+                const [euros, cents] = price.split(',');
+                if (cents.length > 2) {
+                  price = `${euros},${cents.substring(0, 2)}€`;
+                } else if (cents.length === 1) {
+                  price = `${euros},${cents}0€`;
+                }
+              }
+            }
           }
           return price;
         }
