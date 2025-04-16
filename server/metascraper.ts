@@ -885,6 +885,16 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         'i5': '699,00€',
         'ryzen7': '849,00€',
         'ryzen5': '649,00€',
+        'ultrabook': '799,00€',
+        'default': '599,00€'
+      },
+      'laptop': {
+        'gaming': '999,00€',
+        'i7': '899,00€',
+        'i5': '699,00€',
+        'ryzen7': '849,00€',
+        'ryzen5': '649,00€',
+        'ultrabook': '799,00€',
         'default': '599,00€'
       }
     };
@@ -896,9 +906,10 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
     let category = '';
     if (urlLower.includes('monitor')) category = 'monitor';
     else if (urlLower.includes('procesador') || urlLower.includes('cpu')) category = 'procesador';
-    else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx')) category = 'grafica';
+    else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) category = 'grafica';
     else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr')) category = 'ram';
-    else if (urlLower.includes('portatil') || urlLower.includes('laptop')) category = 'portatil';
+    else if (urlLower.includes('portatil')) category = 'portatil';
+    else if (urlLower.includes('laptop') || urlLower.includes('ordenador-portatil')) category = 'laptop';
     
     // Extracción de marca
     let brand = '';
@@ -957,8 +968,28 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
       // Usamos los default values de cada categoría para un precio base aproximado
       if (urlLower.includes('monitor')) {
         return "179,99€";
-      } else if (urlLower.includes('portatil') || urlLower.includes('laptop')) {
-        return "599,00€";
+      } else if (urlLower.includes('portatil') || urlLower.includes('notebook')) {
+        // Detectar las subcategorías de portátiles
+        if (urlLower.includes('gaming')) {
+          return "999,00€";
+        } else if (urlLower.includes('i7') || urlLower.includes('ryzen7')) {
+          return "899,00€";
+        } else if (urlLower.includes('ultrabook') || urlLower.includes('ultrafino')) {
+          return "799,00€";
+        } else {
+          return "599,00€";
+        }
+      } else if (urlLower.includes('laptop') || urlLower.includes('ordenador-portatil')) {
+        // Detectar las subcategorías de laptops
+        if (urlLower.includes('gaming')) {
+          return "999,00€";
+        } else if (urlLower.includes('i7') || urlLower.includes('ryzen7')) {
+          return "899,00€";
+        } else if (urlLower.includes('ultrabook') || urlLower.includes('ultrafino')) {
+          return "799,00€";
+        } else {
+          return "599,00€";
+        }
       } else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) {
         return "399,00€";
       } else if (urlLower.includes('procesador') || urlLower.includes('cpu')) {
