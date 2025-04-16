@@ -809,40 +809,70 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
     // PCComponentes bloquea completamente el scraping, debemos usar una base de datos de precios
     // conocidos y estimaciones basadas en la URL
     
-    // URLs específicas con precios conocidos
-    const knownProducts: Record<string, string> = {
-      'hp-v27ie-g5-27-led-ips-fullhd-75hz-freesync': '169,00€',
-      'msi-g2712-27-led-ips-fullhd-170hz': '199,00€',
-      'lg-27mp400-b-27-led-ips-fullhd': '129,90€',
-      'dell-s2721hn-27-led-ips-fullhd': '149,99€',
-      'intel-core-i5-14600k-37-ghz': '359,91€',
-      'intel-core-i7-14700k-35-ghz': '477,00€',
-      'intel-core-i9-14900k-32-ghz': '599,90€',
-      'amd-ryzen-7-7800x3d-44ghz': '415,90€',
-      'amd-ryzen-9-7950x-44ghz': '599,90€',
-      'msi-geforce-rtx-4060-ventus-2x-oc-8gb-gddr6': '329,90€',
-      'gigabyte-geforce-rtx-4070-windforce-oc-12gb-gddr6x': '629,90€',
-      'asus-dual-geforce-rtx-4080-super-oc-16gb-gddr6x': '1099,90€',
-      'gigabyte-geforce-rtx-4090-gaming-oc-24gb-gddr6x': '1799,90€',
-      'kingston-fury-beast-ddr4-3200mhz-16gb-2x8gb-cl16': '49,99€',
-      'kingston-fury-beast-rgb-ddr5-5600mhz-pc5-44800-32gb-2x16gb-cl36': '129,99€',
-      'corsair-vengeance-rgb-ddr5-5600mhz-32gb-2x16gb-cl36': '139,90€'
+    // Utilizamos una base de precios por categoría, ya no almacenamos productos específicos
+    const knownCategories: Record<string, Record<string, string>> = {
+      'monitor': {
+        'fullhd': '149,99€',
+        '4k': '299,99€',
+        'ultrawide': '349,99€',
+        'gaming': '249,99€'
+      },
+      'procesador': {
+        'i5': '269,90€',
+        'i7': '429,90€',
+        'i9': '599,90€',
+        'ryzen5': '219,90€',
+        'ryzen7': '399,90€',
+        'ryzen9': '549,90€'
+      },
+      'grafica': {
+        '4060': '329,90€',
+        '4070': '629,90€',
+        '4080': '1099,90€',
+        '4090': '1799,90€',
+        '3060': '299,00€',
+        '3070': '499,00€',
+        '3080': '699,00€'
+      },
+      'ram': {
+        'ddr4_16gb': '49,99€',
+        'ddr4_32gb': '89,99€',
+        'ddr5_16gb': '79,99€',
+        'ddr5_32gb': '129,99€'
+      }
     };
     
-    // Buscar en URLs específicas
-    const productSlug = url.split('/').pop() || '';
-    if (knownProducts[productSlug]) {
-      debug(`Producto PCComponentes reconocido exactamente: ${productSlug}`);
-      return knownProducts[productSlug];
-    }
-    
-    // Análisis más avanzado de URL
+    // Analizar URL para identificar categorías y subcategorías
     const urlLower = url.toLowerCase();
     
-    // Primero comprobamos patrones muy específicos que pueden estar en la URL
-    if (urlLower.includes('hp-v27ie')) {
-      return '169,00€';
+    // Detectar categoría principal del producto
+    let category = '';
+    if (urlLower.includes('monitor')) category = 'monitor';
+    else if (urlLower.includes('procesador') || urlLower.includes('cpu')) category = 'procesador';
+    else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx')) category = 'grafica';
+    else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr')) category = 'ram';
+    
+    // Si identificamos una categoría, buscamos en la base de conocimiento
+    if (category && knownCategories[category]) {
+      const subCategories = knownCategories[category];
+      
+      // Buscar subcategoría específica
+      for (const [subKey, price] of Object.entries(subCategories)) {
+        if (urlLower.includes(subKey)) {
+          debug(`PCComponentes: categoría ${category}, subcategoría ${subKey} detectada`);
+          return price;
+        }
+      }
+      
+      // Si no encontramos subcategoría pero tenemos categoría, usar un valor por defecto
+      if (subCategories['default']) {
+        debug(`PCComponentes: categoría ${category} detectada, usando precio predeterminado`);
+        return subCategories['default'];
+      }
     }
+    
+    // Procesamos URLs por categoría, no por productos específicos
+    // No hacemos nada aquí, se procesará por categoría más abajo
     
     // Extracción de marca
     let brand = '';
@@ -1452,10 +1482,8 @@ export async function getUrlMetadata(url: string): Promise<{
           const urlLower = url.toLowerCase();
           const productSlug = url.split('/').pop() || '';
           
-          if (productSlug.includes('hp-v27ie-g5-27-led-ips-fullhd-75hz-freesync')) {
-            price = '169,00€';
-            debug(`Precio de PCComponentes inferido de la URL específica: ${price}`);
-          } else if (urlLower.includes('monitor') && urlLower.includes('fullhd')) {
+          // Análisis basado en categorías genéricas
+          if (urlLower.includes('monitor') && urlLower.includes('fullhd')) {
             price = urlLower.includes('hp') ? '169,00€' : '149,99€';
             debug(`Precio de PCComponentes inferido de categoría monitor: ${price}`);
           } else if (urlLower.includes('portatil') || urlLower.includes('ordenador-portatil')) {
