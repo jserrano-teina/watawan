@@ -700,8 +700,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getUrlMetadata } = await import('./metascraper');
       const metadata = await getUrlMetadata(url);
       
-      // Si no tenemos un título de la IA o extracción HTML, generamos uno a partir de la URL
-      if (!metadata.title) {
+      // Si el título es &nbsp; (caso especial de Zara), forzamos a usar la URL
+      if (metadata.title === '&nbsp;') {
+        metadata.title = '';
+      }
+      
+      // Comprobar y limpiar el título si existe
+      if (metadata.title) {
+        // Remover caracteres HTML y espacios
+        metadata.title = metadata.title
+          .replace(/&nbsp;/g, '')
+          .replace(/&[a-z0-9]+;/g, ' ') // Reemplazar otras entidades HTML por espacios
+          .trim();
+      }
+      
+      // Si no tenemos un título válido después de la limpieza, generamos uno a partir de la URL
+      if (!metadata.title || metadata.title === '' || metadata.title.length < 3) {
         try {
           const urlObj = new URL(url);
           const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
