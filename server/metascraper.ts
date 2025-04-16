@@ -383,7 +383,9 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           'Referer': 'https://www.google.com/',
           'DNT': '1',
           'Upgrade-Insecure-Requests': '1',
-          'Cache-Control': 'max-age=0'
+          'Cache-Control': 'max-age=0',
+          // Cookies para forzar precios en la moneda correcta (EUR) y localización española
+          'Cookie': 'i18n-prefs=EUR; sp-cdn="L5Z9:ES"; session-id=138-8034582-9241463; session-id-time=2082787201l; session-token=FAKE_TOKEN; ubid-main=131-9147565-5432642;'
         },
         signal: controller.signal
       });
@@ -435,6 +437,19 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         
         // Verificar si el precio parece válido
         if (price.match(/(\d+[,.]\d+)|(\d+)/)) {
+          // Asegurarnos que el precio tiene el formato correcto para España
+          // Formato de Amazon España: NN,NN € (con espacio antes del símbolo)
+          if (price.includes('€')) {
+            // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
+            price = price.replace(/\s+€/, '€').replace(/\./, ',');
+          } else if (price.includes('$')) {
+            // Convertir de dólares a euros (aprox)
+            const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
+            price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
+          } else {
+            // No tiene símbolo, asumimos euros
+            price = `${price}€`.replace(/\./, ',');
+          }
           return price;
         }
       }
@@ -446,6 +461,19 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (match && match[1]) {
         let price = match[1].trim();
         debug(`Precio real de Amazon encontrado con patrón ${pattern}: ${price}`);
+        
+        // Asegurarnos que el precio tiene el formato correcto para España
+        if (price.includes('€')) {
+          // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
+          price = price.replace(/\s+€/, '€').replace(/\./, ',');
+        } else if (price.includes('$')) {
+          // Convertir de dólares a euros (aprox)
+          const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
+          price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
+        } else {
+          // No tiene símbolo, asumimos euros
+          price = `${price}€`.replace(/\./, ',');
+        }
         return price;
       }
     }
@@ -469,9 +497,18 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         } else if (match.length === 2) {
           // Formato completo
           let price = match[1].trim();
-          // Asegurarse de que tiene símbolo de moneda
-          if (!price.includes('€') && !price.includes('$')) {
-            price += '€'; // Añadir € por defecto
+          
+          // Asegurarnos que el precio tiene el formato correcto para España
+          if (price.includes('€')) {
+            // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
+            price = price.replace(/\s+€/, '€').replace(/\./, ',');
+          } else if (price.includes('$')) {
+            // Convertir de dólares a euros (aprox)
+            const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
+            price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
+          } else {
+            // No tiene símbolo, asumimos euros
+            price = `${price}€`.replace(/\./, ',');
           }
           return price;
         }

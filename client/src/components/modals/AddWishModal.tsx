@@ -206,12 +206,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           setValueStepTwo('title', metadata.title);
         }
         
-        // Establecer la descripción si existe
-        if (metadata.description) {
-          console.log('Descripción extraída:', metadata.description);
-          setValueStepTwo('description', metadata.description);
-        }
-        
         // Extraer solo el valor numérico del precio si existe
         if (metadata.price) {
           // Primero eliminar todos los caracteres que no sean números, puntos o comas
