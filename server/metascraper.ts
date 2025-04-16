@@ -373,6 +373,40 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     // Variable para configurar logs detallados
     const enableDetailedLogs = true;
     
+    // Manejar URLs acortadas de Amazon (amzn.eu, amzn.to, etc.)
+    if (url.includes('amzn.eu/') || url.includes('amzn.to/')) {
+      debug(`Detectada URL acortada de Amazon: ${url}`);
+      
+      try {
+        // Configurar para seguir redirecciones manualmente
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
+        const response = await fetchWithCorrectTypes(url, {
+          method: 'HEAD', // Solo necesitamos los headers para obtener la ubicación de redirección
+          redirect: 'manual', // No seguir automáticamente
+          signal: controller.signal,
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
+          }
+        });
+        
+        clearTimeout(timeoutId);
+        
+        // Comprobar si tenemos una redirección
+        if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
+          const redirectUrl = response.headers.get('location');
+          if (redirectUrl) {
+            console.log(`✅ URL acortada redirige a: ${redirectUrl}`);
+            url = redirectUrl; // Actualizar la URL para seguir con la URL completa
+          }
+        }
+      } catch (error) {
+        console.error(`❌ Error al seguir redirección de URL acortada: ${error}`);
+        // Continuar con la URL original si hay error
+      }
+    }
+    
     let productHtml = html;
     
     // Si no tenemos el HTML, lo obtenemos con cabeceras que simulan un navegador real
@@ -461,10 +495,59 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         if (!mainPrice.includes('€')) {
           mainPrice = `${mainPrice}€`.replace(/\./, ',');
         }
+        
+        // Implementación de "Precio Máximo" para casos especiales
+        // Buscar todos los precios en el HTML para comparar con lo que extrajimos
+        const allPricesInHtml = extractAllPricesFromHtml(productHtml);
+        if (allPricesInHtml.length > 0) {
+          // Función para convertir un precio a formato numérico para comparación
+          const toNumber = (price: string): number => {
+            return parseFloat(price.replace(/[^0-9,.]/g, '').replace(',', '.'));
+          };
+          
+          const mainPriceValue = toNumber(mainPrice);
+          
+          // Buscar si hay algún precio visiblemente mayor en la página
+          // Esto ayuda a solucionar casos donde el precio JSON es sin IVA
+          const higherVisiblePrices = allPricesInHtml.filter(p => {
+            const numericPrice = toNumber(p);
+            // Comprobamos si es significativamente mayor (>5%)
+            return numericPrice > mainPriceValue * 1.05;
+          });
+          
+          if (higherVisiblePrices.length > 0) {
+            // Ordenar precios de mayor a menor
+            higherVisiblePrices.sort((a, b) => toNumber(b) - toNumber(a));
+            
+            console.log(`⚠️ Encontrado precio JSON (${mainPrice}) pero hay precios visibles mayores: ${higherVisiblePrices.join(', ')}`);
+            
+            // Usar el precio visible más alto como corrección
+            const highestPrice = higherVisiblePrices[0];
+            console.log(`✅ Corrigiendo precio: ${mainPrice} -> ${highestPrice} (probable IVA incluido)`);
+            
+            return highestPrice;
+          }
+        }
+        
         return mainPrice;
       } else if (typeof mainPrice === 'number') {
         return `${mainPrice.toFixed(2).replace('.', ',')}€`;
       }
+    }
+    
+    // Función interna para extraer todos los precios del HTML
+    function extractAllPricesFromHtml(html: string): string[] {
+      // Pattern para detectar precios en euros con formato español
+      // Coincide con formatos como "123,45 €", "123,45€", "123€", etc.
+      const pricePattern = /(\d+(?:[,.]\d+)?)\s*€/g;
+      const matches = html.match(pricePattern);
+      
+      if (!matches) return [];
+      
+      // Limpiar y formatear los precios encontrados
+      return matches.map(price => {
+        return price.trim().replace(/\s+€/, '€').replace(/\./, ',');
+      });
     }
     
     // Buscar el precio visible al usuario (no el oculto en a-offscreen)
@@ -632,6 +715,20 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           return { price, count, numericValue };
         })
         .sort((a, b) => {
+          // Si la URL contiene "Apple" o productos reconocidos de Apple, priorizar el precio más alto
+          // Estos productos típicamente se muestran con el precio final en las páginas
+          if (url.includes('/Apple-') || 
+              url.includes('/apple-') ||
+              url.toLowerCase().includes('iphone') ||
+              url.toLowerCase().includes('ipad') ||
+              url.toLowerCase().includes('macbook') ||
+              url.toLowerCase().includes('watch') ||
+              url.toLowerCase().includes('airpods')) {
+            // Para productos Apple, el precio correcto suele ser el más alto visible
+            return b.numericValue - a.numericValue;
+          }
+          
+          // Para el resto de productos, seguir la lógica normal
           // Primero ordenar por frecuencia (descendente)
           if (b.count !== a.count) return b.count - a.count;
           // Luego por valor numérico (descendente) 

@@ -689,7 +689,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
   router.get("/extract-metadata", async (req: Request, res) => {
-    const url = req.query.url as string;
+    let url = req.query.url as string;
     
     if (!url) {
       return res.status(400).json({ message: "URL parameter is required" });
@@ -697,6 +697,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       console.log(`Extrayendo metadatos de URL: ${url}`);
+      
+      // Manejar URLs acortadas de Amazon antes de procesar
+      if (url.includes('amzn.eu/') || url.includes('amzn.to/')) {
+        try {
+          console.log(`🔄 Procesando URL acortada de Amazon: ${url}`);
+          
+          // Configurar para seguir redirecciones manualmente
+          const response = await fetch(url, {
+            method: 'HEAD', // Solo necesitamos los headers para obtener la ubicación de redirección
+            redirect: 'manual', // No seguir automáticamente
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
+            }
+          });
+          
+          // Comprobar si tenemos una redirección
+          if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
+            const redirectUrl = response.headers.get('location');
+            if (redirectUrl) {
+              console.log(`✅ URL acortada redirige a: ${redirectUrl}`);
+              url = redirectUrl; // Actualizar la URL para extraer metadatos del destino real
+            }
+          }
+        } catch (error) {
+          console.error(`❌ Error al seguir redirección de URL acortada: ${error}`);
+          // Continuar con la URL original si hay error
+        }
+      }
       
       // Procesamos todos los casos de manera genérica con nuestro sistema mejorado
       console.log(`Procesando metadatos para URL: ${url}`);
