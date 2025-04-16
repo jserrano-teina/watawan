@@ -371,9 +371,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     const isHerculesMonitor = url.includes('Hercules-DJMonitor-32');
     if (isHerculesMonitor) {
       console.log("⚠️ Procesando enlace de monitor Hercules:", url);
-      // Solución específica para este producto: Amazon muestra 52,41€ en el HTML
-      // pero el precio real visible en el navegador es 63,42€
-      return "63,42€";
     }
     
     let productHtml = html;
@@ -525,6 +522,174 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       }
     }
     
+    // Intentar extraer información de producto desde los datos estructurados JSON-LD
+    // Esta información suele ser más precisa porque es la que se proporciona a los motores de búsqueda
+    try {
+      const jsonLdMatches = productHtml.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/gi);
+      if (jsonLdMatches) {
+        for (const jsonLdMatch of jsonLdMatches) {
+          try {
+            // Extraer el contenido JSON entre las etiquetas script
+            const jsonContent = jsonLdMatch.replace(/<script type="application\/ld\+json">/, '').replace(/<\/script>/, '');
+            const jsonData = JSON.parse(jsonContent.trim());
+            
+            if (isHerculesMonitor) {
+              console.log("📊 Datos estructurados JSON-LD encontrados:", JSON.stringify(jsonData, null, 2));
+            }
+            
+            // Buscar precios en diferentes formatos de datos estructurados
+            let priceData = null;
+            
+            // Formato 1: Objeto con propiedad "offers" directa
+            if (jsonData.offers && jsonData.offers.price) {
+              priceData = {
+                price: jsonData.offers.price,
+                currency: jsonData.offers.priceCurrency || 'EUR'
+              };
+            }
+            // Formato 2: Array de offers
+            else if (jsonData.offers && Array.isArray(jsonData.offers) && jsonData.offers.length > 0) {
+              const offer = jsonData.offers[0];
+              if (offer.price) {
+                priceData = {
+                  price: offer.price,
+                  currency: offer.priceCurrency || 'EUR'
+                };
+              }
+            }
+            // Formato 3: Objecto con @graph que contiene productos con offers
+            else if (jsonData['@graph'] && Array.isArray(jsonData['@graph'])) {
+              for (const item of jsonData['@graph']) {
+                if (item['@type'] === 'Product' && item.offers) {
+                  if (item.offers.price) {
+                    priceData = {
+                      price: item.offers.price,
+                      currency: item.offers.priceCurrency || 'EUR'
+                    };
+                    break;
+                  }
+                }
+              }
+            }
+            
+            if (priceData) {
+              let price = priceData.price.toString();
+              if (priceData.currency === 'EUR') {
+                // Formatear precio en formato español
+                price = `${price.replace('.', ',')}€`;
+              } else if (priceData.currency === 'USD') {
+                // Convertir USD a EUR (aproximado)
+                const numericValue = parseFloat(price);
+                price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
+              }
+              
+              if (isHerculesMonitor) {
+                console.log(`💰 Precio extraído de datos estructurados: ${price}`);
+              }
+              
+              return price;
+            }
+          } catch (jsonError) {
+            console.error("Error al parsear JSON-LD:", jsonError);
+          }
+        }
+      }
+    } catch (structuredDataError) {
+      console.error("Error al extraer datos estructurados:", structuredDataError);
+    }
+    
+    // Intentar extraer datos de la estructura de JavaScript de Amazon
+    try {
+      // Buscar la configuración del producto
+      const dataMainMatch = productHtml.match(/data-main=["']({.*?})["']/);
+      if (dataMainMatch && dataMainMatch[1]) {
+        try {
+          const dataMain = JSON.parse(dataMainMatch[1].replace(/&quot;/g, '"'));
+          if (isHerculesMonitor) {
+            console.log("🔍 Datos main encontrados:", dataMain);
+          }
+          
+          if (dataMain.price) {
+            return `${dataMain.price}`.replace(/\./, ',') + '€';
+          }
+        } catch (jsonError) {
+          console.error("Error al parsear data-main:", jsonError);
+        }
+      }
+      
+      // Buscar los datos del precio en descuento
+      const priceBlockMatch = productHtml.match(/\\"priceblock_([^"\\]+)\\":[\s]*\\"([^"\\]+)\\"/);
+      if (priceBlockMatch && priceBlockMatch[2]) {
+        const price = priceBlockMatch[2].trim();
+        if (isHerculesMonitor) {
+          console.log(`💲 Precio encontrado en priceblock_${priceBlockMatch[1]}: ${price}`);
+        }
+        return price.replace(/\./, ',');
+      }
+      
+      // Buscar datos de configuración de Amazon
+      const configMatch = productHtml.match(/data-a-state.*?a-price.*?({.*?})/);
+      if (configMatch && configMatch[1]) {
+        try {
+          const configData = JSON.parse(configMatch[1].replace(/&quot;/g, '"'));
+          if (isHerculesMonitor) {
+            console.log("💰 Datos de configuración encontrados:", configData);
+          }
+          
+          if (configData.dollars && configData.cents) {
+            return `${configData.dollars},${configData.cents}€`;
+          } else if (configData.displayPrice) {
+            return configData.displayPrice.replace(/\./, ',');
+          } else if (configData.price) {
+            return `${configData.price}`.replace(/\./, ',') + '€';
+          }
+        } catch (jsonError) {
+          console.error("Error al parsear datos de configuración:", jsonError);
+        }
+      }
+      
+      // Buscar los datos dentro de script con variables de JavaScript
+      const scriptConfigMatch = productHtml.match(/P\.([^\.]+)\.1,([^,]*),([^,]*),/);
+      if (scriptConfigMatch && scriptConfigMatch.length > 2) {
+        try {
+          const [_, configName, price, currency] = scriptConfigMatch;
+          if (isHerculesMonitor) {
+            console.log(`🔢 Precio encontrado en configuración P.${configName}: ${price} ${currency}`);
+          }
+          
+          if (price && !isNaN(parseFloat(price))) {
+            return `${parseFloat(price).toFixed(2).replace('.', ',')}€`;
+          }
+        } catch (error) {
+          console.error("Error al extraer configuración de precio:", error);
+        }
+      }
+      
+      // Intentar extraer desde el objeto "aodPreDisplayObj" que a veces contiene datos de precios
+      const aodMatch = productHtml.match(/aodPreDisplayObj\s*=\s*({[\s\S]*?});/);
+      if (aodMatch && aodMatch[1]) {
+        try {
+          // Limpiar el JSON antes de parsearlo
+          const cleanJson = aodMatch[1]
+            .replace(/([{,])\s*(\w+):/g, '$1"$2":') // Convertir claves sin comillas a con comillas
+            .replace(/:\s*'([^']*)'/g, ':"$1"'); // Cambiar comillas simples a dobles
+          
+          const aodData = JSON.parse(cleanJson);
+          if (isHerculesMonitor) {
+            console.log("🔄 Datos AOD encontrados:", aodData);
+          }
+          
+          if (aodData.price) {
+            return `${aodData.price}`.replace(/\./, ',') + '€';
+          }
+        } catch (jsonError) {
+          console.error("Error al parsear AOD data:", jsonError);
+        }
+      }
+    } catch (aodError) {
+      console.error("Error al extraer datos de configuración:", aodError);
+    }
+    
     // Patrones para extraer precios de Amazon (fallback)
     const pricePatterns = [
       // Nuevo patrón basado en la estructura vista en el monitor Hercules
@@ -534,7 +699,10 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       /priceblock_ourprice[^>]*>([^<]+)/i,
       /priceblock_dealprice[^>]*>([^<]+)/i,
       /data-a-color=['"]price['"][^>]*>([^<]+)/i,
-      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i
+      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      // Patrones adicionales para casos especiales
+      /<span[^>]*class=["']p13n-sc-price["'][^>]*>([^<]+)<\/span>/i,
+      /\\"price\\":\\"([^"\\]+)\\"/i
     ];
     
     for (const pattern of pricePatterns) {
