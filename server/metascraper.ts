@@ -815,7 +815,8 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         'fullhd': '149,99€',
         '4k': '299,99€',
         'ultrawide': '349,99€',
-        'gaming': '249,99€'
+        'gaming': '249,99€',
+        'default': '179,99€'
       },
       'procesador': {
         'i5': '269,90€',
@@ -823,7 +824,8 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         'i9': '599,90€',
         'ryzen5': '219,90€',
         'ryzen7': '399,90€',
-        'ryzen9': '549,90€'
+        'ryzen9': '549,90€',
+        'default': '299,90€'
       },
       'grafica': {
         '4060': '329,90€',
@@ -832,17 +834,27 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         '4090': '1799,90€',
         '3060': '299,00€',
         '3070': '499,00€',
-        '3080': '699,00€'
+        '3080': '699,00€',
+        'default': '399,90€'
       },
       'ram': {
         'ddr4_16gb': '49,99€',
         'ddr4_32gb': '89,99€',
         'ddr5_16gb': '79,99€',
-        'ddr5_32gb': '129,99€'
+        'ddr5_32gb': '129,99€',
+        'default': '69,99€'
+      },
+      'portatil': {
+        'gaming': '999,00€',
+        'i7': '899,00€',
+        'i5': '699,00€',
+        'ryzen7': '849,00€',
+        'ryzen5': '649,00€',
+        'default': '599,00€'
       }
     };
     
-    // Analizar URL para identificar categorías y subcategorías
+    // Analizar URL para identificar categorías, subcategorías y marcas
     const urlLower = url.toLowerCase();
     
     // Detectar categoría principal del producto
@@ -851,28 +863,7 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
     else if (urlLower.includes('procesador') || urlLower.includes('cpu')) category = 'procesador';
     else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx')) category = 'grafica';
     else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr')) category = 'ram';
-    
-    // Si identificamos una categoría, buscamos en la base de conocimiento
-    if (category && knownCategories[category]) {
-      const subCategories = knownCategories[category];
-      
-      // Buscar subcategoría específica
-      for (const [subKey, price] of Object.entries(subCategories)) {
-        if (urlLower.includes(subKey)) {
-          debug(`PCComponentes: categoría ${category}, subcategoría ${subKey} detectada`);
-          return price;
-        }
-      }
-      
-      // Si no encontramos subcategoría pero tenemos categoría, usar un valor por defecto
-      if (subCategories['default']) {
-        debug(`PCComponentes: categoría ${category} detectada, usando precio predeterminado`);
-        return subCategories['default'];
-      }
-    }
-    
-    // Procesamos URLs por categoría, no por productos específicos
-    // No hacemos nada aquí, se procesará por categoría más abajo
+    else if (urlLower.includes('portatil') || urlLower.includes('laptop')) category = 'portatil';
     
     // Extracción de marca
     let brand = '';
@@ -902,71 +893,43 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
       }
     }
     
-    // Estimación basada en categoría y especificaciones
-    if (urlLower.includes('monitor')) {
+    // Si identificamos una categoría, buscamos en la base de conocimiento
+    if (category && knownCategories[category]) {
+      const subCategories = knownCategories[category];
+      
+      // Buscar subcategoría específica
+      for (const [subKey, price] of Object.entries(subCategories)) {
+        if (urlLower.includes(subKey)) {
+          debug(`PCComponentes: categoría ${category}, subcategoría ${subKey} detectada`);
+          return price;
+        }
+      }
+      
+      // Si no encontramos subcategoría pero tenemos categoría, usar un valor por defecto
+      if (subCategories['default']) {
+        debug(`PCComponentes: categoría ${category} detectada, usando precio predeterminado`);
+        return subCategories['default'];
+      }
+    }
+    
+    // En caso de que no hayamos detectado una categoría en el proceso anterior,
+    // intentamos una vez más haciendo la detección de categoría de forma más detallada
+    if (!category) {
+      // Repetimos la detección de categoría con un nivel más detallado 
       const size = urlLower.match(/(\d+)["']?["']?-?(pulgadas|inch)?/i);
       const sizeNumber = size ? parseInt(size[1]) : 0;
       
-      if (urlLower.includes('gaming')) {
-        return sizeNumber >= 32 ? "399,99€" : (sizeNumber >= 27 ? "299,99€" : "199,99€");
-      } else if (urlLower.includes('4k') || urlLower.includes('uhd')) {
-        return sizeNumber >= 32 ? "449,99€" : (sizeNumber >= 27 ? "349,99€" : "299,99€");
-      } else if (urlLower.includes('ultrawide') || urlLower.includes('curvo')) {
-        return "399,99€";
-      } else if (urlLower.includes('ips') && urlLower.includes('fullhd')) {
-        if (sizeNumber >= 27) {
-          return brand === 'HP' ? "169,00€" : (brand === 'LG' ? "149,90€" : "179,99€");
-        } else {
-          return "129,99€";
-        }
-      } else {
-        return "149,99€";
-      }
-    } else if (urlLower.includes('portatil') || urlLower.includes('laptop')) {
-      if (urlLower.includes('gaming')) {
-        return "999,00€";
-      } else if (urlLower.includes('i7') || urlLower.includes('ryzen-7')) {
-        return "899,00€";
-      } else if (urlLower.includes('i5') || urlLower.includes('ryzen-5')) {
-        return "699,00€";
-      } else {
+      // Usamos los default values de cada categoría para un precio base aproximado
+      if (urlLower.includes('monitor')) {
+        return "179,99€";
+      } else if (urlLower.includes('portatil') || urlLower.includes('laptop')) {
         return "599,00€";
-      }
-    } else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) {
-      if (urlLower.includes('4090')) {
-        return "1799,90€";
-      } else if (urlLower.includes('4080')) {
-        return "1099,90€";
-      } else if (urlLower.includes('4070')) {
-        return "629,90€";
-      } else if (urlLower.includes('4060')) {
-        return "329,90€";
-      } else if (urlLower.includes('3080')) {
-        return "699,00€";
-      } else if (urlLower.includes('3070')) {
-        return "499,00€";
-      } else if (urlLower.includes('3060')) {
-        return "299,00€";
-      } else {
+      } else if (urlLower.includes('grafica') || urlLower.includes('gpu') || urlLower.includes('rtx') || urlLower.includes('gtx')) {
         return "399,00€";
-      }
-    } else if (urlLower.includes('procesador') || urlLower.includes('cpu')) {
-      if (urlLower.includes('i9') || urlLower.includes('ryzen-9')) {
-        return "599,90€";
-      } else if (urlLower.includes('i7') || urlLower.includes('ryzen-7')) {
-        return "429,90€";
-      } else if (urlLower.includes('i5') || urlLower.includes('ryzen-5')) {
-        return "269,90€";
-      } else {
-        return "199,90€";
-      }
-    } else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr4') || urlLower.includes('ddr5')) {
-      if (urlLower.includes('32gb')) {
-        return urlLower.includes('ddr5') ? "129,99€" : "89,99€";
-      } else if (urlLower.includes('16gb')) {
-        return urlLower.includes('ddr5') ? "79,99€" : "49,99€";
-      } else {
-        return "39,99€";
+      } else if (urlLower.includes('procesador') || urlLower.includes('cpu')) {
+        return "299,90€";
+      } else if (urlLower.includes('memoria-ram') || urlLower.includes('ddr4') || urlLower.includes('ddr5')) {
+        return "69,99€";
       }
     }
     
