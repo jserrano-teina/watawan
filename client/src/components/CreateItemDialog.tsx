@@ -9,10 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { insertWishlistItemSchema } from "@shared/schema";
+import { toast } from "@/components/ui/toast"; // Assuming a toast component exists
+
 
 const formSchema = insertWishlistItemSchema.omit({ wishlistId: true }).extend({
   wishlistId: z.number().optional(),
-  price: z.string().optional()
+  price: z.string().optional(),
+  title: z.string().optional() // Added title field
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -23,6 +26,7 @@ interface CreateItemDialogProps {
   onSubmit: (values: FormValues) => void;
   wishlistId: number;
   editItem?: any;
+  extractMetadata: (link: string) => Promise<{ imageUrl?: string; price?: string; title?: string } | null>; // Added metadata extraction function
 }
 
 export function CreateItemDialog({ 
@@ -30,7 +34,8 @@ export function CreateItemDialog({
   onOpenChange, 
   onSubmit, 
   wishlistId,
-  editItem 
+  editItem,
+  extractMetadata
 }: CreateItemDialogProps) {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -42,6 +47,7 @@ export function CreateItemDialog({
       store: editItem?.store || "",
       imageUrl: editItem?.imageUrl || "",
       isPriority: editItem?.isPriority || false,
+      title: editItem?.title || "" // Added title to default values
     },
   });
 
@@ -55,6 +61,7 @@ export function CreateItemDialog({
         store: editItem.store || "",
         imageUrl: editItem.imageUrl || "",
         isPriority: editItem.isPriority || false,
+        title: editItem.title || "" // Added title to reset values
       });
     } else if (open) {
       form.reset({
@@ -65,15 +72,48 @@ export function CreateItemDialog({
         store: "",
         imageUrl: "",
         isPriority: false,
+        title: "" // Added title to reset values
       });
     }
   }, [open, editItem, form]);
 
-  const handleSubmit = form.handleSubmit((data) => {
-    onSubmit({
-      ...data,
-      wishlistId
-    });
+  const handleSubmit = form.handleSubmit(async (data) => {
+    if (data.link) {
+      try {
+        const metadata = await extractMetadata(data.link);
+        if (metadata) {
+          if (metadata.imageUrl) {
+            form.setValue('imageUrl', metadata.imageUrl);
+          }
+          if (metadata.price) {
+            form.setValue('price', metadata.price);
+          }
+          if (metadata.title) {
+            form.setValue('title', metadata.title);
+          }
+
+          // Mostrar feedback al usuario
+          toast({
+            title: "Información extraída",
+            description: "Se ha extraído la información del producto automáticamente",
+          });
+        } else {
+          toast({
+            title: "Error al extraer información",
+            description: "No se pudo extraer información del enlace",
+            variant: 'destructive'
+          });
+        }
+      } catch (error) {
+        console.error("Error extracting metadata:", error);
+        toast({
+          title: "Error al extraer información",
+          description: "Ocurrió un error al extraer información del enlace",
+          variant: 'destructive'
+        });
+      }
+    }
+    onSubmit({ ...data, wishlistId });
   });
 
   return (
@@ -97,7 +137,21 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
+            <FormField
+              control={form.control}
+              name="title" // Added title field
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Título del producto</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Título del producto" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <FormField
               control={form.control}
               name="description"
@@ -114,7 +168,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="price"
@@ -131,7 +185,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="link"
@@ -145,7 +199,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="store"
@@ -159,7 +213,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="imageUrl"
@@ -173,7 +227,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <FormField
               control={form.control}
               name="isPriority"
@@ -191,7 +245,7 @@ export function CreateItemDialog({
                 </FormItem>
               )}
             />
-            
+
             <DialogFooter className="flex gap-3 mt-6">
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Cancelar

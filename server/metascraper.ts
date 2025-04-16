@@ -837,7 +837,7 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
   }
 }
 
-export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | undefined, price: string | undefined }> {
+export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | undefined, price: string | undefined, title: string | undefined }> {
   try {
     debug(`Procesando URL para extraer imagen: ${url}`);
     
