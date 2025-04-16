@@ -409,28 +409,125 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     
     if (!productHtml) return undefined;
     
-    // Buscar primero el precio real sin promociones
-    // A veces Amazon muestra precios promocionales que no son el precio real del producto
-    const realPricePatterns = [
-      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
-      /<span[^>]*class=["']a-price-whole["'][^>]*>([^<]+)<\/span>/i,
-      /<span[^>]*class=["']a-color-price["'][^>]*>([^<]+)<\/span>/i,
+    // Buscar primero en los datos JSON incluidos en el HTML, que suelen tener el precio final más preciso
+    let mainPrice = null;
+    try {
+      // Buscar datos de producto en formato JSON dentro del HTML
+      const dataMatches = productHtml.match(/data\["(twister-plus-price-data|almDetailPageState)"]\s*=\s*(".*?"|\{.*?\});/g);
+      if (dataMatches && dataMatches.length > 0) {
+        debug(`Encontrados ${dataMatches.length} bloques JSON de datos de producto`);
+        
+        for (const dataMatch of dataMatches) {
+          try {
+            // Extraer la parte JSON limpia
+            const jsonStart = dataMatch.indexOf('=') + 1;
+            let jsonStr = dataMatch.substring(jsonStart).trim();
+            // Si está entre comillas dobles, quitar las comillas y hacer unescape
+            if (jsonStr.startsWith('"') && jsonStr.endsWith('";')) {
+              jsonStr = JSON.parse(jsonStr.substring(0, jsonStr.length - 1));
+            } else if (jsonStr.endsWith(';')) {
+              jsonStr = jsonStr.substring(0, jsonStr.length - 1);
+            }
+            
+            const data = JSON.parse(jsonStr);
+            
+            // Buscar el precio en los datos JSON analizados
+            if (data && data.displayPrice) {
+              mainPrice = data.displayPrice;
+              debug(`Precio extraído de datos JSON: ${mainPrice}`);
+              break;
+            } else if (data && data.buyingPrice && data.buyingPrice.displayPrice) {
+              mainPrice = data.buyingPrice.displayPrice;
+              debug(`Precio extraído de datos JSON: ${mainPrice}`);
+              break;
+            } else if (data && data.priceData && data.priceData.priceToPay) {
+              mainPrice = data.priceData.priceToPay;
+              debug(`Precio extraído de datos JSON: ${mainPrice}`);
+              break;
+            }
+          } catch (err) {
+            debug(`Error analizando datos JSON: ${err}`);
+          }
+        }
+      }
+    } catch (err) {
+      debug(`Error buscando datos JSON: ${err}`);
+    }
+    
+    // Si encontramos precio en los datos JSON, lo usamos directamente
+    if (mainPrice) {
+      // Verificar que el precio tiene formato correcto
+      if (typeof mainPrice === 'string' && mainPrice.match(/(\d+[,.]\d+)|(\d+)/)) {
+        if (!mainPrice.includes('€')) {
+          mainPrice = `${mainPrice}€`.replace(/\./, ',');
+        }
+        return mainPrice;
+      } else if (typeof mainPrice === 'number') {
+        return `${mainPrice.toFixed(2).replace('.', ',')}€`;
+      }
+    }
+    
+    // Buscar el precio visible al usuario (no el oculto en a-offscreen)
+    // Estos patrones están ordenados por prioridad para capturar el precio final con IVA
+    const visiblePricePatterns = [
+      // Precio en la caja "Comprar ahora"
+      /<span[^>]*id=["']price_inside_buybox["'][^>]*>([^<]+)<\/span>/i,
+      // Precio principal del producto
       /<span[^>]*id=["']priceblock_ourprice["'][^>]*>([^<]+)<\/span>/i,
-      /price["']\s*:\s*["']([^"']+)["']/i,
-      /<span[^>]*data-a-color=["']price["'][^>]*>([^<]+)<\/span>/i,
-      /displayPrice["']\s*:\s*["']([^"']+)["']/i,
+      // Precio de oferta
+      /<span[^>]*id=["']priceblock_dealprice["'][^>]*>([^<]+)<\/span>/i,
+      // Precio visible (no el offscreen)
+      /<span[^>]*class=["']a-price-whole["'][^>]*>([^<]+)<\/span><span[^>]*class=["']a-price-decimal["'][^>]*>[,.]<\/span><span[^>]*class=["']a-price-fraction["'][^>]*>(\d+)<\/span>/i,
+      // Precio en formato "Precio: EUR xx,xx"
+      /<tr[^>]*>[^<]*<td[^>]*>[^<]*Precio:[^<]*<\/td>[^<]*<td[^>]*>[^<]*EUR\s*([^<\s]+)[^<]*<\/td>/i,
+      // Precio normal visible
+      /<span[^>]*class=["']a-color-price["'][^>]*>([^<]+)<\/span>/i,
     ];
     
-    // Intentamos detectar primero precios con descuento (comunes en Amazon)
+    // Buscar en patrones prioritarios primero
+    for (const pattern of visiblePricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match) {
+        // Caso especial para precio con fracciones
+        if (pattern.toString().includes('a-price-fraction')) {
+          const whole = match[1].trim();
+          const fraction = match[2].trim();
+          const price = `${whole},${fraction}€`;
+          debug(`Precio visible Amazon (whole+fraction): ${price}`);
+          return price;
+        }
+        
+        if (match[1]) {
+          let price = match[1].trim();
+          debug(`Precio visible Amazon encontrado: ${price}`);
+          
+          // Verificar si el precio parece válido
+          if (price.match(/(\d+[,.]\d+)|(\d+)/)) {
+            // Asegurarnos que el precio tiene el formato correcto para España
+            if (!price.includes('€')) {
+              price = `${price}€`.replace(/\./, ',');
+            }
+            return price;
+          }
+        }
+      }
+    }
+    
+    // Si no encontramos el precio visible, intentamos con los patrones originales
+    const realPricePatterns = [
+      /<span[^>]*data-a-color=["']price["'][^>]*>([^<]+)<\/span>/i,
+      /displayPrice["']\s*:\s*["']([^"']+)["']/i,
+      /price["']\s*:\s*["']([^"']+)["']/i,
+      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+    ];
+    
+    // Intentamos detectar precios con descuento (comunes en Amazon)
     const discountPricePatterns = [
       // Patrones para descuento en la parte principal
       /<span[^>]*class=["']a-price a-text-price a-size-medium apexPriceToPay["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
-      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>[\s\S]*?<span[^>]*class=["']a-size-large a-color-price["']/i,
       // Patrón para descuento en div principal
-      /<div[^>]*id=["']apex_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
-      // Patrón para precio actual en la caja de compra
-      /<div[^>]*id=["']corePrice_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
-      // Patrón específico para descuentos porcentuales (X% de descuento)
+      /<div[^>]*id=["']apex_desktop["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
+      // Patrón específico para descuentos porcentuales
       /<span[^>]*class=["']a-price aok-align-center reinventPricePriceToPayMargin["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
     ];
     
