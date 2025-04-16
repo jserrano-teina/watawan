@@ -1,8 +1,13 @@
 import metascraper from 'metascraper';
 import metascraperImage from 'metascraper-image';
 import fetch from 'node-fetch';
-import type { Response as NodeFetchResponse } from 'node-fetch';
+import type { Response as NodeFetchResponse, RequestInit } from 'node-fetch';
 import { extractMetadataWithAI } from './openai-utils';
+
+// Función auxiliar para trabajar con node-fetch manteniendo tipos correctos
+async function fetchWithCorrectTypes(url: string, options?: RequestInit): Promise<NodeFetchResponse> {
+  return fetch(url, options) as Promise<NodeFetchResponse>;
+}
 
 // Activamos el modo debug para ver detalles de la extracción
 const DEBUG = true;
@@ -31,7 +36,7 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(url, {
+        const response = await fetchWithCorrectTypes(url, {
           method: 'GET',
           redirect: 'follow',
           headers: {
@@ -73,7 +78,7 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
     if (!asin) {
       try {
         debug(`Buscando ASIN en HTML de: ${fullUrl}`);
-        const response = await fetch(fullUrl, {
+        const response = await fetchWithCorrectTypes(fullUrl, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
           }
@@ -113,7 +118,7 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(fullUrl, {
+      const response = await fetchWithCorrectTypes(fullUrl, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -172,14 +177,14 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
         
         try {
           // Usar una verificación más simple con HEAD request
-          const response = await fetch(imgUrl, {
+          const response = await fetchWithCorrectTypes(imgUrl, {
             method: 'HEAD',
             signal: controller.signal,
             // Agregar cabeceras para evitar bloqueos
             headers: {
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'
             }
-          });
+          }) as NodeFetchResponse;
           
           clearTimeout(timeoutId);
           
@@ -370,7 +375,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
-      const response = await fetch(url, {
+      const response = await fetchWithCorrectTypes(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -606,9 +611,9 @@ async function extractPCComponentesPrice(url: string, html?: string): Promise<st
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos de timeout
         
-        let fetchResponse: Response;
+        let fetchResponse: NodeFetchResponse;
         try {
-          fetchResponse = await fetch(url, {
+          fetchResponse = await fetchWithCorrectTypes(url, {
             headers: {
               'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
               'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -765,7 +770,7 @@ async function extractZaraPrice(url: string, html?: string): Promise<string | un
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
         
-        const response = await fetch(url, {
+        const response = await fetchWithCorrectTypes(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
@@ -856,7 +861,7 @@ async function extractNikePrice(url: string, html?: string): Promise<string | un
     // Si no tenemos el HTML, lo obtenemos
     if (!productHtml) {
       try {
-        const response = await fetch(url, {
+        const response = await fetchWithCorrectTypes(url, {
           headers: {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
@@ -995,7 +1000,7 @@ export async function getUrlMetadata(url: string): Promise<{
       const timeoutId = setTimeout(() => controller.abort(), 10000);
       
       debug(`Haciendo petición GET a: ${url}`);
-      const response = await fetch(url, {
+      const response = await fetchWithCorrectTypes(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
