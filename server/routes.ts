@@ -718,12 +718,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
         
         metadata = await fetchWithTimeout(8000); // 8 segundos máximo
+        
+        // Siempre establecemos el precio como una cadena vacía, independientemente del resultado
+        metadata.price = "";
       } catch (error: any) {
         console.log(`Error con timeout al extraer metadatos: ${error.message}`);
         // Valores por defecto en caso de timeout
         metadata = { 
           imageUrl: "", 
-          price: "", 
+          price: "", // Siempre vacío 
           title: "", 
           description: "" 
         };

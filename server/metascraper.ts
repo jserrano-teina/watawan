@@ -1397,8 +1397,9 @@ export async function getUrlMetadata(url: string): Promise<{
     }
 
     let productHtml: string | undefined;
-    let price: string | undefined;
     let imageUrl: string | undefined;
+    // El precio será siempre undefined o vacío, ya que ahora es responsabilidad del usuario ingresarlo manualmente
+    let price: string | undefined = "";
 
     // Método genérico de extracción
     try {
@@ -1421,48 +1422,18 @@ export async function getUrlMetadata(url: string): Promise<{
 
       if (!response.ok) {
         debug(`No se pudo obtener el contenido de ${url}. Código de estado: ${response.status}`);
-        return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
+        return { imageUrl: undefined, price: "", title: undefined, description: undefined };
       }
 
       productHtml = await response.text();
       debug(`Contenido obtenido para ${url} (${productHtml.length} bytes)`);
       
-      // Extraer precio y título según el sitio
+      // Extraer título según el sitio
+      let amazonTitle;
       if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
-        // Extraer precio y título específicos de Amazon
-        price = await extractAmazonPrice(url, productHtml);
-        // También intentamos extraer el título específico de Amazon (lo asignaremos más adelante)
-        const amazonTitle = await extractAmazonTitle(url, productHtml);
-        debug(`Precio de Amazon extraído: ${price}`);
+        // Extraer título específico de Amazon
+        amazonTitle = await extractAmazonTitle(url, productHtml);
         debug(`Título de Amazon extraído: ${amazonTitle}`);
-      } else if (url.match(/pccomponentes\.com/i)) {
-        price = await extractPCComponentesPrice(url, productHtml);
-        debug(`Precio de PCComponentes extraído: ${price}`);
-        
-        // Si después de intentar extraer el precio no tenemos nada, usamos el método de URL
-        if (!price) {
-          // Extracción basada en información de la URL para PCComponentes
-          const urlLower = url.toLowerCase();
-          const productSlug = url.split('/').pop() || '';
-          
-          // Análisis basado en categorías genéricas
-          if (urlLower.includes('monitor') && urlLower.includes('fullhd')) {
-            price = urlLower.includes('hp') ? '169,00€' : '149,99€';
-            debug(`Precio de PCComponentes inferido de categoría monitor: ${price}`);
-          } else if (urlLower.includes('portatil') || urlLower.includes('ordenador-portatil')) {
-            price = urlLower.includes('gaming') ? '999,00€' : '699,00€';
-            debug(`Precio de PCComponentes inferido de categoría portátil: ${price}`);
-          }
-        }
-      } else if (url.match(/zara\.com/i)) {
-        price = await extractZaraPrice(url, productHtml);
-        debug(`Precio de Zara extraído: ${price}`);
-      } else if (url.match(/nike\.(com|es)/i)) {
-        price = await extractNikePrice(url, productHtml);
-        debug(`Precio de Nike extraído: ${price}`);
-      } else {
-        price = await extractGenericPrice(productHtml);
-        debug(`Precio genérico extraído: ${price}`);
       }
       
       // Comprobar si tenemos un extractor específico para imágenes en este sitio
