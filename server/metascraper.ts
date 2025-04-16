@@ -704,7 +704,7 @@ async function extractZaraPrice(url: string, html?: string): Promise<string | un
     
     // Si encontramos un script con JSON, podríamos intentar analizarlo
     try {
-      const scriptTags = productHtml.match(/<script[^>]*>.*?window\.__INITIAL_STATE__.*?<\/script>/gsi);
+      const scriptTags = productHtml.match(/<script[^>]*>[^<]*window\.__INITIAL_STATE__[^<]*<\/script>/gi);
       if (scriptTags && scriptTags.length > 0) {
         for (const scriptTag of scriptTags) {
           const jsonStart = scriptTag.indexOf('{');
@@ -967,8 +967,38 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
         }
       }
       
+      // Si no se encuentra la imagen o el precio por métodos convencionales,
+      // intentamos con la extracción asistida por IA
+      if (!imageUrl || !price) {
+        debug(`Utilizando IA para extraer metadatos de ${url}`);
+        try {
+          // Usamos OpenAI para analizar el HTML y extraer la información
+          if (productHtml) {
+            const aiMetadata = await extractMetadataWithAI(productHtml, url);
+            debug(`Metadatos extraídos con IA:`, aiMetadata);
+            
+            // Solo usamos los valores de IA si no tenemos valores de los extractores específicos
+            if (!imageUrl && aiMetadata.imageUrl) {
+              imageUrl = aiMetadata.imageUrl;
+              debug(`Imagen encontrada con IA: ${imageUrl}`);
+            }
+            
+            if (!price && aiMetadata.price) {
+              price = aiMetadata.price;
+              debug(`Precio encontrado con IA: ${price}`);
+            }
+          }
+        } catch (aiError) {
+          debug(`Error al extraer metadatos con IA: ${aiError}`);
+        }
+      }
+      
       if (!imageUrl) {
         debug(`No se encontró ninguna imagen para ${url}`);
+      }
+      
+      if (!price) {
+        debug(`No se encontró ningún precio para ${url}`);
       }
       
       return { imageUrl, price };
