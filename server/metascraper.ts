@@ -488,6 +488,21 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       debug(`Error buscando datos JSON: ${err}`);
     }
     
+    // Función auxiliar para extraer todos los precios del HTML
+    const extractAllPricesFromHtml = (html: string): string[] => {
+      // Pattern para detectar precios en euros con formato español
+      // Coincide con formatos como "123,45 €", "123,45€", "123€", etc.
+      const pricePattern = /(\d+(?:[,.]\d+)?)\s*€/g;
+      const matches = html.match(pricePattern);
+      
+      if (!matches) return [];
+      
+      // Limpiar y formatear los precios encontrados
+      return matches.map(price => {
+        return price.trim().replace(/\s+€/, '€').replace(/\./, ',');
+      });
+    };
+    
     // Si encontramos precio en los datos JSON, lo usamos directamente
     if (mainPrice) {
       // Verificar que el precio tiene formato correcto
@@ -533,21 +548,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       } else if (typeof mainPrice === 'number') {
         return `${mainPrice.toFixed(2).replace('.', ',')}€`;
       }
-    }
-    
-    // Función interna para extraer todos los precios del HTML
-    function extractAllPricesFromHtml(html: string): string[] {
-      // Pattern para detectar precios en euros con formato español
-      // Coincide con formatos como "123,45 €", "123,45€", "123€", etc.
-      const pricePattern = /(\d+(?:[,.]\d+)?)\s*€/g;
-      const matches = html.match(pricePattern);
-      
-      if (!matches) return [];
-      
-      // Limpiar y formatear los precios encontrados
-      return matches.map(price => {
-        return price.trim().replace(/\s+€/, '€').replace(/\./, ',');
-      });
     }
     
     // Buscar el precio visible al usuario (no el oculto en a-offscreen)
