@@ -18,6 +18,69 @@ function debug(...args: any[]) {
   }
 }
 
+/**
+ * Formatea un precio para asegurar consistencia (formato español con coma decimal y símbolo €)
+ * - Limita a 2 decimales
+ * - Usa coma como separador decimal
+ * - Añade símbolo € si no existe
+ * - Elimina espacios entre valor y símbolo
+ */
+function formatPrice(price: string | number | undefined | null): string {
+  // Si es undefined, null o vacío, devolver cadena vacía
+  if (price === undefined || price === null || price === '') {
+    return '';
+  }
+  
+  // Convertir a string para procesamiento uniforme
+  let priceStr = price.toString();
+  
+  // Limpiar el precio de caracteres no deseados
+  priceStr = priceStr.trim();
+  
+  // Si no tiene dígitos, devolver vacío
+  if (!/\d/.test(priceStr)) {
+    return '';
+  }
+  
+  // Primero convertir punto a coma para decimales (solo si hay un punto)
+  if (priceStr.includes('.') && !priceStr.includes(',')) {
+    priceStr = priceStr.replace(/\./, ',');
+  }
+  
+  // Si hay más de una coma, mantener solo la última como decimal
+  if ((priceStr.match(/,/g) || []).length > 1) {
+    const parts = priceStr.split(',');
+    const decimals = parts.pop() || '';
+    priceStr = parts.join('') + ',' + decimals;
+  }
+  
+  // Si el precio tiene muchos decimales, truncar a 2
+  if (priceStr.includes(',')) {
+    const [intPart, decPart] = priceStr.split(',');
+    
+    // Asegurar que solo hay 2 decimales
+    if (decPart.length > 2) {
+      priceStr = `${intPart},${decPart.substring(0, 2)}`;
+    } else if (decPart.length === 1) {
+      // Si solo hay un decimal, añadir un 0
+      priceStr = `${intPart},${decPart}0`;
+    }
+  } else {
+    // Si no tiene decimales, añadir ,00
+    priceStr = `${priceStr},00`;
+  }
+  
+  // Añadir el símbolo € si no lo tiene
+  if (!priceStr.includes('€')) {
+    priceStr = `${priceStr}€`;
+  }
+  
+  // Eliminar espacios antes del símbolo €
+  priceStr = priceStr.replace(/\s+€/, '€');
+  
+  return priceStr;
+}
+
 const scraper = metascraper([
   metascraperImage(),
 ]);
