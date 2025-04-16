@@ -838,7 +838,12 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
   }
 }
 
-export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | undefined, price: string | undefined }> {
+export async function getUrlMetadata(url: string): Promise<{ 
+  imageUrl: string | undefined, 
+  price: string | undefined,
+  title?: string,
+  description?: string 
+}> {
   try {
     debug(`Procesando URL para extraer imagen: ${url}`);
     
@@ -888,7 +893,7 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
 
       if (!response.ok) {
         debug(`No se pudo obtener el contenido de ${url}. Código de estado: ${response.status}`);
-        return { imageUrl: undefined, price: undefined };
+        return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
       }
 
       productHtml = await response.text();
@@ -993,6 +998,71 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
         }
       }
       
+      // Variables para almacenar título y descripción
+      let title: string | undefined;
+      let description: string | undefined;
+      
+      // Intentar extraer título y descripción del HTML primero
+      const titleMatch = productHtml.match(/<title[^>]*>(.*?)<\/title>/i);
+      if (titleMatch && titleMatch[1]) {
+        title = titleMatch[1].trim();
+        debug(`Título extraído de etiqueta <title>: ${title}`);
+      }
+      
+      const ogTitleMatch = productHtml.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+      if (ogTitleMatch && ogTitleMatch[1]) {
+        title = ogTitleMatch[1].trim();
+        debug(`Título extraído de og:title: ${title}`);
+      }
+      
+      const descriptionMatch = productHtml.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+      if (descriptionMatch && descriptionMatch[1]) {
+        description = descriptionMatch[1].trim();
+        debug(`Descripción extraída de meta description: ${description}`);
+      }
+      
+      const ogDescriptionMatch = productHtml.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+      if (ogDescriptionMatch && ogDescriptionMatch[1]) {
+        description = ogDescriptionMatch[1].trim();
+        debug(`Descripción extraída de og:description: ${description}`);
+      }
+      
+      // Si no tenemos título, precio, imagen o descripción, intentamos con IA
+      if (!title || !price || !imageUrl || !description) {
+        debug(`Utilizando IA para extraer metadatos completos de ${url}`);
+        try {
+          // Usamos OpenAI para analizar el HTML y extraer toda la información
+          if (productHtml) {
+            const aiMetadata = await extractMetadataWithAI(productHtml, url);
+            debug(`Metadatos extraídos con IA:`, aiMetadata);
+            
+            // Solo usamos los valores de IA si no tenemos valores de los extractores específicos
+            if (!imageUrl && aiMetadata.imageUrl) {
+              imageUrl = aiMetadata.imageUrl;
+              debug(`Imagen encontrada con IA: ${imageUrl}`);
+            }
+            
+            if (!price && aiMetadata.price) {
+              price = aiMetadata.price;
+              debug(`Precio encontrado con IA: ${price}`);
+            }
+            
+            if (!title && aiMetadata.title) {
+              title = aiMetadata.title;
+              debug(`Título encontrado con IA: ${title}`);
+            }
+            
+            if (!description && aiMetadata.description) {
+              description = aiMetadata.description;
+              debug(`Descripción encontrada con IA: ${description}`);
+            }
+          }
+        } catch (aiError) {
+          debug(`Error al extraer metadatos con IA: ${aiError}`);
+        }
+      }
+      
+      // Logging final
       if (!imageUrl) {
         debug(`No se encontró ninguna imagen para ${url}`);
       }
@@ -1001,13 +1071,34 @@ export async function getUrlMetadata(url: string): Promise<{ imageUrl: string | 
         debug(`No se encontró ningún precio para ${url}`);
       }
       
-      return { imageUrl, price };
+      if (!title) {
+        debug(`No se encontró ningún título para ${url}`);
+        
+        // Intentar generar un título a partir de la URL como último recurso
+        try {
+          const urlObj = new URL(url);
+          const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+          if (pathParts.length > 0) {
+            const lastPart = pathParts[pathParts.length - 1];
+            // Convertir formatos como "zapatillas-running-nike" a "Zapatillas Running Nike"
+            title = lastPart
+              .replace(/\.html$|\.htm$|\.php$/, '')
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, match => match.toUpperCase());
+            debug(`Título generado a partir de la URL: ${title}`);
+          }
+        } catch (e) {
+          debug(`Error al generar título desde URL: ${e}`);
+        }
+      }
+      
+      return { imageUrl, price, title, description };
     } catch (error) {
       debug(`Error en el método de extracción para ${url}: ${error}`);
-      return { imageUrl: undefined, price: undefined };
+      return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
     }
   } catch (error) {
     console.error(`Error al obtener metadata para ${url}:`, error);
-    return { imageUrl: undefined, price: undefined };
+    return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
   }
 }

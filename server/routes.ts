@@ -700,30 +700,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { getUrlMetadata } = await import('./metascraper');
       const metadata = await getUrlMetadata(url);
       
-      // Agregar título si se puede extraer del URL (básico)
-      let title = '';
-      try {
-        const urlObj = new URL(url);
-        const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
-        if (pathParts.length > 0) {
-          const lastPart = pathParts[pathParts.length - 1];
-          // Convertir algo como "zapatillas-running-nike-2023" a "Zapatillas Running Nike 2023"
-          title = lastPart
-            .replace(/-/g, ' ')
-            .replace(/\.\w+$/, '') // Eliminar extensión de archivo si existe
-            .split(' ')
-            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-            .join(' ');
+      // Si no tenemos un título de la IA o extracción HTML, generamos uno a partir de la URL
+      if (!metadata.title) {
+        try {
+          const urlObj = new URL(url);
+          const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
+          if (pathParts.length > 0) {
+            const lastPart = pathParts[pathParts.length - 1];
+            // Convertir algo como "zapatillas-running-nike-2023" a "Zapatillas Running Nike 2023"
+            metadata.title = lastPart
+              .replace(/-/g, ' ')
+              .replace(/\.\w+$/, '') // Eliminar extensión de archivo si existe
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+              .join(' ');
+          } else {
+            // Si no hay partes de la ruta, usar el dominio como título
+            metadata.title = urlObj.hostname.replace(/^www\./i, '');
+          }
+        } catch (e) {
+          console.log('Error extrayendo título de la URL:', e);
         }
-      } catch (e) {
-        console.log('Error extrayendo título de la URL:', e);
       }
       
-      res.json({
+      // Asegurarnos de que hay una descripción aunque sea básica
+      if (!metadata.description) {
+        try {
+          metadata.description = `Artículo encontrado en ${new URL(url).hostname.replace(/^www\./i, '')}`;
+        } catch (e) {
+          metadata.description = "Ver detalles del producto";
+        }
+      }
+      
+      console.log("Metadatos extraídos:", {
         imageUrl: metadata.imageUrl,
         price: metadata.price,
-        title: title || undefined
+        title: metadata.title,
+        description: metadata.description?.substring(0, 30) + "..."
       });
+      
+      res.json(metadata);
     } catch (error) {
       console.error('Error extrayendo metadatos:', error);
       res.status(500).json({ 
