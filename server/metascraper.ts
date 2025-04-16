@@ -367,11 +367,8 @@ const SITE_PATTERNS = [
 // Función para extraer precio de Amazon
 async function extractAmazonPrice(url: string, html?: string): Promise<string | undefined> {
   try {
-    // Para diagnóstico, vamos a verificar si estamos procesando el producto específico
-    const isHerculesMonitor = url.includes('Hercules-DJMonitor-32');
-    if (isHerculesMonitor) {
-      console.log("⚠️ Procesando enlace de monitor Hercules:", url);
-    }
+    // Log genérico para diagnóstico del proceso
+    console.log("🔎 Procesando enlace de Amazon:", url.substring(0, 100) + "...");
     
     let productHtml = html;
     
@@ -434,26 +431,10 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       /<span[^>]*class=["']a-price aok-align-center reinventPricePriceToPayMargin["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
     ];
     
-    // Buscar específicamente el precio de 63,42 para el monitor Hercules
-    if (isHerculesMonitor) {
-      // Buscar todas las ocurrencias de números con formato de precio
-      const herculesMatches = productHtml.match(/(\d+[,.]\d+)[ \t]*€/g);
-      if (herculesMatches) {
-        console.log("🔍 Posibles precios encontrados en el HTML:", herculesMatches);
-      }
-      
-      // Buscar específicamente 63,42
-      const precioEspecifico = productHtml.match(/63[,.]42/);
-      if (precioEspecifico) {
-        console.log("✅ Encontrado precio 63,42 en el HTML");
-        
-        // Buscar el patrón HTML alrededor para entender su estructura
-        const alrededor = productHtml.substring(
-          Math.max(0, productHtml.indexOf(precioEspecifico[0]) - 100),
-          Math.min(productHtml.length, productHtml.indexOf(precioEspecifico[0]) + 100)
-        );
-        console.log("🔍 Contexto alrededor del precio:", alrededor);
-      }
+    // Buscar todos los precios disponibles en el HTML para diagnóstico
+    const priceMatches = productHtml.match(/(\d+[,.]\d+)[ \t]*€/g);
+    if (priceMatches && priceMatches.length > 0) {
+      console.log("🔍 Precios encontrados en el HTML:", priceMatches);
     }
     
     // Buscar precios con descuento primero
@@ -461,7 +442,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       const match = productHtml.match(pattern);
       if (match && match[1]) {
         let price = match[1].trim();
-        if (isHerculesMonitor) {
+        if (false) {
           console.log(`🔄 Probando patrón de descuento: ${pattern}`);
           console.log(`🔄 Resultado: ${match[1]}`);
         }
@@ -511,7 +492,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     }
     
     // Patrón específico para el precio que vemos en la imagen (63,42€)
-    if (isHerculesMonitor) {
+    if (false) {
       // Intentamos extraer directamente el precio que vemos en la imagen
       const herculesPattern = /-21[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/;
       const herculesMatch = productHtml.match(herculesPattern);
@@ -524,27 +505,61 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     
     // Intentar extraer información de producto desde los datos estructurados JSON-LD
     // Esta información suele ser más precisa porque es la que se proporciona a los motores de búsqueda
-    // Buscar precio en el formato de span con clase a-offscreen dentro de reinventPriceAccordionT2
-    // Este es el precio que se muestra principalmente en la página del producto
-    const aOffscreenPriceMatch = productHtml.match(/<span class="a-price[^>]*reinventPriceAccordionT2[^>]*>.*?<span class="a-offscreen">([^<]+)<\/span>/);
-    if (aOffscreenPriceMatch && aOffscreenPriceMatch[1]) {
-      const price = aOffscreenPriceMatch[1].trim();
-      if (isHerculesMonitor) {
-        console.log(`💲 Precio encontrado en a-offscreen span principal: ${price}`);
+    // ENFOQUE GENÉRICO PARA EXTRACCIÓN DE PRECIOS
+    // Método 1: Extraer precios de elementos a-offscreen (más común y fiable)
+    const allOffscreenPrices = Array.from(productHtml.matchAll(/<span class="a-offscreen">([^<]+)<\/span>/g));
+    if (allOffscreenPrices && allOffscreenPrices.length > 0) {
+      console.log("Precios encontrados en a-offscreen spans:");
+      
+      // Crear un mapa de precios para poder ordenarlos y entender las variantes
+      const priceMap = new Map();
+      
+      for (const match of allOffscreenPrices) {
+        const priceText = match[1].trim();
+        // Solo procesar los que parecen precios válidos (empiezan con un número, contienen un símbolo de moneda)
+        if (/^[\d.,]+[€$£¥]/.test(priceText) || /^[€$£¥][\d.,]+/.test(priceText)) {
+          if (priceMap.has(priceText)) {
+            priceMap.set(priceText, priceMap.get(priceText) + 1);
+          } else {
+            priceMap.set(priceText, 1);
+          }
+        }
       }
-      return price;
+      
+      // Convertir a array y ordenar: primero por frecuencia, luego por valor numérico (mayor primero)
+      const priceArray = Array.from(priceMap.entries())
+        .map(([price, count]) => {
+          // Extraer el valor numérico para ordenamiento
+          const numericValue = parseFloat(price.replace(/[^0-9,.]/g, '')
+                                             .replace(',', '.'));
+          return { price, count, numericValue };
+        })
+        .sort((a, b) => {
+          // Primero ordenar por frecuencia (descendente)
+          if (b.count !== a.count) return b.count - a.count;
+          // Luego por valor numérico (descendente) 
+          return b.numericValue - a.numericValue;
+        });
+      
+      console.log("Precios encontrados (ordenados por frecuencia y valor):", 
+                 priceArray.map(p => `${p.price} (${p.count} veces)`).join(', '));
+      
+      // El precio principal suele ser el que aparece más veces o el primero/más caro
+      if (priceArray.length > 0) {
+        const mainPrice = priceArray[0].price;
+        console.log(`💲 Precio principal encontrado: ${mainPrice}`);
+        return mainPrice;
+      }
     }
     
-    // Buscar en el objeto JSON de twister-plus-buying-options-price-data (contiene los precios NEW)
+    // Método 2: Extraer precios de datos estructurados en JSON
     const twisterPlusMatch = productHtml.match(/twister-plus-buying-options-price-data">(.*?)<\/div>/);
     if (twisterPlusMatch && twisterPlusMatch[1]) {
       try {
         const jsonStr = twisterPlusMatch[1].replace(/&quot;/g, '"');
         const priceData = JSON.parse(jsonStr);
         
-        if (isHerculesMonitor) {
-          console.log("💰 Datos de precio en twister-plus:", priceData);
-        }
+        console.log("💰 Datos de precio en twister-plus encontrados");
         
         // Buscar en los grupos de precios
         for (const key in priceData) {
@@ -553,9 +568,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             // Buscar una opción NEW (nuevo) - suele ser el primer elemento
             const newOption = options.find(opt => opt.buyingOptionType === "NEW");
             if (newOption && newOption.displayPrice) {
-              if (isHerculesMonitor) {
-                console.log(`📊 Precio NEW encontrado en twister-plus: ${newOption.displayPrice} (${newOption.priceAmount})`);
-              }
+              console.log(`📊 Precio NEW encontrado en twister-plus: ${newOption.displayPrice} (${newOption.priceAmount})`);
               // Asegurar formato consistente
               return newOption.displayPrice.replace(/\s+/g, "");
             }
@@ -563,9 +576,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             // Si no hay opción NEW explícita, usar la primera
             const firstOption = options[0];
             if (firstOption.displayPrice) {
-              if (isHerculesMonitor) {
-                console.log(`📊 Precio (primera opción) encontrado en twister-plus: ${firstOption.displayPrice} (${firstOption.priceAmount})`);
-              }
+              console.log(`📊 Precio (primera opción) encontrado en twister-plus: ${firstOption.displayPrice} (${firstOption.priceAmount})`);
               return firstOption.displayPrice.replace(/\s+/g, "");
             }
           }
@@ -573,14 +584,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       } catch (error) {
         console.error("Error parseando datos de twister-plus:", error);
       }
-    }
-    
-    // Buscar en variables de precios embebidas en JavaScript (más específico para el monitor Hercules)
-    if (isHerculesMonitor || url.includes('Hercules') || url.includes('B07JH148DF')) {
-      if (isHerculesMonitor) {
-        console.log("🖥️ Detectado monitor Hercules - usando precio específico");
-      }
-      return "63,42€";
     }
     
     try {
@@ -592,7 +595,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             const jsonContent = jsonLdMatch.replace(/<script type="application\/ld\+json">/, '').replace(/<\/script>/, '');
             const jsonData = JSON.parse(jsonContent.trim());
             
-            if (isHerculesMonitor) {
+            if (false) {
               console.log("📊 Datos estructurados JSON-LD encontrados:", JSON.stringify(jsonData, null, 2));
             }
             
@@ -642,7 +645,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
                 price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
               }
               
-              if (isHerculesMonitor) {
+              if (false) {
                 console.log(`💰 Precio extraído de datos estructurados: ${price}`);
               }
               
@@ -664,7 +667,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (dataMainMatch && dataMainMatch[1]) {
         try {
           const dataMain = JSON.parse(dataMainMatch[1].replace(/&quot;/g, '"'));
-          if (isHerculesMonitor) {
+          if (false) {
             console.log("🔍 Datos main encontrados:", dataMain);
           }
           
@@ -680,7 +683,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       const priceBlockMatch = productHtml.match(/\\"priceblock_([^"\\]+)\\":[\s]*\\"([^"\\]+)\\"/);
       if (priceBlockMatch && priceBlockMatch[2]) {
         const price = priceBlockMatch[2].trim();
-        if (isHerculesMonitor) {
+        if (false) {
           console.log(`💲 Precio encontrado en priceblock_${priceBlockMatch[1]}: ${price}`);
         }
         return price.replace(/\./, ',');
@@ -691,7 +694,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (configMatch && configMatch[1]) {
         try {
           const configData = JSON.parse(configMatch[1].replace(/&quot;/g, '"'));
-          if (isHerculesMonitor) {
+          if (false) {
             console.log("💰 Datos de configuración encontrados:", configData);
           }
           
@@ -712,7 +715,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       if (scriptConfigMatch && scriptConfigMatch.length > 2) {
         try {
           const [_, configName, price, currency] = scriptConfigMatch;
-          if (isHerculesMonitor) {
+          if (false) {
             console.log(`🔢 Precio encontrado en configuración P.${configName}: ${price} ${currency}`);
           }
           
@@ -734,7 +737,7 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
             .replace(/:\s*'([^']*)'/g, ':"$1"'); // Cambiar comillas simples a dobles
           
           const aodData = JSON.parse(cleanJson);
-          if (isHerculesMonitor) {
+          if (false) {
             console.log("🔄 Datos AOD encontrados:", aodData);
           }
           

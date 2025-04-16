@@ -728,51 +728,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: "" 
         };
         
-        // Asignar valores específicos para productos conocidos
-        // Caso 1: Nike Blazer 
-        if (url.includes('nike.com') && 
-           (url.includes('/blazer-') || url.includes('BQ6806'))) {
-          // Reutilizar la función de metadatos de Nike Blazer
-          const getNikeBlazerMetadata = () => {
-            return {
-              title: "Nike Blazer Mid 77 Vintage Zapatillas",
-              price: "119,99€",
-              imageUrl: "https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/blazer-mid-77-vintage-zapatillas-0mj5pL.png",
-              description: "Zapatillas icónicas Nike Blazer Mid 77, el modelo clásico de baloncesto en versión vintage."
-            };
-          };
-          
-          // Asignar metadatos
-          const nikeBlazerData = getNikeBlazerMetadata();
-          metadata.title = nikeBlazerData.title;
-          metadata.price = nikeBlazerData.price;
-          metadata.imageUrl = nikeBlazerData.imageUrl;
-          metadata.description = nikeBlazerData.description;
-          
-          console.log("Asignando datos para Nike Blazer debido a timeout");
-        } 
-        // Caso 2: Monitor Hercules DJMonitor 32
-        else if ((url.includes('amazon.') || url.includes('amazon-')) && 
-                (url.includes('Hercules-DJMonitor-32') || url.includes('B07JH148DF'))) {
-          // Datos específicos para el monitor Hercules DJMonitor 32
-          const getHerculesMonitorMetadata = () => {
-            return {
-              title: "Hercules DJMonitor 32 - 2 altavoces activos de monitorización de 15 vatios RMS",
-              price: "63,42€",
-              imageUrl: "https://m.media-amazon.com/images/I/71nRjIHlpNL.__AC_SX300_SY300_QL70_ML2_.jpg",
-              description: "Hercules DJMonitor 32 - 2 altavoces activos de monitorización, diseñados para DJs y productores, 15W RMS potencia, puerto Bass Reflex frontal."
-            };
-          };
-          
-          // Asignar metadatos
-          const herculesData = getHerculesMonitorMetadata();
-          metadata.title = herculesData.title;
-          metadata.price = herculesData.price;
-          metadata.imageUrl = herculesData.imageUrl;
-          metadata.description = herculesData.description;
-          
-          console.log("Asignando datos para Monitor Hercules con precio fijo de 63,42€");
-        }
+        // Por motivos de timeout, procedemos con metadatos genéricos
+        console.log("Timeout al obtener metadatos - procederemos con extracción genérica a partir de la URL");
       }
       
       // Si el título es &nbsp; (caso especial de Zara), forzamos a usar la URL
@@ -789,118 +746,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           .trim();
       }
       
-      // Caso especial para Nike: extraer un título mejor de la URL
-      if (url.includes('nike.com')) {
-        try {
-          // Para la URL específica del ejemplo, asignamos datos de Nike Blazer
-          if (url.includes('blazer-mid-77-vintage-zapatillas') || url.includes('/blazer-') || url.includes('/BQ6806-')) {
-            // Reutilizar la función de metadatos para mantener consistencia
-            const getNikeBlazerMetadata = () => {
-              return {
-                title: "Nike Blazer Mid 77 Vintage Zapatillas",
-                price: "119,99€",
-                imageUrl: "https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/blazer-mid-77-vintage-zapatillas-0mj5pL.png",
-                description: "Zapatillas icónicas Nike Blazer Mid 77, el modelo clásico de baloncesto en versión vintage."
-              };
-            };
-            
-            // Asignar datos
-            const nikeBlazerData = getNikeBlazerMetadata();
-            metadata.title = nikeBlazerData.title;
-            metadata.price = nikeBlazerData.price;
-            metadata.imageUrl = nikeBlazerData.imageUrl;
-            metadata.description = nikeBlazerData.description;
-            
-            console.log(`Usando datos específicos para Nike Blazer: ${metadata.title}`);
-          } else {
-            // Para otras URLs de Nike
-            const urlObj = new URL(url);
-            const pathStr = urlObj.pathname;
-            
-            // Buscamos patrones específicos en la URL completa
-            let foundTitle = false;
-            
-            // Intentar extraer una descripción significativa con expresiones regulares
-            const patterns = [
-              /\/([a-z0-9-]+)-zapatillas/i,
-              /\/([a-z0-9-]+)-calzado/i,
-              /\/([a-z0-9-]+)-([a-z0-9-]+)-([a-z0-9-]+)-([a-z0-9-]+)/i,
-            ];
-            
-            for (const pattern of patterns) {
-              const match = pathStr.match(pattern);
-              if (match) {
-                let extractedTitle = match[0].replace(/^\//, '');
-                // Limpiar y formatear
-                metadata.title = extractedTitle
-                  .replace(/-/g, ' ')
-                  .replace(/\.\w+$/, '')
-                  .split(' ')
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                  .join(' ');
-                console.log(`Título extraído con regex: ${metadata.title}`);
-                foundTitle = true;
-                break;
-              }
-            }
-            
-            // Si no encontramos un título con regex, intentamos con partes de la URL
-            if (!foundTitle) {
-              const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
-              
-              // Buscar partes descriptivas en la URL de Nike
-              const descriptiveParts = pathParts.filter(part => 
-                !part.match(/^[A-Z0-9]+(-\d+)?$/) && 
-                part.length > 5 && 
-                !part.match(/^t$/) &&
-                !part.match(/^[0-9a-zA-Z]{5,7}$/)
-              );
-              
-              if (descriptiveParts.length > 0) {
-                // Buscar la parte más descriptiva
-                let bestPart = descriptiveParts[0];
-                for (const part of descriptiveParts) {
-                  if (
-                    (part.includes('blazer') || part.includes('zapatillas') || part.includes('vintage')) ||
-                    (part.length > bestPart.length)
-                  ) {
-                    bestPart = part;
-                  }
-                }
-                
-                // Formatear el título
-                metadata.title = bestPart
-                  .replace(/-/g, ' ')
-                  .replace(/\.\w+$/, '')
-                  .split(' ')
-                  .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                  .join(' ');
-                console.log(`Título extraído de partes: ${metadata.title}`);
-              }
+      // Extraer título y otros datos significativos a partir de la URL (método genérico)
+      try {
+        const urlObj = new URL(url);
+        const pathStr = urlObj.pathname;
+        
+        // Si no tenemos título, extraerlo de la URL
+        if (!metadata.title || metadata.title.trim().length < 3) {
+          // Intentar extraer un título significativo con expresiones regulares
+          const patterns = [
+            /\/([a-z0-9-]+)-([a-z0-9-]+)/i,
+            /\/([\w-]+)\/?$/i,
+            /\/p\/([\w-]+)/i,
+            /\/dp\/([\w-]+)/i,
+          ];
+          
+          let foundTitle = false;
+          for (const pattern of patterns) {
+            const match = pathStr.match(pattern);
+            if (match && match[1]) {
+              let extractedTitle = match[0].replace(/^\//, '');
+              // Limpiar y formatear
+              metadata.title = extractedTitle
+                .replace(/-/g, ' ')
+                .replace(/\.\w+$/, '')
+                .replace(/\/dp\//, '')
+                .replace(/\/p\//, '')
+                .split(' ')
+                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                .join(' ');
+              console.log(`Título extraído de URL: ${metadata.title}`);
+              foundTitle = true;
+              break;
             }
           }
-        } catch (e) {
-          console.log('Error procesando URL de Nike:', e);
         }
-      }
-      
-      // Caso especial para productos fijos - añadido por encima de la generación del título
-      // Monitor Hercules: asignar el precio correcto siempre
-      if ((url.includes('amazon.') || url.includes('amazon-')) && 
-          (url.includes('Hercules-DJMonitor-32') || url.includes('B07JH148DF'))) {
-        console.log('🖥️ Detectado producto Monitor Hercules - asegurando precio correcto: 63,42€');
-        metadata.price = "63,42€";
-        
-        // Si no tenemos imagen, título o descripción, asignar valores conocidos
-        if (!metadata.imageUrl || metadata.imageUrl.length < 10) {
-          metadata.imageUrl = "https://m.media-amazon.com/images/I/71nRjIHlpNL.__AC_SX300_SY300_QL70_ML2_.jpg";
-        }
-        if (!metadata.title || metadata.title.length < 10) {
-          metadata.title = "Hercules DJMonitor 32 - 2 altavoces activos de monitorización de 15 vatios RMS";
-        }
-        if (!metadata.description || metadata.description.length < 10) {
-          metadata.description = "Hercules DJMonitor 32 - 2 altavoces activos de monitorización, diseñados para DJs y productores, 15W RMS potencia, puerto Bass Reflex frontal.";
-        }
+      } catch (e) {
+        console.log('Error procesando URL:', e);
       }
       
       // Si no tenemos un título válido después de la limpieza, generamos uno a partir de la URL
