@@ -18,69 +18,6 @@ function debug(...args: any[]) {
   }
 }
 
-/**
- * Formatea un precio para asegurar consistencia (formato español con coma decimal y símbolo €)
- * - Limita a 2 decimales
- * - Usa coma como separador decimal
- * - Añade símbolo € si no existe
- * - Elimina espacios entre valor y símbolo
- */
-function formatPrice(price: string | number | undefined | null): string {
-  // Si es undefined, null o vacío, devolver cadena vacía
-  if (price === undefined || price === null || price === '') {
-    return '';
-  }
-  
-  // Convertir a string para procesamiento uniforme
-  let priceStr = price.toString();
-  
-  // Limpiar el precio de caracteres no deseados
-  priceStr = priceStr.trim();
-  
-  // Si no tiene dígitos, devolver vacío
-  if (!/\d/.test(priceStr)) {
-    return '';
-  }
-  
-  // Primero convertir punto a coma para decimales (solo si hay un punto)
-  if (priceStr.includes('.') && !priceStr.includes(',')) {
-    priceStr = priceStr.replace(/\./, ',');
-  }
-  
-  // Si hay más de una coma, mantener solo la última como decimal
-  if ((priceStr.match(/,/g) || []).length > 1) {
-    const parts = priceStr.split(',');
-    const decimals = parts.pop() || '';
-    priceStr = parts.join('') + ',' + decimals;
-  }
-  
-  // Si el precio tiene muchos decimales, truncar a 2
-  if (priceStr.includes(',')) {
-    const [intPart, decPart] = priceStr.split(',');
-    
-    // Asegurar que solo hay 2 decimales
-    if (decPart.length > 2) {
-      priceStr = `${intPart},${decPart.substring(0, 2)}`;
-    } else if (decPart.length === 1) {
-      // Si solo hay un decimal, añadir un 0
-      priceStr = `${intPart},${decPart}0`;
-    }
-  } else {
-    // Si no tiene decimales, añadir ,00
-    priceStr = `${priceStr},00`;
-  }
-  
-  // Añadir el símbolo € si no lo tiene
-  if (!priceStr.includes('€')) {
-    priceStr = `${priceStr}€`;
-  }
-  
-  // Eliminar espacios antes del símbolo €
-  priceStr = priceStr.replace(/\s+€/, '€');
-  
-  return priceStr;
-}
-
 const scraper = metascraper([
   metascraperImage(),
 ]);
@@ -436,40 +373,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     // Variable para configurar logs detallados
     const enableDetailedLogs = true;
     
-    // Manejar URLs acortadas de Amazon (amzn.eu, amzn.to, etc.)
-    if (url.includes('amzn.eu/') || url.includes('amzn.to/')) {
-      debug(`Detectada URL acortada de Amazon: ${url}`);
-      
-      try {
-        // Configurar para seguir redirecciones manualmente
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetchWithCorrectTypes(url, {
-          method: 'HEAD', // Solo necesitamos los headers para obtener la ubicación de redirección
-          redirect: 'manual', // No seguir automáticamente
-          signal: controller.signal,
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
-          }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        // Comprobar si tenemos una redirección
-        if (response.status === 301 || response.status === 302 || response.status === 307 || response.status === 308) {
-          const redirectUrl = response.headers.get('location');
-          if (redirectUrl) {
-            console.log(`✅ URL acortada redirige a: ${redirectUrl}`);
-            url = redirectUrl; // Actualizar la URL para seguir con la URL completa
-          }
-        }
-      } catch (error) {
-        console.error(`❌ Error al seguir redirección de URL acortada: ${error}`);
-        // Continuar con la URL original si hay error
-      }
-    }
-    
     let productHtml = html;
     
     // Si no tenemos el HTML, lo obtenemos con cabeceras que simulan un navegador real
@@ -506,207 +409,28 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     
     if (!productHtml) return undefined;
     
-    // Buscar primero en los datos JSON incluidos en el HTML, que suelen tener el precio final más preciso
-    let mainPrice = null;
-    try {
-      // Buscar datos de producto en formato JSON dentro del HTML
-      const dataMatches = productHtml.match(/data\["(twister-plus-price-data|almDetailPageState)"]\s*=\s*(".*?"|\{.*?\});/g);
-      if (dataMatches && dataMatches.length > 0) {
-        debug(`Encontrados ${dataMatches.length} bloques JSON de datos de producto`);
-        
-        for (const dataMatch of dataMatches) {
-          try {
-            // Extraer la parte JSON limpia
-            const jsonStart = dataMatch.indexOf('=') + 1;
-            let jsonStr = dataMatch.substring(jsonStart).trim();
-            // Si está entre comillas dobles, quitar las comillas y hacer unescape
-            if (jsonStr.startsWith('"') && jsonStr.endsWith('";')) {
-              jsonStr = JSON.parse(jsonStr.substring(0, jsonStr.length - 1));
-            } else if (jsonStr.endsWith(';')) {
-              jsonStr = jsonStr.substring(0, jsonStr.length - 1);
-            }
-            
-            const data = JSON.parse(jsonStr);
-            
-            // Buscar el precio en los datos JSON analizados
-            if (data && data.displayPrice) {
-              mainPrice = data.displayPrice;
-              debug(`Precio extraído de datos JSON: ${mainPrice}`);
-              break;
-            } else if (data && data.buyingPrice && data.buyingPrice.displayPrice) {
-              mainPrice = data.buyingPrice.displayPrice;
-              debug(`Precio extraído de datos JSON: ${mainPrice}`);
-              break;
-            } else if (data && data.priceData && data.priceData.priceToPay) {
-              mainPrice = data.priceData.priceToPay;
-              debug(`Precio extraído de datos JSON: ${mainPrice}`);
-              break;
-            }
-          } catch (err) {
-            debug(`Error analizando datos JSON: ${err}`);
-          }
-        }
-      }
-    } catch (err) {
-      debug(`Error buscando datos JSON: ${err}`);
-    }
-    
-    // Función auxiliar para extraer todos los precios del HTML
-    const extractAllPricesFromHtml = (html: string): string[] => {
-      // Pattern para detectar precios en euros con formato español
-      // Coincide con formatos como "123,45 €", "123,45€", "123€", etc.
-      const pricePattern = /(\d+(?:[,.]\d+)?)\s*€/g;
-      const matches = html.match(pricePattern);
-      
-      if (!matches) return [];
-      
-      // Limpiar y formatear los precios encontrados
-      return matches.map(price => {
-        return price.trim().replace(/\s+€/, '€').replace(/\./, ',');
-      });
-    };
-    
-    // Si encontramos precio en los datos JSON, lo usamos directamente
-    if (mainPrice) {
-      // Verificar que el precio tiene formato correcto
-      if (typeof mainPrice === 'string' && mainPrice.match(/(\d+[,.]\d+)|(\d+)/)) {
-        if (!mainPrice.includes('€')) {
-          mainPrice = `${mainPrice}€`.replace(/\./, ',');
-        }
-        
-        // Implementación de "Precio Máximo" para casos especiales
-        // Buscar todos los precios en el HTML para comparar con lo que extrajimos
-        const allPricesInHtml = extractAllPricesFromHtml(productHtml);
-        if (allPricesInHtml.length > 0) {
-          // Función para convertir un precio a formato numérico para comparación
-          // Mejorada para manejar múltiples formatos y limpiar los precios adecuadamente
-          const toNumber = (price: string): number => {
-            // Eliminar todo excepto dígitos, punto y coma
-            const cleanPrice = price.replace(/[^0-9,.]/g, '');
-            
-            // Si tiene coma decimal, convertirla a punto para parseo correcto
-            // Si hay múltiples comas o puntos, consideramos solo el último como decimal
-            const parts = cleanPrice.split(/[,.]/);
-            if (parts.length === 1) {
-              // No hay decimales
-              return parseInt(cleanPrice, 10);
-            } else {
-              // Unir todas las partes excepto la última como números enteros
-              // y la última como decimales
-              const integerPart = parts.slice(0, -1).join('');
-              const decimalPart = parts[parts.length - 1];
-              return parseFloat(`${integerPart}.${decimalPart}`);
-            }
-          };
-          
-          // Para detectar precios Amazon con IVA vs sin IVA, necesitamos verificar
-          // casos específicos de diferencia porcentual
-          const mainPriceValue = toNumber(mainPrice);
-          
-          // Buscar si hay algún precio visiblemente mayor en la página
-          // Se han identificado varias diferencias: 17.4%, 21%, 32%, etc.
-          // Utilizamos una estrategia general: buscar cualquier precio significativamente mayor
-          const higherVisiblePrices = allPricesInHtml.filter(p => {
-            const numericPrice = toNumber(p);
-            
-            // Diferencia porcentual entre precios
-            const percentDiff = (numericPrice - mainPriceValue) / mainPriceValue * 100;
-            
-            // Rangos comunes observados para precios con/sin IVA
-            // Comprobamos si está en alguno de estos rangos típicos
-            return (
-              // Diferencia de 17-19% (IVA básico)
-              (percentDiff >= 16 && percentDiff <= 19) ||
-              // Diferencia de 20-22% (IVA estándar)
-              (percentDiff >= 20 && percentDiff <= 22) ||
-              // Diferencia de 30-33% (otros casos especiales)
-              (percentDiff >= 30 && percentDiff <= 33) ||
-              // O cualquier precio con más de 15% de diferencia
-              percentDiff > 15
-            );
-          });
-          
-          if (higherVisiblePrices.length > 0) {
-            // Ordenar precios de mayor a menor
-            higherVisiblePrices.sort((a, b) => toNumber(b) - toNumber(a));
-            
-            console.log(`⚠️ Encontrado precio JSON (${mainPrice}) pero hay precios visibles mayores: ${higherVisiblePrices.join(', ')}`);
-            
-            // Usar el precio visible más alto como corrección
-            const highestPrice = higherVisiblePrices[0];
-            console.log(`✅ Corrigiendo precio: ${mainPrice} -> ${highestPrice} (probable IVA incluido)`);
-            
-            return highestPrice;
-          }
-        }
-        
-        return mainPrice;
-      } else if (typeof mainPrice === 'number') {
-        return `${mainPrice.toFixed(2).replace('.', ',')}€`;
-      }
-    }
-    
-    // Buscar el precio visible al usuario (no el oculto en a-offscreen)
-    // Estos patrones están ordenados por prioridad para capturar el precio final con IVA
-    const visiblePricePatterns = [
-      // Precio en la caja "Comprar ahora"
-      /<span[^>]*id=["']price_inside_buybox["'][^>]*>([^<]+)<\/span>/i,
-      // Precio principal del producto
-      /<span[^>]*id=["']priceblock_ourprice["'][^>]*>([^<]+)<\/span>/i,
-      // Precio de oferta
-      /<span[^>]*id=["']priceblock_dealprice["'][^>]*>([^<]+)<\/span>/i,
-      // Precio visible (no el offscreen)
-      /<span[^>]*class=["']a-price-whole["'][^>]*>([^<]+)<\/span><span[^>]*class=["']a-price-decimal["'][^>]*>[,.]<\/span><span[^>]*class=["']a-price-fraction["'][^>]*>(\d+)<\/span>/i,
-      // Precio en formato "Precio: EUR xx,xx"
-      /<tr[^>]*>[^<]*<td[^>]*>[^<]*Precio:[^<]*<\/td>[^<]*<td[^>]*>[^<]*EUR\s*([^<\s]+)[^<]*<\/td>/i,
-      // Precio normal visible
-      /<span[^>]*class=["']a-color-price["'][^>]*>([^<]+)<\/span>/i,
-    ];
-    
-    // Buscar en patrones prioritarios primero
-    for (const pattern of visiblePricePatterns) {
-      const match = productHtml.match(pattern);
-      if (match) {
-        // Caso especial para precio con fracciones
-        if (pattern.toString().includes('a-price-fraction')) {
-          const whole = match[1].trim();
-          const fraction = match[2].trim();
-          const price = `${whole},${fraction}€`;
-          debug(`Precio visible Amazon (whole+fraction): ${price}`);
-          return price;
-        }
-        
-        if (match[1]) {
-          let price = match[1].trim();
-          debug(`Precio visible Amazon encontrado: ${price}`);
-          
-          // Verificar si el precio parece válido
-          if (price.match(/(\d+[,.]\d+)|(\d+)/)) {
-            // Asegurarnos que el precio tiene el formato correcto para España
-            if (!price.includes('€')) {
-              price = `${price}€`.replace(/\./, ',');
-            }
-            return price;
-          }
-        }
-      }
-    }
-    
-    // Si no encontramos el precio visible, intentamos con los patrones originales
+    // Buscar primero el precio real sin promociones
+    // A veces Amazon muestra precios promocionales que no son el precio real del producto
     const realPricePatterns = [
+      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      /<span[^>]*class=["']a-price-whole["'][^>]*>([^<]+)<\/span>/i,
+      /<span[^>]*class=["']a-color-price["'][^>]*>([^<]+)<\/span>/i,
+      /<span[^>]*id=["']priceblock_ourprice["'][^>]*>([^<]+)<\/span>/i,
+      /price["']\s*:\s*["']([^"']+)["']/i,
       /<span[^>]*data-a-color=["']price["'][^>]*>([^<]+)<\/span>/i,
       /displayPrice["']\s*:\s*["']([^"']+)["']/i,
-      /price["']\s*:\s*["']([^"']+)["']/i,
-      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
     ];
     
-    // Intentamos detectar precios con descuento (comunes en Amazon)
+    // Intentamos detectar primero precios con descuento (comunes en Amazon)
     const discountPricePatterns = [
       // Patrones para descuento en la parte principal
       /<span[^>]*class=["']a-price a-text-price a-size-medium apexPriceToPay["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
+      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>[\s\S]*?<span[^>]*class=["']a-size-large a-color-price["']/i,
       // Patrón para descuento en div principal
-      /<div[^>]*id=["']apex_desktop["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
-      // Patrón específico para descuentos porcentuales
+      /<div[^>]*id=["']apex_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      // Patrón para precio actual en la caja de compra
+      /<div[^>]*id=["']corePrice_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      // Patrón específico para descuentos porcentuales (X% de descuento)
       /<span[^>]*class=["']a-price aok-align-center reinventPricePriceToPayMargin["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
     ];
     
@@ -733,41 +457,14 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           // Formato de Amazon España: NN,NN € (con espacio antes del símbolo)
           if (price.includes('€')) {
             // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-            price = price.replace(/\s+€/, '€');
-            
-            // Normalizar formato decimal (punto a coma)
-            price = price.replace(/\./, ',');
-            
-            // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
-            if (price.includes(',')) {
-              const [euros, cents] = price.split(',');
-              if (cents.length > 2) {
-                // Truncar a 2 decimales
-                price = `${euros},${cents.substring(0, 2)}€`;
-              }
-            }
+            price = price.replace(/\s+€/, '€').replace(/\./, ',');
           } else if (price.includes('$')) {
             // Convertir de dólares a euros (aprox)
             const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
             price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
           } else {
             // No tiene símbolo, asumimos euros
-            // Para precios sin decimales, añadir ceros
-            if (!price.includes(',') && !price.includes('.')) {
-              price = `${price},00€`;
-            } else {
-              price = `${price}€`.replace(/\./, ',');
-              
-              // Asegurar que solo haya 2 decimales
-              if (price.includes(',')) {
-                const [euros, cents] = price.split(',');
-                if (cents.length > 2) {
-                  price = `${euros},${cents.substring(0, 2)}€`;
-                } else if (cents.length === 1) {
-                  price = `${euros},${cents}0€`;
-                }
-              }
-            }
+            price = `${price}€`.replace(/\./, ',');
           }
           return price;
         }
@@ -784,41 +481,14 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
         // Asegurarnos que el precio tiene el formato correcto para España
         if (price.includes('€')) {
           // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-          price = price.replace(/\s+€/, '€');
-          
-          // Normalizar formato decimal (punto a coma)
-          price = price.replace(/\./, ',');
-          
-          // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
-          if (price.includes(',')) {
-            const [euros, cents] = price.split(',');
-            if (cents.length > 2) {
-              // Truncar a 2 decimales
-              price = `${euros},${cents.substring(0, 2)}€`;
-            }
-          }
+          price = price.replace(/\s+€/, '€').replace(/\./, ',');
         } else if (price.includes('$')) {
           // Convertir de dólares a euros (aprox)
           const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
           price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
         } else {
           // No tiene símbolo, asumimos euros
-          // Para precios sin decimales, añadir ceros
-          if (!price.includes(',') && !price.includes('.')) {
-            price = `${price},00€`;
-          } else {
-            price = `${price}€`.replace(/\./, ',');
-            
-            // Asegurar que solo haya 2 decimales
-            if (price.includes(',')) {
-              const [euros, cents] = price.split(',');
-              if (cents.length > 2) {
-                price = `${euros},${cents.substring(0, 2)}€`;
-              } else if (cents.length === 1) {
-                price = `${euros},${cents}0€`;
-              }
-            }
-          }
+          price = `${price}€`.replace(/\./, ',');
         }
         return price;
       }
@@ -828,10 +498,9 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     const discountPattern = /-\d+[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/;
     const discountMatch = productHtml.match(discountPattern);
     if (discountMatch && discountMatch[1]) {
-      const rawPrice = `${discountMatch[1]}€`;
-      const formattedPrice = formatPrice(rawPrice);
-      console.log(`🎯 Encontrado precio después de descuento: ${rawPrice} → ${formattedPrice}`);
-      return formattedPrice;
+      const price = `${discountMatch[1]}€`;
+      console.log(`🎯 Encontrado precio después de descuento: ${price}`);
+      return price;
     }
     
     // Intentar extraer información de producto desde los datos estructurados JSON-LD
@@ -866,20 +535,6 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           return { price, count, numericValue };
         })
         .sort((a, b) => {
-          // Si la URL contiene "Apple" o productos reconocidos de Apple, priorizar el precio más alto
-          // Estos productos típicamente se muestran con el precio final en las páginas
-          if (url.includes('/Apple-') || 
-              url.includes('/apple-') ||
-              url.toLowerCase().includes('iphone') ||
-              url.toLowerCase().includes('ipad') ||
-              url.toLowerCase().includes('macbook') ||
-              url.toLowerCase().includes('watch') ||
-              url.toLowerCase().includes('airpods')) {
-            // Para productos Apple, el precio correcto suele ser el más alto visible
-            return b.numericValue - a.numericValue;
-          }
-          
-          // Para el resto de productos, seguir la lógica normal
           // Primero ordenar por frecuencia (descendente)
           if (b.count !== a.count) return b.count - a.count;
           // Luego por valor numérico (descendente) 
@@ -891,10 +546,9 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       
       // El precio principal suele ser el que aparece más veces o el primero/más caro
       if (priceArray.length > 0) {
-        const rawPrice = priceArray[0].price;
-        const formattedPrice = formatPrice(rawPrice);
-        console.log(`💲 Precio principal encontrado: ${rawPrice} → ${formattedPrice}`);
-        return formattedPrice;
+        const mainPrice = priceArray[0].price;
+        console.log(`💲 Precio principal encontrado: ${mainPrice}`);
+        return mainPrice;
       }
     }
     
@@ -1126,41 +780,14 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
           // Asegurarnos que el precio tiene el formato correcto para España
           if (price.includes('€')) {
             // Ya tiene el símbolo de Euro, asegurarnos del formato correcto
-            price = price.replace(/\s+€/, '€');
-            
-            // Normalizar formato decimal (punto a coma)
-            price = price.replace(/\./, ',');
-            
-            // Asegurar que solo haya 2 decimales (muchas veces Amazon incluye 4 o más)
-            if (price.includes(',')) {
-              const [euros, cents] = price.split(',');
-              if (cents.length > 2) {
-                // Truncar a 2 decimales
-                price = `${euros},${cents.substring(0, 2)}€`;
-              }
-            }
+            price = price.replace(/\s+€/, '€').replace(/\./, ',');
           } else if (price.includes('$')) {
             // Convertir de dólares a euros (aprox)
             const numericValue = parseFloat(price.replace(/[^\d,.]/g, '').replace(',', '.'));
             price = `${(numericValue * 0.92).toFixed(2).replace('.', ',')}€`;
           } else {
             // No tiene símbolo, asumimos euros
-            // Para precios sin decimales, añadir ceros
-            if (!price.includes(',') && !price.includes('.')) {
-              price = `${price},00€`;
-            } else {
-              price = `${price}€`.replace(/\./, ',');
-              
-              // Asegurar que solo haya 2 decimales
-              if (price.includes(',')) {
-                const [euros, cents] = price.split(',');
-                if (cents.length > 2) {
-                  price = `${euros},${cents.substring(0, 2)}€`;
-                } else if (cents.length === 1) {
-                  price = `${euros},${cents}0€`;
-                }
-              }
-            }
+            price = `${price}€`.replace(/\./, ',');
           }
           return price;
         }
@@ -2066,15 +1693,7 @@ export async function getUrlMetadata(url: string): Promise<{
         }
       }
       
-      // Formatear el precio para garantizar consistencia antes de devolverlo
-      const formattedPrice = price ? formatPrice(price) : undefined;
-      
-      // Log para diagnóstico
-      if (formattedPrice !== price && price) {
-        console.log(`🔄 Precio formateado: ${price} → ${formattedPrice}`);
-      }
-      
-      return { imageUrl, price: formattedPrice, title, description };
+      return { imageUrl, price, title, description };
     } catch (error) {
       debug(`Error en el método de extracción para ${url}: ${error}`);
       return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };

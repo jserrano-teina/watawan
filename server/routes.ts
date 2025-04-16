@@ -688,49 +688,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
-  // Función para limpiar URL de Amazon de parámetros innecesarios
-  function cleanAmazonUrl(inputUrl: string): string {
-    try {
-      const urlObj = new URL(inputUrl);
-      
-      // Si es una URL de Amazon, limpiar parámetros de tracking
-      if (urlObj.hostname.includes('amazon.') || urlObj.hostname.includes('amzn.')) {
-        // Extraer solo la parte esencial de la URL
-        const pathParts = urlObj.pathname.split('/');
-        
-        // Verificar si la URL tiene un formato de producto de Amazon con /dp/ o /gp/product/
-        if (urlObj.pathname.includes('/dp/')) {
-          // Formato /dp/{ASIN}
-          const dpIndex = pathParts.indexOf('dp');
-          if (dpIndex !== -1 && dpIndex + 1 < pathParts.length) {
-            const asin = pathParts[dpIndex + 1];
-            // Construir URL limpia con solo el ASIN
-            return `https://${urlObj.hostname}/dp/${asin}`;
-          }
-        } else if (urlObj.pathname.includes('/gp/product/')) {
-          // Formato /gp/product/{ASIN}
-          const productIndex = pathParts.indexOf('product');
-          if (productIndex !== -1 && productIndex + 1 < pathParts.length) {
-            const asin = pathParts[productIndex + 1];
-            // Construir URL limpia con solo el ASIN
-            return `https://${urlObj.hostname}/gp/product/${asin}`;
-          }
-        }
-        
-        // Si no pudimos extraer un ASIN, al menos eliminar los parámetros de consulta
-        return `https://${urlObj.hostname}${urlObj.pathname}`;
-      }
-      
-      // Si no es una URL de Amazon o no pudimos procesarla, devolver la original
-      return inputUrl;
-    } catch (e) {
-      console.error(`Error limpiando URL de Amazon: ${e}`);
-      return inputUrl; // Devolver la URL original en caso de error
-    }
-  }
-  
   router.get("/extract-metadata", async (req: Request, res) => {
-    let url = req.query.url as string;
+    const url = req.query.url as string;
     
     if (!url) {
       return res.status(400).json({ message: "URL parameter is required" });
@@ -738,44 +697,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     try {
       console.log(`Extrayendo metadatos de URL: ${url}`);
-      
-      // Manejar URLs acortadas de Amazon antes de procesar
-      if (url.includes('amzn.eu/') || url.includes('amzn.to/')) {
-        try {
-          console.log(`🔄 Procesando URL acortada de Amazon: ${url}`);
-          
-          // En lugar de usar el método HEAD, usamos fetch con redirección automática
-          // Esta aproximación es más confiable para URLs acortadas
-          const response = await fetch(url, {
-            method: 'GET',
-            redirect: 'follow', // Seguir redirecciones automáticamente
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
-            }
-          });
-          
-          // Obtener la URL final después de seguir todas las redirecciones
-          if (response.ok) {
-            const finalUrl = response.url;
-            if (finalUrl && finalUrl !== url) {
-              console.log(`✅ URL acortada redirige a: ${finalUrl}`);
-              url = finalUrl; // Actualizar la URL para extraer metadatos del destino real
-            }
-          }
-        } catch (error) {
-          console.error(`❌ Error al seguir redirección de URL acortada: ${error}`);
-          // Continuar con la URL original si hay error
-        }
-      }
-      
-      // Limpiar URL de Amazon si es necesario
-      if (url.includes('amazon.')) {
-        const originalUrl = url;
-        url = cleanAmazonUrl(url);
-        if (url !== originalUrl) {
-          console.log(`🧹 URL de Amazon limpiada: ${originalUrl} -> ${url}`);
-        }
-      }
       
       // Procesamos todos los casos de manera genérica con nuestro sistema mejorado
       console.log(`Procesando metadatos para URL: ${url}`);
