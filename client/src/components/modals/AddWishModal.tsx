@@ -200,6 +200,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
+        // Establecer el título si existe
+        if (metadata.title) {
+          console.log('Título extraído:', metadata.title);
+          setValueStepTwo('title', metadata.title);
+        }
+        
+        // Establecer la descripción si existe
+        if (metadata.description) {
+          console.log('Descripción extraída:', metadata.description);
+          setValueStepTwo('description', metadata.description);
+        }
+        
         // Extraer solo el valor numérico del precio si existe
         if (metadata.price) {
           // Primero eliminar todos los caracteres que no sean números, puntos o comas

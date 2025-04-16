@@ -413,16 +413,31 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       /displayPrice["']\s*:\s*["']([^"']+)["']/i,
     ];
     
-    // Para casos difíciles de Amazon, o productos específicos conocidos, usar precios conocidos
-    if (url.includes('B0CXPJ3KMN')) {
-      debug(`URL específica de Amazon reconocida (no Fire TV), usando precio conocido`);
-      return "499,00€";
-    }
+    // Intentamos detectar primero precios con descuento (comunes en Amazon)
+    const discountPricePatterns = [
+      // Patrones para descuento en la parte principal
+      /<span[^>]*class=["']a-price a-text-price a-size-medium apexPriceToPay["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
+      /<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>[\s\S]*?<span[^>]*class=["']a-size-large a-color-price["']/i,
+      // Patrón para descuento en div principal
+      /<div[^>]*id=["']apex_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      // Patrón para precio actual en la caja de compra
+      /<div[^>]*id=["']corePrice_desktop["'][^>]*>[\s\S]*?<span[^>]*class=["']a-offscreen["'][^>]*>([^<]+)<\/span>/i,
+      // Patrón específico para descuentos porcentuales (X% de descuento)
+      /<span[^>]*class=["']a-price aok-align-center reinventPricePriceToPayMargin["'][^>]*>[\s\S]*?<span[^>]*>([^<]+)<\/span>/i,
+    ];
     
-    // Caso especial para el Amazon Fire TV Stick
-    if (url.includes('B0CJKTWTVT') || url.includes('fire-tv-stick-4k')) {
-      debug(`Producto Amazon Fire TV Stick reconocido, usando precio conocido y actualizado`);
-      return "37,99€"; // Precio con descuento actual
+    // Buscar precios con descuento primero
+    for (const pattern of discountPricePatterns) {
+      const match = productHtml.match(pattern);
+      if (match && match[1]) {
+        let price = match[1].trim();
+        debug(`Precio con descuento de Amazon encontrado: ${price}`);
+        
+        // Verificar si el precio parece válido
+        if (price.match(/(\d+[,.]\d+)|(\d+)/)) {
+          return price;
+        }
+      }
     }
     
     // Intentar extraer el precio real primero

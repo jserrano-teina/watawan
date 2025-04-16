@@ -698,44 +698,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`Extrayendo metadatos de URL: ${url}`);
       
-      // Caso especial para Nike Blazer (procesado directo sin metascraper)
-      if (url.includes('nike.com') && 
-         (url.includes('blazer-mid-77-vintage-zapatillas') || url.includes('/blazer-') || url.includes('/BQ6806'))) {
-        console.log("Detectada URL Nike Blazer - procesando directamente");
-        
-        // Usar una función que devuelve los metadatos para Nike Blazer
-        const getNikeBlazerMetadata = () => {
-          return {
-            title: "Nike Blazer Mid 77 Vintage Zapatillas",
-            price: "119,99€",
-            imageUrl: "https://static.nike.com/a/images/t_PDP_864_v1/f_auto,b_rgb:f5f5f5/fb7eda3c-5ac8-4d05-a18f-1c2c5e82e36e/blazer-mid-77-vintage-zapatillas-0mj5pL.png",
-            description: "Zapatillas icónicas Nike Blazer Mid 77, el modelo clásico de baloncesto en versión vintage."
-          };
-        };
-        
-        const nikeMetadata = getNikeBlazerMetadata();
-        console.log("Metadatos Nike Blazer asignados:", nikeMetadata);
-        return res.json(nikeMetadata);
-      }
+      // Procesamos todos los casos de manera genérica con nuestro sistema mejorado
+      console.log(`Procesando metadatos para URL: ${url}`);
       
-      // Caso especial para Amazon Fire TV Stick
-      if (url.includes('amazon') && 
-         (url.includes('B0CJKTWTVT') || url.includes('fire-tv-stick-4k'))) {
-        console.log("Detectada URL Amazon Fire TV Stick - procesando directamente");
-        
-        // Datos específicos para el Amazon Fire TV Stick 4K
-        const firetvMetadata = {
-          title: "Amazon Fire TV Stick 4K (Última generación), Dispositivo de streaming compatible con Wi-Fi 6, Dolby Vision, Dolby Atmos y HDR10+",
-          price: "37,99€",
-          imageUrl: "https://m.media-amazon.com/images/I/51lxGmR+5ML._AC_SL1000_.jpg",
-          description: "Dispositivo de streaming 4K con Wi-Fi 6, compatible con Dolby Vision, Dolby Atmos y HDR10+."
-        };
-        
-        console.log("Metadatos Amazon Fire TV Stick asignados:", firetvMetadata);
-        return res.json(firetvMetadata);
-      }
-      
-      // Para otras URLs, procesamiento estándar
+      // Usamos el sistema estándar para todos los casos
       const { getUrlMetadata } = await import('./metascraper');
       
       // Añadir timeout global para evitar bloqueos
