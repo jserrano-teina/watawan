@@ -828,9 +828,10 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
     const discountPattern = /-\d+[^0-9]*%[^0-9]*([0-9]+[,.][0-9]+)/;
     const discountMatch = productHtml.match(discountPattern);
     if (discountMatch && discountMatch[1]) {
-      const price = `${discountMatch[1]}€`;
-      console.log(`🎯 Encontrado precio después de descuento: ${price}`);
-      return price;
+      const rawPrice = `${discountMatch[1]}€`;
+      const formattedPrice = formatPrice(rawPrice);
+      console.log(`🎯 Encontrado precio después de descuento: ${rawPrice} → ${formattedPrice}`);
+      return formattedPrice;
     }
     
     // Intentar extraer información de producto desde los datos estructurados JSON-LD
@@ -890,9 +891,10 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       
       // El precio principal suele ser el que aparece más veces o el primero/más caro
       if (priceArray.length > 0) {
-        const mainPrice = priceArray[0].price;
-        console.log(`💲 Precio principal encontrado: ${mainPrice}`);
-        return mainPrice;
+        const rawPrice = priceArray[0].price;
+        const formattedPrice = formatPrice(rawPrice);
+        console.log(`💲 Precio principal encontrado: ${rawPrice} → ${formattedPrice}`);
+        return formattedPrice;
       }
     }
     
@@ -2064,7 +2066,15 @@ export async function getUrlMetadata(url: string): Promise<{
         }
       }
       
-      return { imageUrl, price, title, description };
+      // Formatear el precio para garantizar consistencia antes de devolverlo
+      const formattedPrice = price ? formatPrice(price) : undefined;
+      
+      // Log para diagnóstico
+      if (formattedPrice !== price && price) {
+        console.log(`🔄 Precio formateado: ${price} → ${formattedPrice}`);
+      }
+      
+      return { imageUrl, price: formattedPrice, title, description };
     } catch (error) {
       debug(`Error en el método de extracción para ${url}: ${error}`);
       return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
