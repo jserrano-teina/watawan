@@ -707,6 +707,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Añadir timeout global para evitar bloqueos
       let metadata;
       try {
+        // Registrar información del dispositivo para diagnóstico
+        const userAgent = req.headers['user-agent'] || 'Unknown';
+        const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
+                         (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
+        
+        console.log(`📱 Dispositivo solicitante: ${deviceType}`);
+        console.log(`📡 User-Agent: ${userAgent.substring(0, 100)}...`);
+        
         // Crear una promesa con timeout
         const fetchWithTimeout = async (ms: number): Promise<any> => {
           return Promise.race([
