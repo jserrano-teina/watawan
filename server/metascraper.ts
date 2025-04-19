@@ -224,7 +224,7 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
             signal: controller.signal,
             // Agregar cabeceras para evitar bloqueos
             headers: {
-              'User-Agent': USER_AGENTS.desktop, // Usar un agente confiable para verificar imágenes
+              'User-Agent': getRandomUserAgent(), // Rotamos User-Agent para evitar bloqueos
               'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
               'Accept-Language': 'en-US,en;q=0.9',
               'Cache-Control': 'no-cache'
@@ -1351,14 +1351,15 @@ async function extractAmazonTitle(url: string, html?: string): Promise<string | 
         
         const response = await fetchWithCorrectTypes(url, {
           headers: {
-            'User-Agent': USER_AGENTS.modernDesktop,
-              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Cache-Control': 'no-cache',
-              'Pragma': 'no-cache',
+            'User-Agent': getRandomUserAgent(), // Rotamos User-Agent para evitar bloqueos
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-            'Cache-Control': 'max-age=0'
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1'
           },
           signal: controller.signal
         });
