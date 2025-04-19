@@ -156,10 +156,16 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
       
       const response = await fetchWithCorrectTypes(fullUrl, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
+          'User-Agent': USER_AGENTS.desktop, // Usamos el User-Agent más efectivo para extraer imágenes
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
           'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-          'Cache-Control': 'max-age=0'
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
+          'Upgrade-Insecure-Requests': '1'
         },
         signal: controller.signal
       });
@@ -218,7 +224,10 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
             signal: controller.signal,
             // Agregar cabeceras para evitar bloqueos
             headers: {
-              'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36'
+              'User-Agent': USER_AGENTS.desktop, // Usar un agente confiable para verificar imágenes
+              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
+              'Accept-Language': 'en-US,en;q=0.9',
+              'Cache-Control': 'no-cache'
             }
           }) as NodeFetchResponse;
           
@@ -419,13 +428,18 @@ async function extractAmazonPrice(url: string, html?: string): Promise<string | 
       
       const response = await fetchWithCorrectTypes(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.127 Safari/537.36',
+          'User-Agent': USER_AGENTS.desktop, // Usar nuestro sistema mejorado para extraer precios
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
           'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
           'Referer': 'https://www.google.com/',
           'DNT': '1',
           'Upgrade-Insecure-Requests': '1',
-          'Cache-Control': 'max-age=0',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1',
           // Cookies para forzar precios en la moneda correcta (EUR) y localización española
           'Cookie': 'i18n-prefs=EUR; sp-cdn="L5Z9:ES"; session-id=138-8034582-9241463; session-id-time=2082787201l; session-token=FAKE_TOKEN; ubid-main=131-9147565-5432642;'
         },
@@ -1409,7 +1423,7 @@ export async function getUrlMetadata(url: string): Promise<{
   description?: string 
 }> {
   try {
-    debug(`Procesando URL para extraer imagen: ${url}`);
+    debug(`Procesando URL para extraer metadatos completos: ${url}`);
     
     // Establecemos User-Agent para todo el proceso
     // Podemos rotarlo o usar directamente el predeterminado
@@ -1743,6 +1757,12 @@ export async function getUrlMetadata(url: string): Promise<{
           debug(`Error al generar título desde URL: ${e}`);
         }
       }
+      
+      // Calcular el tiempo que ha tardado la extracción para diagnóstico
+      const endTime = Date.now();
+      const processingTime = endTime - startTime;
+      debug(`✅ Extracción completada en ${processingTime}ms. User-Agent: ${userAgent.substring(0, 20)}...`);
+      debug(`Datos extraídos: imagen=${!!imageUrl}, precio=${!!price}, título=${!!title}`);
       
       return { imageUrl, price, title, description };
     } catch (error) {
