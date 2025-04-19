@@ -18,6 +18,32 @@ function debug(...args: any[]) {
   }
 }
 
+// Lista de User-Agents efectivos para diferentes escenarios
+const USER_AGENTS = {
+  // Desktop Chrome - muy efectivo para la mayoría de sitios
+  desktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  
+  // Simulamos un navegador desktop más actualizado
+  modernDesktop: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  
+  // User-Agent que simula un iPhone pero desde Safari (más confiable)
+  modernMobile: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  
+  // User-Agent genérico que funciona bien con la mayoría de sitios
+  generic: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+};
+
+// Función para obtener un User-Agent aleatorio
+function getRandomUserAgent(): string {
+  const agents = Object.values(USER_AGENTS);
+  const randomIndex = Math.floor(Math.random() * agents.length);
+  return agents[randomIndex];
+}
+
+// User-Agent por defecto para usar en todas las peticiones
+// Comenzamos con el más efectivo y genérico
+const DEFAULT_USER_AGENT = USER_AGENTS.desktop;
+
 const scraper = metascraper([
   metascraperImage(),
 ]);
@@ -40,7 +66,10 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
           method: 'GET',
           redirect: 'follow',
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': USER_AGENTS.desktop, // Usamos el User-Agent desktop que es más confiable
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache'
           },
           signal: controller.signal
         });
@@ -80,7 +109,14 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
         debug(`Buscando ASIN en HTML de: ${fullUrl}`);
         const response = await fetchWithCorrectTypes(fullUrl, {
           headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
+            'User-Agent': USER_AGENTS.modernDesktop, // Usamos un User-Agent más moderno
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Cache-Control': 'no-cache',
+            'Sec-Fetch-Dest': 'document',
+            'Sec-Fetch-Mode': 'navigate',
+            'Sec-Fetch-Site': 'none',
+            'Sec-Fetch-User': '?1'
           }
         });
         
@@ -1375,6 +1411,14 @@ export async function getUrlMetadata(url: string): Promise<{
   try {
     debug(`Procesando URL para extraer imagen: ${url}`);
     
+    // Establecemos User-Agent para todo el proceso
+    // Podemos rotarlo o usar directamente el predeterminado
+    const userAgent = getRandomUserAgent();
+    debug(`Usando User-Agent: ${userAgent}`);
+    
+    // Registrar inicio para analizar tiempos
+    const startTime = Date.now();
+    
     // Validar el formato de la URL
     const urlRegex = /^(http|https):\/\/[^ "]+$/;
     if (!urlRegex.test(url)) {
@@ -1410,9 +1454,16 @@ export async function getUrlMetadata(url: string): Promise<{
       debug(`Haciendo petición GET a: ${url}`);
       const response = await fetchWithCorrectTypes(url, {
         headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+          'User-Agent': userAgent, // Usamos el User-Agent aleatorio seleccionado al inicio
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9,es;q=0.8'
+          'Accept-Language': 'en-US,en;q=0.9,es;q=0.8',
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache',
+          'DNT': '1', // Do Not Track
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Sec-Fetch-User': '?1'
         },
         signal: controller.signal
       });
