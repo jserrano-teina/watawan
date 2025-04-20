@@ -25,8 +25,12 @@ function AppWithReadyNotification() {
         setAppInitialized(true);
         
         // Notificar que la app está cargada para ocultar el splash screen
-        const readyEvent = new Event('appReady');
-        window.dispatchEvent(readyEvent);
+        // Solo disparamos este evento si no viene de un segundo timeout en index.html
+        if (document.getElementById('splash-screen') && 
+            !document.getElementById('splash-screen').classList.contains('hidden')) {
+          const readyEvent = new Event('appReady');
+          window.dispatchEvent(readyEvent);
+        }
       }
     }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
     

@@ -62,11 +62,9 @@
       align-items: center;
       justify-content: center;
       z-index: 9999;
-      transition: opacity 0.3s ease-out;
     }
     .splash-screen.hidden {
-      opacity: 0;
-      pointer-events: none;
+      display: none;
     }
     .splash-screen img {
       width: 180px;
@@ -115,11 +113,6 @@
       window.addEventListener('appReady', function() {
         const splashScreen = document.getElementById('splash-screen');
         splashScreen.classList.add('hidden');
-        
-        // Eliminar después de la transición
-        setTimeout(function() {
-          splashScreen.style.display = 'none';
-        }, 300);
       });
       
       // Si después de 3 segundos la app no está lista, ocultar splash de todas formas
