@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { validateEmail, getEmailErrorMessage } from "@/lib/validation";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const registerSchema = z.object({
   email: z.string().min(1, { message: "Completa este campo" })
