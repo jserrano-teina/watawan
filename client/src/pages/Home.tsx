@@ -259,17 +259,17 @@ const Home: React.FC = () => {
       )}
       
       <Header user={user} />
-      <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
-        style={{ 
-          WebkitOverflowScrolling: 'touch', 
-          height: 'calc(100vh - 56px)', 
-          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
-        }}>
-        {myWishItems.length > 0 && (
+      {/* Contenido principal - cambia su comportamiento según haya items o no */}
+      {myWishItems.length > 0 ? (
+        // Si hay items, mantenemos el scroll
+        <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+          style={{ 
+            WebkitOverflowScrolling: 'touch', 
+            height: 'calc(100vh - 56px)', 
+            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+          }}>
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
-        )}
-        
-        {myWishItems.length > 0 ? (
+          
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
             <div className="grid gap-2 pb-24">
@@ -287,12 +287,15 @@ const Home: React.FC = () => {
               ))}
             </div>
           </div>
-        ) : (
-          <div className="flex items-center justify-center h-[calc(100vh-180px)] mt-10">
+        </main>
+      ) : (
+        // Si no hay items, eliminamos el scroll y centramos verticalmente
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex flex-col">
+          <div className="flex flex-col h-full items-center justify-center pb-[90px]">
             <EmptyWishlist onAddWish={handleAddWishClick} />
           </div>
-        )}
-      </main>
+        </main>
+      )}
       
       {myWishItems.length > 0 && (
         <FloatingActionButton onClick={handleAddWishClick} />

@@ -194,24 +194,25 @@ const NotificationsPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
       <Header user={user as User} />
       
-      <main 
-        className="flex-grow container mx-auto px-4 pb-24 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
-        style={{ 
-          WebkitOverflowScrolling: 'touch', 
-          height: 'calc(100vh - 56px)', 
-          paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
-        }}
-      >
-        {/* Mostramos el título solo cuando hay notificaciones */}
-        {notifications.length > 0 && (
-          <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
-        )}
-        
-        {isLoading ? (
-          <div className="flex justify-center items-center h-40">
+      {isLoading ? (
+        // Si está cargando, mostramos un indicador
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex flex-col">
+          <div className="flex justify-center items-center h-full">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
-        ) : notifications.length > 0 ? (
+        </main>
+      ) : notifications.length > 0 ? (
+        // Si hay notificaciones, mantenemos el scroll
+        <main 
+          className="flex-grow container mx-auto px-4 pb-24 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+          style={{ 
+            WebkitOverflowScrolling: 'touch', 
+            height: 'calc(100vh - 56px)', 
+            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+          }}
+        >
+          <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
+          
           <div className="space-y-3 pb-24">
             {notifications.map(({ item, reservation }) => (
               <div 
@@ -246,8 +247,11 @@ const NotificationsPage: React.FC = () => {
               </div>
             ))}
           </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center h-[calc(100vh-220px)] p-6 text-center max-w-[500px] mx-auto mt-12">
+        </main>
+      ) : (
+        // Si no hay notificaciones, eliminamos el scroll y centramos verticalmente
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex flex-col">
+          <div className="flex flex-col h-full items-center justify-center pb-[90px]">
             {/* Imagen de notificaciones */}
             <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <img 
@@ -259,8 +263,8 @@ const NotificationsPage: React.FC = () => {
             <h2 className="font-bold text-2xl text-white mb-3">No hay notificaciones</h2>
             <p className="text-white/60 mb-6">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
           </div>
-        )}
-      </main>
+        </main>
+      )}
       
       <BottomNavigation />
       
