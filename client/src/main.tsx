@@ -16,20 +16,17 @@ function AppWithReadyNotification() {
   const [appInitialized, setAppInitialized] = useState(false);
 
   useEffect(() => {
-    // Esperar hasta que la aplicación esté lista para ocultar el splash screen
-    // Este temporizador es lo suficientemente largo para permitir que se cargue la autenticación
+    // Temporizador simple que oculta el splash screen después de un tiempo definido
     const timer = setTimeout(() => {
-      if (!appInitialized) {
-        console.log("Temporizador de inicialización completado, mostrando la aplicación");
-        setAppInitialized(true);
-        
-        // Esperar para asegurarnos de que la aplicación está lista antes de ocultar splash
-        setTimeout(() => {
-          // Notificar que la app está cargada para ocultar el splash screen
-          const readyEvent = new Event('appReady');
-          window.dispatchEvent(readyEvent);
-        }, 100); // Pequeño delay para prevenir problemas de timing
+      console.log("Temporizador de inicialización completado, ocultando splash screen");
+      
+      // Ocultar el splash screen directamente mediante DOM
+      const splashScreen = document.getElementById('splash-screen');
+      if (splashScreen) {
+        splashScreen.classList.add('hidden');
       }
+      
+      setAppInitialized(true);
     }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
     
     // Mejorada detección de PWA que incluye iOS en pantalla completa

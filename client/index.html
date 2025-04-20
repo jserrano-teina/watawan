@@ -88,16 +88,7 @@
       });
     }
     
-    // Gestionar splash screen
-    document.addEventListener('DOMContentLoaded', function() {
-      // Ocultar splash screen cuando la app esté lista
-      window.addEventListener('appReady', function() {
-        const splashScreen = document.getElementById('splash-screen');
-        splashScreen.classList.add('hidden');
-      });
-      
-      // Nota: El temporizador de respaldo se gestiona desde src/main.tsx
-    });
+    // El splash screen se gestiona completamente desde main.tsx
   </script>
 </body>
 </html>
