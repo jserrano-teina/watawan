@@ -50,43 +50,12 @@
     .modal {
       backdrop-filter: blur(8px);
     }
-    /* Splash Screen para PWA */
-    .splash-screen {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: #121212;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    .splash-screen.hidden {
-      display: none;
-    }
-    .splash-screen img {
-      width: 180px;
-      height: 180px;
-      animation: pulse 1.5s infinite ease-in-out;
-    }
-    @keyframes pulse {
-      0% { 
-        transform: scale(0.95); 
-      }
-      50% { 
-        transform: scale(1.05);
-      }
-      100% { 
-        transform: scale(0.95);
-      }
-    }
+    /* Los estilos del splash screen se han movido a src/index.css */
   </style>
 </head>
 <body>
   <!-- Splash Screen para PWA -->
-  <div id="splash-screen" class="splash-screen">
+  <div id="splash-screen">
     <img src="/icons/logo.svg" alt="WataWan Logo">
   </div>
   
@@ -115,11 +84,7 @@
         splashScreen.classList.add('hidden');
       });
       
-      // Si después de 3 segundos la app no está lista, ocultar splash de todas formas
-      setTimeout(function() {
-        const event = new Event('appReady');
-        window.dispatchEvent(event);
-      }, 3000);
+      // Nota: El temporizador de respaldo se gestiona desde src/main.tsx
     });
   </script>
 </body>

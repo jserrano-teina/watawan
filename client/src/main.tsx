@@ -18,19 +18,14 @@ function AppWithReadyNotification() {
   useEffect(() => {
     // Esperar hasta que la aplicación esté lista para ocultar el splash screen
     // Este temporizador es lo suficientemente largo para permitir que se cargue la autenticación
-    // pero no tan largo que el usuario tenga que esperar demasiado
     const timer = setTimeout(() => {
       if (!appInitialized) {
         console.log("Temporizador de inicialización completado, mostrando la aplicación");
         setAppInitialized(true);
         
         // Notificar que la app está cargada para ocultar el splash screen
-        // Solo disparamos este evento si no viene de un segundo timeout en index.html
-        if (document.getElementById('splash-screen') && 
-            !document.getElementById('splash-screen').classList.contains('hidden')) {
-          const readyEvent = new Event('appReady');
-          window.dispatchEvent(readyEvent);
-        }
+        const readyEvent = new Event('appReady');
+        window.dispatchEvent(readyEvent);
       }
     }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
     
