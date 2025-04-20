@@ -13,22 +13,8 @@ declare global {
 
 // Componente wrapper para notificar cuando la app está lista
 function AppWithReadyNotification() {
-  const [appInitialized, setAppInitialized] = useState(false);
-
+  // Aplicamos configuraciones de PWA una vez que el componente se monta
   useEffect(() => {
-    // Temporizador simple que oculta el splash screen después de un tiempo definido
-    const timer = setTimeout(() => {
-      console.log("Temporizador de inicialización completado, ocultando splash screen");
-      
-      // Ocultar el splash screen directamente mediante DOM
-      const splashScreen = document.getElementById('splash-screen');
-      if (splashScreen) {
-        splashScreen.classList.add('hidden');
-      }
-      
-      setAppInitialized(true);
-    }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
-    
     // Mejorada detección de PWA que incluye iOS en pantalla completa
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
                  (window.navigator.standalone === true) || 
@@ -62,11 +48,7 @@ function AppWithReadyNotification() {
         e.preventDefault(); // Prevenir zoom con gesto de pellizco
       }, { passive: false });
     }
-    
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [appInitialized]);
+  }, []);
   
   return <App />;
 }
