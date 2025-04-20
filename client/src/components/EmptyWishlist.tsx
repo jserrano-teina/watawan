@@ -14,6 +14,7 @@ const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
           src="/images/empty_list.png" 
           alt="Elementos deseados" 
           className="w-full h-full"
+          objectFit="contain"
         />
       </div>
       <h2 className="font-bold text-2xl text-white mb-3">Tu lista de deseos está vacía</h2>

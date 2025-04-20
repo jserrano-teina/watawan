@@ -259,6 +259,7 @@ const NotificationsPage: React.FC = () => {
                 src="/images/no_notifications.png" 
                 alt="Notificaciones" 
                 className="w-full h-full"
+                objectFit="contain"
               />
             </div>
             <h2 className="font-bold text-2xl text-white mb-3 text-center">No hay notificaciones</h2>

@@ -6,6 +6,7 @@ interface OptimizedImageProps {
   className?: string;
   width?: string | number;
   height?: string | number;
+  objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
   onLoad?: () => void;
   onError?: () => void;
 }
@@ -23,6 +24,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   className = "", 
   width,
   height,
+  objectFit = "cover",
   onLoad,
   onError
 }) => {
@@ -61,7 +63,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           src={src} 
           alt={alt} 
           className={className}
-          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          style={{ width: '100%', height: '100%', objectFit }}
           onLoad={() => {
             if (onLoad) onLoad();
           }}

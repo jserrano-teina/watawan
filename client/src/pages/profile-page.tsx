@@ -320,6 +320,7 @@ const ProfilePage = () => {
               src="/images/waw_logo.svg" 
               alt="WataWan" 
               className="h-8 mx-auto mb-1" 
+              objectFit="contain"
             />
             <span className="text-xs text-gray-500">Versión 1.0.0</span>
           </div>
