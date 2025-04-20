@@ -1,7 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import { queryClient } from "./lib/queryClient";
 
 // Declaración para la propiedad standalone en Navigator para Safari en iOS
 declare global {
@@ -12,10 +13,22 @@ declare global {
 
 // Componente wrapper para notificar cuando la app está lista
 function AppWithReadyNotification() {
+  const [appInitialized, setAppInitialized] = useState(false);
+
   useEffect(() => {
-    // Notificar que la app está cargada para ocultar el splash screen
-    const readyEvent = new Event('appReady');
-    window.dispatchEvent(readyEvent);
+    // Configurar un listener para saber cuando la autenticación se ha completado
+    // Este enfoque evita tener que importar directamente useAuth aquí
+    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
+      // Si la consulta del usuario se ha completado (success o error), considerar la app como inicializada
+      if (event.query.queryKey[0] === "/api/user" && !event.query.isLoading() && !appInitialized) {
+        console.log("Autenticación completada, mostrando la aplicación");
+        setAppInitialized(true);
+        
+        // Notificar que la app está cargada para ocultar el splash screen
+        const readyEvent = new Event('appReady');
+        window.dispatchEvent(readyEvent);
+      }
+    });
     
     // Mejorada detección de PWA que incluye iOS en pantalla completa
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
@@ -50,7 +63,11 @@ function AppWithReadyNotification() {
         e.preventDefault(); // Prevenir zoom con gesto de pellizco
       }, { passive: false });
     }
-  }, []);
+    
+    return () => {
+      unsubscribe(); // Limpiar el suscriptor al desmontar
+    };
+  }, [appInitialized]);
   
   return <App />;
 }

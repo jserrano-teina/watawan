@@ -46,21 +46,13 @@ export function ProtectedRoute({
 
   return (
     <Route path={path}>
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground text-sm">Cargando...</p>
-        </div>
-      ) : user ? (
+      {!isLoading && user ? (
         <Component />
       ) : shouldRedirect ? (
         <Redirect to="/login" />
       ) : (
-        // Estado intermedio mientras se decide si redirigir
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-          <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-          <p className="text-muted-foreground text-sm">Verificando sesión...</p>
-        </div>
+        // Pantalla en blanco durante la carga - el splash screen en index.html se encargará de mostrar la animación
+        <div className="flex flex-col items-center justify-center min-h-screen bg-background"></div>
       )}
     </Route>
   );
