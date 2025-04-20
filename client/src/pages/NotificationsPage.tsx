@@ -260,8 +260,8 @@ const NotificationsPage: React.FC = () => {
                 className="w-full h-full object-contain"
               />
             </div>
-            <h2 className="font-bold text-2xl text-white mb-3">No hay notificaciones</h2>
-            <p className="text-white/60 mb-6">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
+            <h2 className="font-bold text-2xl text-white mb-3 text-center">No hay notificaciones</h2>
+            <p className="text-white/60 mb-6 text-center">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
           </div>
         </main>
       )}
