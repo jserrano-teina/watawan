@@ -1,5 +1,4 @@
 import { useAuth } from "@/hooks/use-auth";
-import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
 import { useEffect, useState } from "react";
 
@@ -7,7 +6,7 @@ import { useEffect, useState } from "react";
  * Componente mejorado para rutas protegidas que requieren autenticación
  * 
  * Características:
- * - Muestra estado de carga con un spinner
+ * - Usa el splash screen para la carga (sin estados de carga adicionales)
  * - Retrasa la redirección para evitar parpadeos durante la verificación de sesión
  * - Proporciona transiciones suaves entre estados
  * - Maneja mejor las reconexiones después de pérdida de red

@@ -210,11 +210,10 @@ const ProfilePage = () => {
     }
   };
 
+  // Cuando está cargando, devolvemos un div vacío para que solo se muestre el splash screen
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-      </div>
+      <div className="min-h-screen bg-[#121212]"></div>
     );
   }
 
