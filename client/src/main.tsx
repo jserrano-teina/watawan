@@ -23,9 +23,12 @@ function AppWithReadyNotification() {
         console.log("Temporizador de inicialización completado, mostrando la aplicación");
         setAppInitialized(true);
         
-        // Notificar que la app está cargada para ocultar el splash screen
-        const readyEvent = new Event('appReady');
-        window.dispatchEvent(readyEvent);
+        // Esperar para asegurarnos de que la aplicación está lista antes de ocultar splash
+        setTimeout(() => {
+          // Notificar que la app está cargada para ocultar el splash screen
+          const readyEvent = new Event('appReady');
+          window.dispatchEvent(readyEvent);
+        }, 100); // Pequeño delay para prevenir problemas de timing
       }
     }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
     
