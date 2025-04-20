@@ -122,11 +122,11 @@
         }, 300);
       });
       
-      // Si después de 4 segundos la app no está lista, ocultar splash de todas formas
+      // Si después de 3 segundos la app no está lista, ocultar splash de todas formas
       setTimeout(function() {
         const event = new Event('appReady');
         window.dispatchEvent(event);
-      }, 4000);
+      }, 3000);
     });
   </script>
 </body>

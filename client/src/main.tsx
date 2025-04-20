@@ -16,19 +16,19 @@ function AppWithReadyNotification() {
   const [appInitialized, setAppInitialized] = useState(false);
 
   useEffect(() => {
-    // Configurar un listener para saber cuando la autenticación se ha completado
-    // Este enfoque evita tener que importar directamente useAuth aquí
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      // Si la consulta del usuario se ha completado (success o error), considerar la app como inicializada
-      if (event.query.queryKey[0] === "/api/user" && !event.query.isLoading() && !appInitialized) {
-        console.log("Autenticación completada, mostrando la aplicación");
+    // Esperar hasta que la aplicación esté lista para ocultar el splash screen
+    // Este temporizador es lo suficientemente largo para permitir que se cargue la autenticación
+    // pero no tan largo que el usuario tenga que esperar demasiado
+    const timer = setTimeout(() => {
+      if (!appInitialized) {
+        console.log("Temporizador de inicialización completado, mostrando la aplicación");
         setAppInitialized(true);
         
         // Notificar que la app está cargada para ocultar el splash screen
         const readyEvent = new Event('appReady');
         window.dispatchEvent(readyEvent);
       }
-    });
+    }, 3000); // 3 segundos para asegurar que la autenticación haya tenido tiempo
     
     // Mejorada detección de PWA que incluye iOS en pantalla completa
     const isPWA = window.matchMedia('(display-mode: standalone)').matches || 
@@ -65,7 +65,7 @@ function AppWithReadyNotification() {
     }
     
     return () => {
-      unsubscribe(); // Limpiar el suscriptor al desmontar
+      clearTimeout(timer);
     };
   }, [appInitialized]);
   
