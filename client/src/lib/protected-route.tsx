@@ -50,8 +50,10 @@ export function ProtectedRoute({
       ) : shouldRedirect ? (
         <Redirect to="/login" />
       ) : (
-        // Pantalla en blanco durante la carga - el splash screen en index.html se encargará de mostrar la animación
-        <div className="flex flex-col items-center justify-center min-h-screen bg-background"></div>
+        // Estado de carga con mismo fondo que la aplicación y spinner centrado
+        <div className="flex flex-col items-center justify-center min-h-screen bg-[#121212]">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+        </div>
       )}
     </Route>
   );

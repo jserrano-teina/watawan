@@ -52,14 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     staleTime: 5 * 60 * 1000, // 5 minutos de datos frescos
   });
   
-  // Una vez que tenemos los datos (tanto si hay usuario como si no), ocultamos el splash screen
+  // Monitorear cuando los datos de autenticación se cargan
   useEffect(() => {
     if (isFetched) {
-      console.log('Datos de autenticación cargados, ocultando splash screen...');
-      // Ocultar el splash screen cuando tengamos los datos (autenticado o no)
-      if (typeof window.hideSplashScreen === 'function') {
-        window.hideSplashScreen();
-      }
+      console.log('Datos de autenticación cargados');
     }
   }, [isFetched]);
 

@@ -42,18 +42,15 @@ function App() {
   // Inicializar el sistema de áreas seguras
   const safeArea = useSafeArea();
   
-  // Iniciar el sistema de gestión de sesiones y gestionar el splash screen
+  // Iniciar el sistema de gestión de sesiones para mantener la conexión automáticamente
   useEffect(() => {
     // Registrar los valores de área segura
     console.log('Áreas seguras inicializadas:', safeArea);
     
-    let isSessionManagerStarted = false;
-
     // Importar el gestor de sesiones de forma dinámica para no bloquear el renderizado
     import('./lib/sessionManager').then(({ startSessionManager, stopSessionManager }) => {
       console.log('Iniciando sistema de gestión de sesiones');
       startSessionManager();
-      isSessionManagerStarted = true;
       
       // Detener el gestor cuando el componente se desmonte
       return () => {
@@ -63,20 +60,6 @@ function App() {
     }).catch(error => {
       console.error('Error al iniciar el gestor de sesiones:', error);
     });
-
-    // Monitorear la autenticación antes de ocultar el splash screen
-    const hideTimeout = setTimeout(() => {
-      // En caso de que el sistema tarde demasiado, ocultamos el splash
-      // como último recurso después de 5 segundos
-      if (typeof window.hideSplashScreen === 'function') {
-        console.log('Ocultando splash screen por tiempo límite de seguridad');
-        window.hideSplashScreen();
-      }
-    }, 5000);
-
-    return () => {
-      clearTimeout(hideTimeout);
-    };
   }, [safeArea]);
 
   return (
