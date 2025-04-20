@@ -196,11 +196,8 @@ const NotificationsPage: React.FC = () => {
       <Header user={user as User} />
       
       {isLoading ? (
-        // Si está cargando, mostramos un indicador
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex flex-col">
-          <div className="flex justify-center items-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          </div>
+        // Cuando está cargando, devolvemos un div vacío para que solo se muestre el splash screen
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] bg-[#121212]">
         </main>
       ) : notifications.length > 0 ? (
         // Si hay notificaciones, mantenemos el scroll

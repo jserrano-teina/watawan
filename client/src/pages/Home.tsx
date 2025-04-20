@@ -239,11 +239,10 @@ const Home: React.FC = () => {
     }, 3000);
   };
 
+  // Cuando está cargando, devolvemos un div vacío para que solo se muestre el splash screen
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-pulse text-xl text-neutral-600">Cargando...</div>
-      </div>
+      <div className="min-h-screen bg-[#121212]"></div>
     );
   }
 
