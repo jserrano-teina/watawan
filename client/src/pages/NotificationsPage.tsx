@@ -7,6 +7,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import ProductImage from '@/components/ProductImage';
+import OptimizedImage from '@/components/OptimizedImage';
 import { Loader2, Bell } from 'lucide-react';
 import BottomNavigation from '@/components/BottomNavigation';
 import WishDetailModal from '@/components/modals/WishDetailModal';
@@ -254,10 +255,10 @@ const NotificationsPage: React.FC = () => {
           <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
             {/* Imagen de notificaciones */}
             <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
-              <img 
+              <OptimizedImage 
                 src="/images/no_notifications.png" 
                 alt="Notificaciones" 
-                className="w-full h-full object-contain"
+                className="w-full h-full"
               />
             </div>
             <h2 className="font-bold text-2xl text-white mb-3 text-center">No hay notificaciones</h2>
