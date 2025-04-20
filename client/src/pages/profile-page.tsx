@@ -314,7 +314,7 @@ const ProfilePage = () => {
           <div className="flex-1"></div>
           
           {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mb-[70px]">
+          <div className="flex flex-col items-center mb-[90px]">
             <img 
               src="/images/waw_logo.svg" 
               alt="WataWan" 
