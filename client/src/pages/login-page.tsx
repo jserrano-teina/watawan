@@ -82,7 +82,7 @@ export default function LoginPage() {
           <OptimizedImage 
             src="/images/waw_logo.svg" 
             alt="WataWan" 
-            className="h-8 mx-auto mb-10" 
+            className="h-[48px] mx-auto mb-10" 
             objectFit="contain"
           />
           <h1 className="text-3xl font-bold mb-2 text-white">Inicia sesión</h1>
