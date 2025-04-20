@@ -1,6 +1,7 @@
 import express, { type Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import * as fs from "fs";
 import { 
   insertWishItemSchema, 
   insertReservationSchema,
@@ -837,6 +838,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error('Error extrayendo metadatos:', error);
       res.status(500).json({ 
         message: "Error extracting metadata",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+
+  // Endpoint para subir imágenes
+  router.post("/upload-image", requireAuth, async (req: Request, res: Response) => {
+    if (!req.body || !req.body.image) {
+      return res.status(400).json({ message: "Se requiere una imagen en formato base64" });
+    }
+    
+    try {
+      // Extraer la información base64
+      const base64Data = req.body.image;
+      
+      // Verificar que sea una imagen válida
+      if (!base64Data.startsWith('data:image/')) {
+        return res.status(400).json({ message: "El formato de imagen no es válido" });
+      }
+      
+      // Generar un nombre de archivo único
+      const fileName = `img_${Date.now()}_${Math.random().toString(36).substr(2, 9)}.png`;
+      
+      // Extraer los datos binarios de la cadena base64
+      const matches = base64Data.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+      
+      if (!matches || matches.length !== 3) {
+        return res.status(400).json({ message: "Formato de imagen no válido" });
+      }
+      
+      // Convertir a Buffer y guardar en el servidor
+      const imageBuffer = Buffer.from(matches[2], 'base64');
+      
+      // Crear directorio si no existe
+      const uploadDir = './public/uploads';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      
+      // Ruta completa del archivo
+      const filePath = `${uploadDir}/${fileName}`;
+      
+      // Escribir el archivo
+      fs.writeFileSync(filePath, imageBuffer);
+      
+      // URL pública que puede ser accedida desde el cliente
+      const imageUrl = `/uploads/${fileName}`;
+      
+      return res.status(200).json({ imageUrl });
+    } catch (error) {
+      console.error('Error al subir imagen:', error);
+      return res.status(500).json({ 
+        message: "Error al procesar la imagen", 
         error: error instanceof Error ? error.message : String(error)
       });
     }
