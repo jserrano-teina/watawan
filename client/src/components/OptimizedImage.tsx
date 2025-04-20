@@ -62,6 +62,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
           alt={alt} 
           className={className}
           style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+          onLoad={() => {
+            if (onLoad) onLoad();
+          }}
+          onError={() => {
+            if (onError) onError();
+          }}
         />
       )}
     </div>

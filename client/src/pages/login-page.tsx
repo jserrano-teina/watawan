@@ -11,6 +11,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import { AlertCircle } from "lucide-react";
 import { validateEmail, getEmailErrorMessage } from "@/lib/validation";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const loginSchema = z.object({
   email: z.string().min(1, { message: "Completa este campo" })
@@ -78,7 +79,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen bg-background">
       <div className="flex flex-col w-full max-w-[500px] mx-auto items-center justify-center px-4 py-12">
         <div className="w-full mb-8 text-center">
-          <img 
+          <OptimizedImage 
             src="/images/waw_logo.svg" 
             alt="WataWan" 
             className="h-16 mx-auto mb-10" 
