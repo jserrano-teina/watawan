@@ -6,6 +6,8 @@ interface OptimizedImageProps {
   className?: string;
   width?: string | number;
   height?: string | number;
+  onLoad?: () => void;
+  onError?: () => void;
 }
 
 // Caché global para almacenar las imágenes precargadas
@@ -20,7 +22,9 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   alt, 
   className = "", 
   width,
-  height
+  height,
+  onLoad,
+  onError
 }) => {
   const [isLoaded, setIsLoaded] = useState(imageCache[src] || false);
   

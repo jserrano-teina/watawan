@@ -5,6 +5,7 @@ import { User } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import OptimizedImage from "@/components/OptimizedImage";
 import {
   Dialog,
   DialogContent,
@@ -253,10 +254,10 @@ const ProfilePage = () => {
                 )}
               >
                 {avatar ? (
-                  <img
+                  <OptimizedImage
                     src={avatar}
                     alt={user.displayName || user.email}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full"
                   />
                 ) : (
                   getInitials(user.displayName, user.email)
@@ -315,7 +316,7 @@ const ProfilePage = () => {
           
           {/* Logo y versión al final pero por encima de la navbar */}
           <div className="flex flex-col items-center mb-[90px]">
-            <img 
+            <OptimizedImage 
               src="/images/waw_logo.svg" 
               alt="WataWan" 
               className="h-8 mx-auto mb-1" 

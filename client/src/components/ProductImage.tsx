@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, ImageIcon } from 'lucide-react';
 import { sanitizeUrl } from '@/lib/sanitize';
+import OptimizedImage from './OptimizedImage';
 
 type ImageState = 'loading' | 'loaded' | 'error';
 
@@ -122,13 +123,15 @@ const ProductImage: React.FC<ProductImageProps> = ({
   return (
     <div className={`relative flex items-center justify-center ${className}`}>
       {imgSrc && (
-        <img 
-          src={imgSrc} 
-          alt={title} 
-          className="w-full h-full object-cover"
-          onLoad={handleImageLoad}
-          onError={handleImageError}
-        />
+        <div className="w-full h-full">
+          <OptimizedImage 
+            src={imgSrc} 
+            alt={title} 
+            className="w-full h-full object-cover"
+            onLoad={handleImageLoad}
+            onError={handleImageError}
+          />
+        </div>
       )}
       
       {/* Mostrar spinner durante la carga */}
