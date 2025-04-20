@@ -205,16 +205,15 @@ const NotificationsPage: React.FC = () => {
       ) : notifications.length > 0 ? (
         // Si hay notificaciones, mantenemos el scroll
         <main 
-          className="flex-grow container mx-auto px-4 pb-24 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+          className="flex-grow container mx-auto px-4 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
           style={{ 
             WebkitOverflowScrolling: 'touch', 
-            height: 'calc(100vh - 56px)', 
-            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
+            height: 'calc(100vh - 56px)'
           }}
         >
           <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
           
-          <div className="space-y-3 pb-24">
+          <div className="space-y-3">
             {notifications.map(({ item, reservation }) => (
               <div 
                 key={reservation.id} 
