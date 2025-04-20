@@ -311,19 +311,28 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   // Manejar cambio de imagen
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       setUploadingImage(true);
       
-      // Simular subida de imagen
-      setTimeout(() => {
-        // Para una demo, usamos URL.createObjectURL
-        // En producción, esto se reemplazaría por una subida real
-        const imageUrl = URL.createObjectURL(file);
+      try {
+        // Convertir la imagen a base64
+        const base64Image = await convertFileToBase64(file);
         
-        // Imprimir para depuración
-        console.log('Imagen subida manualmente generada con URL.createObjectURL:', imageUrl);
+        // Enviar la imagen al servidor
+        const response = await apiRequest('POST', '/api/upload-image', {
+          image: base64Image
+        });
+        
+        if (!response.ok) {
+          throw new Error('Error al subir la imagen');
+        }
+        
+        const data = await response.json();
+        const imageUrl = data.imageUrl;
+        
+        console.log('Imagen subida al servidor:', imageUrl);
         
         // Asignar URL al campo del formulario y al estado de datos extraídos
         setValueStepTwo('imageUrl', imageUrl);
@@ -333,10 +342,24 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           ...extractedData,
           imageUrl: imageUrl
         });
-        
+      } catch (error) {
+        console.error('Error al subir la imagen:', error);
+        // Mostrar mensaje de error al usuario
+        alert('Error al subir la imagen. Por favor, intenta de nuevo.');
+      } finally {
         setUploadingImage(false);
-      }, 1000);
+      }
     }
+  };
+  
+  // Función para convertir un archivo a base64
+  const convertFileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = error => reject(error);
+    });
   };
 
   // Manejar clic en botón de subir imagen

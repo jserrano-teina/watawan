@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de Subida de Imágenes</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .preview {
+            width: 100%;
+            max-height: 300px;
+            border: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        .preview img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        button {
+            padding: 10px 15px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #result {
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            padding: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Prueba de Subida de Imágenes</h1>
+    
+    <div class="preview" id="imagePreview">
+        <p>Vista previa de la imagen</p>
+    </div>
+    
+    <div class="form-group">
+        <input type="file" id="imageInput" accept="image/*">
+    </div>
+    
+    <button id="uploadButton">Subir Imagen</button>
+    
+    <div id="result">
+        <p>Resultado de la subida:</p>
+        <div id="resultContent"></div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const imageInput = document.getElementById('imageInput');
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadButton = document.getElementById('uploadButton');
+            const resultContent = document.getElementById('resultContent');
+            
+            // Mostrar vista previa de la imagen
+            imageInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        imagePreview.innerHTML = `<img src="${event.target.result}" alt="Vista previa">`;
+                        // También guardamos la base64 para usarla luego
+                        imagePreview.dataset.base64 = event.target.result;
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+            
+            // Manejar subida de imagen
+            uploadButton.addEventListener('click', async function() {
+                if (!imagePreview.dataset.base64) {
+                    resultContent.innerHTML = '<p style="color: red;">Por favor, selecciona una imagen primero</p>';
+                    return;
+                }
+                
+                resultContent.innerHTML = '<p>Subiendo imagen...</p>';
+                
+                try {
+                    const response = await fetch('/api/upload-image', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            image: imagePreview.dataset.base64
+                        }),
+                        credentials: 'include' // Para enviar cookies
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok) {
+                        resultContent.innerHTML = `
+                            <p style="color: green;">¡Imagen subida con éxito!</p>
+                            <p>URL de la imagen: <a href="${data.imageUrl}" target="_blank">${data.imageUrl}</a></p>
+                            <img src="${data.imageUrl}" style="max-width: 100%;">
+                        `;
+                    } else {
+                        resultContent.innerHTML = `<p style="color: red;">Error: ${data.message || 'No se pudo subir la imagen'}</p>`;
+                    }
+                } catch (error) {
+                    resultContent.innerHTML = `<p style="color: red;">Error: ${error.message}</p>`;
+                }
+            });
+        });
+    </script>
+</body>
+</html>

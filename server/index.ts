@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import { setupCsrf, verifyCsrf } from "./csrf";
+import path from "path";
 
 const app = express();
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
@@ -10,6 +11,8 @@ app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
 // Parsear cookies
 app.use(cookieParser());
+// Servir archivos estáticos desde el directorio public
+app.use('/uploads', express.static(path.join(process.cwd(), 'public/uploads')));
 // Configurar protección CSRF
 app.use(setupCsrf);  // Genera y proporciona el token CSRF
 app.use('/api', verifyCsrf);  // Verifica el token para rutas de API (excepto GET)
