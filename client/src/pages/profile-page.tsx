@@ -236,82 +236,86 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
-      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col overflow-hidden">
-        <div className="flex flex-col items-center justify-center h-full py-3">
-          {/* Avatar con botón de edición */}
-          <div className="relative mb-6">
-            <div
-              className={cn(
-                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
-                avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
-              )}
-            >
-              {avatar ? (
-                <img
-                  src={avatar}
-                  alt={user.displayName || user.email}
-                  className="w-full h-full object-cover"
+      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
+        {/* Contenedor principal que ocupa exactamente el espacio disponible */}
+        <div className="flex flex-col items-center justify-between h-full pb-[70px]">
+          {/* Sección superior con avatar e información */}
+          <div className="flex flex-col items-center pt-8">
+            {/* Avatar con botón de edición */}
+            <div className="relative mb-4">
+              <div
+                className={cn(
+                  "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
+                  avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
+                )}
+              >
+                {avatar ? (
+                  <img
+                    src={avatar}
+                    alt={user.displayName || user.email}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  getInitials(user.displayName, user.email)
+                )}
+              </div>
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-md border border-[#333] bg-[#121212] hover:bg-[#252525] transition-colors"
+              >
+                <Pencil size={16} className="text-white" />
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  className="hidden"
+                  accept="image/*"
+                  onChange={handleAvatarChange}
                 />
-              ) : (
-                getInitials(user.displayName, user.email)
-              )}
+              </label>
             </div>
-            <label
-              htmlFor="avatar-upload"
-              className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-md border border-[#333] bg-[#121212] hover:bg-[#252525] transition-colors"
-            >
-              <Pencil size={16} className="text-white" />
-              <input
-                id="avatar-upload"
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handleAvatarChange}
-              />
-            </label>
-          </div>
 
-          {/* Información del usuario */}
-          <h2 className="text-xl font-bold mb-1">
-            {user.displayName || user.email.split('@')[0]}
-          </h2>
-          <p className="text-gray-500 text-sm mb-2">{user.email}</p>
-          
-          {/* Botón de editar */}
-          <button
-            onClick={() => setIsEditingProfile(true)}
-            className="mt-4 px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
-            </svg>
-            Editar perfil
-          </button>
-        
-
-          <div className="mt-4 flex justify-center">
+            {/* Información del usuario */}
+            <h2 className="text-xl font-bold mb-1">
+              {user.displayName || user.email.split('@')[0]}
+            </h2>
+            <p className="text-gray-500 text-sm mb-4">{user.email}</p>
+            
+            {/* Botón de editar */}
             <button
-              onClick={() => setIsLogoutDialogOpen(true)}
-              className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
+              onClick={() => setIsEditingProfile(true)}
+              className="mt-2 px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
+                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
               </svg>
-              <span>Cerrar sesión</span>
+              Editar perfil
             </button>
+          
+            {/* Botón de cerrar sesión */}
+            <div className="mt-3 flex justify-center">
+              <button
+                onClick={() => setIsLogoutDialogOpen(true)}
+                className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Cerrar sesión</span>
+              </button>
+            </div>
           </div>
-        </div>
-        
-        {/* Logo y versión (ahora dentro del main, al final) */}
-        <div className="flex flex-col items-center mt-auto mb-[80px] pb-4">
-          <img 
-            src="/images/waw_logo.svg" 
-            alt="WataWan" 
-            className="h-8 mx-auto mb-1" 
-          />
-          <span className="text-xs text-gray-500 mb-1">Versión 1.0.0</span>
+          
+          {/* Logo y versión al final pero por encima de la navbar */}
+          <div className="flex flex-col items-center mt-auto mb-4">
+            <img 
+              src="/images/waw_logo.svg" 
+              alt="WataWan" 
+              className="h-8 mx-auto mb-1" 
+            />
+            <span className="text-xs text-gray-500">Versión 1.0.0</span>
+          </div>
         </div>
       </main>
 
