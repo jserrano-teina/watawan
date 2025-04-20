@@ -239,10 +239,12 @@ const Home: React.FC = () => {
     }, 3000);
   };
 
-  // Cuando está cargando, devolvemos un div vacío para que solo se muestre el splash screen
+  // Mostrar un spinner de carga con el mismo fondo que la aplicación para una transición suave
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#121212]"></div>
+      <div className="min-h-screen bg-[#121212] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
     );
   }
 

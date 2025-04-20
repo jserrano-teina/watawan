@@ -1,4 +1,4 @@
-import { createContext, ReactNode, useContext } from "react";
+import { createContext, ReactNode, useContext, useEffect } from "react";
 import {
   useQuery,
   useMutation,
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     data: user,
     error,
     isLoading,
+    isFetched,
   } = useQuery<User | null, Error>({
     queryKey: ["/api/user"],
     queryFn: getQueryFn({ on401: "returnNull" }),
@@ -50,6 +51,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     retryDelay: attempt => Math.min(1000 * 2 ** attempt, 30000), // Backoff exponencial
     staleTime: 5 * 60 * 1000, // 5 minutos de datos frescos
   });
+  
+  // Una vez que tenemos los datos (tanto si hay usuario como si no), ocultamos el splash screen
+  useEffect(() => {
+    if (isFetched) {
+      console.log('Datos de autenticación cargados, ocultando splash screen...');
+      // Ocultar el splash screen cuando tengamos los datos (autenticado o no)
+      if (typeof window.hideSplashScreen === 'function') {
+        window.hideSplashScreen();
+      }
+    }
+  }, [isFetched]);
 
   // Mutación para inicio de sesión
   const loginMutation = useMutation({

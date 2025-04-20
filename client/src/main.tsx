@@ -4,8 +4,9 @@ import App from "./App";
 import "./index.css";
 import { queryClient } from "./lib/queryClient";
 
-// Declaración para la propiedad standalone en Navigator para Safari en iOS
+// Declaraciones globales
 declare global {
+  // Para la propiedad standalone en Navigator para Safari en iOS
   interface Navigator {
     standalone?: boolean;
   }

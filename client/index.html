@@ -107,14 +107,14 @@
       });
     }
     
-    // Temporizador simple que oculta el splash screen después de la carga
+    // El splash screen se ocultará automáticamente después de un tiempo razonable
     setTimeout(function() {
       const splashScreen = document.getElementById('splash-screen');
       if (splashScreen) {
-        console.log('Ocultando splash screen');
+        console.log('Ocultando splash screen después de 3 segundos');
         splashScreen.classList.add('hidden');
       }
-    }, 2000);
+    }, 3000);
   </script>
 </body>
 </html>
