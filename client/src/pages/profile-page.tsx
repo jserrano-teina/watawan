@@ -238,9 +238,12 @@ const ProfilePage = () => {
     <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
       <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
-        <div className="flex flex-col items-center justify-between h-full pb-[70px]">
-          {/* Sección superior con avatar e información */}
-          <div className="flex flex-col items-center pt-8">
+        <div className="flex flex-col items-center justify-between h-full">
+          {/* Espacio superior flexible para centrar verticalmente */}
+          <div className="flex-1"></div>
+          
+          {/* Sección central con avatar e información - perfectamente centrada */}
+          <div className="flex flex-col items-center">
             {/* Avatar con botón de edición */}
             <div className="relative mb-4">
               <div
@@ -307,8 +310,11 @@ const ProfilePage = () => {
             </div>
           </div>
           
+          {/* Espacio flexible para empujar el logo hacia abajo */}
+          <div className="flex-1"></div>
+          
           {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mt-auto mb-4">
+          <div className="flex flex-col items-center mb-[70px]">
             <img 
               src="/images/waw_logo.svg" 
               alt="WataWan" 
