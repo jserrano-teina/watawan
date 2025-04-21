@@ -812,13 +812,19 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
         // Buscar patrones comunes como "POLO", "LINO", etc.
         const commonWords = ['POLO', 'LINO', 'VESTIDO', 'FALDA', 'JERSEY', 'CAMISA', 'PANTALON'];
         for (const word of commonWords) {
-          const regex = new RegExp(`(^|[A-Z])${word}([A-Z]|$)`, 'g');
+          const regex = new RegExp(`(^|[A-Z]|\\s)${word}([A-Z]|$|P\\d+)`, 'g');
           cleaned = cleaned.replace(regex, (match, p1, p2) => {
-            if (p1 && p2) return `${p1} ${word} ${p2}`;
-            if (p1) return `${p1} ${word}`;
+            if (p1 && p2 && p2.startsWith('P')) return `${p1}${word}`;
+            if (p1 && p2) return `${p1}${word} ${p2}`;
+            if (p1) return `${p1}${word}`;
             if (p2) return `${word} ${p2}`;
             return word;
           });
+        }
+        
+        // 5. Tratamiento específico para "LINOP" -> "LINO"
+        if (cleaned.includes('LINOP')) {
+          cleaned = cleaned.replace('LINOP', 'LINO');
         }
         
         productTitle = cleaned.trim();
