@@ -71,10 +71,53 @@ const ProductImage: React.FC<ProductImageProps> = ({
     }
   };
   
+  // Verificar si el dominio debe usar un icono genérico (ShoppingBag)
+  const shouldUseGenericIcon = (domain: string): boolean => {
+    const genericDomains = [
+      'pccomponentes.com',
+      'fnac.es',
+      'fnac.com',
+      'elcorteingles.es',
+      'carrefour.es',
+      'alcampo.es',
+      'lidl.es',
+      'dia.es',
+      'decathlon.es',
+      'leroy.com',
+      'leroymerlin.es',
+      'coolmod.com',
+      'ldlc.com',
+      'asos.com',
+      'zalando.es',
+      'cortefiel.com',
+      'mercadona.es',
+      'alimerka.es',
+      'conforama.es',
+      'worten.es',
+      'primark.com',
+      'pullandbear.com',
+      'bershka.com',
+      'massimodutti.com',
+      'stradivarius.com',
+      'oysho.com',
+      'corte.es',
+      'eci.com'
+    ];
+    
+    return genericDomains.some(genericDomain => 
+      domain.includes(genericDomain.replace('.com', '').replace('.es', ''))
+    );
+  };
+
   // Mapear dominios a nombres de iconos de react-icons/si
   const getDomainIconName = (domain: string): string | null => {
     // Normalizar el dominio para las coincidencias
     domain = domain.toLowerCase();
+    
+    // Si el dominio está en la lista de dominios que deben usar icono genérico
+    if (shouldUseGenericIcon(domain)) {
+      return null;
+    }
     
     const domainMappings: Record<string, string> = {
       // Marketplaces internacionales
@@ -92,11 +135,6 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'adidas.com': 'SiAdidas',
       'hm.com': 'SiHm',
       'mango.com': 'SiMango',
-      'pullandbear.com': 'SiZara', // Inditex
-      'bershka.com': 'SiZara', // Inditex
-      'massimodutti.com': 'SiZara', // Inditex
-      'stradivarius.com': 'SiZara', // Inditex
-      'oysho.com': 'SiZara', // Inditex
       
       // Tecnología
       'apple.com': 'SiApple',
@@ -120,27 +158,10 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'ubisoft.com': 'SiUbisoft',
       'ea.com': 'SiEa',
       
-      // Grandes superficies (España)
-      'fnac.es': 'SiApple', // No hay icono de Fnac en react-icons
-      'fnac.com': 'SiApple', // No hay icono de Fnac en react-icons
+      // Tecnología globales
       'mediamarkt.es': 'SiMediamarkt',
-      'elcorteingles.es': 'SiApple', // No hay icono de El Corte Inglés
-      'carrefour.es': 'SiShopify', // No hay icono de Carrefour
-      'alcampo.es': 'SiShopify', // No hay icono de Alcampo
-      'lidl.es': 'SiShopify', // No hay icono de Lidl
-      'dia.es': 'SiShopify', // No hay icono de DIA
-      
-      // Tecnología (España)
-      'pccomponentes.com': 'SiIntel', // No hay icono de PcComponentes
-      'coolmod.com': 'SiIntel',
-      'ldlc.com': 'SiIntel',
-      
-      // Hogar y deporte
       'ikea.com': 'SiIkea',
-      'decathlon.es': 'SiAdidas', // No hay icono de Decathlon
-      'leroy.com': 'SiShopify', // No hay icono de Leroy Merlin
-      'leroymerlin.es': 'SiShopify',
-
+      
       // Otros sites populares
       'booking.com': 'SiBooking',
       'airbnb.com': 'SiAirbnb',
@@ -234,20 +255,20 @@ const ProductImage: React.FC<ProductImageProps> = ({
   // Componente que muestra el logo de la tienda basado en el dominio
   const DomainLogo: React.FC<{ domain: string | null }> = ({ domain }) => {
     if (!domain) {
-      return <ShoppingBag size={42} className="text-[#444444]" strokeWidth={1.5} />;
+      return <ShoppingBag size={48} className="text-[#444444]" strokeWidth={1.5} />;
+    }
+    
+    // Verificar si este dominio debe usar el icono de bolsa de compras genérico
+    if (shouldUseGenericIcon(domain)) {
+      return <ShoppingBag size={48} className="text-[#444444]" strokeWidth={1.5} />;
     }
     
     // Intentar obtener el nombre del icono de la tienda
     const iconName = getDomainIconName(domain);
     
     if (!iconName) {
-      // Si no hay icono disponible para esta tienda, mostrar la primera letra del dominio
-      const firstLetter = domain.charAt(0).toUpperCase();
-      return (
-        <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center">
-          <span className="text-2xl font-bold">{firstLetter}</span>
-        </div>
-      );
+      // Para dominios sin mapeo específico, usar el icono de bolsa de compras
+      return <ShoppingBag size={48} className="text-[#444444]" strokeWidth={1.5} />;
     }
     
     // Si el icono existe en react-icons/si, mostrarlo
@@ -259,7 +280,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
     }
     
     // Fallback a un icono genérico
-    return <ShoppingBag size={42} className="text-[#444444]" strokeWidth={1.5} />;
+    return <ShoppingBag size={48} className="text-[#444444]" strokeWidth={1.5} />;
   };
   
   // Si es una tienda problemática, no hay URL o hubo un error, mostrar placeholder con logo
@@ -268,7 +289,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
     const domain = extractDomain(purchaseLink);
     
     return (
-      <div className={`relative flex flex-col items-center justify-center shadow-inner bg-white ${className}`}>
+      <div className={`relative flex flex-col items-center justify-center shadow-inner bg-gradient-to-b from-white to-gray-50 ${className}`}>
         <DomainLogo domain={domain} />
       </div>
     );
@@ -298,7 +319,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
       
       {/* Mostrar placeholder con logo de la tienda si la imagen falla */}
       {imgState === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-white to-gray-50">
           <DomainLogo domain={extractDomain(purchaseLink)} />
         </div>
       )}
