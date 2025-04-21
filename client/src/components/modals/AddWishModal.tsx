@@ -186,40 +186,30 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     setPurchaseLinkValue(purchaseLink);
     
     try {
-      // Extraer metadatos del enlace si existe
+      // Extraer metadatos del enlace si existe utilizando Open Graph tags
       if (purchaseLink) {
         const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(purchaseLink)}`);
         const metadata = await response.json();
         
-        // Guardar datos extraídos para el paso 2
+        // Guardar datos extraídos para el paso 2 (ahora sin precio automático)
         setExtractedData({
           imageUrl: metadata.imageUrl,
-          price: metadata.price
+          price: undefined // El precio ya no se completa automáticamente
         });
         
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Establecer el título si existe
+        // Establecer el título si existe (extraído de Open Graph)
         if (metadata.title) {
-          console.log('Título extraído:', metadata.title);
+          console.log('Título extraído (Open Graph):', metadata.title);
           setValueStepTwo('title', metadata.title);
         }
         
-        // Extraer solo el valor numérico del precio si existe
-        if (metadata.price) {
-          // Primero eliminar todos los caracteres que no sean números, puntos o comas
-          let priceValue = metadata.price.replace(/[^0-9,.]/g, '');
-          
-          // Sustituir todos los puntos por comas para la representación de decimales
-          priceValue = priceValue.replace(/\./g, ',');
-          
-          const currencyValue = metadata.price.includes('$') ? '$' : '€';
-          
-          setValueStepTwo('price', priceValue);
-          setValueStepTwo('currency', currencyValue);
-        }
+        // Ya no tratamos de extraer el precio automáticamente
+        // El usuario debe introducir el precio manualmente
         
+        // Establecer la imagen si existe (extraída de Open Graph)
         if (metadata.imageUrl) {
           setValueStepTwo('imageUrl', metadata.imageUrl);
         }
