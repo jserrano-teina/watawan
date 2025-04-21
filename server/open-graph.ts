@@ -242,10 +242,14 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       } 
       // Zara
       else if (urlLower.includes('zara.com')) {
-        const zaraImg = await extractZaraImageWithCheerio(url, $);
-        if (zaraImg) {
-          result.imageUrl = zaraImg;
+        const zaraData = await extractZaraImageWithCheerio(url, $);
+        if (zaraData.image) {
+          result.imageUrl = zaraData.image;
           console.log('✓ Imagen extraída de Zara con cheerio');
+        }
+        if (zaraData.title && !result.title) {
+          result.title = zaraData.title;
+          console.log('✓ Título extraído de Zara con cheerio');
         }
       }
       // AliExpress
@@ -495,20 +499,34 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI)
  * Extrae información de Zara usando cheerio
  * Zara utiliza diferentes estructuras dependiendo de la región y el tipo de producto
  */
-async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
+async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<{image: string | null, title: string | null}> {
   try {
-    // Resultado
+    // Resultados
     let imgUrl: string | null = null;
+    let productTitle: string | null = null;
     
     console.log('🔍 Analizando página de Zara...');
     
-    // ESTRATEGIA 1: Extraer datos de la aplicación React de Zara
+    // ESTRATEGIA 1: Extraer el título del producto
+    // Buscar título del producto en la estructura HTML
+    const h1Title = $('h1.product-detail-info__header-name').text().trim() || 
+                    $('h1.product-name').text().trim() ||
+                    $('span.product-name').text().trim() ||
+                    $('h1').first().text().trim();
+    
+    if (h1Title) {
+      // Limpiar el título (a veces Zara usa el carácter \u0020 entre letras)
+      productTitle = h1Title.replace(/\s+/g, ' ').trim();
+      console.log(`✓ Título extraído de HTML: ${productTitle}`);
+    }
+    
+    // ESTRATEGIA 2: Extraer datos de la aplicación React de Zara
     // Zara suele almacenar sus datos en un objeto llamado __INITIAL_STATE__ o PRELOADED_STATE
     $('script:not([src])').each((_, element) => {
       const content = $(element).html() || '';
       
       // Buscar el estado inicial de la aplicación React
-      if (content.includes('__INITIAL_STATE__') || content.includes('PRELOADED_STATE')) {
+      if (content.indexOf('__INITIAL_STATE__') >= 0 || content.indexOf('PRELOADED_STATE') >= 0) {
         try {
           // Extraer el JSON del estado (usamos [\s\S] en lugar de /s para compatibilidad)
           const stateMatch = content.match(/(__INITIAL_STATE__|PRELOADED_STATE)\s*=\s*({[\s\S]+?});/);
@@ -518,7 +536,25 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
               // Intentar parsear el JSON
               const state = JSON.parse(stateMatch[2]);
               
-              // Buscar la información del producto en varias estructuras posibles
+              // Extraer el título del producto si no lo tenemos ya
+              if (!productTitle && state.product && state.product.detail && state.product.detail.name) {
+                productTitle = state.product.detail.name;
+                console.log(`✓ Título extraído del estado React: ${productTitle}`);
+              }
+              
+              // Extraer el título del producto (estructura alternativa)
+              if (!productTitle && state.productData && state.productData.name) {
+                productTitle = state.productData.name;
+                console.log(`✓ Título extraído del estado React (productData): ${productTitle}`);
+              }
+              
+              // Extraer el título del producto (otra estructura)
+              if (!productTitle && state.detail && state.detail.product && state.detail.product.name) {
+                productTitle = state.detail.product.name;
+                console.log(`✓ Título extraído del estado React (detail): ${productTitle}`);
+              }
+              
+              // Buscar la información de la imagen en varias estructuras posibles
               if (state.product && state.product.detail && state.product.detail.colors) {
                 const colors = state.product.detail.colors;
                 // Buscar la primera imagen disponible
@@ -535,11 +571,15 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
                 }
               }
               
-              // Otra estructura común
-              if (state.productData && state.productData.images) {
+              // Otra estructura común para imágenes
+              if (!imgUrl && state.productData && state.productData.images) {
                 const images = state.productData.images;
-                if (images.length > 0 && images[0].url) {
-                  imgUrl = images[0].url;
+                if (images && images.length > 0) {
+                  if (images[0].url) {
+                    imgUrl = images[0].url;
+                  } else if (images[0].path) {
+                    imgUrl = `https://static.zara.net/photos/${images[0].path}/w/1920/${images[0].name}.jpg`;
+                  }
                   console.log('✓ Imagen extraída del estado React (productData)');
                   return false; // Break the each loop
                 }
@@ -554,7 +594,7 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
       }
       
       // Buscar datos en formato JSON en otros scripts
-      if (content.includes('"image"') || content.includes('"images"') || content.includes('"media"')) {
+      if (content.indexOf('"image"') >= 0 || content.indexOf('"images"') >= 0 || content.indexOf('"media"') >= 0) {
         try {
           // Intentar encontrar patrones de datos JSON dentro del script
           // Patrón para array de imágenes
@@ -570,12 +610,43 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
           // Continuar con la siguiente iteración
         }
       }
+      
+      // Buscar el título en otros scripts con datos JSON
+      if (!productTitle && content.indexOf('"name"') >= 0) {
+        try {
+          const nameMatch = content.match(/"name"\s*:\s*"([^"]+?)"/i);
+          if (nameMatch && nameMatch[1]) {
+            productTitle = nameMatch[1].replace(/\\u0020/g, ' ').replace(/\s+/g, ' ').trim();
+            console.log(`✓ Título extraído de datos JSON: ${productTitle}`);
+          }
+        } catch (e) {
+          // Continuar con la siguiente iteración
+        }
+      }
     });
     
-    // ESTRATEGIA 2: Buscar en nodos específicos comunes de Zara
+    // Si no tenemos título aún, buscar en los metadatos
+    if (!productTitle) {
+      productTitle = $('meta[property="og:title"]').attr('content') || 
+                     $('meta[name="twitter:title"]').attr('content') ||
+                     $('meta[name="title"]').attr('content') ||
+                     $('title').text().split('|')[0].trim();
+      
+      if (productTitle) {
+        // Limpiar el título
+        productTitle = productTitle.replace(/\s+/g, ' ').trim();
+        console.log(`✓ Título extraído de metadatos: ${productTitle}`);
+      }
+    }
+    
+    // ESTRATEGIA 3: Buscar imágenes en nodos específicos comunes de Zara
     if (!imgUrl) {
       // Nodos de imágenes específicos de Zara
       const zaraSelectors = [
+        '.product-detail-slide img',
+        '.main-image img',
+        'img.image-main',
+        'img.main-product-image',
         'img[data-path]', 
         '.media-image img', 
         '.product-detail-images img',
@@ -592,7 +663,7 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
         const img = $(selector).first();
         const src = img.attr('src') || img.attr('srcset')?.split(' ')[0] || img.attr('data-src');
         
-        if (src && !src.includes('icon') && !src.includes('logo')) {
+        if (src && src.indexOf('icon') === -1 && src.indexOf('logo') === -1) {
           imgUrl = src;
           console.log(`✓ Imagen extraída de selector CSS: ${selector}`);
           break;
@@ -600,7 +671,7 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
       }
     }
     
-    // ESTRATEGIA 3: Reconstruir URLs a partir del ID del producto
+    // ESTRATEGIA 4: Reconstruir URLs a partir del ID del producto
     // Las URLs de Zara siguen ciertos patrones predecibles
     if (!imgUrl) {
       // Diferentes patrones de URL que podemos encontrar
@@ -648,27 +719,39 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
       // Reconstruir la URL de la imagen a partir del ID del producto
       if (productId && productId.length >= 7) {
         // Zara organiza sus imágenes según temporada, categoría y producto
-        // Vamos a intentar varios patrones comunes
+        // Pueden tener diferentes formatos de ID de producto (numérico o alfanumérico)
         
+        // Para IDs alfanuméricos, necesitamos otro enfoque
         // Patrón 2024, versión primavera/verano
-        const season = "2024/V"; // Primavera/Verano 2024
+        const currentYear = new Date().getFullYear();
+        // Para mayor compatibilidad, probamos con diferentes temporadas
+        const seasons = [
+          `${currentYear}/V`, // Primavera/Verano actual
+          `${currentYear}/I`, // Otoño/Invierno actual
+          `${currentYear-1}/I`, // Otoño/Invierno anterior
+          `${currentYear-1}/V`, // Primavera/Verano anterior
+        ];
         
         // Extraer categorías del ID (los primeros dígitos indican categoría)
         const productCategory = productId.substring(0, 2);
         const productSubcategory = productId.substring(2, 4);
         const specificCode = productId.substring(4);
         
-        // Construir varias posibles URLs (Zara cambia la estructura periódicamente)
-        const possibleUrls = [
-          // Formato actual (Mayo 2024)
-          `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/750/${productId}_1_1_1.jpg`,
-          // Formato alternativo
-          `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`,
-          // Formato anterior
-          `https://static.zara.net/photos//${season}/0/1/p/${productId}/2/w/750/${productId}_1_1_1.jpg`,
-          // Formato simplificado
-          `https://static.zara.net/photos//${season}/0/1/p/${productId}_1_1_1.jpg`,
-        ];
+        // Construir posibles URLs para múltiples formatos y temporadas
+        let possibleUrls: string[] = [];
+        
+        for (const season of seasons) {
+          // Añadir diferentes formatos para cada temporada
+          possibleUrls = [
+            ...possibleUrls,
+            // Formatos específicos por categoría (más probable)
+            `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/1000/${productId}_1_1_1.jpg`,
+            `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/750/${productId}_1_1_1.jpg`,
+            // Formatos genéricos
+            `https://static.zara.net/photos//${season}/0/1/p/${productId}/2/w/1000/${productId}_1_1_1.jpg`,
+            `https://static.zara.net/photos//${season}/0/1/p/${productId}_1_1_1.jpg`,
+          ];
+        }
         
         // Retornar la primera URL posible (no podemos verificar cuál existe sin hacer múltiples peticiones)
         imgUrl = possibleUrls[0];
@@ -676,15 +759,47 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
       }
     }
     
-    // Verificar si la URL necesita el esquema añadido
-    if (imgUrl && imgUrl.startsWith('//')) {
+    // Verificar si la URL de la imagen necesita el esquema añadido
+    if (imgUrl && imgUrl.indexOf('//') === 0) {
       imgUrl = 'https:' + imgUrl;
     }
     
-    return imgUrl;
+    // Si no tenemos título, crear uno a partir de la URL
+    if (!productTitle) {
+      // Extraer el nombre del producto de la URL
+      const urlParts = url.split('/');
+      const lastPart = urlParts[urlParts.length - 1].split('.')[0];
+      
+      // Convertir formato URL a título legible
+      if (lastPart) {
+        productTitle = lastPart
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, l => l.toUpperCase()) // Capitalizar primera letra de cada palabra
+          .replace(/([a-z])([A-Z])/g, '$1 $2'); // Añadir espacio entre camelCase
+        
+        console.log(`✓ Título generado a partir de URL: ${productTitle}`);
+      }
+    }
+    
+    // Limpieza adicional del título para casos de ZARA
+    if (productTitle) {
+      // Corregir títulos con espaciado incorrecto (C A M I S A P O L O ... -> CAMISA POLO ...)
+      if (/^([A-Z]\s)+[A-Z]$/.test(productTitle) || /^([A-Z]\s?){5,}$/.test(productTitle)) {
+        productTitle = productTitle.replace(/\s+/g, '').replace(/([A-Z](?=[A-Z][a-z])|[A-Z](?=[A-Z]$))/g, '$1 ').trim();
+      }
+      
+      // Remover códigos de producto o referencias
+      productTitle = productTitle
+        .replace(/REF\.\s*\d+\/\d+\/\d+/i, '')
+        .replace(/\d{7,}/, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+    
+    return { image: imgUrl, title: productTitle };
   } catch (e) {
-    console.log('Error extrayendo imagen de Zara con cheerio:', e);
-    return null;
+    console.log('Error extrayendo información de Zara con cheerio:', e);
+    return { image: null, title: null };
   }
 }
 
