@@ -499,7 +499,13 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI)
  * Extrae información de Zara usando cheerio
  * Zara utiliza diferentes estructuras dependiendo de la región y el tipo de producto
  */
-async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<{image: string | null, title: string | null}> {
+// Interface para la respuesta del extractor de Zara
+interface ZaraExtractorResult {
+  image: string | null;
+  title: string | null;
+}
+
+async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<ZaraExtractorResult> {
   try {
     // Resultados
     let imgUrl: string | null = null;
