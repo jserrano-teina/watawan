@@ -699,6 +699,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`📋 Extrayendo metadatos de URL: ${url}`);
       
+      // Determinar qué tipo de sitio estamos visitando para depuración
+      const sitioTipo = getSiteType(url);
+      console.log(`🌐 Tipo de sitio detectado: ${sitioTipo}`);
+      
       // Registrar información del dispositivo para diagnóstico
       const userAgent = req.headers['user-agent'] || 'Unknown';
       const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
@@ -719,13 +723,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]);
       };
       
-      // Dar un máximo de 5 segundos para la extracción
+      // Dar un máximo de 8 segundos para la extracción (aumentado para sitios complejos)
       let metadata;
       try {
-        metadata = await fetchWithTimeout(5000);
+        console.log(`⏳ Iniciando extracción con timeout de 8 segundos`);
+        metadata = await fetchWithTimeout(8000);
+        console.log(`✅ Extracción completada sin timeout`);
+        
+        // Debug adicional para Nike
+        if (getSiteType(url) === 'Nike') {
+          console.log("🔍 Inspección detallada para Nike:", {
+            urlCompleta: url,
+            estiloMatch: url.match(/\/t\/[\w-]+\/(\w+(?:-\w+)?)/i),
+            ultimaParte: url.split('/').pop()
+          });
+        }
         
         // Si no hay título, usar un valor predeterminado basado en el dominio
         if (!metadata.title) {
+          console.log(`⚠️ No se pudo extraer título, usando valor predeterminado`);
           try {
             const urlObj = new URL(url);
             metadata.title = urlObj.hostname.replace(/^www\./i, '');
@@ -763,12 +779,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       metadata.price = '';
       
       // Logs y respuesta
-      console.log("Metadatos extraídos:", {
-        title: metadata.title,
-        description: metadata.description ? metadata.description.substring(0, 30) + "..." : "",
-        imageUrl: metadata.imageUrl ? "(Imagen encontrada)" : "(Sin imagen)",
+      console.log("🔍 Metadatos extraídos:", {
+        title: metadata.title || '(Sin título)',
+        description: metadata.description ? metadata.description.substring(0, 30) + "..." : "(Sin descripción)",
+        imageUrl: metadata.imageUrl ? metadata.imageUrl.substring(0, 50) + "..." : "(Sin imagen)",
         price: "(Entrada manual por el usuario)"
       });
+      
+      // Comprobar específicamente si no se pudo extraer la imagen
+      if (!metadata.imageUrl) {
+        console.log(`❌ No se pudo extraer la imagen para el sitio: ${sitioTipo}`);
+      }
       
       res.json(metadata);
     } catch (error) {
@@ -777,6 +798,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Error extracting metadata",
         error: error instanceof Error ? error.message : String(error)
       });
+    }
+    
+    // Función interna para identificar el tipo de sitio
+    function getSiteType(url: string): string {
+      const urlLower = url.toLowerCase();
+      
+      if (urlLower.includes('amazon')) return 'Amazon';
+      if (urlLower.includes('zara.com')) return 'Zara';
+      if (urlLower.includes('nike.com')) return 'Nike';
+      if (urlLower.includes('aliexpress')) return 'AliExpress';
+      if (urlLower.includes('zalando')) return 'Zalando';
+      if (urlLower.includes('elcorteingles')) return 'El Corte Inglés';
+      if (urlLower.includes('mango.com')) return 'Mango';
+      
+      // Detectar dominio
+      try {
+        const urlObj = new URL(url);
+        return urlObj.hostname.replace(/^www\./i, '');
+      } catch (e) {
+        return 'Desconocido';
+      }
     }
   });
 
