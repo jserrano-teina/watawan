@@ -719,6 +719,9 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string, d
     let bestImage: string | null = null;
     let bestScore = 0;
     
+    // Log para depuración
+    console.log(`Extrayendo mejor imagen con cheerio para dispositivo ${deviceType} en URL: ${url.substring(0, 50)}...`);
+    
     // Buscar imágenes y evaluarlas por dimensiones y atributos relevantes
     $('img').each((_, element) => {
       let score = 0;
@@ -809,28 +812,38 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string, d
     }
     
     // Asegurarse de que la URL sea absoluta
-    if (bestImage && bestImage.length > 0) {
-      try {
-        // Conversión de URL relativa a absoluta:
-        if (bestImage.indexOf('http') === 0) {
-          // Ya es una URL absoluta
-          return bestImage;
-        } else if (bestImage.indexOf('//') === 0) {
-          // URL de protocolo relativo
+    if (bestImage) {
+      const imgStr = bestImage;
+      if (imgStr.startsWith('http')) {
+        // Ya es una URL absoluta
+        return imgStr;
+      } else if (imgStr.startsWith('//')) {
+        // URL de protocolo relativo
+        try {
           const urlObj = new URL(url);
-          return `${urlObj.protocol}${bestImage}`;
-        } else if (bestImage.indexOf('/') === 0) {
-          // URL absoluta al dominio
-          const urlObj = new URL(url);
-          return `${urlObj.origin}${bestImage}`;
-        } else {
-          // URL relativa
-          const urlObj = new URL(url);
-          return `${urlObj.origin}/${bestImage}`;
+          return `${urlObj.protocol}${imgStr}`;
+        } catch (e) {
+          console.log('Error al procesar URL de protocolo relativo:', e);
+          return `https:${imgStr}`;
         }
-      } catch (e) {
-        console.log('Error convirtiendo URL relativa a absoluta:', e);
-        return bestImage; // Devolver la URL tal cual
+      } else if (imgStr.startsWith('/')) {
+        // URL absoluta al dominio
+        try {
+          const urlObj = new URL(url);
+          return `${urlObj.origin}${imgStr}`;
+        } catch (e) {
+          console.log('Error al procesar URL absoluta al dominio:', e);
+          return imgStr;
+        }
+      } else {
+        // URL relativa
+        try {
+          const urlObj = new URL(url);
+          return `${urlObj.origin}/${imgStr}`;
+        } catch (e) {
+          console.log('Error al procesar URL relativa:', e);
+          return imgStr;
+        }
       }
     }
     
