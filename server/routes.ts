@@ -697,11 +697,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      console.log(`📋 Extrayendo metadatos de URL: ${url}`);
-      
       // Determinar qué tipo de sitio estamos visitando para depuración
-      const sitioTipo = getSiteType(url);
-      console.log(`🌐 Tipo de sitio detectado: ${sitioTipo}`);
+      let tipoSitio = getSiteType(url);
+      
+      console.log(`📋 Extrayendo metadatos de URL: ${url}`);
+      console.log(`🌐 Tipo de sitio detectado: ${tipoSitio}`);
       
       // Registrar información del dispositivo para diagnóstico
       const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -731,7 +731,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`✅ Extracción completada sin timeout`);
         
         // Debug adicional para Nike
-        if (getSiteType(url) === 'Nike') {
+        if (tipoSitio === 'Nike') {
           console.log("🔍 Inspección detallada para Nike:", {
             urlCompleta: url,
             estiloMatch: url.match(/\/t\/[\w-]+\/(\w+(?:-\w+)?)/i),
@@ -779,7 +779,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       metadata.price = '';
       
       // Extraer metadatos directamente de la URL para ciertos sitios
-      console.log(`🧪 Verificando si aplicar solución específica para: ${sitioTipo}`);
+      console.log(`🧪 Verificando si aplicar solución específica para: ${tipoSitio}`);
       
       // Nike
       if (url.toLowerCase().includes('nike.com')) {
@@ -870,7 +870,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Comprobar específicamente si no se pudo extraer la imagen
       if (!metadata.imageUrl) {
-        console.log(`❌ No se pudo extraer la imagen para el sitio: ${sitioTipo}`);
+        console.log(`❌ No se pudo extraer la imagen para el sitio: ${tipoSitio}`);
       }
       
       res.json(metadata);
