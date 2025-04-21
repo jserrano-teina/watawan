@@ -1,6 +1,7 @@
 import fetch from 'node-fetch';
 import type { Response as NodeFetchResponse } from 'node-fetch';
 import * as cheerio from 'cheerio';
+import { extractMetadataWithAI } from './openai-utils';
 
 // Interfaz para los metadatos que extraemos
 export interface MetadataResult {
@@ -292,6 +293,43 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       // Si tampoco tenemos descripción, usar la de la URL
       if (!result.description) {
         result.description = urlMetadata.description;
+      }
+    }
+    
+    // Si después de intentar todos los métodos convencionales no tenemos título razonable
+    // o imagen, intentaremos usar OpenAI para extraer la información
+    const shouldUseAI = (!result.imageUrl || 
+                         !result.title || 
+                         result.title.length < 5 ||
+                         result.title.length > 200 ||
+                         // Detectar títulos genéricos como el nombre del sitio
+                         (result.title.toLowerCase().includes(new URL(url).hostname.replace('www.', ''))));
+    
+    if (shouldUseAI && process.env.OPENAI_API_KEY) {
+      console.log('ℹ️ Resultados insatisfactorios con métodos tradicionales, intentando con OpenAI...');
+      
+      try {
+        const aiMetadata = await extractMetadataWithAI(html, url);
+        
+        // Solo usar los campos que no pudimos extraer correctamente
+        if (aiMetadata.title && (!result.title || shouldUseAI)) {
+          console.log('✓ Título extraído con OpenAI:', aiMetadata.title);
+          result.title = aiMetadata.title;
+        }
+        
+        if (aiMetadata.imageUrl && !result.imageUrl) {
+          console.log('✓ Imagen extraída con OpenAI:', aiMetadata.imageUrl);
+          result.imageUrl = aiMetadata.imageUrl;
+        }
+        
+        if (aiMetadata.description && !result.description) {
+          console.log('✓ Descripción extraída con OpenAI');
+          result.description = aiMetadata.description;
+        }
+        
+        // Nota: Seguimos sin usar el precio, incluso si OpenAI lo extrae
+      } catch (error) {
+        console.error('❌ Error al usar OpenAI para extracción:', error);
       }
     }
     
