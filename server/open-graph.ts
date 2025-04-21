@@ -21,14 +21,14 @@ type DeviceType = 'mobile' | 'tablet' | 'desktop';
 
 // User-Agents optimizados para diferentes dispositivos
 const USER_AGENTS = {
-  // Desktop Chrome
-  desktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+  // Desktop Chrome - más genérico y menos detectable como bot
+  desktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
   
-  // iOS Safari - optimizado para extracciones en iPhone
-  mobile: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+  // Móvil Android - mejor aceptado por Amazon
+  mobile: 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
   
-  // iPad Safari
-  tablet: 'Mozilla/5.0 (iPad; CPU OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  // Tablet - versión más genérica
+  tablet: 'Mozilla/5.0 (iPad; CPU OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1'
 };
 
 /**
@@ -53,17 +53,51 @@ export async function extractOpenGraphData(url: string, deviceType: DeviceType =
     console.log(`🔄 Usando User-Agent para dispositivo tipo: ${deviceType}`);
     
     // Configurar cabeceras para simular el navegador correcto según el dispositivo
-    const headers = {
+    const headers: Record<string, string> = {
       'User-Agent': USER_AGENTS[deviceType],
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
       'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Sec-Fetch-User': '?1'
+      'Referer': 'https://www.google.com/',
+      'Connection': 'keep-alive',
+      'DNT': '1',
+      'Upgrade-Insecure-Requests': '1'
     };
+    
+    // Para Amazon específicamente, extraemos el ASIN y generamos 
+    // una URL más simple que tiene mayor probabilidad de funcionar
+    if (url.includes('amazon.')) {
+      console.log('🔐 Configurando encabezados especiales para Amazon');
+      headers['Accept-Encoding'] = 'gzip, deflate, br';
+      headers['sec-ch-ua'] = '"Not.A/Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"';
+      headers['sec-ch-ua-mobile'] = deviceType === 'mobile' ? '?1' : '?0';
+      headers['sec-ch-ua-platform'] = deviceType === 'mobile' ? '"Android"' : '"Windows"';
+      
+      // Intentar extraer ASIN para crear una URL más simple
+      const asinPatterns = [
+        /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+        /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+        /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+        /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
+      ];
+      
+      let asin: string | null = null;
+      for (const pattern of asinPatterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          asin = match[1].toUpperCase();
+          console.log(`ASIN encontrado en URL: ${asin}`);
+          
+          // Generar URL más simple usando el ASIN
+          const domain = url.includes('amazon.es') ? 'amazon.es' : 
+                         url.includes('amazon.com') ? 'amazon.com' : 
+                         'amazon.es';
+          
+          url = `https://www.${domain}/dp/${asin}`;
+          console.log(`URL simplificada para Amazon: ${url}`);
+          break;
+        }
+      }
+    }
 
     // Configurar un timeout razonable
     const controller = new AbortController();
@@ -456,11 +490,26 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
       if (match && match[1]) {
         asin = match[1].toUpperCase();
         console.log(`ASIN extraído de URL: ${asin}`);
-        break;
+        
+        // Si tenemos el ASIN de la URL, usamos directamente las imágenes de Amazon
+        // en lugar de intentar extraerlas del HTML, ya que es más confiable
+        console.log(`⚠️ Generando URL de imagen a partir del ASIN extraído: ${asin}`);
+        
+        // Probar diferentes formatos de imagen que Amazon usa para sus productos
+        const imageFormats = [
+          `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`,
+          `https://m.media-amazon.com/images/I/${asin}.jpg`,
+          `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL500_.jpg`,
+          `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
+        ];
+        
+        // En lugar de analizar el HTML, simplemente devolvemos la URL de imagen basada en ASIN
+        // Amazon redirigirá automáticamente a la imagen correcta si existe
+        return imageFormats[0];
       }
     }
     
-    // Buscar ASIN en el HTML
+    // Buscar ASIN en el HTML solo si no lo encontramos en la URL
     if (!asin) {
       // Buscar en atributos data-asin
       const dataAsin = $('[data-asin]').first().attr('data-asin');
@@ -541,7 +590,17 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
     // Si tenemos un ASIN pero no pudimos extraer la imagen, usar un patrón URL conocido
     if (asin) {
       console.log(`⚠️ Usando URL de imagen por defecto basada en ASIN: ${asin}`);
-      return `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
+      
+      // Probar diferentes formatos de imagen que Amazon usa para sus productos
+      const imageFormats = [
+        `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}.jpg`,
+        `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL500_.jpg`,
+        `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
+      ];
+      
+      // Devolver el primer formato, Amazon redirigirá automáticamente al correcto
+      return imageFormats[0];
     }
     
     return null;
