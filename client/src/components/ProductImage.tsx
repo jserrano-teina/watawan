@@ -92,7 +92,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'adidas.com': 'SiAdidas',
       'hm.com': 'SiHm',
       'mango.com': 'SiMango',
-      'pullandbear.com': 'SiZara', // Inditex
+      'pullandbear.com': 'SiBunq', // Uso un logo para Pull&Bear
       'bershka.com': 'SiZara', // Inditex
       'massimodutti.com': 'SiZara', // Inditex
       'stradivarius.com': 'SiZara', // Inditex
@@ -121,23 +121,27 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'ea.com': 'SiEa',
       
       // Grandes superficies (España)
-      'fnac.es': 'SiApple', // No hay icono de Fnac en react-icons
-      'fnac.com': 'SiApple', // No hay icono de Fnac en react-icons
+      'fnac.es': 'SiBooking', // Uso un logo similar para Fnac
+      'fnac.com': 'SiBooking', // Uso un logo similar para Fnac
       'mediamarkt.es': 'SiMediamarkt',
-      'elcorteingles.es': 'SiApple', // No hay icono de El Corte Inglés
-      'carrefour.es': 'SiShopify', // No hay icono de Carrefour
+      'elcorteingles.es': 'SiShopify', // Uso logo genérico para El Corte Inglés
+      'elcorteingles.com': 'SiShopify', // Uso logo genérico para El Corte Inglés
+      'carrefour.es': 'SiAtlassian', // Uso un logo azul para Carrefour
+      'carrefour.com': 'SiAtlassian', // Uso un logo azul para Carrefour
       'alcampo.es': 'SiShopify', // No hay icono de Alcampo
       'lidl.es': 'SiShopify', // No hay icono de Lidl
       'dia.es': 'SiShopify', // No hay icono de DIA
       
       // Tecnología (España)
-      'pccomponentes.com': 'SiIntel', // No hay icono de PcComponentes
+      'pccomponentes.com': 'SiGithub', // Uso un logo circular para PC Componentes
       'coolmod.com': 'SiIntel',
       'ldlc.com': 'SiIntel',
+      'miravia.es': 'SiShopify', // Logo para Miravia
       
       // Hogar y deporte
       'ikea.com': 'SiIkea',
-      'decathlon.es': 'SiAdidas', // No hay icono de Decathlon
+      'decathlon.es': 'SiWebpack', // Uso un logo azul para Decathlon
+      'decathlon.com': 'SiWebpack', // Uso un logo azul para Decathlon
       'leroy.com': 'SiShopify', // No hay icono de Leroy Merlin
       'leroymerlin.es': 'SiShopify',
 
