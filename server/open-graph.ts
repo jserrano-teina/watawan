@@ -492,24 +492,78 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI)
 }
 
 /**
- * Extrae imagen de Zara usando cheerio
+ * Extrae información de Zara usando cheerio
+ * Zara utiliza diferentes estructuras dependiendo de la región y el tipo de producto
  */
 async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
   try {
-    // Buscar en la estructura JSON en los scripts
+    // Resultado
     let imgUrl: string | null = null;
     
-    // 1. Buscar en scripts que contengan información del producto
+    console.log('🔍 Analizando página de Zara...');
+    
+    // ESTRATEGIA 1: Extraer datos de la aplicación React de Zara
+    // Zara suele almacenar sus datos en un objeto llamado __INITIAL_STATE__ o PRELOADED_STATE
     $('script:not([src])').each((_, element) => {
-      const content = $(element).html();
-      if (!content) return;
+      const content = $(element).html() || '';
       
-      if (content.includes('"image"') || content.includes('"images"')) {
+      // Buscar el estado inicial de la aplicación React
+      if (content.includes('__INITIAL_STATE__') || content.includes('PRELOADED_STATE')) {
         try {
-          // Buscar patrones como "image": ["https://..."] o "images": ["https://..."]
-          const imgMatch = content.match(/"image(?:s)?":\s*\[\s*"([^"]+?)"/i);
+          // Extraer el JSON del estado (usamos [\s\S] en lugar de /s para compatibilidad)
+          const stateMatch = content.match(/(__INITIAL_STATE__|PRELOADED_STATE)\s*=\s*({[\s\S]+?});/);
+          
+          if (stateMatch && stateMatch[2]) {
+            try {
+              // Intentar parsear el JSON
+              const state = JSON.parse(stateMatch[2]);
+              
+              // Buscar la información del producto en varias estructuras posibles
+              if (state.product && state.product.detail && state.product.detail.colors) {
+                const colors = state.product.detail.colors;
+                // Buscar la primera imagen disponible
+                for (const color of colors) {
+                  if (color.xmedia && color.xmedia.length > 0) {
+                    const xmedia = color.xmedia[0];
+                    if (xmedia.path) {
+                      // Construir la URL de la imagen
+                      imgUrl = `https://static.zara.net/photos/${xmedia.path}/w/1920/${xmedia.name}.jpg`;
+                      console.log('✓ Imagen extraída del estado React (xmedia)');
+                      return false; // Break the each loop
+                    }
+                  }
+                }
+              }
+              
+              // Otra estructura común
+              if (state.productData && state.productData.images) {
+                const images = state.productData.images;
+                if (images.length > 0 && images[0].url) {
+                  imgUrl = images[0].url;
+                  console.log('✓ Imagen extraída del estado React (productData)');
+                  return false; // Break the each loop
+                }
+              }
+            } catch (e) {
+              console.log('Error al parsear JSON del estado:', e);
+            }
+          }
+        } catch (e) {
+          // Continuar con la siguiente iteración
+        }
+      }
+      
+      // Buscar datos en formato JSON en otros scripts
+      if (content.includes('"image"') || content.includes('"images"') || content.includes('"media"')) {
+        try {
+          // Intentar encontrar patrones de datos JSON dentro del script
+          // Patrón para array de imágenes
+          const imgMatch = content.match(/"image(?:s)?":\s*\[\s*"([^"]+?)"/i) || 
+                           content.match(/"media":\s*\[\s*{[^}]*"url":\s*"([^"]+?)"/i);
+                           
           if (imgMatch && imgMatch[1]) {
             imgUrl = imgMatch[1];
+            console.log('✓ Imagen extraída de datos JSON en script');
             return false; // Break the each loop
           }
         } catch (e) {
@@ -518,50 +572,113 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
       }
     });
     
-    // 2. Buscar imágenes con estructuras típicas de Zara
+    // ESTRATEGIA 2: Buscar en nodos específicos comunes de Zara
     if (!imgUrl) {
-      const productImage = $('img[data-path]').attr('src') || 
-                           $('.media-image img').attr('src') ||
-                           $('.product-detail-images img').first().attr('src');
+      // Nodos de imágenes específicos de Zara
+      const zaraSelectors = [
+        'img[data-path]', 
+        '.media-image img', 
+        '.product-detail-images img',
+        '.product-images img', 
+        '.product-image-item img',
+        '.product-image img',
+        'picture source',
+        '.product__image img',
+        '.image-item img',
+        '.product-media img'
+      ];
       
-      if (productImage) {
-        imgUrl = productImage;
-      }
-    }
-    
-    // 3. Cualquier imagen grande en la página
-    if (!imgUrl) {
-      $('img').each((_, element) => {
-        const src = $(element).attr('src');
-        const width = parseInt($(element).attr('width') || '0', 10);
-        const height = parseInt($(element).attr('height') || '0', 10);
+      for (const selector of zaraSelectors) {
+        const img = $(selector).first();
+        const src = img.attr('src') || img.attr('srcset')?.split(' ')[0] || img.attr('data-src');
         
-        if (src && 
-            (width > 300 || height > 300) && 
-            !src.includes('icon') && 
-            !src.includes('logo') &&
-            (src.includes('.jpg') || src.includes('.jpeg') || src.includes('.png'))) {
+        if (src && !src.includes('icon') && !src.includes('logo')) {
           imgUrl = src;
-          return false; // Break the each loop
-        }
-      });
-    }
-    
-    // 4. Extraer del código de producto si está en la URL
-    if (!imgUrl) {
-      const productCodeMatch = url.match(/[p]([0-9]+)\.html/i);
-      if (productCodeMatch && productCodeMatch[1]) {
-        const productId = productCodeMatch[1];
-        
-        if (productId.length >= 7) {
-          const productCategory = productId.substring(0, 2);
-          const productSubcategory = productId.substring(2, 4);
-          const specificCode = productId.substring(4);
-          
-          // Patrón para productos actuales
-          imgUrl = `https://static.zara.net/photos//2024/V/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`;
+          console.log(`✓ Imagen extraída de selector CSS: ${selector}`);
+          break;
         }
       }
+    }
+    
+    // ESTRATEGIA 3: Reconstruir URLs a partir del ID del producto
+    // Las URLs de Zara siguen ciertos patrones predecibles
+    if (!imgUrl) {
+      // Diferentes patrones de URL que podemos encontrar
+      const patterns = [
+        // Patrón moderno: /p12345678.html
+        /[\/p]([0-9]{7,10})(?:\.html|\?v1=|$)/i,
+        // Patrón alternativo: /-p123/
+        /\/-p([0-9]{7,10})(?:\/|$)/i,
+        // Patrón antiguo: /product/123/
+        /\/product\/([0-9]{7,10})(?:\/|$)/i
+      ];
+      
+      let productId = null;
+      
+      // Buscar el ID del producto en la URL
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          productId = match[1];
+          console.log(`✓ ID de producto extraído de URL: ${productId}`);
+          break;
+        }
+      }
+      
+      // Buscar el ID en el HTML si no está en la URL
+      if (!productId) {
+        const metaProductId = $('meta[property="product:id"]').attr('content') || 
+                              $('meta[name="productId"]').attr('content');
+        if (metaProductId) {
+          productId = metaProductId;
+          console.log(`✓ ID de producto extraído de meta tags: ${productId}`);
+        }
+      }
+      
+      // Buscar en atributos data-
+      if (!productId) {
+        const dataAttr = $('[data-productid]').attr('data-productid') || 
+                         $('[data-item-id]').attr('data-item-id');
+        if (dataAttr) {
+          productId = dataAttr;
+          console.log(`✓ ID de producto extraído de atributo data-: ${productId}`);
+        }
+      }
+      
+      // Reconstruir la URL de la imagen a partir del ID del producto
+      if (productId && productId.length >= 7) {
+        // Zara organiza sus imágenes según temporada, categoría y producto
+        // Vamos a intentar varios patrones comunes
+        
+        // Patrón 2024, versión primavera/verano
+        const season = "2024/V"; // Primavera/Verano 2024
+        
+        // Extraer categorías del ID (los primeros dígitos indican categoría)
+        const productCategory = productId.substring(0, 2);
+        const productSubcategory = productId.substring(2, 4);
+        const specificCode = productId.substring(4);
+        
+        // Construir varias posibles URLs (Zara cambia la estructura periódicamente)
+        const possibleUrls = [
+          // Formato actual (Mayo 2024)
+          `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/750/${productId}_1_1_1.jpg`,
+          // Formato alternativo
+          `https://static.zara.net/photos//${season}/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`,
+          // Formato anterior
+          `https://static.zara.net/photos//${season}/0/1/p/${productId}/2/w/750/${productId}_1_1_1.jpg`,
+          // Formato simplificado
+          `https://static.zara.net/photos//${season}/0/1/p/${productId}_1_1_1.jpg`,
+        ];
+        
+        // Retornar la primera URL posible (no podemos verificar cuál existe sin hacer múltiples peticiones)
+        imgUrl = possibleUrls[0];
+        console.log('✓ Imagen reconstruida a partir del ID de producto');
+      }
+    }
+    
+    // Verificar si la URL necesita el esquema añadido
+    if (imgUrl && imgUrl.startsWith('//')) {
+      imgUrl = 'https:' + imgUrl;
     }
     
     return imgUrl;
@@ -573,28 +690,109 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
 
 /**
  * Extrae imagen de AliExpress usando cheerio
+ * AliExpress utiliza diferentes estructuras según la región y versión del sitio
  */
 async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise<string | null> {
   try {
-    // 1. Buscar en estructuras de datos JSON en scripts
+    // Resultado
     let imgUrl: string | null = null;
     
-    // Buscar en scripts que contengan información del producto
+    console.log('🔍 Analizando página de AliExpress...');
+    
+    // ESTRATEGIA 1: Buscar en variables globales y scripts de datos
+    // AliExpress suele almacenar datos de productos en variables JS globales
     $('script:not([src])').each((_, element) => {
-      const content = $(element).html();
-      if (!content) return;
+      const content = $(element).html() || '';
       
-      // Buscar patrones comunes en AliExpress
-      if (content.includes('"imageUrl"') || content.includes('"imageModule"')) {
+      // Buscar patrones específicos de la aplicación de AliExpress
+      if (content.includes('window.runParams') || 
+          content.includes('data:') || 
+          content.includes('imageModule')) {
         try {
-          // Buscar patrones para imágenes en la estructura de datos
-          const imgMatch = content.match(/"imageUrl"\s*:\s*"([^"]+?)"/i) || 
-                          content.match(/"image_url"\s*:\s*"([^"]+?)"/i) ||
-                          content.match(/"mainImage"\s*:\s*"([^"]+?)"/i);
-          
+          // Patrones específicos de imágenes en AliExpress
+          // 1. Patrón para el módulo de imágenes principal
+          let imgMatch = content.match(/imageModule['"]\s*:.*?['"](https:\/\/.*?(?:\.jpg|\.png|\.jpeg))['"](?:[\s,}]|$)/i);
           if (imgMatch && imgMatch[1]) {
             imgUrl = imgMatch[1];
+            console.log('✓ Imagen extraída del módulo de imágenes principal');
             return false; // Break the each loop
+          }
+          
+          // 2. Patrón para la gallería de imágenes
+          imgMatch = content.match(/imagePathList['"]?\s*:\s*\[\s*['"]([^'"]+?)['"](?:\s*,|\s*\])/i);
+          if (imgMatch && imgMatch[1]) {
+            // A menudo estas URLs son relativas o necesitan el dominio
+            let extractedUrl = imgMatch[1];
+            if (extractedUrl.startsWith('//')) {
+              extractedUrl = 'https:' + extractedUrl;
+            }
+            imgUrl = extractedUrl;
+            console.log('✓ Imagen extraída de la galería de imágenes');
+            return false;
+          }
+          
+          // 3. Patrón para datos estructurados en JSON
+          // Buscar un bloque JSON y analizarlo
+          const jsonBlocks = content.match(/({(?:(?:"(?:\\.|[^"\\])*"|[^{}])|({(?:(?:"(?:\\.|[^"\\])*"|[^{}])|({[^{}]*})|.)*}))*})/g);
+          if (jsonBlocks) {
+            for (const jsonBlock of jsonBlocks) {
+              try {
+                if (jsonBlock.includes('image') || jsonBlock.includes('url')) {
+                  const jsonData = JSON.parse(jsonBlock);
+                  
+                  // Buscar en varias estructuras de datos posibles
+                  if (jsonData.imageUrl) {
+                    imgUrl = jsonData.imageUrl;
+                    console.log('✓ Imagen extraída de JSON (imageUrl)');
+                    return false;
+                  } else if (jsonData.image_url) {
+                    imgUrl = jsonData.image_url;
+                    console.log('✓ Imagen extraída de JSON (image_url)');
+                    return false;
+                  } else if (jsonData.mainImage) {
+                    imgUrl = jsonData.mainImage;
+                    console.log('✓ Imagen extraída de JSON (mainImage)');
+                    return false;
+                  } else if (jsonData.images && jsonData.images.length > 0) {
+                    imgUrl = jsonData.images[0];
+                    console.log('✓ Imagen extraída de JSON (images array)');
+                    return false;
+                  } else if (jsonData.imageModule && jsonData.imageModule.imagePathList && jsonData.imageModule.imagePathList.length > 0) {
+                    imgUrl = jsonData.imageModule.imagePathList[0];
+                    console.log('✓ Imagen extraída de JSON (imageModule)');
+                    return false;
+                  }
+                }
+              } catch (e) {
+                // Continue con el siguiente bloque JSON
+              }
+            }
+          }
+          
+          // 4. Búsqueda directa de URLs de imágenes de AliExpress
+          const urlMatches = content.match(/https:\/\/ae01\.alicdn\.com\/kf\/[^"']+?(?:\.jpg|\.png|\.jpeg)/g);
+          if (urlMatches && urlMatches.length > 0) {
+            // Filtrar y seleccionar la mejor imagen (normalmente las más grandes)
+            const validImages = urlMatches.filter(url => 
+              !url.includes('50x50') && 
+              !url.includes('32x32') && 
+              !url.includes('16x16') && 
+              !url.includes('thumbnail') &&
+              !url.includes('icon')
+            );
+            
+            if (validImages.length > 0) {
+              // Preferir imágenes con resoluciones altas
+              const highResImage = validImages.find(url => 
+                url.includes('1000x1000') || 
+                url.includes('800x800') || 
+                url.includes('640x640')
+              );
+              
+              imgUrl = highResImage || validImages[0];
+              console.log('✓ Imagen extraída de URL directa en script');
+              return false;
+            }
           }
         } catch (e) {
           // Continuar con la siguiente iteración
@@ -602,31 +800,75 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
       }
     });
     
-    // 2. Buscar en elementos DOM comunes para AliExpress
+    // ESTRATEGIA 2: Buscar en elementos específicos del DOM
     if (!imgUrl) {
-      imgUrl = $('.gallery-preview-panel img').first().attr('src') || 
-              $('.product-image img').first().attr('src') ||
-              $('.magnifier-image').attr('src');
-    }
-    
-    // 3. Buscar elementos específicos de la nueva interfaz
-    if (!imgUrl) {
-      // Intentar con atributos data-src que son comunes en lazy loading
-      const lazyImg = $('img[data-src*="ae01.alicdn.com"]').first().attr('data-src');
-      if (lazyImg) {
-        imgUrl = lazyImg;
+      // Selectores específicos de AliExpress (diferentes versiones del sitio)
+      const aliexpressSelectors = [
+        // Nueva versión del sitio
+        '.img-view-item img',
+        '.images-view-item img', 
+        '.product-main-image img',
+        // Versión clásica
+        '.magnifier-image',
+        '.gallery-preview-panel img',
+        // Versiones móviles y responsive
+        '.product-image img',
+        '.product-gallery img',
+        // Otros selectores comunes
+        '.detail-gallery-image',
+        '.pdp-image',
+        '[data-role="product-image"] img'
+      ];
+      
+      for (const selector of aliexpressSelectors) {
+        const img = $(selector).first();
+        let src = img.attr('src') || 
+                 img.attr('data-src') || 
+                 img.attr('data-lazy-src') || 
+                 img.attr('data-lazy') ||
+                 img.attr('data-image');
+        
+        if (src) {
+          // Asegurarse de que la URL tenga el protocolo
+          if (src.startsWith('//')) {
+            src = 'https:' + src;
+          }
+          
+          if (src.includes('alicdn') && !src.includes('icon') && !src.includes('logo')) {
+            imgUrl = src;
+            console.log(`✓ Imagen extraída de selector CSS: ${selector}`);
+            break;
+          }
+        }
       }
     }
     
-    // 4. Buscar imágenes con fuentes de AliExpress (dominio ae01.alicdn.com)
+    // ESTRATEGIA 3: Buscar imágenes con el dominio de AliExpress
     if (!imgUrl) {
+      // Buscar cualquier imagen del dominio ae01.alicdn.com que parezca ser de producto
       $('img').each((_, element) => {
-        const src = $(element).attr('src');
+        const img = $(element);
+        const src = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
         
-        if (src && src.includes('ae01.alicdn.com') && 
-            !src.includes('icon') && !src.includes('logo')) {
-          imgUrl = src;
-          return false; // Break the each loop
+        if (src) {
+          // Comprobar si es una imagen de AliExpress y no es un icono
+          if (src.indexOf('ae01.alicdn.com') >= 0 && 
+              src.indexOf('icon') === -1 && 
+              src.indexOf('logo') === -1 && 
+              src.indexOf('16x16') === -1 && 
+              src.indexOf('32x32') === -1) {
+            
+            // Verificar si es una imagen de tamaño razonable
+            const width = parseInt(img.attr('width') || '0', 10);
+            const height = parseInt(img.attr('height') || '0', 10);
+            
+            // Si tiene dimensiones y son razonables
+            if ((width === 0 && height === 0) || (width > 100 || height > 100)) {
+              imgUrl = src.indexOf('//') === 0 ? 'https:' + src : src;
+              console.log('✓ Imagen de AliExpress encontrada en DOM general');
+              return false; // Break the each loop
+            }
+          }
         }
       });
     }
@@ -651,16 +893,16 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
     $('img').each((_, element) => {
       let score = 0;
       const img = $(element);
-      const src = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
+      const src: string | undefined = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
       
       if (!src) return;
       
       // Filtrar imágenes pequeñas, iconos y placeholder
-      if (src.includes('blank.') || 
-          src.includes('placeholder') || 
-          src.includes('loading') ||
-          src.includes('icon') || 
-          src.includes('logo')) {
+      if (src.indexOf('blank.') >= 0 || 
+          src.indexOf('placeholder') >= 0 || 
+          src.indexOf('loading') >= 0 ||
+          src.indexOf('icon') >= 0 || 
+          src.indexOf('logo') >= 0) {
         return;
       }
       
@@ -719,17 +961,17 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
     // Si no encontramos ninguna imagen con buena puntuación, buscar cualquier imagen grande
     if (!bestImage || bestScore < 20) {
       $('img').each((_, element) => {
-        const src = $(element).attr('src');
+        const src: string | undefined = $(element).attr('src');
         const width = parseInt($(element).attr('width') || '0', 10);
         const height = parseInt($(element).attr('height') || '0', 10);
         
         if (src && 
             (width > 200 || height > 200) && 
-            !src.includes('blank.') && 
-            !src.includes('placeholder') && 
-            !src.includes('loading') && 
-            !src.includes('icon') && 
-            !src.includes('logo')) {
+            src.indexOf('blank.') === -1 && 
+            src.indexOf('placeholder') === -1 && 
+            src.indexOf('loading') === -1 && 
+            src.indexOf('icon') === -1 && 
+            src.indexOf('logo') === -1) {
           bestImage = src;
           return false; // Break the each loop
         }
@@ -739,22 +981,33 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
     // Asegurarse de que la URL sea absoluta
     if (bestImage) {
       try {
-        if (bestImage.startsWith('http')) {
-          // Ya es una URL absoluta
-          return bestImage;
-        } else if (bestImage.startsWith('//')) {
-          // URL de protocolo relativo
-          const urlObj = new URL(url);
-          return urlObj.protocol + bestImage;
-        } else if (bestImage.startsWith('/')) {
-          // URL absoluta al dominio
-          const urlObj = new URL(url);
-          return urlObj.origin + bestImage;
-        } else {
-          // URL relativa
-          const urlObj = new URL(url);
-          return urlObj.origin + '/' + bestImage;
-        }
+        // Es necesario convertir las rutas relativas a absolutas
+        const makeAbsoluteUrl = (relativeUrl: string): string => {
+          try {
+            if (relativeUrl.indexOf('http') === 0) {
+              // Ya es absoluta
+              return relativeUrl;
+            }
+            
+            const baseUrl = new URL(url);
+            
+            if (relativeUrl.indexOf('//') === 0) {
+              // URL protocolo-relativa
+              return baseUrl.protocol + relativeUrl;
+            } else if (relativeUrl.indexOf('/') === 0) {
+              // URL absoluta al dominio
+              return baseUrl.origin + relativeUrl;
+            } else {
+              // URL relativa
+              return baseUrl.origin + '/' + relativeUrl;
+            }
+          } catch (err) {
+            console.log('Error al convertir URL relativa a absoluta:', err);
+            return relativeUrl;
+          }
+        };
+        
+        return makeAbsoluteUrl(bestImage);
       } catch (e) {
         console.log('Error convirtiendo URL relativa a absoluta:', e);
         return bestImage; // Devolver la URL tal cual
