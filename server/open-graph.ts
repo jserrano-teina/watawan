@@ -6,12 +6,15 @@ export interface MetadataResult {
   title: string;
   description: string;
   imageUrl: string;
-  price: string;
+  price: string; // Siempre vacío según nuevas especificaciones
 }
 
 /**
  * Extrae metadatos básicos de una URL utilizando Open Graph
- * Esta es una versión inicial simplificada para reemplazar el sistema de scraping anterior
+ * Versión actualizada conforme a nuevas especificaciones: 
+ * - Solo completar automáticamente imagen y título
+ * - Nunca completar el precio (será ingresado por el usuario)
+ * - Usar exclusivamente Open Graph para la extracción
  */
 export async function extractOpenGraphData(url: string): Promise<MetadataResult> {
   console.log(`🔍 Extrayendo metadatos Open Graph para: ${url}`);
@@ -20,7 +23,7 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     title: '',
     description: '',
     imageUrl: '',
-    price: ''
+    price: '' // Siempre vacío por especificación
   };
   
   try {
@@ -90,27 +93,9 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       result.imageUrl = metaImageMatch[1].trim();
     }
     
-    // Precio: Buscamos en datos estructurados
-    // Método 1: Schema.org Product - Usamos una expresión regular compatible con las versiones anteriores de ES
-    const schemaOrgPattern = new RegExp('<script[^>]*type=["\'](application/ld\\+json)["\'][^>]*>([\\s\\S]*?)</script>', 'i');
-    const schemaOrgMatch = html.match(schemaOrgPattern);
-    if (schemaOrgMatch && schemaOrgMatch[2]) { // El contenido JSON está en el segundo grupo de captura
-      try {
-        const jsonData = JSON.parse(schemaOrgMatch[2]);
-        
-        // Buscar precio en formato JSON-LD
-        if (jsonData && jsonData['@type'] === 'Product' && jsonData.offers && jsonData.offers.price) {
-          result.price = jsonData.offers.price.toString();
-        } else if (Array.isArray(jsonData) && jsonData[0] && jsonData[0]['@type'] === 'Product') {
-          // A veces viene como array
-          if (jsonData[0].offers && jsonData[0].offers.price) {
-            result.price = jsonData[0].offers.price.toString();
-          }
-        }
-      } catch (e) {
-        console.log('Error al parsear datos estructurados:', e);
-      }
-    }
+    // Ya no buscamos precio - el usuario lo introducirá manualmente
+    // El precio siempre queda vacío
+    result.price = '';
     
     // Si el título contiene entidades HTML, las limpiamos
     if (result.title) {
@@ -124,7 +109,7 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       title: result.title,
       description: result.description ? result.description.substring(0, 30) + '...' : '',
       imageUrl: result.imageUrl ? '(Imagen encontrada)' : '(Sin imagen)',
-      price: result.price || '(Sin precio)'
+      price: '(Entrada manual por el usuario)'
     });
     
     return result;

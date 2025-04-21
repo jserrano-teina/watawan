@@ -697,7 +697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      console.log(`Extrayendo metadatos de URL: ${url}`);
+      console.log(`📋 Extrayendo metadatos de URL: ${url}`);
       
       // Registrar información del dispositivo para diagnóstico
       const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -743,7 +743,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Valores por defecto en caso de timeout
         metadata = { 
           imageUrl: "", 
-          price: "", 
+          price: "", // Siempre vacío según la nueva especificación
           title: "", 
           description: "" 
         };
@@ -758,12 +758,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
+      // IMPORTANTE: Asegurarse de que el precio SIEMPRE sea una cadena vacía (no null o undefined)
+      // según la nueva especificación, ya que el precio lo introducirá manualmente el usuario
+      metadata.price = '';
+      
       // Logs y respuesta
       console.log("Metadatos extraídos:", {
         title: metadata.title,
         description: metadata.description ? metadata.description.substring(0, 30) + "..." : "",
         imageUrl: metadata.imageUrl ? "(Imagen encontrada)" : "(Sin imagen)",
-        price: metadata.price || "(Sin precio)"
+        price: "(Entrada manual por el usuario)"
       });
       
       res.json(metadata);
