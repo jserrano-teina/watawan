@@ -411,6 +411,71 @@ function cleanTextContent(text: string): string {
 }
 
 /**
+ * Extrae título de Amazon usando cheerio - especialmente para dispositivos móviles
+ */
+async function extractAmazonTitleWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
+  try {
+    // Patrones para extraer título de Amazon - priorizados por calidad
+    
+    // 1. El selector más confiable es #productTitle
+    const productTitle = $('#productTitle').text().trim();
+    if (productTitle) {
+      console.log('✓ Título encontrado en #productTitle:', productTitle);
+      return productTitle;
+    }
+    
+    // 2. Amazon Mobile usa una estructura diferente
+    const mobileTitle = $('#title').text().trim();
+    if (mobileTitle) {
+      console.log('✓ Título encontrado en #title (mobile):', mobileTitle);
+      return mobileTitle;
+    }
+    
+    // 3. Buscar en los metadatos específicos
+    const titleMetaContent = $('meta[name="title"]').attr('content');
+    if (titleMetaContent && !titleMetaContent.includes('amazon.es') && !titleMetaContent.includes('Amazon.com')) {
+      console.log('✓ Título encontrado en meta name="title":', titleMetaContent);
+      return titleMetaContent;
+    }
+    
+    // 4. Buscar en microdata de Schema.org
+    const microdataName = $('[itemtype="http://schema.org/Product"] [itemprop="name"]').text().trim();
+    if (microdataName) {
+      console.log('✓ Título encontrado en microdata:', microdataName);
+      return microdataName;
+    }
+    
+    // 5. Buscar en JSON-LD
+    const scriptTags = $('script[type="application/ld+json"]');
+    let jsonLdTitle = null;
+    
+    scriptTags.each((i, script) => {
+      try {
+        const jsonContent = $(script).html();
+        if (jsonContent) {
+          const parsedJson = JSON.parse(jsonContent);
+          if (parsedJson.name && !jsonLdTitle) {
+            jsonLdTitle = parsedJson.name;
+          }
+        }
+      } catch (e) {
+        // Ignorar errores de parsing JSON
+      }
+    });
+    
+    if (jsonLdTitle) {
+      console.log('✓ Título encontrado en JSON-LD:', jsonLdTitle);
+      return jsonLdTitle;
+    }
+    
+    return null;
+  } catch (e) {
+    console.log('Error extrayendo título de Amazon con cheerio:', e);
+    return null;
+  }
+}
+
+/**
  * Extrae imagen de Amazon usando cheerio
  */
 async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
