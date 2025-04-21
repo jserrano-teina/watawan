@@ -1341,88 +1341,162 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
 // Función para extraer el título de productos de Amazon
 async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: string): Promise<string | undefined> {
   try {
-    let productHtml = html;
-    
-    // Usar User-Agent del cliente o uno aleatorio
-    const userAgent = clientUserAgent || getRandomUserAgent();
-    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
-    debug(`extractAmazonTitle: usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'}: ${userAgent}`);
-    
-    // Si no tenemos HTML, intentamos obtenerlo
-    if (!productHtml) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
-        
-        const response = await fetchWithCorrectTypes(url, {
-          headers: {
-            'User-Agent': userAgent, // Usamos el User-Agent del cliente para consistencia
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-            'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-            'Cache-Control': 'no-cache',
-            'Pragma': 'no-cache',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1'
-          },
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (response.ok) {
-          productHtml = await response.text();
-          debug(`HTML obtenido para extracción de título de Amazon: ${productHtml.length} bytes`);
-        }
-      } catch (error) {
-        debug(`Error obteniendo HTML para título de Amazon: ${error}`);
-      }
-    }
-    
     // URLs específicas conocidas para productos de Amazon
     if (url.includes('B0CJKTWTVT') || url.includes('fire-tv-stick-4k')) {
       debug(`Detectado Amazon Fire TV Stick, usando título conocido`);
       return "Amazon Fire TV Stick 4K (Última generación), Dispositivo de streaming compatible con Wi-Fi 6, Dolby Vision, Dolby Atmos y HDR10+";
     }
     
-    if (!productHtml) return undefined;
-    
-    // Patrones para extraer el título de Amazon
-    const titlePatterns = [
-      /<span[^>]*id=["']productTitle["'][^>]*>(.*?)<\/span>/i,
-      /<meta[^>]*property=["']og:title["'][^>]*content=["'](.*?)["']/i,
-      /<meta[^>]*name=["']title["'][^>]*content=["'](.*?)["']/i,
-      /"product":\s*{[^}]*"name":\s*"([^"]+)"/i,
-      /<title>(.*?)([-–|:].*)?<\/title>/i,
-      /<div[^>]*class=["'].*?product-title.*?["'][^>]*>(.*?)<\/div>/i
-    ];
-    
-    for (const pattern of titlePatterns) {
-      const match = productHtml.match(pattern);
-      if (match && match[1]) {
-        // Limpiar el título de HTML y entidades
-        let title = match[1]
-          .replace(/&nbsp;/g, ' ')
-          .replace(/&amp;/g, '&')
-          .replace(/&quot;/g, '"')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&#\d+;/g, '')
-          .trim();
-        
-        // En algunos casos el título viene con "Amazon.com:" al principio
-        title = title.replace(/^Amazon\.com\s*:\s*/i, '');
-        
-        debug(`Título extraído de Amazon: ${title}`);
-        return title;
+    // Si tenemos HTML, intentamos extraer el título directamente
+    if (html) {
+      debug(`Analizando HTML existente para extraer título de Amazon`);
+      
+      // Patrones para extraer el título de Amazon
+      const titlePatterns = [
+        /<span[^>]*id=["']productTitle["'][^>]*>(.*?)<\/span>/i,
+        /<meta[^>]*property=["']og:title["'][^>]*content=["'](.*?)["']/i,
+        /<meta[^>]*name=["']title["'][^>]*content=["'](.*?)["']/i,
+        /"product":\s*{[^}]*"name":\s*"([^"]+)"/i,
+        /<title>(.*?)([-–|:].*)?<\/title>/i,
+        /<div[^>]*class=["'].*?product-title.*?["'][^>]*>(.*?)<\/div>/i
+      ];
+      
+      for (const pattern of titlePatterns) {
+        const match = html.match(pattern);
+        if (match && match[1]) {
+          // Limpiar el título de HTML y entidades
+          let title = match[1]
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&#\d+;/g, '')
+            .trim();
+          
+          // En algunos casos el título viene con "Amazon.com:" al principio
+          title = title.replace(/^Amazon\.com\s*:\s*/i, '');
+          
+          debug(`Título extraído de HTML de Amazon: ${title}`);
+          return title;
+        }
       }
+    }
+    
+    // IMPLEMENTAR ESTRATEGIA DE EXTRACCIÓN BASADA EN LA URL
+    // Las URLs de Amazon siguen patrones predecibles de los que podemos extraer información
+    
+    try {
+      // Extraer el código ASIN (ID del producto en Amazon)
+      const asinMatch = url.match(/\/([A-Z0-9]{10})(\?|\/|$)/);
+      const asin = asinMatch ? asinMatch[1] : null;
+      
+      if (asin) {
+        debug(`ASIN encontrado en URL de Amazon: ${asin}`);
+        
+        // Extraer información del slug en la URL
+        const titleFromSlug = extractTitleFromAmazonURL(url);
+        if (titleFromSlug) {
+          debug(`Título extraído de URL de Amazon: ${titleFromSlug}`);
+          return titleFromSlug;
+        }
+      }
+      
+      // Si no podemos extraer de la URL, intentar extraer del pathname
+      const urlObj = new URL(url);
+      const pathSegments = urlObj.pathname.split('/').filter(segment => segment && !segment.match(/^(dp|gp|product)$/i));
+      
+      // El slug descriptivo suele estar antes del ASIN
+      if (pathSegments.length > 1) {
+        let slugIndex = -1;
+        for (let i = 0; i < pathSegments.length; i++) {
+          if (pathSegments[i].match(/^[A-Z0-9]{10}$/)) {
+            slugIndex = i - 1;
+            break;
+          }
+        }
+        
+        if (slugIndex >= 0 && pathSegments[slugIndex]) {
+          const slug = pathSegments[slugIndex];
+          if (slug.length > 5 && !slug.match(/^(dp|gp|product)$/i)) {
+            const titleFromSlug = slug
+              .replace(/-/g, ' ')
+              .replace(/\b\w/g, c => c.toUpperCase())
+              .trim();
+            
+            debug(`Título extraído del slug de URL de Amazon: ${titleFromSlug}`);
+            return titleFromSlug;
+          }
+        }
+      }
+    } catch (error) {
+      debug(`Error extrayendo información de la URL de Amazon: ${error}`);
+    }
+    
+    // Si nada funciona, extraer algo útil del pathname
+    try {
+      const urlObj = new URL(url);
+      const path = urlObj.pathname;
+      
+      // Buscar partes descriptivas en el path
+      const descriptiveParts = path.split('/')
+        .filter(part => part.length > 5 && part.includes('-'))
+        .map(part => part.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase()).trim());
+      
+      if (descriptiveParts.length > 0) {
+        // Usar la parte más larga como probable título
+        const bestTitle = descriptiveParts.reduce((a, b) => a.length > b.length ? a : b);
+        debug(`Título extraído de partes descriptivas de URL Amazon: ${bestTitle}`);
+        return bestTitle;
+      }
+    } catch (error) {
+      debug(`Error extrayendo título de pathname Amazon: ${error}`);
     }
     
     return undefined;
   } catch (error) {
     console.error("Error extrayendo título de Amazon:", error);
     return undefined;
+  }
+}
+
+// Función auxiliar para extraer título de URL de Amazon
+function extractTitleFromAmazonURL(url: string): string | null {
+  // Las URLs de Amazon suelen tener un formato como:
+  // https://www.amazon.es/Nombre-Del-Producto-Algunas-Caracteristicas/dp/B0ABCDE123/
+  try {
+    const urlObj = new URL(url);
+    const path = urlObj.pathname;
+    
+    // Ignorar URLs que no siguen el patrón estándar
+    if (!path.includes('/dp/') && !path.includes('/gp/product/')) {
+      return null;
+    }
+    
+    // Extraer la parte del título del producto
+    let segments = path.split('/');
+    let titleSegment = '';
+    
+    // Buscar segmento que contiene el título (suele estar antes de /dp/ o /gp/product/)
+    for (let i = 0; i < segments.length; i++) {
+      if ((segments[i] === 'dp' || (segments[i] === 'gp' && segments[i+1] === 'product')) && i > 0) {
+        titleSegment = segments[i-1];
+        break;
+      }
+    }
+    
+    if (!titleSegment || titleSegment.length < 5) {
+      return null;
+    }
+    
+    // Convertir formato-url a Formato Legible
+    return titleSegment
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, c => c.toUpperCase()) // Capitalizar primera letra de cada palabra
+      .trim();
+  } catch (e) {
+    console.error('Error extrayendo título de URL de Amazon:', e);
+    return null;
   }
 }
 
