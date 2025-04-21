@@ -16,30 +16,13 @@ interface StoreExtractor {
   extract: (url: string, $: cheerio.CheerioAPI) => Promise<Partial<MetadataResult>>;
 }
 
-// Define los tipos de dispositivos
-type DeviceType = 'mobile' | 'tablet' | 'desktop';
-
-// User-Agents optimizados para diferentes dispositivos
-const USER_AGENTS = {
-  // Desktop Chrome - más genérico y menos detectable como bot
-  desktop: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  
-  // Móvil Android - mejor aceptado por Amazon
-  mobile: 'Mozilla/5.0 (Linux; Android 13; SM-G991B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
-  
-  // Tablet - versión más genérica
-  tablet: 'Mozilla/5.0 (iPad; CPU OS 16_5 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Mobile/15E148 Safari/604.1'
-};
-
 /**
  * Extrae metadatos básicos de una URL usando cheerio para un análisis DOM robusto
  * Esta implementación mejora sustancialmente la capacidad para extraer información
  * de una variedad de sitios, incluyendo AliExpress y Zara que tienen estructuras más complejas
- * @param url La URL de la cual extraer metadatos
- * @param deviceType El tipo de dispositivo desde el cual se solicita la extracción
  */
-export async function extractOpenGraphData(url: string, deviceType: DeviceType = 'desktop'): Promise<MetadataResult> {
-  console.log(`🔍 Extrayendo metadatos para: ${url} desde dispositivo tipo: ${deviceType}`);
+export async function extractOpenGraphData(url: string): Promise<MetadataResult> {
+  console.log(`🔍 Extrayendo metadatos para: ${url}`);
   
   const DEFAULT_RESULT: MetadataResult = {
     title: '',
@@ -49,55 +32,18 @@ export async function extractOpenGraphData(url: string, deviceType: DeviceType =
   };
   
   try {
-    // Seleccionar el User-Agent apropiado según el tipo de dispositivo
-    console.log(`🔄 Usando User-Agent para dispositivo tipo: ${deviceType}`);
-    
-    // Configurar cabeceras para simular el navegador correcto según el dispositivo
-    const headers: Record<string, string> = {
-      'User-Agent': USER_AGENTS[deviceType],
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    // Configurar cabeceras para simular un navegador real
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-      'Referer': 'https://www.google.com/',
-      'Connection': 'keep-alive',
-      'DNT': '1',
-      'Upgrade-Insecure-Requests': '1'
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1'
     };
-    
-    // Para Amazon específicamente, extraemos el ASIN y generamos 
-    // una URL más simple que tiene mayor probabilidad de funcionar
-    if (url.includes('amazon.')) {
-      console.log('🔐 Configurando encabezados especiales para Amazon');
-      headers['Accept-Encoding'] = 'gzip, deflate, br';
-      headers['sec-ch-ua'] = '"Not.A/Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"';
-      headers['sec-ch-ua-mobile'] = deviceType === 'mobile' ? '?1' : '?0';
-      headers['sec-ch-ua-platform'] = deviceType === 'mobile' ? '"Android"' : '"Windows"';
-      
-      // Intentar extraer ASIN para crear una URL más simple
-      const asinPatterns = [
-        /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-        /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-        /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-        /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
-      ];
-      
-      let asin: string | null = null;
-      for (const pattern of asinPatterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-          asin = match[1].toUpperCase();
-          console.log(`ASIN encontrado en URL: ${asin}`);
-          
-          // Generar URL más simple usando el ASIN
-          const domain = url.includes('amazon.es') ? 'amazon.es' : 
-                         url.includes('amazon.com') ? 'amazon.com' : 
-                         'amazon.es';
-          
-          url = `https://www.${domain}/dp/${asin}`;
-          console.log(`URL simplificada para Amazon: ${url}`);
-          break;
-        }
-      }
-    }
 
     // Configurar un timeout razonable
     const controller = new AbortController();
@@ -288,36 +234,36 @@ export async function extractOpenGraphData(url: string, deviceType: DeviceType =
       
       // Amazon
       if (urlLower.includes('amazon.')) {
-        const amazonImg = await extractAmazonImageWithCheerio(url, $, deviceType);
+        const amazonImg = await extractAmazonImageWithCheerio(url, $);
         if (amazonImg) {
           result.imageUrl = amazonImg;
-          console.log(`✓ Imagen extraída de Amazon con cheerio para dispositivo ${deviceType}`);
+          console.log('✓ Imagen extraída de Amazon con cheerio');
         }
       } 
       // Zara
       else if (urlLower.includes('zara.com')) {
-        const zaraImg = await extractZaraImageWithCheerio(url, $, deviceType);
+        const zaraImg = await extractZaraImageWithCheerio(url, $);
         if (zaraImg) {
           result.imageUrl = zaraImg;
-          console.log(`✓ Imagen extraída de Zara con cheerio para dispositivo ${deviceType}`);
+          console.log('✓ Imagen extraída de Zara con cheerio');
         }
       }
       // AliExpress
       else if (urlLower.includes('aliexpress.')) {
-        const aliImg = await extractAliExpressImageWithCheerio($, deviceType);
+        const aliImg = await extractAliExpressImageWithCheerio($);
         if (aliImg) {
           result.imageUrl = aliImg;
-          console.log(`✓ Imagen extraída de AliExpress con cheerio para dispositivo ${deviceType}`);
+          console.log('✓ Imagen extraída de AliExpress con cheerio');
         }
       }
     }
     
     // Buscar imágenes destacadas en el HTML basadas en tamaño, clase, y posición
     if (!result.imageUrl) {
-      const bestImg = await extractBestImageWithCheerio($, url, deviceType);
+      const bestImg = await extractBestImageWithCheerio($, url);
       if (bestImg) {
         result.imageUrl = bestImg;
-        console.log(`✓ Imagen destacada encontrada en HTML con cheerio para dispositivo ${deviceType}`);
+        console.log('✓ Imagen destacada encontrada en HTML con cheerio');
       }
     }
     
@@ -466,14 +412,9 @@ function cleanTextContent(text: string): string {
 
 /**
  * Extrae imagen de Amazon usando cheerio
- * @param url La URL del producto de Amazon
- * @param $ El objeto cheerio cargado con el HTML
- * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI, deviceType: DeviceType = 'desktop'): Promise<string | null> {
+async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
   try {
-    console.log(`🔍 Extrayendo imagen de Amazon para dispositivo tipo: ${deviceType}`);
-    
     // Patrones para extraer ASIN
     const asinPatterns = [
       /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
@@ -490,26 +431,11 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
       if (match && match[1]) {
         asin = match[1].toUpperCase();
         console.log(`ASIN extraído de URL: ${asin}`);
-        
-        // Si tenemos el ASIN de la URL, usamos directamente las imágenes de Amazon
-        // en lugar de intentar extraerlas del HTML, ya que es más confiable
-        console.log(`⚠️ Generando URL de imagen a partir del ASIN extraído: ${asin}`);
-        
-        // Probar diferentes formatos de imagen que Amazon usa para sus productos
-        const imageFormats = [
-          `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`,
-          `https://m.media-amazon.com/images/I/${asin}.jpg`,
-          `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL500_.jpg`,
-          `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
-        ];
-        
-        // En lugar de analizar el HTML, simplemente devolvemos la URL de imagen basada en ASIN
-        // Amazon redirigirá automáticamente a la imagen correcta si existe
-        return imageFormats[0];
+        break;
       }
     }
     
-    // Buscar ASIN en el HTML solo si no lo encontramos en la URL
+    // Buscar ASIN en el HTML
     if (!asin) {
       // Buscar en atributos data-asin
       const dataAsin = $('[data-asin]').first().attr('data-asin');
@@ -527,80 +453,35 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
       }
     }
     
-    // Usar diferentes selectores según el tipo de dispositivo
-    let imgUrl: string | undefined = undefined;
+    // Buscar la imagen directamente en el DOM
+    // 1. Buscar en el visor de imágenes principal
+    let imgUrl = $('#landingImage').attr('src') || $('#imgBlkFront').attr('src');
     
-    if (deviceType === 'mobile') {
-      // Selectores optimizados para móvil:
-      // En dispositivos móviles, Amazon usa diferentes clases y estructuras
-      imgUrl = $('.image-size-small img').attr('src') || 
-               $('img.a-dynamic-image').attr('src') ||
-               $('img[data-a-dynamic-image]').attr('src') ||
-               $('.images-container img').first().attr('src');
-               
-      console.log('Buscando con selectores para móvil');
-    } else {
-      // Selectores para desktop/tablet:
-      // 1. Buscar en el visor de imágenes principal
-      imgUrl = $('#landingImage').attr('src') || 
-               $('#imgBlkFront').attr('src') ||
-               $('img.a-dynamic-image').attr('src');
-      
-      console.log('Buscando con selectores para desktop/tablet');
-    }
-    
-    // Selectores comunes para todos los dispositivos
+    // 2. Buscar en data-old-hires (imagen de alta resolución)
     if (!imgUrl) {
-      // 2. Buscar en data-old-hires (imagen de alta resolución)
       imgUrl = $('img[data-old-hires]').attr('data-old-hires');
     }
     
+    // 3. Buscar en otros contenedores comunes
     if (!imgUrl) {
-      // 3. Buscar en otros contenedores comunes
       imgUrl = $('.imgTagWrapper img').attr('src');
     }
     
+    // 4. Buscar con selectores específicos de Amazon
     if (!imgUrl) {
-      // 4. Buscar con selectores genéricos
       imgUrl = $('#main-image').attr('src') || 
                $('#imageBlock img').first().attr('src') ||
                $('.image-display-block img').first().attr('src');
     }
     
-    // 5. Buscar en la data original de imágenes
-    if (!imgUrl) {
-      const dataImages = $('img[data-a-dynamic-image]').attr('data-a-dynamic-image');
-      if (dataImages) {
-        try {
-          const imageData = JSON.parse(dataImages);
-          // Obtener la primera URL de la lista de imágenes
-          imgUrl = Object.keys(imageData)[0];
-        } catch (e) {
-          console.log('Error al parsear data-a-dynamic-image:', e);
-        }
-      }
-    }
-    
     // Si encontramos una imagen, la devolvemos
     if (imgUrl && imgUrl.includes('amazon') && imgUrl.includes('images')) {
-      console.log(`✅ Imagen encontrada en el DOM para dispositivo ${deviceType}`);
       return imgUrl;
     }
     
     // Si tenemos un ASIN pero no pudimos extraer la imagen, usar un patrón URL conocido
     if (asin) {
-      console.log(`⚠️ Usando URL de imagen por defecto basada en ASIN: ${asin}`);
-      
-      // Probar diferentes formatos de imagen que Amazon usa para sus productos
-      const imageFormats = [
-        `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`,
-        `https://m.media-amazon.com/images/I/${asin}.jpg`,
-        `https://images-na.ssl-images-amazon.com/images/I/${asin}._SL500_.jpg`,
-        `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
-      ];
-      
-      // Devolver el primer formato, Amazon redirigirá automáticamente al correcto
-      return imageFormats[0];
+      return `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
     }
     
     return null;
@@ -612,11 +493,8 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
 
 /**
  * Extrae imagen de Zara usando cheerio
- * @param url La URL del producto de Zara
- * @param $ El objeto cheerio cargado con el HTML
- * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI, deviceType: DeviceType = 'desktop'): Promise<string | null> {
+async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
   try {
     // Buscar en la estructura JSON en los scripts
     let imgUrl: string | null = null;
@@ -695,10 +573,8 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI, d
 
 /**
  * Extrae imagen de AliExpress usando cheerio
- * @param $ El objeto cheerio cargado con el HTML
- * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI, deviceType: DeviceType = 'desktop'): Promise<string | null> {
+async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise<string | null> {
   try {
     // 1. Buscar en estructuras de datos JSON en scripts
     let imgUrl: string | null = null;
@@ -728,13 +604,9 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI, deviceTy
     
     // 2. Buscar en elementos DOM comunes para AliExpress
     if (!imgUrl) {
-      const galleryImg = $('.gallery-preview-panel img').first().attr('src');
-      const productImg = $('.product-image img').first().attr('src');
-      const magnifierImg = $('.magnifier-image').attr('src');
-      
-      if (galleryImg) imgUrl = galleryImg;
-      else if (productImg) imgUrl = productImg;
-      else if (magnifierImg) imgUrl = magnifierImg;
+      imgUrl = $('.gallery-preview-panel img').first().attr('src') || 
+              $('.product-image img').first().attr('src') ||
+              $('.magnifier-image').attr('src');
     }
     
     // 3. Buscar elementos específicos de la nueva interfaz
@@ -769,17 +641,11 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI, deviceTy
 /**
  * Extrae la mejor imagen de la página usando cheerio
  * Método general para cualquier sitio
- * @param $ El objeto cheerio cargado con el HTML
- * @param url La URL de la página
- * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string, deviceType: DeviceType = 'desktop'): Promise<string | null> {
+async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): Promise<string | null> {
   try {
     let bestImage: string | null = null;
     let bestScore = 0;
-    
-    // Log para depuración
-    console.log(`Extrayendo mejor imagen con cheerio para dispositivo ${deviceType} en URL: ${url.substring(0, 50)}...`);
     
     // Buscar imágenes y evaluarlas por dimensiones y atributos relevantes
     $('img').each((_, element) => {
@@ -872,37 +738,26 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string, d
     
     // Asegurarse de que la URL sea absoluta
     if (bestImage) {
-      const imgStr = bestImage;
-      if (imgStr.startsWith('http')) {
-        // Ya es una URL absoluta
-        return imgStr;
-      } else if (imgStr.startsWith('//')) {
-        // URL de protocolo relativo
-        try {
+      try {
+        if (bestImage.startsWith('http')) {
+          // Ya es una URL absoluta
+          return bestImage;
+        } else if (bestImage.startsWith('//')) {
+          // URL de protocolo relativo
           const urlObj = new URL(url);
-          return `${urlObj.protocol}${imgStr}`;
-        } catch (e) {
-          console.log('Error al procesar URL de protocolo relativo:', e);
-          return `https:${imgStr}`;
-        }
-      } else if (imgStr.startsWith('/')) {
-        // URL absoluta al dominio
-        try {
+          return urlObj.protocol + bestImage;
+        } else if (bestImage.startsWith('/')) {
+          // URL absoluta al dominio
           const urlObj = new URL(url);
-          return `${urlObj.origin}${imgStr}`;
-        } catch (e) {
-          console.log('Error al procesar URL absoluta al dominio:', e);
-          return imgStr;
-        }
-      } else {
-        // URL relativa
-        try {
+          return urlObj.origin + bestImage;
+        } else {
+          // URL relativa
           const urlObj = new URL(url);
-          return `${urlObj.origin}/${imgStr}`;
-        } catch (e) {
-          console.log('Error al procesar URL relativa:', e);
-          return imgStr;
+          return urlObj.origin + '/' + bestImage;
         }
+      } catch (e) {
+        console.log('Error convirtiendo URL relativa a absoluta:', e);
+        return bestImage; // Devolver la URL tal cual
       }
     }
     

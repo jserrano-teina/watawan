@@ -699,83 +699,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`📋 Extrayendo metadatos de URL: ${url}`);
       
-      // Detectar tipo de dispositivo a partir del User-Agent
+      // Registrar información del dispositivo para diagnóstico
       const userAgent = req.headers['user-agent'] || 'Unknown';
+      const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
+                       (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
       
-      // Determinar tipo de dispositivo para la extracción
-      let deviceType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
+      console.log(`📱 Dispositivo solicitante: ${deviceType}`);
       
-      if (userAgent.toLowerCase().includes('iphone') || 
-          userAgent.toLowerCase().includes('android') && !userAgent.toLowerCase().includes('tablet')) {
-        deviceType = 'mobile';
-      } else if (userAgent.toLowerCase().includes('ipad') || 
-                userAgent.toLowerCase().includes('tablet')) {
-        deviceType = 'tablet';
-      }
-      
-      console.log(`📱 Dispositivo detectado: ${deviceType}`);
-      
-      // Comprobación especial para Amazon - extraer ASIN y generar datos directamente
-      // para evitar bloqueos de scraping
-      if (url.toLowerCase().includes('amazon.')) {
-        console.log('🛒 Detectada URL de Amazon - usando extracción directa');
-        
-        // Patrones para extraer ASIN de Amazon
-        const asinPatterns = [
-          /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-          /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-          /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-          /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
-        ];
-        
-        let asin: string | null = null;
-        
-        // Buscar ASIN en la URL
-        for (const pattern of asinPatterns) {
-          const match = url.match(pattern);
-          if (match && match[1]) {
-            asin = match[1].toUpperCase();
-            console.log(`✅ ASIN extraído de URL: ${asin}`);
-            break;
-          }
-        }
-        
-        if (asin) {
-          // Extraer dominio para el título
-          let domain = 'amazon';
-          try {
-            const urlObj = new URL(url);
-            domain = urlObj.hostname.replace(/^www\./i, '');
-          } catch (e) {
-            console.log('Error extrayendo dominio:', e);
-          }
-          
-          // Construir metadatos para Amazon basados en ASIN
-          const metadata = {
-            title: `Producto de ${domain}`,
-            description: `Producto con referencia ${asin} en ${domain}`,
-            imageUrl: `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`,
-            price: ''
-          };
-          
-          console.log("Metadatos generados para Amazon:", {
-            title: metadata.title,
-            description: metadata.description,
-            imageUrl: "(Imagen generada por ASIN)",
-            price: "(Entrada manual por el usuario)"
-          });
-          
-          return res.json(metadata);
-        }
-      }
-      
-      // Usar nuestro nuevo extractor de Open Graph con timeout para el resto de sitios
+      // Usar nuestro nuevo extractor de Open Graph con timeout
       const { extractOpenGraphData } = await import('./open-graph');
       
       // Crear una promesa con timeout para evitar bloqueos
       const fetchWithTimeout = async (ms: number): Promise<any> => {
         return Promise.race([
-          extractOpenGraphData(url, deviceType),
+          extractOpenGraphData(url),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
           )
