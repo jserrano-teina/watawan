@@ -697,11 +697,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     try {
-      // Determinar qué tipo de sitio estamos visitando para depuración
-      let tipoSitio = getSiteType(url);
-      
       console.log(`📋 Extrayendo metadatos de URL: ${url}`);
-      console.log(`🌐 Tipo de sitio detectado: ${tipoSitio}`);
       
       // Registrar información del dispositivo para diagnóstico
       const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -723,25 +719,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ]);
       };
       
-      // Dar un máximo de 8 segundos para la extracción (aumentado para sitios complejos)
+      // Dar un máximo de 5 segundos para la extracción
       let metadata;
       try {
-        console.log(`⏳ Iniciando extracción con timeout de 8 segundos`);
-        metadata = await fetchWithTimeout(8000);
-        console.log(`✅ Extracción completada sin timeout`);
-        
-        // Debug adicional para Nike
-        if (tipoSitio === 'Nike') {
-          console.log("🔍 Inspección detallada para Nike:", {
-            urlCompleta: url,
-            estiloMatch: url.match(/\/t\/[\w-]+\/(\w+(?:-\w+)?)/i),
-            ultimaParte: url.split('/').pop()
-          });
-        }
+        metadata = await fetchWithTimeout(5000);
         
         // Si no hay título, usar un valor predeterminado basado en el dominio
         if (!metadata.title) {
-          console.log(`⚠️ No se pudo extraer título, usando valor predeterminado`);
           try {
             const urlObj = new URL(url);
             metadata.title = urlObj.hostname.replace(/^www\./i, '');
@@ -778,100 +762,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // según la nueva especificación, ya que el precio lo introducirá manualmente el usuario
       metadata.price = '';
       
-      // Extraer metadatos directamente de la URL para ciertos sitios
-      console.log(`🧪 Verificando si aplicar solución específica para: ${tipoSitio}`);
-      
-      // Nike
-      if (url.toLowerCase().includes('nike.com')) {
-        console.log('⚡ Aplicando solución directa para imágenes de Nike');
-        
-        try {
-          // Intentar extraer el código de estilo directamente
-          const nikeUrlPattern = /\/t\/[\w-]+\/(\w+(?:-\w+)?)/i;
-          const match = url.match(nikeUrlPattern);
-          const lastPart = url.split('/').pop();
-          
-          if (match && match[1]) {
-            const styleCode = match[1];
-            console.log(`✓ URL de Nike - Código de estilo encontrado en patrón: ${styleCode}`);
-            
-            // Construir URL de imagen directamente (formato estándar de Nike)
-            metadata.imageUrl = `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/${styleCode.toLowerCase()}.jpg`;
-            console.log(`✓ URL de imagen de Nike generada: ${metadata.imageUrl}`);
-            
-          } else if (lastPart && /^[A-Z0-9-]+$/i.test(lastPart) && lastPart.length >= 6) {
-            console.log(`✓ URL de Nike - Código de estilo encontrado en última parte: ${lastPart}`);
-            
-            // Construir URL de imagen directamente (formato alternativo)
-            metadata.imageUrl = `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/${lastPart.toLowerCase()}.jpg`;
-            console.log(`✓ URL de imagen de Nike generada: ${metadata.imageUrl}`);
-            
-          } else {
-            // Como último recurso, usar una imagen genérica de Nike
-            console.log('⚠️ Usando imagen genérica de Nike como fallback');
-            metadata.imageUrl = 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-          }
-        } catch (e) {
-          console.error('❌ Error en solución para Nike:', e);
-          metadata.imageUrl = 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-        }
-      }
-      
-      // Amazon
-      else if (url.toLowerCase().includes('amazon')) {
-        console.log('⚡ Aplicando solución directa para imágenes de Amazon');
-        
-        try {
-          // Extraer ASIN de la URL de Amazon
-          const asinPatterns = [
-            /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-            /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-            /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
-            /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
-          ];
-          
-          let asin: string | null = null;
-          
-          // Buscar ASIN en la URL
-          for (const pattern of asinPatterns) {
-            const match = url.match(pattern);
-            if (match && match[1]) {
-              asin = match[1].toUpperCase();
-              console.log(`✓ ASIN extraído de URL: ${asin}`);
-              break;
-            }
-          }
-          
-          if (asin) {
-            // Generar URL de imagen de Amazon usando el ASIN
-            metadata.imageUrl = `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
-            console.log(`✓ URL de imagen de Amazon generada: ${metadata.imageUrl}`);
-          } else {
-            console.log('⚠️ No se pudo extraer ASIN de la URL de Amazon');
-          }
-        } catch (e) {
-          console.error('❌ Error en solución para Amazon:', e);
-        }
-      }
-      
       // Logs y respuesta
-      console.log("🔍 Metadatos extraídos:", {
-        title: metadata.title || '(Sin título)',
-        description: metadata.description ? metadata.description.substring(0, 30) + "..." : "(Sin descripción)",
-        imageUrl: metadata.imageUrl ? metadata.imageUrl.substring(0, 50) + "..." : "(Sin imagen)",
+      console.log("Metadatos extraídos:", {
+        title: metadata.title,
+        description: metadata.description ? metadata.description.substring(0, 30) + "..." : "",
+        imageUrl: metadata.imageUrl ? "(Imagen encontrada)" : "(Sin imagen)",
         price: "(Entrada manual por el usuario)"
       });
-      
-      // Debuggear específicamente la extracción de imágenes
-      console.log("🔬 Detalles de los metadatos:", {
-        url: url,
-        metadataCompleto: JSON.stringify(metadata)
-      });
-      
-      // Comprobar específicamente si no se pudo extraer la imagen
-      if (!metadata.imageUrl) {
-        console.log(`❌ No se pudo extraer la imagen para el sitio: ${tipoSitio}`);
-      }
       
       res.json(metadata);
     } catch (error) {
@@ -880,27 +777,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         message: "Error extracting metadata",
         error: error instanceof Error ? error.message : String(error)
       });
-    }
-    
-    // Función interna para identificar el tipo de sitio
-    function getSiteType(url: string): string {
-      const urlLower = url.toLowerCase();
-      
-      if (urlLower.includes('amazon')) return 'Amazon';
-      if (urlLower.includes('zara.com')) return 'Zara';
-      if (urlLower.includes('nike.com')) return 'Nike';
-      if (urlLower.includes('aliexpress')) return 'AliExpress';
-      if (urlLower.includes('zalando')) return 'Zalando';
-      if (urlLower.includes('elcorteingles')) return 'El Corte Inglés';
-      if (urlLower.includes('mango.com')) return 'Mango';
-      
-      // Detectar dominio
-      try {
-        const urlObj = new URL(url);
-        return urlObj.hostname.replace(/^www\./i, '');
-      } catch (e) {
-        return 'Desconocido';
-      }
     }
   });
 

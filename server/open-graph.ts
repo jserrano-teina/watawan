@@ -248,43 +248,6 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
           console.log('✓ Imagen extraída de Zara con cheerio');
         }
       }
-      // Nike
-      else if (urlLower.includes('nike.com')) {
-        try {
-          // Intentar extraer el código de estilo directamente
-          const nikeUrlPattern = /\/t\/[\w-]+\/(\w+(?:-\w+)?)/i;
-          const match = url.match(nikeUrlPattern);
-          const lastPart = url.split('/').pop();
-          
-          let styleCode = null;
-          if (match && match[1]) {
-            console.log(`✓ URL de Nike - Código de estilo encontrado en patrón: ${match[1]}`);
-            styleCode = match[1];
-          } else if (lastPart && /^[A-Z0-9-]+$/i.test(lastPart) && lastPart.length >= 6) {
-            console.log(`✓ URL de Nike - Código de estilo encontrado en última parte: ${lastPart}`);
-            styleCode = lastPart;
-          }
-          
-          // Si tenemos un código de estilo, generamos la URL de la imagen
-          if (styleCode) {
-            // Construir URL de imagen directamente (formato estándar de Nike)
-            const imgUrl = `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/${styleCode.toLowerCase()}.jpg`;
-            console.log(`✓ Generando URL de imagen de Nike: ${imgUrl}`);
-            result.imageUrl = imgUrl;
-          } else {
-            // Como último recurso, usar una imagen genérica de Nike
-            console.log('⚠️ Usando imagen genérica de Nike como fallback');
-            result.imageUrl = 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-          }
-          
-          console.log('✓ Imagen extraída de Nike');
-        } catch (e) {
-          console.error('❌ Error procesando URL de Nike:', e);
-          // Como último recurso, usar una imagen genérica de Nike
-          result.imageUrl = 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-          console.log('✓ Imagen genérica de Nike asignada como fallback');
-        }
-      }
       // AliExpress
       else if (urlLower.includes('aliexpress.')) {
         const aliImg = await extractAliExpressImageWithCheerio($);
@@ -445,92 +408,6 @@ function cleanTextContent(text: string): string {
     .replace(/[\r\n\t]+/g, ' ') // Eliminar saltos de línea y tabs
     .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios con uno solo
     .trim();
-}
-
-/**
- * Extrae imagen del sitio de Nike usando la URL del producto
- * 
- * Nike tiene un formato estándar para sus URLs de imágenes que podemos inferir
- * a partir de la URL del producto en lugar de hacer web scraping
- */
-async function extractNikeImageWithCheerio($: cheerio.CheerioAPI, url: string): Promise<string | null> {
-  try {
-    console.log('Intentando extraer código de producto de Nike desde URL:', url);
-    
-    // 1. Buscar con patrón de URL más común
-    // Ejemplo: https://www.nike.com/es/t/air-jordan-1-mid-zapatillas-7rP7gC/554724-203
-    let productCode: string | null = null;
-    let styleCode: string | null = null;
-    
-    // Patrón principal de URL de Nike
-    const nikePattern = /\/t\/[\w-]+\/(\w+(?:-\w+)?)/i;
-    const match = url.match(nikePattern);
-    
-    if (match && match[1]) {
-      styleCode = match[1];
-      console.log(`✓ Código de estilo encontrado en URL: ${styleCode}`);
-      
-      // Construir URL de imagen directamente (formato estándar de Nike)
-      return `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/${styleCode.toLowerCase()}/xxx_a.jpg`;
-    }
-    
-    // 2. Buscar en la estructura DOM como fallback
-    let imgUrl: string | null = null;
-    
-    // Verificar varias estructuras comunes en Nike.com
-    const selectors = [
-      'picture.hero-image-container img',
-      'picture.image-component img',
-      'div[data-test="product-image"] img',
-      'img.css-viwop1',  // Selector específico para imágenes de productos
-      'div.css-r3nya3 img',  // Otro selector común
-      'img[data-testid="hero-image"]',
-      'div.product-carousel img',  // Carrusel de imágenes
-      '.product-image-container img' // Contenedor de imágenes de producto
-    ];
-    
-    // Probar cada selector hasta encontrar una imagen
-    for (const selector of selectors) {
-      const img = $(selector).first();
-      const src = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
-      
-      if (src && 
-          !src.includes('blank.') && 
-          !src.includes('placeholder') && 
-          !src.includes('loading')) {
-        imgUrl = src;
-        console.log(`✓ Imagen de Nike encontrada con selector: ${selector}`);
-        break;
-      }
-    }
-    
-    // 3. Si la detección falló y tenemos algún código del producto final, intentar construir URL
-    // https://www.nike.com/es/t/calzado-air-force-1-07-VJmZ4X/DD8959-100
-    if (!imgUrl && url.includes('/')) {
-      const parts = url.split('/');
-      const lastPart = parts[parts.length - 1];
-      
-      // Si parece un código de producto (alfanumérico, posiblemente con guiones)
-      if (/^[A-Z0-9-]+$/i.test(lastPart) && lastPart.length >= 6) {
-        console.log(`✓ Posible código de producto encontrado: ${lastPart}`);
-        
-        // Intentar formato alternativo de imágenes de Nike
-        return `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/${lastPart.toLowerCase()}/xxx_a.jpg`;
-      }
-    }
-    
-    // 4. Si todo lo anterior falló, devolver una URL para zapatillas Nike genéricas
-    if (!imgUrl) {
-      console.log('⚠️ Usando imagen genérica de Nike como fallback');
-      return 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-    }
-    
-    return imgUrl;
-  } catch (e) {
-    console.log('Error extrayendo imagen de Nike:', e);
-    // Último recurso: imagen genérica de Nike
-    return 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
-  }
 }
 
 /**
