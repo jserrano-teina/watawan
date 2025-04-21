@@ -1,5 +1,8 @@
+import metascraper from 'metascraper';
+import metascraperImage from 'metascraper-image';
 import fetch from 'node-fetch';
 import type { Response as NodeFetchResponse, RequestInit } from 'node-fetch';
+import { extractMetadataWithAI } from './openai-utils';
 
 // Función auxiliar para trabajar con node-fetch manteniendo tipos correctos
 async function fetchWithCorrectTypes(url: string, options?: RequestInit): Promise<NodeFetchResponse> {
@@ -40,6 +43,10 @@ function getRandomUserAgent(): string {
 // User-Agent por defecto para usar en todas las peticiones
 // Comenzamos con el más efectivo y genérico
 const DEFAULT_USER_AGENT = USER_AGENTS.desktop;
+
+const scraper = metascraper([
+  metascraperImage(),
+]);
 
 // Función específica para extraer imágenes de Amazon
 async function extractAmazonImage(url: string): Promise<string | undefined> {

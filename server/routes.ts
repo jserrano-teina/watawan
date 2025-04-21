@@ -702,8 +702,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Procesamos todos los casos de manera genérica con nuestro sistema mejorado
       console.log(`Procesando metadatos para URL: ${url}`);
       
-      // Usamos nuestro sistema basado en Open Graph para todos los casos
-      const { getUrlMetadata } = await import('./metascraper-new');
+      // Usamos el sistema estándar para todos los casos
+      const { getUrlMetadata } = await import('./metascraper');
       
       // Añadir timeout global para evitar bloqueos
       let metadata;
