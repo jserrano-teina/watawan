@@ -22,6 +22,22 @@ interface StoreExtractor {
  * Esta implementación mejora sustancialmente la capacidad para extraer información
  * de una variedad de sitios, incluyendo AliExpress y Zara que tienen estructuras más complejas
  */
+/**
+ * Función para limpiar texto de entidades HTML y caracteres especiales
+ */
+function cleanTextContent(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&[a-z0-9]+;/g, ' ') // Otras entidades HTML
+    .replace(/[\r\n\t]+/g, ' ') // Eliminar saltos de línea y tabs
+    .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios con uno solo
+    .trim();
+}
+
 export async function extractOpenGraphData(url: string): Promise<MetadataResult> {
   console.log(`🔍 Extrayendo metadatos para: ${url}`);
   
@@ -33,6 +49,10 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
   };
   
   try {
+    // Determinar si este es un sitio donde debemos priorizar la extracción con OpenAI o métodos tradicionales
+    const urlLower = url.toLowerCase();
+    const isAmazon = urlLower.includes('amazon.');
+    
     // Configurar cabeceras para simular un navegador real
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
@@ -66,10 +86,53 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     }
     
     const html = await response.text();
-    
-    // Cargar el HTML en cheerio para analizarlo como DOM
     const $ = cheerio.load(html);
     const result = { ...DEFAULT_RESULT };
+    
+    // Si no es Amazon, intentar primero con OpenAI directamente
+    // Esto nos ahorra procesamiento y mejora la calidad de los resultados
+    if (!isAmazon && process.env.OPENAI_API_KEY) {
+      console.log('🔍 Extrayendo metadatos con OpenAI para sitio no-Amazon...');
+      
+      try {
+        const aiMetadata = await extractMetadataWithAI(html, url);
+        
+        if (aiMetadata.title) {
+          console.log('✓ Título extraído con OpenAI:', aiMetadata.title);
+          result.title = aiMetadata.title;
+        }
+        
+        if (aiMetadata.imageUrl) {
+          console.log('✓ Imagen extraída con OpenAI:', aiMetadata.imageUrl);
+          result.imageUrl = aiMetadata.imageUrl;
+        }
+        
+        if (aiMetadata.description) {
+          console.log('✓ Descripción extraída con OpenAI');
+          result.description = aiMetadata.description;
+        }
+        
+        // Si OpenAI devolvió resultados útiles, ya no necesitamos seguir con métodos tradicionales
+        if (result.title && result.imageUrl) {
+          console.log('✅ Metadatos extraídos correctamente con OpenAI');
+          
+          // Limpiar y devolver el resultado
+          result.title = cleanTextContent(result.title);
+          result.description = result.description ? cleanTextContent(result.description) : '';
+          result.price = ''; // Siempre vacío
+          
+          return result;
+        }
+      } catch (error) {
+        console.error('❌ Error al usar OpenAI para extracción:', error);
+        // Si falló OpenAI, continuamos con métodos tradicionales
+      }
+    }
+    
+    // Si llegamos aquí, es porque:
+    // 1. Es Amazon (queremos usar métodos específicos)
+    // 2. No se pudo usar OpenAI (sin API key o error)
+    // 3. OpenAI no dio resultados completos
     
     // ==================== EXTRACCIÓN DE TÍTULO ====================
     // PRIORIDAD:
@@ -79,8 +142,6 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     // 4. Title tag
     // 5. JSON-LD (Schema.org)
     // 6. H1 tag más prominente
-    // 7. Extractores específicos por tienda
-    // 8. Extraer de la URL
     
     // Intentar Open Graph
     const ogTitle = $('meta[property="og:title"]').attr('content');
@@ -153,8 +214,6 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     // 1. Open Graph
     // 2. Twitter Cards
     // 3. Meta description
-    // 4. Schema.org
-    // 5. Párrafos principales
     
     const ogDescription = $('meta[property="og:description"]').attr('content');
     if (ogDescription) {
@@ -179,87 +238,65 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     }
     
     // ================ EXTRACCIÓN DE IMAGEN =================
-    // PRIORIDAD:
-    // 1. Open Graph
-    // 2. Twitter Cards
-    // 3. Schema.org
-    // 4. Extractores específicos por tienda
-    // 5. Imágenes destacadas en base a tamaño y posición
-    
-    const ogImage = $('meta[property="og:image"]').attr('content');
-    if (ogImage) {
-      result.imageUrl = ogImage.trim();
-      console.log('✓ Imagen encontrada en Open Graph');
-    }
-    
-    if (!result.imageUrl) {
-      const twitterImage = $('meta[name="twitter:image"]').attr('content');
-      if (twitterImage) {
-        result.imageUrl = twitterImage.trim();
-        console.log('✓ Imagen encontrada en Twitter Card');
+    // Ahora extraemos la imagen basada en el tipo de sitio
+    if (isAmazon) {
+      // Para Amazon usamos métodos específicos
+      const amazonImg = await extractAmazonImageWithCheerio(url, $);
+      if (amazonImg) {
+        result.imageUrl = amazonImg;
+        console.log('✓ Imagen extraída de Amazon con cheerio');
       }
-    }
-    
-    if (!result.imageUrl) {
-      const metaImage = $('meta[name="image"]').attr('content');
-      if (metaImage) {
-        result.imageUrl = metaImage.trim();
-        console.log('✓ Imagen encontrada en meta image');
-      }
-    }
-    
-    // Buscar en JSON-LD
-    if (!result.imageUrl) {
-      try {
-        const jsonLdScript = $('script[type="application/ld+json"]').first().html();
-        if (jsonLdScript) {
-          const jsonData = JSON.parse(jsonLdScript);
-          
-          if (jsonData && jsonData.image) {
-            result.imageUrl = typeof jsonData.image === 'string' ? jsonData.image : jsonData.image.url || jsonData.image[0];
-            console.log('✓ Imagen encontrada en Schema.org JSON-LD');
-          } else if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].image) {
-            const image = jsonData[0].image;
-            result.imageUrl = typeof image === 'string' ? image : image.url || image[0];
-            console.log('✓ Imagen encontrada en Schema.org JSON-LD (array)');
-          }
-        }
-      } catch (e) {
-        console.log('Error al parsear JSON-LD para imagen:', e);
-      }
-    }
-    
-    // Patrones específicos para diferentes tiendas
-    if (!result.imageUrl) {
-      const urlLower = url.toLowerCase();
+    } else {
+      // Para otros sitios, intentamos con métodos estándar
       
-      // Amazon
-      if (urlLower.includes('amazon.')) {
-        const amazonImg = await extractAmazonImageWithCheerio(url, $);
-        if (amazonImg) {
-          result.imageUrl = amazonImg;
-          console.log('✓ Imagen extraída de Amazon con cheerio');
-        }
-      } 
-      // Zara
-      else if (urlLower.includes('zara.com')) {
-        const zaraImg = await extractZaraImageWithCheerio(url, $);
-        if (zaraImg) {
-          result.imageUrl = zaraImg;
-          console.log('✓ Imagen extraída de Zara con cheerio');
+      // 1. Open Graph
+      const ogImage = $('meta[property="og:image"]').attr('content');
+      if (ogImage) {
+        result.imageUrl = ogImage.trim();
+        console.log('✓ Imagen encontrada en Open Graph');
+      }
+      
+      // 2. Twitter Cards
+      if (!result.imageUrl) {
+        const twitterImage = $('meta[name="twitter:image"]').attr('content');
+        if (twitterImage) {
+          result.imageUrl = twitterImage.trim();
+          console.log('✓ Imagen encontrada en Twitter Card');
         }
       }
-      // AliExpress
-      else if (urlLower.includes('aliexpress.')) {
-        const aliImg = await extractAliExpressImageWithCheerio($);
-        if (aliImg) {
-          result.imageUrl = aliImg;
-          console.log('✓ Imagen extraída de AliExpress con cheerio');
+      
+      // 3. Meta image
+      if (!result.imageUrl) {
+        const metaImage = $('meta[name="image"]').attr('content');
+        if (metaImage) {
+          result.imageUrl = metaImage.trim();
+          console.log('✓ Imagen encontrada en meta image');
+        }
+      }
+      
+      // 4. JSON-LD
+      if (!result.imageUrl) {
+        try {
+          const jsonLdScript = $('script[type="application/ld+json"]').first().html();
+          if (jsonLdScript) {
+            const jsonData = JSON.parse(jsonLdScript);
+            
+            if (jsonData && jsonData.image) {
+              result.imageUrl = typeof jsonData.image === 'string' ? jsonData.image : jsonData.image.url || jsonData.image[0];
+              console.log('✓ Imagen encontrada en Schema.org JSON-LD');
+            } else if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].image) {
+              const image = jsonData[0].image;
+              result.imageUrl = typeof image === 'string' ? image : image.url || image[0];
+              console.log('✓ Imagen encontrada en Schema.org JSON-LD (array)');
+            }
+          }
+        } catch (e) {
+          console.log('Error al parsear JSON-LD para imagen:', e);
         }
       }
     }
     
-    // Buscar imágenes destacadas en el HTML basadas en tamaño, clase, y posición
+    // Si aún no tenemos imagen, usamos el método genérico
     if (!result.imageUrl) {
       const bestImg = await extractBestImageWithCheerio($, url);
       if (bestImg) {
@@ -296,23 +333,23 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       }
     }
     
-    // Si después de intentar todos los métodos convencionales no tenemos título razonable
-    // o imagen, intentaremos usar OpenAI para extraer la información
-    const shouldUseAI = (!result.imageUrl || 
-                         !result.title || 
-                         result.title.length < 5 ||
-                         result.title.length > 200 ||
-                         // Detectar títulos genéricos como el nombre del sitio
-                         (result.title.toLowerCase().includes(new URL(url).hostname.replace('www.', ''))));
+    // Verificar si debemos intentar mejorar con OpenAI como último recurso
+    // Si la extracción tradicional no dio buenos resultados
+    const hasLowQualityResults = (!result.imageUrl || 
+                               !result.title || 
+                               result.title.length < 5 ||
+                               result.title.length > 200 ||
+                               // Detectar títulos genéricos como el nombre del sitio
+                               (result.title.toLowerCase().includes(new URL(url).hostname.replace('www.', ''))));
     
-    if (shouldUseAI && process.env.OPENAI_API_KEY) {
-      console.log('ℹ️ Resultados insatisfactorios con métodos tradicionales, intentando con OpenAI...');
+    if (!isAmazon && hasLowQualityResults && process.env.OPENAI_API_KEY) {
+      console.log('ℹ️ Los métodos tradicionales no dieron buenos resultados, intentando con OpenAI...');
       
       try {
         const aiMetadata = await extractMetadataWithAI(html, url);
         
         // Solo usar los campos que no pudimos extraer correctamente
-        if (aiMetadata.title && (!result.title || shouldUseAI)) {
+        if (aiMetadata.title && (!result.title || hasLowQualityResults)) {
           console.log('✓ Título extraído con OpenAI:', aiMetadata.title);
           result.title = aiMetadata.title;
         }
@@ -326,8 +363,6 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
           console.log('✓ Descripción extraída con OpenAI');
           result.description = aiMetadata.description;
         }
-        
-        // Nota: Seguimos sin usar el precio, incluso si OpenAI lo extrae
       } catch (error) {
         console.error('❌ Error al usar OpenAI para extracción:', error);
       }
