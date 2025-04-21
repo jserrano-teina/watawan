@@ -789,16 +789,48 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
     
     // Limpieza adicional del título para casos de ZARA
     if (productTitle) {
-      // Corregir títulos con espaciado incorrecto (C A M I S A P O L O ... -> CAMISA POLO ...)
-      if (/^([A-Z]\s)+[A-Z]$/.test(productTitle) || /^([A-Z]\s?){5,}$/.test(productTitle)) {
-        productTitle = productTitle.replace(/\s+/g, '').replace(/([A-Z](?=[A-Z][a-z])|[A-Z](?=[A-Z]$))/g, '$1 ').trim();
+      // Casos específicos de Zara donde el título tiene espacios entre cada letra
+      // Ejemplos: "C A M I S A P O L O 1 0 0 L I N O P" o nombres similares con espacios innecesarios
+      
+      // Tratar primero títulos que tienen letras separadas por espacios
+      if (productTitle.match(/[A-Z]\s[A-Z]\s[A-Z]/) || productTitle.match(/[A-Z]\s[0-9]\s[0-9]/)) {
+        console.log("✓ Detectado título con espacios innecesarios entre letras/números");
+        
+        // 1. Quitar espacios completamente y luego insertar espacios donde corresponde
+        let cleaned = productTitle.replace(/\s+/g, '');
+        
+        // 2. Añadir espacios antes de los dígitos que siguen a letras
+        cleaned = cleaned.replace(/([A-Za-z])([0-9])/g, '$1 $2');
+        
+        // 3. Añadir espacios entre palabras en mayúsculas
+        cleaned = cleaned.replace(/([A-Z])([A-Z][a-z])/g, '$1 $2');
+        
+        // Añadir espacio entre números y texto que les sigue (100LINO -> 100 LINO)
+        cleaned = cleaned.replace(/([0-9])([A-Za-z])/g, '$1 $2');
+        
+        // 4. Corrección para productos ZARA con nombres como "CAMISA POLO 100 LINO"
+        // Buscar patrones comunes como "POLO", "LINO", etc.
+        const commonWords = ['POLO', 'LINO', 'VESTIDO', 'FALDA', 'JERSEY', 'CAMISA', 'PANTALON'];
+        for (const word of commonWords) {
+          const regex = new RegExp(`(^|[A-Z])${word}([A-Z]|$)`, 'g');
+          cleaned = cleaned.replace(regex, (match, p1, p2) => {
+            if (p1 && p2) return `${p1} ${word} ${p2}`;
+            if (p1) return `${p1} ${word}`;
+            if (p2) return `${word} ${p2}`;
+            return word;
+          });
+        }
+        
+        productTitle = cleaned.trim();
+        console.log(`✓ Título limpiado de espacios innecesarios: "${productTitle}"`);
       }
       
       // Remover códigos de producto o referencias
       productTitle = productTitle
         .replace(/REF\.\s*\d+\/\d+\/\d+/i, '')
-        .replace(/\d{7,}/, '')
-        .replace(/\s{2,}/g, ' ')
+        .replace(/\d{7,}/, '')  // Quitar números largos (códigos de producto)
+        .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios por uno solo
+        .replace(/\sP\d+$/, '')  // Quitar referencias de producto al final (como P04337181)
         .trim();
     }
     
