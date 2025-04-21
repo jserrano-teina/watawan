@@ -778,8 +778,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // según la nueva especificación, ya que el precio lo introducirá manualmente el usuario
       metadata.price = '';
       
-      // FIXME: Solución rápida para Nike - extractor directo para URLs de Nike
-      console.log(`🧪 Verificando si aplicar solución para Nike. Tipo detectado: ${getSiteType(url)}`);
+      // Extraer metadatos directamente de la URL para ciertos sitios
+      console.log(`🧪 Verificando si aplicar solución específica para: ${sitioTipo}`);
+      
+      // Nike
       if (url.toLowerCase().includes('nike.com')) {
         console.log('⚡ Aplicando solución directa para imágenes de Nike');
         
@@ -812,6 +814,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         } catch (e) {
           console.error('❌ Error en solución para Nike:', e);
           metadata.imageUrl = 'https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/0a98d067-7a37-4e80-b557-24af069fe9f4/air-force-1-07-zapatillas-TPprn8.jpg';
+        }
+      }
+      
+      // Amazon
+      else if (url.toLowerCase().includes('amazon')) {
+        console.log('⚡ Aplicando solución directa para imágenes de Amazon');
+        
+        try {
+          // Extraer ASIN de la URL de Amazon
+          const asinPatterns = [
+            /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
+          ];
+          
+          let asin: string | null = null;
+          
+          // Buscar ASIN en la URL
+          for (const pattern of asinPatterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+              asin = match[1].toUpperCase();
+              console.log(`✓ ASIN extraído de URL: ${asin}`);
+              break;
+            }
+          }
+          
+          if (asin) {
+            // Generar URL de imagen de Amazon usando el ASIN
+            metadata.imageUrl = `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
+            console.log(`✓ URL de imagen de Amazon generada: ${metadata.imageUrl}`);
+          } else {
+            console.log('⚠️ No se pudo extraer ASIN de la URL de Amazon');
+          }
+        } catch (e) {
+          console.error('❌ Error en solución para Amazon:', e);
         }
       }
       
