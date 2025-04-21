@@ -13,7 +13,7 @@ export interface MetadataResult {
 // Interfaz para extractores específicos por tienda
 interface StoreExtractor {
   pattern: RegExp;
-  extract: (url: string, $: cheerio.CheerioAPI) => Promise<Partial<MetadataResult>>;
+  extract: (url: string, $: cheerio.CheerioAPI, userAgent?: string) => Promise<Partial<MetadataResult>>;
 }
 
 /**
@@ -21,7 +21,7 @@ interface StoreExtractor {
  * Esta implementación mejora sustancialmente la capacidad para extraer información
  * de una variedad de sitios, incluyendo AliExpress y Zara que tienen estructuras más complejas
  */
-export async function extractOpenGraphData(url: string): Promise<MetadataResult> {
+export async function extractOpenGraphData(url: string, clientUserAgent?: string): Promise<MetadataResult> {
   console.log(`🔍 Extrayendo metadatos para: ${url}`);
   
   const DEFAULT_RESULT: MetadataResult = {
@@ -32,9 +32,17 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
   };
   
   try {
-    // Configurar cabeceras para simular un navegador real
+    // Usar el User-Agent del cliente si está disponible, o un User-Agent de navegador de escritorio por defecto
+    const userAgent = clientUserAgent || 
+      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+    
+    // Registrar información de dispositivo para depuración
+    const isMobile = clientUserAgent && (clientUserAgent.includes('Mobile') || clientUserAgent.includes('Android'));
+    console.log(`🌐 Usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'} para: ${url}`);
+    
+    // Configurar cabeceras para simular el navegador del cliente
     const headers = {
-      'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
+      'User-Agent': userAgent,
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
       'Cache-Control': 'no-cache',

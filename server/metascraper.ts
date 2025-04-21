@@ -1339,9 +1339,14 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
 }
 
 // Función para extraer el título de productos de Amazon
-async function extractAmazonTitle(url: string, html?: string): Promise<string | undefined> {
+async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: string): Promise<string | undefined> {
   try {
     let productHtml = html;
+    
+    // Usar User-Agent del cliente o uno aleatorio
+    const userAgent = clientUserAgent || getRandomUserAgent();
+    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
+    debug(`extractAmazonTitle: usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'}: ${userAgent}`);
     
     // Si no tenemos HTML, intentamos obtenerlo
     if (!productHtml) {
@@ -1351,7 +1356,7 @@ async function extractAmazonTitle(url: string, html?: string): Promise<string | 
         
         const response = await fetchWithCorrectTypes(url, {
           headers: {
-            'User-Agent': getRandomUserAgent(), // Rotamos User-Agent para evitar bloqueos
+            'User-Agent': userAgent, // Usamos el User-Agent del cliente para consistencia
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
@@ -1421,7 +1426,7 @@ async function extractAmazonTitle(url: string, html?: string): Promise<string | 
   }
 }
 
-export async function getUrlMetadata(url: string): Promise<{ 
+export async function getUrlMetadata(url: string, clientUserAgent?: string): Promise<{ 
   imageUrl: string | undefined, 
   price: string | undefined,
   title?: string,
@@ -1430,10 +1435,15 @@ export async function getUrlMetadata(url: string): Promise<{
   try {
     debug(`Procesando URL para extraer metadatos completos: ${url}`);
     
-    // Establecemos User-Agent para todo el proceso
-    // Podemos rotarlo o usar directamente el predeterminado
-    const userAgent = getRandomUserAgent();
+    // Si recibimos el User-Agent del cliente, lo usamos para preservar la consistencia
+    // entre lo que ve el usuario y lo que extrae el sistema
+    // Si no, usamos un User-Agent aleatorio
+    const userAgent = clientUserAgent || getRandomUserAgent();
     debug(`Usando User-Agent: ${userAgent}`);
+    
+    // Determinar si es móvil para adaptar la extracción
+    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
+    debug(`Detectado ${isMobile ? 'dispositivo móvil' : 'dispositivo desktop'}`);
     
     // Registrar inicio para analizar tiempos
     const startTime = Date.now();
@@ -1502,7 +1512,7 @@ export async function getUrlMetadata(url: string): Promise<{
         // Extraer precio y título específicos de Amazon
         price = await extractAmazonPrice(url, productHtml);
         // También intentamos extraer el título específico de Amazon (lo asignaremos más adelante)
-        const amazonTitle = await extractAmazonTitle(url, productHtml);
+        const amazonTitle = await extractAmazonTitle(url, productHtml, userAgent);
         debug(`Precio de Amazon extraído: ${price}`);
         debug(`Título de Amazon extraído: ${amazonTitle}`);
       } else if (url.match(/pccomponentes\.com/i)) {
@@ -1606,8 +1616,8 @@ export async function getUrlMetadata(url: string): Promise<{
       
       // Si estamos en Amazon, preferimos el título extraído por el método específico
       if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
-        // Intentamos extraer el título específico de Amazon
-        const amazonTitle = await extractAmazonTitle(url, productHtml);
+        // Intentamos extraer el título específico de Amazon usando el User-Agent del cliente
+        const amazonTitle = await extractAmazonTitle(url, productHtml, userAgent);
         if (amazonTitle) {
           title = amazonTitle;
           debug(`Usando título específico de Amazon: ${title}`);

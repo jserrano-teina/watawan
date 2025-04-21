@@ -704,7 +704,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
                        (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
       
-      console.log(`📱 Dispositivo solicitante: ${deviceType}`);
+      console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
       
       // Usar nuestro nuevo extractor de Open Graph con timeout
       const { extractOpenGraphData } = await import('./open-graph');
@@ -712,7 +712,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Crear una promesa con timeout para evitar bloqueos
       const fetchWithTimeout = async (ms: number): Promise<any> => {
         return Promise.race([
-          extractOpenGraphData(url),
+          extractOpenGraphData(url, userAgent), // Pasamos el User-Agent original para mantener consistencia
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
           )
