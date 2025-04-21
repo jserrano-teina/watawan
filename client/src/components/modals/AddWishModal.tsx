@@ -63,7 +63,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [extractedData, setExtractedData] = useState<{
     imageUrl?: string,
     price?: string,
-    title?: string,
   }>({});
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -179,62 +178,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
   if (!isOpen) return null;
 
-  // Función auxiliar para extraer información de URLs de Amazon
-  const extractAmazonMetadata = (url: string) => {
-    // Detectar si es un enlace de Amazon
-    const isAmazon = url.match(/amazon\.(com|es|co\.uk|de|fr|it|co\.jp|ca|com\.mx|nl)/i) || url.match(/amzn\.(to|eu)/i);
-    
-    if (!isAmazon) {
-      return null;
-    }
-    
-    // Extraer ASIN (código de producto de Amazon)
-    const asinMatch = url.match(/\/([A-Z0-9]{10})(\?|\/|$)/);
-    const asin = asinMatch ? asinMatch[1] : null;
-    
-    // Si encontramos el ASIN, podemos generar la URL de la imagen y extraer título
-    if (asin) {
-      console.log('✓ ASIN detectado en cliente:', asin);
-      
-      // Generar URL de imagen basada en ASIN
-      const imageUrl = `https://m.media-amazon.com/images/I/${asin}._AC_SX679_.jpg`;
-      
-      // Extraer título de la URL si está disponible
-      let title = '';
-      try {
-        // Las URLs de Amazon suelen tener este formato:
-        // https://www.amazon.es/Nombre-Del-Producto-Con-Guiones/dp/ASIN/
-        const urlObj = new URL(url);
-        const pathSegments = urlObj.pathname.split('/');
-        
-        // Buscar el segmento que contiene el título (antes de "dp" o "gp/product")
-        for (let i = 0; i < pathSegments.length; i++) {
-          if ((pathSegments[i] === 'dp' || 
-              (pathSegments[i] === 'gp' && pathSegments[i+1] === 'product')) && 
-              i > 0 && pathSegments[i-1].length > 5) {
-            
-            // Convertir formato-con-guiones a Formato Con Espacios
-            title = pathSegments[i-1]
-              .replace(/-/g, ' ')
-              .replace(/\b\w/g, c => c.toUpperCase()) // Capitalizar primera letra de cada palabra
-              .trim();
-            break;
-          }
-        }
-      } catch (error) {
-        console.error('Error extrayendo título de URL Amazon:', error);
-      }
-      
-      return {
-        imageUrl,
-        title: title || `Producto Amazon ${asin}`, // Título de fallback si no se pudo extraer
-        detectado: 'amazon'
-      };
-    }
-    
-    return null;
-  };
-  
   // Manejar envío del paso 1 (para el modo de creación, no edición)
   const submitStepOne = async (data: StepOneFormValues) => {
     // Solo llegamos aquí durante el proceso de adición, no edición
@@ -243,40 +186,16 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     setPurchaseLinkValue(purchaseLink);
     
     try {
-      // Primero intentar extraer metadatos localmente para Amazon
-      const amazonData = extractAmazonMetadata(purchaseLink);
-      
-      if (amazonData) {
-        // Si es Amazon, usamos los datos extraídos localmente
-        console.log('✓ Datos de Amazon extraídos localmente:', amazonData);
-        
-        // Guardar datos extraídos para el paso 2
-        setExtractedData((prev) => ({
-          ...prev,
-          imageUrl: amazonData.imageUrl,
-          // No guardamos título en extractedData, lo establecemos directamente en el formulario
-        }));
-        
-        // Prerellenar el título si se extrajo
-        if (amazonData.title) {
-          setValueStepTwo('title', amazonData.title);
-        }
-        
-        setValueStepTwo('purchaseLink', purchaseLink);
-        
-        // Ya tenemos los datos, continuar al paso 2
-        setStep(2);
-      } else if (purchaseLink) {
-        // Si no es Amazon, usar el método normal con el servidor
+      // Extraer metadatos del enlace si existe
+      if (purchaseLink) {
         const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(purchaseLink)}`);
         const metadata = await response.json();
         
         // Guardar datos extraídos para el paso 2
-        setExtractedData((prev) => ({
-          ...prev,
+        setExtractedData({
           imageUrl: metadata.imageUrl,
           price: metadata.price
-        }));
+        });
         
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
@@ -304,13 +223,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         if (metadata.imageUrl) {
           setValueStepTwo('imageUrl', metadata.imageUrl);
         }
-        
-        // Avanzar al paso 2
-        setStep(2);
-      } else {
-        // Si no hay enlace, simplemente avanzar al paso 2
-        setStep(2);
       }
+      
+      // Avanzar al paso 2
+      setStep(2);
     } catch (error) {
       console.error('Error extrayendo metadatos:', error);
       // Aún así, avanzamos al paso 2, pero sin datos extraídos
@@ -422,10 +338,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         setValueStepTwo('imageUrl', imageUrl);
         
         // Actualizar el estado para mostrar la imagen
-        setExtractedData((prev) => ({
-          ...prev,
+        setExtractedData({
+          ...extractedData,
           imageUrl: imageUrl
-        }));
+        });
       } catch (error) {
         console.error('Error al subir la imagen:', error);
         // Mostrar mensaje de error al usuario
