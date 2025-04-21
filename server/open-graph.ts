@@ -262,28 +262,28 @@ export async function extractOpenGraphData(url: string, deviceType: DeviceType =
       } 
       // Zara
       else if (urlLower.includes('zara.com')) {
-        const zaraImg = await extractZaraImageWithCheerio(url, $);
+        const zaraImg = await extractZaraImageWithCheerio(url, $, deviceType);
         if (zaraImg) {
           result.imageUrl = zaraImg;
-          console.log('✓ Imagen extraída de Zara con cheerio');
+          console.log(`✓ Imagen extraída de Zara con cheerio para dispositivo ${deviceType}`);
         }
       }
       // AliExpress
       else if (urlLower.includes('aliexpress.')) {
-        const aliImg = await extractAliExpressImageWithCheerio($);
+        const aliImg = await extractAliExpressImageWithCheerio($, deviceType);
         if (aliImg) {
           result.imageUrl = aliImg;
-          console.log('✓ Imagen extraída de AliExpress con cheerio');
+          console.log(`✓ Imagen extraída de AliExpress con cheerio para dispositivo ${deviceType}`);
         }
       }
     }
     
     // Buscar imágenes destacadas en el HTML basadas en tamaño, clase, y posición
     if (!result.imageUrl) {
-      const bestImg = await extractBestImageWithCheerio($, url);
+      const bestImg = await extractBestImageWithCheerio($, url, deviceType);
       if (bestImg) {
         result.imageUrl = bestImg;
-        console.log('✓ Imagen destacada encontrada en HTML con cheerio');
+        console.log(`✓ Imagen destacada encontrada en HTML con cheerio para dispositivo ${deviceType}`);
       }
     }
     
@@ -553,8 +553,11 @@ async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI,
 
 /**
  * Extrae imagen de Zara usando cheerio
+ * @param url La URL del producto de Zara
+ * @param $ El objeto cheerio cargado con el HTML
+ * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
+async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI, deviceType: DeviceType = 'desktop'): Promise<string | null> {
   try {
     // Buscar en la estructura JSON en los scripts
     let imgUrl: string | null = null;
@@ -633,8 +636,10 @@ async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): 
 
 /**
  * Extrae imagen de AliExpress usando cheerio
+ * @param $ El objeto cheerio cargado con el HTML
+ * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise<string | null> {
+async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI, deviceType: DeviceType = 'desktop'): Promise<string | null> {
   try {
     // 1. Buscar en estructuras de datos JSON en scripts
     let imgUrl: string | null = null;
@@ -664,9 +669,13 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
     
     // 2. Buscar en elementos DOM comunes para AliExpress
     if (!imgUrl) {
-      imgUrl = $('.gallery-preview-panel img').first().attr('src') || 
-              $('.product-image img').first().attr('src') ||
-              $('.magnifier-image').attr('src');
+      const galleryImg = $('.gallery-preview-panel img').first().attr('src');
+      const productImg = $('.product-image img').first().attr('src');
+      const magnifierImg = $('.magnifier-image').attr('src');
+      
+      if (galleryImg) imgUrl = galleryImg;
+      else if (productImg) imgUrl = productImg;
+      else if (magnifierImg) imgUrl = magnifierImg;
     }
     
     // 3. Buscar elementos específicos de la nueva interfaz
@@ -701,8 +710,11 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
 /**
  * Extrae la mejor imagen de la página usando cheerio
  * Método general para cualquier sitio
+ * @param $ El objeto cheerio cargado con el HTML
+ * @param url La URL de la página
+ * @param deviceType El tipo de dispositivo desde el cual se solicita: 'mobile', 'tablet' o 'desktop'
  */
-async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): Promise<string | null> {
+async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string, deviceType: DeviceType = 'desktop'): Promise<string | null> {
   try {
     let bestImage: string | null = null;
     let bestScore = 0;
@@ -797,23 +809,24 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
     }
     
     // Asegurarse de que la URL sea absoluta
-    if (bestImage) {
+    if (bestImage && bestImage.length > 0) {
       try {
-        if (bestImage.startsWith('http')) {
+        // Conversión de URL relativa a absoluta:
+        if (bestImage.indexOf('http') === 0) {
           // Ya es una URL absoluta
           return bestImage;
-        } else if (bestImage.startsWith('//')) {
+        } else if (bestImage.indexOf('//') === 0) {
           // URL de protocolo relativo
           const urlObj = new URL(url);
-          return urlObj.protocol + bestImage;
-        } else if (bestImage.startsWith('/')) {
+          return `${urlObj.protocol}${bestImage}`;
+        } else if (bestImage.indexOf('/') === 0) {
           // URL absoluta al dominio
           const urlObj = new URL(url);
-          return urlObj.origin + bestImage;
+          return `${urlObj.origin}${bestImage}`;
         } else {
           // URL relativa
           const urlObj = new URL(url);
-          return urlObj.origin + '/' + bestImage;
+          return `${urlObj.origin}/${bestImage}`;
         }
       } catch (e) {
         console.log('Error convirtiendo URL relativa a absoluta:', e);
