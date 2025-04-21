@@ -72,20 +72,33 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     
     // ==================== EXTRACCIÓN DE TÍTULO ====================
     // PRIORIDAD:
-    // 1. Open Graph
-    // 2. Twitter Cards
-    // 3. Meta title
-    // 4. Title tag
-    // 5. JSON-LD (Schema.org)
-    // 6. H1 tag más prominente
-    // 7. Extractores específicos por tienda
+    // 1. Extractores específicos por tienda (Amazon, etc.)
+    // 2. Open Graph
+    // 3. Twitter Cards
+    // 4. Meta title
+    // 5. Title tag
+    // 6. JSON-LD (Schema.org)
+    // 7. H1 tag más prominente
     // 8. Extraer de la URL
     
-    // Intentar Open Graph
-    const ogTitle = $('meta[property="og:title"]').attr('content');
-    if (ogTitle) {
-      result.title = ogTitle.trim();
-      console.log('✓ Título encontrado en Open Graph');
+    // Primero intentar con extractores específicos por tienda
+    // Amazon tiene un comportamiento único especialmente en dispositivos móviles
+    if (url.includes('amazon')) {
+      console.log('📱 Detectada URL de Amazon - intentando extractor específico');
+      const amazonTitle = await extractAmazonTitleWithCheerio(url, $);
+      if (amazonTitle) {
+        result.title = amazonTitle;
+        console.log('✓ Título encontrado con extractor específico de Amazon:', amazonTitle);
+      }
+    }
+    
+    // Intentar Open Graph si no se encontró título específico
+    if (!result.title) {
+      const ogTitle = $('meta[property="og:title"]').attr('content');
+      if (ogTitle) {
+        result.title = ogTitle.trim();
+        console.log('✓ Título encontrado en Open Graph');
+      }
     }
     
     // Twitter Cards
@@ -447,14 +460,14 @@ async function extractAmazonTitleWithCheerio(url: string, $: cheerio.CheerioAPI)
     
     // 5. Buscar en JSON-LD
     const scriptTags = $('script[type="application/ld+json"]');
-    let jsonLdTitle = null;
+    let jsonLdTitle: string | null = null;
     
     scriptTags.each((i, script) => {
       try {
         const jsonContent = $(script).html();
         if (jsonContent) {
           const parsedJson = JSON.parse(jsonContent);
-          if (parsedJson.name && !jsonLdTitle) {
+          if (parsedJson && parsedJson.name && !jsonLdTitle) {
             jsonLdTitle = parsedJson.name;
           }
         }
@@ -669,9 +682,17 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
     
     // 2. Buscar en elementos DOM comunes para AliExpress
     if (!imgUrl) {
-      imgUrl = $('.gallery-preview-panel img').first().attr('src') || 
-              $('.product-image img').first().attr('src') ||
-              $('.magnifier-image').attr('src');
+      const galleryImg = $('.gallery-preview-panel img').first().attr('src');
+      const productImg = $('.product-image img').first().attr('src');
+      const magnifierImg = $('.magnifier-image').attr('src');
+      
+      if (galleryImg) {
+        imgUrl = galleryImg;
+      } else if (productImg) {
+        imgUrl = productImg;
+      } else if (magnifierImg) {
+        imgUrl = magnifierImg;
+      }
     }
     
     // 3. Buscar elementos específicos de la nueva interfaz
@@ -804,14 +825,15 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
     // Asegurarse de que la URL sea absoluta
     if (bestImage) {
       try {
-        if (bestImage.startsWith('http')) {
+        const bestImageStr: string = bestImage;
+        if (bestImageStr.startsWith('http')) {
           // Ya es una URL absoluta
           return bestImage;
-        } else if (bestImage.startsWith('//')) {
+        } else if (bestImageStr.startsWith('//')) {
           // URL de protocolo relativo
           const urlObj = new URL(url);
           return urlObj.protocol + bestImage;
-        } else if (bestImage.startsWith('/')) {
+        } else if (bestImageStr.startsWith('/')) {
           // URL absoluta al dominio
           const urlObj = new URL(url);
           return urlObj.origin + bestImage;
