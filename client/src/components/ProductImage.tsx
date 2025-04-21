@@ -62,6 +62,30 @@ const ProductImage: React.FC<ProductImageProps> = ({
       if (domain.includes('amazon.')) return 'amazon.com';
       if (domain.includes('aliexpress.')) return 'aliexpress.com';
       if (domain.includes('ebay.')) return 'ebay.com';
+      if (domain.includes('elcorteingles.')) return 'elcorteingles.es';
+      if (domain.includes('pccomponentes.')) return 'pccomponentes.com';
+      if (domain.includes('carrefour.')) return 'carrefour.es';
+      if (domain.includes('fnac.')) return 'fnac.es';
+      if (domain.includes('zalando.')) return 'zalando.es';
+      if (domain.includes('decathlon.')) return 'decathlon.es';
+      if (domain.includes('ikea.')) return 'ikea.com';
+      if (domain.includes('leroymerlin.')) return 'leroymerlin.es';
+      if (domain.includes('leroy.')) return 'leroymerlin.es';
+      if (domain.includes('mediamarkt.')) return 'mediamarkt.es';
+      if (domain.includes('miravia.')) return 'miravia.es';
+      if (domain.includes('primark.')) return 'primark.com';
+      if (domain.includes('nike.')) return 'nike.com';
+      if (domain.includes('adidas.')) return 'adidas.com';
+      if (domain.includes('reebok.')) return 'reebok.com';
+      if (domain.includes('puma.')) return 'puma.com';
+      if (domain.includes('hm.')) return 'hm.com';
+      if (domain.includes('zara.')) return 'zara.com';
+      if (domain.includes('pullandbear.')) return 'pullandbear.com';
+      if (domain.includes('bershka.')) return 'bershka.com';
+      if (domain.includes('massimodutti.')) return 'massimodutti.com';
+      if (domain.includes('stradivarius.')) return 'stradivarius.com';
+      if (domain.includes('oysho.')) return 'oysho.com';
+      if (domain.includes('uterque.')) return 'uterque.com';
       
       return domain;
     } catch (error) {
@@ -90,13 +114,24 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'zara.com': 'SiZara',
       'nike.com': 'SiNike',
       'adidas.com': 'SiAdidas',
+      'reebok.com': 'SiReebok',
+      'puma.com': 'SiPuma',
       'hm.com': 'SiHm',
-      'mango.com': 'SiMango',
-      'pullandbear.com': 'SiZara', // Inditex
-      'bershka.com': 'SiZara', // Inditex
-      'massimodutti.com': 'SiZara', // Inditex
-      'stradivarius.com': 'SiZara', // Inditex
-      'oysho.com': 'SiZara', // Inditex
+      'mango.com': 'SiShopify', // No hay icono de Mango
+      'asos.com': 'SiShopify', // No hay icono de Asos
+      'zalando.es': 'SiZalando',
+      'zalando.com': 'SiZalando',
+      'miravia.es': 'SiShopify', // No hay icono de Miravia
+      'primark.com': 'SiShopify', // No hay icono de Primark
+      'primark.es': 'SiShopify',
+      
+      // Inditex (mostramos su propio logo para cada marca)
+      'pullandbear.com': 'SiShopify', // No hay icono específico
+      'bershka.com': 'SiShopify',
+      'massimodutti.com': 'SiShopify',
+      'stradivarius.com': 'SiShopify',
+      'oysho.com': 'SiShopify',
+      'uterque.com': 'SiShopify',
       
       // Tecnología
       'apple.com': 'SiApple',
@@ -121,24 +156,24 @@ const ProductImage: React.FC<ProductImageProps> = ({
       'ea.com': 'SiEa',
       
       // Grandes superficies (España)
-      'fnac.es': 'SiApple', // No hay icono de Fnac en react-icons
-      'fnac.com': 'SiApple', // No hay icono de Fnac en react-icons
+      'fnac.es': 'SiAtlassian', // No hay icono de Fnac, usamos uno azul
+      'fnac.com': 'SiAtlassian',
       'mediamarkt.es': 'SiMediamarkt',
-      'elcorteingles.es': 'SiApple', // No hay icono de El Corte Inglés
-      'carrefour.es': 'SiShopify', // No hay icono de Carrefour
-      'alcampo.es': 'SiShopify', // No hay icono de Alcampo
-      'lidl.es': 'SiShopify', // No hay icono de Lidl
-      'dia.es': 'SiShopify', // No hay icono de DIA
+      'elcorteingles.es': 'SiShopify', // No hay icono específico
+      'carrefour.es': 'SiCashapp', // No hay icono de Carrefour, usamos uno azul/verde
+      'alcampo.es': 'SiShopify',
+      'lidl.es': 'SiShopify',
+      'dia.es': 'SiShopify',
       
       // Tecnología (España)
-      'pccomponentes.com': 'SiIntel', // No hay icono de PcComponentes
+      'pccomponentes.com': 'SiPcgamingwiki', // No hay icono específico, usamos uno con "PC"
       'coolmod.com': 'SiIntel',
       'ldlc.com': 'SiIntel',
       
       // Hogar y deporte
       'ikea.com': 'SiIkea',
-      'decathlon.es': 'SiAdidas', // No hay icono de Decathlon
-      'leroy.com': 'SiShopify', // No hay icono de Leroy Merlin
+      'decathlon.es': 'SiShopify', // No hay icono de Decathlon
+      'leroy.com': 'SiShopify',
       'leroymerlin.es': 'SiShopify',
 
       // Otros sites populares
@@ -186,18 +221,11 @@ const ProductImage: React.FC<ProductImageProps> = ({
   const shouldUseInitialsPlaceholder = (): boolean => {
     // Si es un blob URL o URL local, NO usamos placeholder
     if (isBlobOrLocalUrl()) {
-      console.log('Es una URL local o blob, mostrando imagen:', imageUrl);
       return false;
     }
     
     // Para tiendas problemáticas, sin URL o con errores, usamos placeholder
     const shouldUsePlaceholder = isProblematicStore() || !imageUrl || imgState === 'error';
-    if (shouldUsePlaceholder) {
-      console.log('Usando placeholder porque:', 
-        isProblematicStore() ? 'es tienda problemática' : 
-        !imageUrl ? 'no hay URL' : 
-        'hubo error al cargar');
-    }
     return shouldUsePlaceholder;
   };
   
@@ -242,10 +270,29 @@ const ProductImage: React.FC<ProductImageProps> = ({
     
     if (!iconName) {
       // Si no hay icono disponible para esta tienda, mostrar la primera letra del dominio
-      const firstLetter = domain.charAt(0).toUpperCase();
+      // Extraer el nombre principal del dominio
+      const domainParts = domain.split('.');
+      const mainName = domainParts[0];
+      const firstLetter = mainName.charAt(0).toUpperCase();
+      
+      // Generar un color consistente basado en el dominio
+      const getConsistentColor = (text: string): string => {
+        let hash = 0;
+        for (let i = 0; i < text.length; i++) {
+          hash = text.charCodeAt(i) + ((hash << 5) - hash);
+        }
+        const color = Math.abs(hash) % 360;
+        return `hsl(${color}, 70%, 45%)`;
+      };
+      
+      const bgColor = getConsistentColor(domain);
+      
       return (
-        <div className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center">
-          <span className="text-2xl font-bold">{firstLetter}</span>
+        <div 
+          className="w-14 h-14 rounded-full flex items-center justify-center" 
+          style={{ backgroundColor: bgColor }}
+        >
+          <span className="text-2xl font-bold text-white">{firstLetter}</span>
         </div>
       );
     }
@@ -268,7 +315,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
     const domain = extractDomain(purchaseLink);
     
     return (
-      <div className={`relative flex flex-col items-center justify-center shadow-inner bg-white ${className}`}>
+      <div className={`relative flex flex-col items-center justify-center shadow-sm bg-white rounded-md overflow-hidden ${className}`}>
         <DomainLogo domain={domain} />
       </div>
     );
@@ -298,7 +345,7 @@ const ProductImage: React.FC<ProductImageProps> = ({
       
       {/* Mostrar placeholder con logo de la tienda si la imagen falla */}
       {imgState === 'error' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white">
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-white rounded-md overflow-hidden shadow-sm">
           <DomainLogo domain={extractDomain(purchaseLink)} />
         </div>
       )}
