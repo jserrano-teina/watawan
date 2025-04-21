@@ -1,5 +1,6 @@
 import fetch from 'node-fetch';
 import type { Response as NodeFetchResponse } from 'node-fetch';
+import * as cheerio from 'cheerio';
 
 // Interfaz para los metadatos que extraemos
 export interface MetadataResult {
@@ -9,15 +10,16 @@ export interface MetadataResult {
   price: string; // Siempre vacío según nuevas especificaciones
 }
 
-// Patrones de imágenes para tiendas específicas
-interface StorePattern {
+// Interfaz para extractores específicos por tienda
+interface StoreExtractor {
   pattern: RegExp;
-  imageExtractor: (url: string, html: string) => Promise<string | null>;
+  extract: (url: string, $: cheerio.CheerioAPI) => Promise<Partial<MetadataResult>>;
 }
 
 /**
- * Extrae metadatos básicos de una URL usando múltiples métodos
- * Versión mejorada con estrategias de fallback para mejorar la cobertura
+ * Extrae metadatos básicos de una URL usando cheerio para un análisis DOM robusto
+ * Esta implementación mejora sustancialmente la capacidad para extraer información
+ * de una variedad de sitios, incluyendo AliExpress y Zara que tienen estructuras más complejas
  */
 export async function extractOpenGraphData(url: string): Promise<MetadataResult> {
   console.log(`🔍 Extrayendo metadatos para: ${url}`);
@@ -30,18 +32,22 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
   };
   
   try {
-    // Configurar cabeceras para simular un navegador
+    // Configurar cabeceras para simular un navegador real
     const headers = {
       'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
       'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
       'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
       'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
+      'Pragma': 'no-cache',
+      'Sec-Fetch-Dest': 'document',
+      'Sec-Fetch-Mode': 'navigate',
+      'Sec-Fetch-Site': 'none',
+      'Sec-Fetch-User': '?1'
     };
 
     // Configurar un timeout razonable
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 5000);
+    const timeoutId = setTimeout(() => controller.abort(), 8000); // Aumentamos timeout para sitios complejos
     
     // Realizar la petición HTTP
     const response = await fetch(url, {
@@ -60,55 +66,71 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     
     const html = await response.text();
     
-    // Extraer metadatos
+    // Cargar el HTML en cheerio para analizarlo como DOM
+    const $ = cheerio.load(html);
     const result = { ...DEFAULT_RESULT };
     
-    // EXTRACCIÓN DEL TÍTULO - PRIORIDAD:
+    // ==================== EXTRACCIÓN DE TÍTULO ====================
+    // PRIORIDAD:
     // 1. Open Graph
-    // 2. Meta title
-    // 3. Title tag
-    // 4. JSON-LD (Schema.org)
-    // 5. H1 tag
-    // 6. Extraer de la URL
-    const ogTitleMatch = html.match(/<meta[^>]*property=["']og:title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const metaTitleMatch = html.match(/<meta[^>]*name=["']title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const titleTagMatch = html.match(/<title[^>]*>(.*?)<\/title>/i);
-    const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i);
-    const twitterTitleMatch = html.match(/<meta[^>]*name=["']twitter:title["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+    // 2. Twitter Cards
+    // 3. Meta title
+    // 4. Title tag
+    // 5. JSON-LD (Schema.org)
+    // 6. H1 tag más prominente
+    // 7. Extractores específicos por tienda
+    // 8. Extraer de la URL
     
-    if (ogTitleMatch && ogTitleMatch[1]) {
-      result.title = ogTitleMatch[1].trim();
+    // Intentar Open Graph
+    const ogTitle = $('meta[property="og:title"]').attr('content');
+    if (ogTitle) {
+      result.title = ogTitle.trim();
       console.log('✓ Título encontrado en Open Graph');
-    } else if (twitterTitleMatch && twitterTitleMatch[1]) {
-      result.title = twitterTitleMatch[1].trim();
-      console.log('✓ Título encontrado en Twitter Card');
-    } else if (metaTitleMatch && metaTitleMatch[1]) {
-      result.title = metaTitleMatch[1].trim();
-      console.log('✓ Título encontrado en meta title');
-    } else if (titleTagMatch && titleTagMatch[1]) {
-      result.title = titleTagMatch[1].trim();
-      console.log('✓ Título encontrado en title tag');
-    } else if (h1Match && h1Match[1]) {
-      // Limpiar etiquetas HTML del H1
-      result.title = h1Match[1].replace(/<[^>]*>/g, '').trim();
-      console.log('✓ Título encontrado en H1');
     }
     
-    // Si no encontramos un título, intentamos extraerlo de JSON-LD
+    // Twitter Cards
+    if (!result.title) {
+      const twitterTitle = $('meta[name="twitter:title"]').attr('content');
+      if (twitterTitle) {
+        result.title = twitterTitle.trim();
+        console.log('✓ Título encontrado en Twitter Card');
+      }
+    }
+    
+    // Meta title
+    if (!result.title) {
+      const metaTitle = $('meta[name="title"]').attr('content');
+      if (metaTitle) {
+        result.title = metaTitle.trim();
+        console.log('✓ Título encontrado en meta title');
+      }
+    }
+    
+    // Title tag
+    if (!result.title) {
+      const titleTag = $('title').text();
+      if (titleTag) {
+        result.title = titleTag.trim();
+        console.log('✓ Título encontrado en title tag');
+      }
+    }
+    
+    // JSON-LD (Schema.org)
     if (!result.title) {
       try {
-        const schemaOrgPattern = new RegExp('<script[^>]*type=["\'](application/ld\\+json)["\'][^>]*>([\\s\\S]*?)</script>', 'i');
-        const schemaOrgMatch = html.match(schemaOrgPattern);
-        if (schemaOrgMatch && schemaOrgMatch[2]) {
-          const jsonData = JSON.parse(schemaOrgMatch[2]);
+        const jsonLdScript = $('script[type="application/ld+json"]').first().html();
+        if (jsonLdScript) {
+          const jsonData = JSON.parse(jsonLdScript);
           
-          // Buscar título en Schema.org
           if (jsonData && jsonData.name) {
             result.title = jsonData.name;
             console.log('✓ Título encontrado en Schema.org JSON-LD');
           } else if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].name) {
             result.title = jsonData[0].name;
             console.log('✓ Título encontrado en Schema.org JSON-LD (array)');
+          } else if (jsonData && jsonData.headline) {
+            result.title = jsonData.headline;
+            console.log('✓ Título encontrado en Schema.org headline');
           }
         }
       } catch (e) {
@@ -116,74 +138,132 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
       }
     }
     
-    // Descripción: Primero Open Graph, luego meta description
-    const ogDescriptionMatch = html.match(/<meta[^>]*property=["']og:description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const metaDescriptionMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const twitterDescMatch = html.match(/<meta[^>]*name=["']twitter:description["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    
-    if (ogDescriptionMatch && ogDescriptionMatch[1]) {
-      result.description = ogDescriptionMatch[1].trim();
-    } else if (twitterDescMatch && twitterDescMatch[1]) {
-      result.description = twitterDescMatch[1].trim();
-    } else if (metaDescriptionMatch && metaDescriptionMatch[1]) {
-      result.description = metaDescriptionMatch[1].trim();
+    // H1 tag más prominente
+    if (!result.title) {
+      const h1Text = $('h1').first().text();
+      if (h1Text) {
+        result.title = h1Text.trim();
+        console.log('✓ Título encontrado en H1');
+      }
     }
     
-    // EXTRACCIÓN DE IMAGEN - PRIORIDAD:
+    // ================ EXTRACCIÓN DE DESCRIPCIÓN =================
+    // PRIORIDAD:
     // 1. Open Graph
-    // 2. Twitter Card
-    // 3. Meta image
-    // 4. Patrones específicos para tiendas (Amazon, etc.)
-    // 5. Imágenes destacadas en el HTML
-    const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const twitterImageMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-    const metaImageMatch = html.match(/<meta[^>]*name=["']image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+    // 2. Twitter Cards
+    // 3. Meta description
+    // 4. Schema.org
+    // 5. Párrafos principales
     
-    if (ogImageMatch && ogImageMatch[1]) {
-      result.imageUrl = ogImageMatch[1].trim();
+    const ogDescription = $('meta[property="og:description"]').attr('content');
+    if (ogDescription) {
+      result.description = ogDescription.trim();
+      console.log('✓ Descripción encontrada en Open Graph');
+    }
+    
+    if (!result.description) {
+      const twitterDesc = $('meta[name="twitter:description"]').attr('content');
+      if (twitterDesc) {
+        result.description = twitterDesc.trim();
+        console.log('✓ Descripción encontrada en Twitter Card');
+      }
+    }
+    
+    if (!result.description) {
+      const metaDesc = $('meta[name="description"]').attr('content');
+      if (metaDesc) {
+        result.description = metaDesc.trim();
+        console.log('✓ Descripción encontrada en meta description');
+      }
+    }
+    
+    // ================ EXTRACCIÓN DE IMAGEN =================
+    // PRIORIDAD:
+    // 1. Open Graph
+    // 2. Twitter Cards
+    // 3. Schema.org
+    // 4. Extractores específicos por tienda
+    // 5. Imágenes destacadas en base a tamaño y posición
+    
+    const ogImage = $('meta[property="og:image"]').attr('content');
+    if (ogImage) {
+      result.imageUrl = ogImage.trim();
       console.log('✓ Imagen encontrada en Open Graph');
-    } else if (twitterImageMatch && twitterImageMatch[1]) {
-      result.imageUrl = twitterImageMatch[1].trim();
-      console.log('✓ Imagen encontrada en Twitter Card');
-    } else if (metaImageMatch && metaImageMatch[1]) {
-      result.imageUrl = metaImageMatch[1].trim();
-      console.log('✓ Imagen encontrada en meta image');
-    } else {
-      // Comprobar patrones específicos para tiendas
+    }
+    
+    if (!result.imageUrl) {
+      const twitterImage = $('meta[name="twitter:image"]').attr('content');
+      if (twitterImage) {
+        result.imageUrl = twitterImage.trim();
+        console.log('✓ Imagen encontrada en Twitter Card');
+      }
+    }
+    
+    if (!result.imageUrl) {
+      const metaImage = $('meta[name="image"]').attr('content');
+      if (metaImage) {
+        result.imageUrl = metaImage.trim();
+        console.log('✓ Imagen encontrada en meta image');
+      }
+    }
+    
+    // Buscar en JSON-LD
+    if (!result.imageUrl) {
+      try {
+        const jsonLdScript = $('script[type="application/ld+json"]').first().html();
+        if (jsonLdScript) {
+          const jsonData = JSON.parse(jsonLdScript);
+          
+          if (jsonData && jsonData.image) {
+            result.imageUrl = typeof jsonData.image === 'string' ? jsonData.image : jsonData.image.url || jsonData.image[0];
+            console.log('✓ Imagen encontrada en Schema.org JSON-LD');
+          } else if (Array.isArray(jsonData) && jsonData[0] && jsonData[0].image) {
+            const image = jsonData[0].image;
+            result.imageUrl = typeof image === 'string' ? image : image.url || image[0];
+            console.log('✓ Imagen encontrada en Schema.org JSON-LD (array)');
+          }
+        }
+      } catch (e) {
+        console.log('Error al parsear JSON-LD para imagen:', e);
+      }
+    }
+    
+    // Patrones específicos para diferentes tiendas
+    if (!result.imageUrl) {
       const urlLower = url.toLowerCase();
       
       // Amazon
       if (urlLower.includes('amazon.')) {
-        const amazonImg = await extractAmazonImage(url, html);
+        const amazonImg = await extractAmazonImageWithCheerio(url, $);
         if (amazonImg) {
           result.imageUrl = amazonImg;
-          console.log('✓ Imagen extraída de Amazon');
+          console.log('✓ Imagen extraída de Amazon con cheerio');
         }
       } 
       // Zara
       else if (urlLower.includes('zara.com')) {
-        const zaraImg = await extractZaraImage(url, html);
+        const zaraImg = await extractZaraImageWithCheerio(url, $);
         if (zaraImg) {
           result.imageUrl = zaraImg;
-          console.log('✓ Imagen extraída de Zara');
+          console.log('✓ Imagen extraída de Zara con cheerio');
         }
       }
       // AliExpress
       else if (urlLower.includes('aliexpress.')) {
-        const aliImg = await extractGenericLargeImage(html);
+        const aliImg = await extractAliExpressImageWithCheerio($);
         if (aliImg) {
           result.imageUrl = aliImg;
-          console.log('✓ Imagen extraída de AliExpress');
+          console.log('✓ Imagen extraída de AliExpress con cheerio');
         }
       }
-      
-      // Si aún no tenemos imagen, buscar imágenes destacadas en el HTML
-      if (!result.imageUrl) {
-        const largeImage = await extractGenericLargeImage(html);
-        if (largeImage) {
-          result.imageUrl = largeImage;
-          console.log('✓ Imagen destacada encontrada en HTML');
-        }
+    }
+    
+    // Buscar imágenes destacadas en el HTML basadas en tamaño, clase, y posición
+    if (!result.imageUrl) {
+      const bestImg = await extractBestImageWithCheerio($, url);
+      if (bestImg) {
+        result.imageUrl = bestImg;
+        console.log('✓ Imagen destacada encontrada en HTML con cheerio');
       }
     }
     
@@ -219,12 +299,17 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     // El precio siempre queda vacío
     result.price = '';
     
-    // Limpiar el título de entidades HTML y caracteres no deseados
+    // Limpiar el título y descripción
     if (result.title) {
       result.title = result.title
         .replace(/&nbsp;/g, ' ')
-        .replace(/&[a-z0-9]+;/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&[a-z0-9]+;/g, ' ') // Otras entidades HTML
         .replace(/[\r\n\t]+/g, ' ') // Eliminar saltos de línea y tabs
+        .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios con uno solo
         .trim();
     }
     
@@ -232,8 +317,13 @@ export async function extractOpenGraphData(url: string): Promise<MetadataResult>
     if (result.description) {
       result.description = result.description
         .replace(/&nbsp;/g, ' ')
-        .replace(/&[a-z0-9]+;/g, ' ')
-        .replace(/[\r\n\t]+/g, ' ')
+        .replace(/&amp;/g, '&')
+        .replace(/&quot;/g, '"')
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&[a-z0-9]+;/g, ' ') // Otras entidades HTML
+        .replace(/[\r\n\t]+/g, ' ') // Eliminar saltos de línea y tabs
+        .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios con uno solo
         .trim();
     }
     
@@ -305,9 +395,25 @@ function getMetadataFromUrl(url: string): MetadataResult {
 }
 
 /**
- * Extrae imagen de Amazon
+ * Función para limpiar texto de entidades HTML y caracteres especiales
  */
-async function extractAmazonImage(url: string, html: string): Promise<string | null> {
+function cleanTextContent(text: string): string {
+  return text
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&[a-z0-9]+;/g, ' ') // Otras entidades HTML
+    .replace(/[\r\n\t]+/g, ' ') // Eliminar saltos de línea y tabs
+    .replace(/\s{2,}/g, ' ') // Reemplazar múltiples espacios con uno solo
+    .trim();
+}
+
+/**
+ * Extrae imagen de Amazon usando cheerio
+ */
+async function extractAmazonImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
   try {
     // Patrones para extraer ASIN
     const asinPatterns = [
@@ -317,7 +423,7 @@ async function extractAmazonImage(url: string, html: string): Promise<string | n
       /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
     ];
     
-    let asin = null;
+    let asin: string | null = null;
     
     // Buscar ASIN en la URL
     for (const pattern of asinPatterns) {
@@ -329,145 +435,335 @@ async function extractAmazonImage(url: string, html: string): Promise<string | n
       }
     }
     
-    // Si no encontramos ASIN en la URL, buscarlo en el HTML
+    // Buscar ASIN en el HTML
     if (!asin) {
-      const asinMatch = html.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
-      if (asinMatch && asinMatch[1]) {
-        asin = asinMatch[1].toUpperCase();
-        console.log(`ASIN encontrado en HTML: ${asin}`);
-      }
-    }
-    
-    if (!asin) {
-      return null;
-    }
-    
-    // Buscar la imagen en el HTML primero
-    const imgPatterns = [
-      /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg)"/i,
-      /https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg/i,
-      /"hiRes":"(https:\/\/[^"]+?)"/i,
-    ];
-    
-    for (const pattern of imgPatterns) {
-      const match = html.match(pattern);
-      if (match && match[1]) {
-        return match[1];
-      }
-    }
-    
-    // Si no encontramos la imagen en el HTML, generarla a partir del ASIN
-    return `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
-  } catch (e) {
-    console.log('Error extrayendo imagen de Amazon:', e);
-    return null;
-  }
-}
-
-/**
- * Extrae imagen de Zara
- */
-async function extractZaraImage(url: string, html: string): Promise<string | null> {
-  try {
-    // Buscar en el HTML primero
-    const imgMatch = html.match(/"image":\s*\[\s*"([^"]+?)"/i);
-    if (imgMatch && imgMatch[1]) {
-      return imgMatch[1];
-    }
-    
-    // Buscar el código de producto
-    const productCodeMatch = url.match(/[p]([0-9]+)\.html/i);
-    if (!productCodeMatch || !productCodeMatch[1]) {
-      return null;
-    }
-    
-    const productId = productCodeMatch[1];
-    
-    if (productId.length >= 7) {
-      const productCategory = productId.substring(0, 2);
-      const productSubcategory = productId.substring(2, 4);
-      const specificCode = productId.substring(4);
-      
-      // Patrón para productos actuales
-      return `https://static.zara.net/photos//2024/V/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`;
-    }
-    
-    return null;
-  } catch (e) {
-    console.log('Error extrayendo imagen de Zara:', e);
-    return null;
-  }
-}
-
-/**
- * Busca imágenes grandes en el HTML
- * Útil para sitios que no especifican metadatos
- */
-async function extractGenericLargeImage(html: string): Promise<string | null> {
-  try {
-    // Buscar imágenes con atributos que sugieren que son las principales
-    const imgPatterns = [
-      /<img[^>]*?class="[^"]*?(main|primary|product)[^"]*?"[^>]*?src="([^"]+)"/i,
-      /<img[^>]*?id="[^"]*?(main|primary|product)[^"]*?"[^>]*?src="([^"]+)"/i,
-      /<img[^>]*?(main|primary|product|gallery)[^>]*?src="([^"]+)"/i,
-      /<img[^>]*?src="([^"]+)"[^>]*?(main|primary|product|gallery)/i,
-      /<img[^>]*?data-src="([^"]+)"[^>]*?(main|primary|product|gallery)/i,
-      /<img[^>]*?data-lazy-src="([^"]+)"[^>]*?(main|primary|product|gallery)/i
-    ];
-    
-    for (const pattern of imgPatterns) {
-      const match = html.match(pattern);
-      if (match) {
-        // El grupo de captura para la URL puede ser diferente según el patrón
-        const imgSrc = match[2] || match[1];
-        if (imgSrc && !imgSrc.includes('blank.') && !imgSrc.includes('placeholder') && !imgSrc.includes('loading')) {
-          return imgSrc;
+      // Buscar en atributos data-asin
+      const dataAsin = $('[data-asin]').first().attr('data-asin');
+      if (dataAsin && dataAsin.length >= 10) {
+        asin = dataAsin.toUpperCase();
+        console.log(`ASIN encontrado en atributo data-asin: ${asin}`);
+      } else {
+        // Buscar en scripts
+        const scriptContent = $('script:contains("ASIN")').text();
+        const asinMatch = scriptContent.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
+        if (asinMatch && asinMatch[1]) {
+          asin = asinMatch[1].toUpperCase();
+          console.log(`ASIN encontrado en script: ${asin}`);
         }
       }
     }
     
-    // Buscar cualquier imagen que parezca grande basada en dimensiones en atributos
-    const dimensionPattern = /<img[^>]*?(width|height|w|h)=["']?(\d+)["']?[^>]*?src=["']([^"']+)["']/gi;
-    let match;
-    let bestImage = null;
-    let largestDimension = 0;
+    // Buscar la imagen directamente en el DOM
+    // 1. Buscar en el visor de imágenes principal
+    let imgUrl = $('#landingImage').attr('src') || $('#imgBlkFront').attr('src');
     
-    while ((match = dimensionPattern.exec(html)) !== null) {
-      const dimension = parseInt(match[2], 10);
-      const src = match[3];
-      
-      if (dimension > largestDimension && dimension > 200 && 
-          !src.includes('blank.') && !src.includes('placeholder') && !src.includes('loading')) {
-        largestDimension = dimension;
-        bestImage = src;
-      }
+    // 2. Buscar en data-old-hires (imagen de alta resolución)
+    if (!imgUrl) {
+      imgUrl = $('img[data-old-hires]').attr('data-old-hires');
     }
     
-    if (bestImage) {
-      return bestImage;
+    // 3. Buscar en otros contenedores comunes
+    if (!imgUrl) {
+      imgUrl = $('.imgTagWrapper img').attr('src');
     }
     
-    // Como último recurso, extraer todas las imágenes y elegir la primera "grande" que encontremos
-    const allImagesPattern = /<img[^>]*?src=["']([^"']+)["'][^>]*?>/gi;
-    const images = [];
-    
-    while ((match = allImagesPattern.exec(html)) !== null) {
-      const src = match[1];
-      // Filtrar imágenes claramente pequeñas (iconos, etc) y placeholders
-      if (!src.includes('blank.') && !src.includes('placeholder') && !src.includes('loading') &&
-          !src.includes('icon') && !src.includes('logo') && src.match(/\.(jpg|jpeg|png)(\?|$)/i)) {
-        images.push(src);
-      }
+    // 4. Buscar con selectores específicos de Amazon
+    if (!imgUrl) {
+      imgUrl = $('#main-image').attr('src') || 
+               $('#imageBlock img').first().attr('src') ||
+               $('.image-display-block img').first().attr('src');
     }
     
-    // Devolver la primera imagen razonable de la página
-    if (images.length > 0) {
-      return images[0];
+    // Si encontramos una imagen, la devolvemos
+    if (imgUrl && imgUrl.includes('amazon') && imgUrl.includes('images')) {
+      return imgUrl;
+    }
+    
+    // Si tenemos un ASIN pero no pudimos extraer la imagen, usar un patrón URL conocido
+    if (asin) {
+      return `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`;
     }
     
     return null;
   } catch (e) {
-    console.log('Error extrayendo imagen genérica:', e);
+    console.log('Error extrayendo imagen de Amazon con cheerio:', e);
+    return null;
+  }
+}
+
+/**
+ * Extrae imagen de Zara usando cheerio
+ */
+async function extractZaraImageWithCheerio(url: string, $: cheerio.CheerioAPI): Promise<string | null> {
+  try {
+    // Buscar en la estructura JSON en los scripts
+    let imgUrl: string | null = null;
+    
+    // 1. Buscar en scripts que contengan información del producto
+    $('script:not([src])').each((_, element) => {
+      const content = $(element).html();
+      if (!content) return;
+      
+      if (content.includes('"image"') || content.includes('"images"')) {
+        try {
+          // Buscar patrones como "image": ["https://..."] o "images": ["https://..."]
+          const imgMatch = content.match(/"image(?:s)?":\s*\[\s*"([^"]+?)"/i);
+          if (imgMatch && imgMatch[1]) {
+            imgUrl = imgMatch[1];
+            return false; // Break the each loop
+          }
+        } catch (e) {
+          // Continuar con la siguiente iteración
+        }
+      }
+    });
+    
+    // 2. Buscar imágenes con estructuras típicas de Zara
+    if (!imgUrl) {
+      const productImage = $('img[data-path]').attr('src') || 
+                           $('.media-image img').attr('src') ||
+                           $('.product-detail-images img').first().attr('src');
+      
+      if (productImage) {
+        imgUrl = productImage;
+      }
+    }
+    
+    // 3. Cualquier imagen grande en la página
+    if (!imgUrl) {
+      $('img').each((_, element) => {
+        const src = $(element).attr('src');
+        const width = parseInt($(element).attr('width') || '0', 10);
+        const height = parseInt($(element).attr('height') || '0', 10);
+        
+        if (src && 
+            (width > 300 || height > 300) && 
+            !src.includes('icon') && 
+            !src.includes('logo') &&
+            (src.includes('.jpg') || src.includes('.jpeg') || src.includes('.png'))) {
+          imgUrl = src;
+          return false; // Break the each loop
+        }
+      });
+    }
+    
+    // 4. Extraer del código de producto si está en la URL
+    if (!imgUrl) {
+      const productCodeMatch = url.match(/[p]([0-9]+)\.html/i);
+      if (productCodeMatch && productCodeMatch[1]) {
+        const productId = productCodeMatch[1];
+        
+        if (productId.length >= 7) {
+          const productCategory = productId.substring(0, 2);
+          const productSubcategory = productId.substring(2, 4);
+          const specificCode = productId.substring(4);
+          
+          // Patrón para productos actuales
+          imgUrl = `https://static.zara.net/photos//2024/V/0/1/p/${productCategory}${productSubcategory}/${specificCode}/2/w/563/${productId}_1_1_1.jpg`;
+        }
+      }
+    }
+    
+    return imgUrl;
+  } catch (e) {
+    console.log('Error extrayendo imagen de Zara con cheerio:', e);
+    return null;
+  }
+}
+
+/**
+ * Extrae imagen de AliExpress usando cheerio
+ */
+async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise<string | null> {
+  try {
+    // 1. Buscar en estructuras de datos JSON en scripts
+    let imgUrl: string | null = null;
+    
+    // Buscar en scripts que contengan información del producto
+    $('script:not([src])').each((_, element) => {
+      const content = $(element).html();
+      if (!content) return;
+      
+      // Buscar patrones comunes en AliExpress
+      if (content.includes('"imageUrl"') || content.includes('"imageModule"')) {
+        try {
+          // Buscar patrones para imágenes en la estructura de datos
+          const imgMatch = content.match(/"imageUrl"\s*:\s*"([^"]+?)"/i) || 
+                          content.match(/"image_url"\s*:\s*"([^"]+?)"/i) ||
+                          content.match(/"mainImage"\s*:\s*"([^"]+?)"/i);
+          
+          if (imgMatch && imgMatch[1]) {
+            imgUrl = imgMatch[1];
+            return false; // Break the each loop
+          }
+        } catch (e) {
+          // Continuar con la siguiente iteración
+        }
+      }
+    });
+    
+    // 2. Buscar en elementos DOM comunes para AliExpress
+    if (!imgUrl) {
+      imgUrl = $('.gallery-preview-panel img').first().attr('src') || 
+              $('.product-image img').first().attr('src') ||
+              $('.magnifier-image').attr('src');
+    }
+    
+    // 3. Buscar elementos específicos de la nueva interfaz
+    if (!imgUrl) {
+      // Intentar con atributos data-src que son comunes en lazy loading
+      const lazyImg = $('img[data-src*="ae01.alicdn.com"]').first().attr('data-src');
+      if (lazyImg) {
+        imgUrl = lazyImg;
+      }
+    }
+    
+    // 4. Buscar imágenes con fuentes de AliExpress (dominio ae01.alicdn.com)
+    if (!imgUrl) {
+      $('img').each((_, element) => {
+        const src = $(element).attr('src');
+        
+        if (src && src.includes('ae01.alicdn.com') && 
+            !src.includes('icon') && !src.includes('logo')) {
+          imgUrl = src;
+          return false; // Break the each loop
+        }
+      });
+    }
+    
+    return imgUrl;
+  } catch (e) {
+    console.log('Error extrayendo imagen de AliExpress con cheerio:', e);
+    return null;
+  }
+}
+
+/**
+ * Extrae la mejor imagen de la página usando cheerio
+ * Método general para cualquier sitio
+ */
+async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): Promise<string | null> {
+  try {
+    let bestImage: string | null = null;
+    let bestScore = 0;
+    
+    // Buscar imágenes y evaluarlas por dimensiones y atributos relevantes
+    $('img').each((_, element) => {
+      let score = 0;
+      const img = $(element);
+      const src = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src');
+      
+      if (!src) return;
+      
+      // Filtrar imágenes pequeñas, iconos y placeholder
+      if (src.includes('blank.') || 
+          src.includes('placeholder') || 
+          src.includes('loading') ||
+          src.includes('icon') || 
+          src.includes('logo')) {
+        return;
+      }
+      
+      // Verificar si es una imagen de un formato común
+      if (!src.match(/\.(jpg|jpeg|png|webp)(\?|$)/i)) {
+        return;
+      }
+      
+      // Analizar atributos para determinar si es una imagen destacada
+      const width = parseInt(img.attr('width') || '0', 10);
+      const height = parseInt(img.attr('height') || '0', 10);
+      const alt = (img.attr('alt') || '').toLowerCase();
+      const className = (img.attr('class') || '').toLowerCase();
+      const id = (img.attr('id') || '').toLowerCase();
+      
+      // Puntuación basada en tamaño
+      if (width > 300 || height > 300) score += 20;
+      if (width > 500 || height > 500) score += 20;
+      
+      // Puntuación basada en la posición en el DOM
+      const parentClass = img.parent().attr('class') || '';
+      const parentId = img.parent().attr('id') || '';
+      
+      // Puntuación por nombres de clase/id relevantes
+      const keywords = ['product', 'main', 'primary', 'hero', 'featured', 'gallery', 'carousel', 'slide'];
+      
+      for (const keyword of keywords) {
+        if (className.includes(keyword)) score += 15;
+        if (id.includes(keyword)) score += 15;
+        if (parentClass.includes(keyword)) score += 10;
+        if (parentId.includes(keyword)) score += 10;
+        if (alt.includes(keyword)) score += 5;
+      }
+      
+      // No podemos usar offset en cheerio en Node.js al igual que en jQuery
+      // Usamos otra heurística: si aparece antes en el DOM, es más probable que sea importante
+      if (_.toString().length < 5000) {
+        score += 15; // Está cerca del inicio del documento
+      }
+      
+      // Penalización para imágenes probablemente irrelevantes
+      if (className.includes('avatar') || 
+          className.includes('thumb') || 
+          id.includes('avatar') || 
+          id.includes('thumb')) {
+        score -= 20;
+      }
+      
+      // Actualiza la mejor imagen si esta tiene mejor puntuación
+      if (score > bestScore) {
+        bestScore = score;
+        bestImage = src;
+      }
+    });
+    
+    // Si no encontramos ninguna imagen con buena puntuación, buscar cualquier imagen grande
+    if (!bestImage || bestScore < 20) {
+      $('img').each((_, element) => {
+        const src = $(element).attr('src');
+        const width = parseInt($(element).attr('width') || '0', 10);
+        const height = parseInt($(element).attr('height') || '0', 10);
+        
+        if (src && 
+            (width > 200 || height > 200) && 
+            !src.includes('blank.') && 
+            !src.includes('placeholder') && 
+            !src.includes('loading') && 
+            !src.includes('icon') && 
+            !src.includes('logo')) {
+          bestImage = src;
+          return false; // Break the each loop
+        }
+      });
+    }
+    
+    // Asegurarse de que la URL sea absoluta
+    if (bestImage) {
+      try {
+        if (bestImage.startsWith('http')) {
+          // Ya es una URL absoluta
+          return bestImage;
+        } else if (bestImage.startsWith('//')) {
+          // URL de protocolo relativo
+          const urlObj = new URL(url);
+          return urlObj.protocol + bestImage;
+        } else if (bestImage.startsWith('/')) {
+          // URL absoluta al dominio
+          const urlObj = new URL(url);
+          return urlObj.origin + bestImage;
+        } else {
+          // URL relativa
+          const urlObj = new URL(url);
+          return urlObj.origin + '/' + bestImage;
+        }
+      } catch (e) {
+        console.log('Error convirtiendo URL relativa a absoluta:', e);
+        return bestImage; // Devolver la URL tal cual
+      }
+    }
+    
+    return bestImage;
+  } catch (e) {
+    console.log('Error extrayendo imagen genérica con cheerio:', e);
     return null;
   }
 }
