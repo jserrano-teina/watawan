@@ -722,11 +722,13 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
           imgMatch = content.match(/imagePathList['"]?\s*:\s*\[\s*['"]([^'"]+?)['"](?:\s*,|\s*\])/i);
           if (imgMatch && imgMatch[1]) {
             // A menudo estas URLs son relativas o necesitan el dominio
-            let extractedUrl = imgMatch[1];
-            if (extractedUrl.startsWith('//')) {
-              extractedUrl = 'https:' + extractedUrl;
+            const extractedUrl = imgMatch[1];
+            // Comprobar si es una URL de protocolo relativo
+            if (extractedUrl.indexOf('//') === 0) {
+              imgUrl = 'https:' + extractedUrl;
+            } else {
+              imgUrl = extractedUrl;
             }
-            imgUrl = extractedUrl;
             console.log('✓ Imagen extraída de la galería de imágenes');
             return false;
           }
@@ -830,11 +832,11 @@ async function extractAliExpressImageWithCheerio($: cheerio.CheerioAPI): Promise
         
         if (src) {
           // Asegurarse de que la URL tenga el protocolo
-          if (src.startsWith('//')) {
+          if (src.indexOf('//') === 0) {
             src = 'https:' + src;
           }
           
-          if (src.includes('alicdn') && !src.includes('icon') && !src.includes('logo')) {
+          if (src.indexOf('alicdn') >= 0 && src.indexOf('icon') === -1 && src.indexOf('logo') === -1) {
             imgUrl = src;
             console.log(`✓ Imagen extraída de selector CSS: ${selector}`);
             break;
@@ -930,11 +932,11 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
       const keywords = ['product', 'main', 'primary', 'hero', 'featured', 'gallery', 'carousel', 'slide'];
       
       for (const keyword of keywords) {
-        if (className.includes(keyword)) score += 15;
-        if (id.includes(keyword)) score += 15;
-        if (parentClass.includes(keyword)) score += 10;
-        if (parentId.includes(keyword)) score += 10;
-        if (alt.includes(keyword)) score += 5;
+        if (className.indexOf(keyword) >= 0) score += 15;
+        if (id.indexOf(keyword) >= 0) score += 15;
+        if (parentClass.indexOf(keyword) >= 0) score += 10;
+        if (parentId.indexOf(keyword) >= 0) score += 10;
+        if (alt.indexOf(keyword) >= 0) score += 5;
       }
       
       // No podemos usar offset en cheerio en Node.js al igual que en jQuery
@@ -944,10 +946,10 @@ async function extractBestImageWithCheerio($: cheerio.CheerioAPI, url: string): 
       }
       
       // Penalización para imágenes probablemente irrelevantes
-      if (className.includes('avatar') || 
-          className.includes('thumb') || 
-          id.includes('avatar') || 
-          id.includes('thumb')) {
+      if (className.indexOf('avatar') >= 0 || 
+          className.indexOf('thumb') >= 0 || 
+          id.indexOf('avatar') >= 0 || 
+          id.indexOf('thumb') >= 0) {
         score -= 20;
       }
       
