@@ -699,12 +699,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`📋 Extrayendo metadatos de URL: ${url}`);
       
-      // Registrar información del dispositivo para diagnóstico
+      // Detectar tipo de dispositivo a partir del User-Agent
       const userAgent = req.headers['user-agent'] || 'Unknown';
-      const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
-                       (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
       
-      console.log(`📱 Dispositivo solicitante: ${deviceType}`);
+      // Determinar tipo de dispositivo para la extracción
+      let deviceType: 'mobile' | 'tablet' | 'desktop' = 'desktop';
+      
+      if (userAgent.toLowerCase().includes('iphone') || 
+          userAgent.toLowerCase().includes('android') && !userAgent.toLowerCase().includes('tablet')) {
+        deviceType = 'mobile';
+      } else if (userAgent.toLowerCase().includes('ipad') || 
+                userAgent.toLowerCase().includes('tablet')) {
+        deviceType = 'tablet';
+      }
+      
+      console.log(`📱 Dispositivo detectado: ${deviceType}`);
       
       // Usar nuestro nuevo extractor de Open Graph con timeout
       const { extractOpenGraphData } = await import('./open-graph');
@@ -712,7 +721,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Crear una promesa con timeout para evitar bloqueos
       const fetchWithTimeout = async (ms: number): Promise<any> => {
         return Promise.race([
-          extractOpenGraphData(url),
+          extractOpenGraphData(url, deviceType),
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
           )
