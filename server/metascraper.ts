@@ -149,114 +149,21 @@ async function extractAmazonImage(url: string): Promise<string | undefined> {
       return undefined;
     }
     
-    // Intentar obtener el HTML para extraer la imagen correcta
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      
-      const response = await fetchWithCorrectTypes(fullUrl, {
-        headers: {
-          'User-Agent': USER_AGENTS.desktop, // Usamos el User-Agent más efectivo para extraer imágenes
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-          'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-          'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Sec-Fetch-User': '?1',
-          'Upgrade-Insecure-Requests': '1'
-        },
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      if (response.ok) {
-        const html = await response.text();
-        debug(`HTML obtenido para extracción de imagen: ${html.length} bytes`);
-        
-        // Patrones para encontrar la imagen principal del producto
-        const imagePatterns = [
-          // Buscar en la sección "landingImage" o "imgBlkFront"
-          /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg)"/i,
-          /https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg/i,
-          // Buscar en los datos estructurados de JSON-LD
-          /"image"\s*:\s*"(https:\/\/[^"]+?)"/i,
-          // Buscar en imágenes del carrusel
-          /"hiRes":"(https:\/\/[^"]+?)"/i,
-          // Buscar en la imagen de miniatura
-          /"thumb":"(https:\/\/[^"]+?)"/i,
-          // Buscar en meta tags
-          /<meta\s+property="og:image"\s+content="([^"]+)"/i
-        ];
-        
-        for (const pattern of imagePatterns) {
-          const match = html.match(pattern);
-          if (match && match[1]) {
-            const imageUrl = match[1].replace(/\\_/g, '_');
-            debug(`Imagen extraída del HTML: ${imageUrl}`);
-            return imageUrl;
-          }
-        }
-      }
-    } catch (error) {
-      debug(`Error obteniendo HTML para imágenes: ${error}`);
-    }
+    // NUEVA ESTRATEGIA: Generar URL de imagen directamente basada en el ASIN
+    // Amazon utiliza una estructura predecible para sus imágenes de productos
+    debug(`Usando ASIN ${asin} para generar URL de imagen directamente`);
     
-    // Como fallback, usar la imagen dinámica más reciente
-    const imageUrls = [
+    // Construir URLs de imágenes basadas en patrones comunes de Amazon
+    const possibleImageUrls = [
+      `https://m.media-amazon.com/images/I/${asin}._AC_SX679_.jpg`,
+      `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
       `https://m.media-amazon.com/images/I/${asin}.jpg`,
-      `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`, 
-      `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
+      `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SX679_.jpg`
     ];
     
-    // Intentar verificar que la imagen existe y no es un placeholder de 1x1
-    try {
-      for (const imgUrl of imageUrls) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
-        try {
-          // Usar una verificación más simple con HEAD request
-          const response = await fetchWithCorrectTypes(imgUrl, {
-            method: 'HEAD',
-            signal: controller.signal,
-            // Agregar cabeceras para evitar bloqueos
-            headers: {
-              'User-Agent': getRandomUserAgent(), // Rotamos User-Agent para evitar bloqueos
-              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Cache-Control': 'no-cache'
-            }
-          }) as NodeFetchResponse;
-          
-          clearTimeout(timeoutId);
-          
-          if (response.ok) {
-            // Verificar tamaño por cómo lo reporta el servidor
-            const contentLengthHeader = response.headers.get('content-length');
-            const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : 0;
-            
-            if (contentLength > 1000) {
-              debug(`Imagen válida encontrada: ${imgUrl} (${contentLength} bytes)`);
-              return imgUrl;
-            }
-          }
-        } catch (e) {
-          clearTimeout(timeoutId);
-          continue;
-        }
-      }
-    } catch (e) {
-      debug(`Error verificando imágenes: ${e}`);
-    }
-    
-    // Último recurso, usar una URL de imagen basada en el ASIN
-    const lastFallbackUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
-    debug(`Usando URL de imagen de último recurso: ${lastFallbackUrl}`);
-    
-    return lastFallbackUrl;
+    // Devolver la primera URL (más probable)
+    debug(`Generada URL de imagen para Amazon: ${possibleImageUrls[0]}`);
+    return possibleImageUrls[0];
   } catch (error) {
     console.error(`Error al extraer imagen de Amazon: ${error}`);
     return undefined;
