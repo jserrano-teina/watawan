@@ -699,36 +699,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log(`Extrayendo metadatos de URL: ${url}`);
       
-      // Procesamos todos los casos de manera genérica con nuestro sistema mejorado
-      console.log(`Procesando metadatos para URL: ${url}`);
+      // Registrar información del dispositivo para diagnóstico
+      const userAgent = req.headers['user-agent'] || 'Unknown';
+      const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
+                       (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
       
-      // Usamos el sistema estándar para todos los casos
-      const { getUrlMetadata } = await import('./metascraper');
+      console.log(`📱 Dispositivo solicitante: ${deviceType}`);
       
-      // Añadir timeout global para evitar bloqueos
+      // Usar nuestro nuevo extractor de Open Graph con timeout
+      const { extractOpenGraphData } = await import('./open-graph');
+      
+      // Crear una promesa con timeout para evitar bloqueos
+      const fetchWithTimeout = async (ms: number): Promise<any> => {
+        return Promise.race([
+          extractOpenGraphData(url),
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
+          )
+        ]);
+      };
+      
+      // Dar un máximo de 5 segundos para la extracción
       let metadata;
       try {
-        // Registrar información del dispositivo para diagnóstico
-        const userAgent = req.headers['user-agent'] || 'Unknown';
-        const deviceType = userAgent.includes('Mobile') ? 'móvil' : 
-                         (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
+        metadata = await fetchWithTimeout(5000);
         
-        console.log(`📱 Dispositivo solicitante: ${deviceType}`);
-        console.log(`📡 User-Agent: ${userAgent.substring(0, 100)}...`);
-        
-        // Crear una promesa con timeout
-        const fetchWithTimeout = async (ms: number): Promise<any> => {
-          return Promise.race([
-            getUrlMetadata(url),
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
-            )
-          ]);
-        };
-        
-        metadata = await fetchWithTimeout(8000); // 8 segundos máximo
+        // Si no hay título, usar un valor predeterminado basado en el dominio
+        if (!metadata.title) {
+          try {
+            const urlObj = new URL(url);
+            metadata.title = urlObj.hostname.replace(/^www\./i, '');
+            
+            if (!metadata.description) {
+              metadata.description = `Enlace de ${metadata.title}`;
+            }
+          } catch (e) {
+            console.log('Error procesando URL para título por defecto:', e);
+          }
+        }
       } catch (error: any) {
-        console.log(`Error con timeout al extraer metadatos: ${error.message}`);
+        console.log(`⏱️ Timeout al extraer metadatos: ${error.message}`);
+        
         // Valores por defecto en caso de timeout
         metadata = { 
           imageUrl: "", 
@@ -737,100 +748,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           description: "" 
         };
         
-        // Por motivos de timeout, procedemos con metadatos genéricos
-        console.log("Timeout al obtener metadatos - procederemos con extracción genérica a partir de la URL");
-      }
-      
-      // Si el título es &nbsp; (caso especial de Zara), forzamos a usar la URL
-      if (metadata.title === '&nbsp;') {
-        metadata.title = '';
-      }
-      
-      // Comprobar y limpiar el título si existe
-      if (metadata.title) {
-        // Remover caracteres HTML y espacios
-        metadata.title = metadata.title
-          .replace(/&nbsp;/g, '')
-          .replace(/&[a-z0-9]+;/g, ' ') // Reemplazar otras entidades HTML por espacios
-          .trim();
-      }
-      
-      // Extraer título y otros datos significativos a partir de la URL (método genérico)
-      try {
-        const urlObj = new URL(url);
-        const pathStr = urlObj.pathname;
-        
-        // Si no tenemos título, extraerlo de la URL
-        if (!metadata.title || metadata.title.trim().length < 3) {
-          // Intentar extraer un título significativo con expresiones regulares
-          const patterns = [
-            /\/([a-z0-9-]+)-([a-z0-9-]+)/i,
-            /\/([\w-]+)\/?$/i,
-            /\/p\/([\w-]+)/i,
-            /\/dp\/([\w-]+)/i,
-          ];
-          
-          let foundTitle = false;
-          for (const pattern of patterns) {
-            const match = pathStr.match(pattern);
-            if (match && match[1]) {
-              let extractedTitle = match[0].replace(/^\//, '');
-              // Limpiar y formatear
-              metadata.title = extractedTitle
-                .replace(/-/g, ' ')
-                .replace(/\.\w+$/, '')
-                .replace(/\/dp\//, '')
-                .replace(/\/p\//, '')
-                .split(' ')
-                .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-                .join(' ');
-              console.log(`Título extraído de URL: ${metadata.title}`);
-              foundTitle = true;
-              break;
-            }
-          }
-        }
-      } catch (e) {
-        console.log('Error procesando URL:', e);
-      }
-      
-      // Si no tenemos un título válido después de la limpieza, generamos uno a partir de la URL
-      if (!metadata.title || metadata.title === '' || metadata.title.length < 3) {
+        // Crear un título básico a partir de la URL
         try {
           const urlObj = new URL(url);
-          const pathParts = urlObj.pathname.split('/').filter(part => part.length > 0);
-          if (pathParts.length > 0) {
-            const lastPart = pathParts[pathParts.length - 1];
-            // Convertir algo como "zapatillas-running-nike-2023" a "Zapatillas Running Nike 2023"
-            metadata.title = lastPart
-              .replace(/-/g, ' ')
-              .replace(/\.\w+$/, '') // Eliminar extensión de archivo si existe
-              .split(' ')
-              .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-              .join(' ');
-          } else {
-            // Si no hay partes de la ruta, usar el dominio como título
-            metadata.title = urlObj.hostname.replace(/^www\./i, '');
-          }
+          metadata.title = urlObj.hostname.replace(/^www\./i, '');
+          metadata.description = `Enlace de ${metadata.title}`;
         } catch (e) {
-          console.log('Error extrayendo título de la URL:', e);
+          console.log('Error procesando URL:', e);
         }
       }
       
-      // Asegurarnos de que hay una descripción aunque sea básica
-      if (!metadata.description) {
-        try {
-          metadata.description = `Artículo encontrado en ${new URL(url).hostname.replace(/^www\./i, '')}`;
-        } catch (e) {
-          metadata.description = "Ver detalles del producto";
-        }
-      }
-      
+      // Logs y respuesta
       console.log("Metadatos extraídos:", {
-        imageUrl: metadata.imageUrl,
-        price: metadata.price,
         title: metadata.title,
-        description: metadata.description?.substring(0, 30) + "..."
+        description: metadata.description ? metadata.description.substring(0, 30) + "..." : "",
+        imageUrl: metadata.imageUrl ? "(Imagen encontrada)" : "(Sin imagen)",
+        price: metadata.price || "(Sin precio)"
       });
       
       res.json(metadata);
