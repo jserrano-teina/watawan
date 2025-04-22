@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Test de Detección de URL</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      color: #333;
+    }
+    
+    .result-box {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      padding: 15px;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    button {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    }
+    
+    button:hover {
+      background-color: #45a049;
+    }
+    
+    .image-preview {
+      margin-top: 20px;
+      border: 1px dashed #ccc;
+      padding: 10px;
+    }
+    
+    img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Test de Detección de URL</h1>
+  
+  <div>
+    <h2>Información del Navegador</h2>
+    <div id="browserInfo" class="result-box"></div>
+  </div>
+  
+  <div>
+    <h2>URLs de Prueba</h2>
+    <div id="hostInfo" class="result-box"></div>
+    
+    <div>
+      <button id="generateRelative">Generar URL Relativa</button>
+      <button id="generateAbsolute">Generar URL Absoluta</button>
+    </div>
+    
+    <div id="urlInfo" class="result-box">URL generada aparecerá aquí</div>
+  </div>
+  
+  <div class="image-preview">
+    <h3>Vista previa de imagen (con URL relativa)</h3>
+    <img id="relativeSrc" src="">
+    <div id="relativeStatus"></div>
+  </div>
+  
+  <div class="image-preview">
+    <h3>Vista previa de imagen (con URL absoluta)</h3>
+    <img id="absoluteSrc" src="">
+    <div id="absoluteStatus"></div>
+  </div>
+  
+  <script>
+    // Mostrar información del navegador
+    const browserInfo = document.getElementById('browserInfo');
+    const hostInfo = document.getElementById('hostInfo');
+    const urlInfo = document.getElementById('urlInfo');
+    const relativeSrc = document.getElementById('relativeSrc');
+    const absoluteSrc = document.getElementById('absoluteSrc');
+    const relativeStatus = document.getElementById('relativeStatus');
+    const absoluteStatus = document.getElementById('absoluteStatus');
+    
+    // Mostrar información del navegador
+    browserInfo.innerHTML = `User Agent: ${navigator.userAgent}\n`;
+    browserInfo.innerHTML += `Plataforma: ${navigator.platform}\n`;
+    browserInfo.innerHTML += `Ancho de ventana: ${window.innerWidth}\n`;
+    browserInfo.innerHTML += `Dispositivo móvil: ${/Mobi|Android/i.test(navigator.userAgent) ? 'Sí' : 'No'}\n`;
+    
+    // Mostrar información del host
+    hostInfo.innerHTML = `window.location.href: ${window.location.href}\n`;
+    hostInfo.innerHTML += `window.location.origin: ${window.location.origin}\n`;
+    hostInfo.innerHTML += `window.location.protocol: ${window.location.protocol}\n`;
+    hostInfo.innerHTML += `window.location.host: ${window.location.host}\n`;
+    hostInfo.innerHTML += `window.location.hostname: ${window.location.hostname}\n`;
+    
+    // Generar URL relativa
+    document.getElementById('generateRelative').addEventListener('click', function() {
+      const relativeUrl = `/uploads/test-image-${Date.now()}.jpg`;
+      urlInfo.innerHTML = `URL Relativa: ${relativeUrl}\n`;
+      
+      // Intentar cargar imagen con URL relativa
+      relativeSrc.src = relativeUrl;
+      relativeSrc.onerror = function() {
+        relativeStatus.innerHTML = `<span style="color: red">❌ Error al cargar imagen relativa</span>`;
+      };
+      relativeSrc.onload = function() {
+        relativeStatus.innerHTML = `<span style="color: green">✓ Imagen relativa cargada correctamente</span>`;
+      };
+    });
+    
+    // Generar URL absoluta
+    document.getElementById('generateAbsolute').addEventListener('click', function() {
+      const absoluteUrl = `${window.location.origin}/uploads/test-image-${Date.now()}.jpg`;
+      urlInfo.innerHTML = `URL Absoluta: ${absoluteUrl}\n`;
+      
+      // Intentar cargar imagen con URL absoluta
+      absoluteSrc.src = absoluteUrl;
+      absoluteSrc.onerror = function() {
+        absoluteStatus.innerHTML = `<span style="color: red">❌ Error al cargar imagen absoluta</span>`;
+      };
+      absoluteSrc.onload = function() {
+        absoluteStatus.innerHTML = `<span style="color: green">✓ Imagen absoluta cargada correctamente</span>`;
+      };
+    });
+  </script>
+</body>
+</html>

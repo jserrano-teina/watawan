@@ -30,6 +30,29 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
 }) => {
   const [isLoaded, setIsLoaded] = useState(imageCache[src] || false);
   
+  // Función auxiliar para normalizar URLs de imágenes
+  const normalizeImageUrl = (url: string): string => {
+    // Si es una URL vacía, devolverla tal cual
+    if (!url) return url;
+    
+    // Si ya es una URL absoluta, devolverla tal cual
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    
+    // Si es una URL de uploads, convertirla a absoluta usando el origen actual
+    if (url.includes('/uploads/')) {
+      // Asegurarnos de que empieza con / si no lo tiene
+      const pathUrl = url.startsWith('/') ? url : `/${url}`;
+      const absoluteUrl = `${window.location.origin}${pathUrl}`;
+      console.log('Convirtiendo URL relativa a absoluta:', absoluteUrl);
+      return absoluteUrl;
+    }
+    
+    // Para otros tipos de URLs, devolverlas sin cambios
+    return url;
+  };
+
   // Precargar la imagen cuando el componente se monte
   useEffect(() => {
     // Si ya está en caché, no hacer nada
@@ -38,29 +61,22 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       return;
     }
     
-    // Manejar URL absolutas y relativas
-    let imageSrc = src;
+    // Normalizar la URL para asegurar que funciona en todos los dispositivos
+    const imageSrc = normalizeImageUrl(src);
     
-    // Si es una URL relativa que empieza con /uploads, asegurar que se carga correctamente
-    if (src && src.startsWith('/uploads/') && !src.startsWith('http')) {
-      // Usamos la URL actual como base para URLs relativas
-      const currentOrigin = window.location.origin;
-      imageSrc = `${currentOrigin}${src}`;
-      console.log('Convirtiendo URL relativa a absoluta:', imageSrc);
-    }
-    
+    // Crear nueva imagen para precarga
     const img = new Image();
     img.src = imageSrc;
     
     img.onload = () => {
-      // Marcar como cargada en el caché global
+      // Marcar como cargada en el caché global (usamos la URL original como clave)
       imageCache[src] = true;
       setIsLoaded(true);
       if (onLoad) onLoad();
     };
     
     img.onerror = () => {
-      console.error('Error al cargar imagen:', imageSrc);
+      console.error('Error al cargar imagen:', imageSrc, 'URL original:', src);
       if (onError) onError();
     };
     
@@ -78,10 +94,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     >
       {isLoaded && (
         <img 
-          src={src && src.startsWith('/uploads/') && !src.startsWith('http') 
-            ? `${window.location.origin}${src}` // URL absoluta para imágenes locales
-            : src
-          } 
+          src={normalizeImageUrl(src)} 
           alt={alt} 
           className={className}
           style={{ width: '100%', height: '100%', objectFit }}
