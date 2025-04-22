@@ -56,17 +56,13 @@ const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
-  // Cargar el avatar directamente desde el usuario para asegurar que siempre está actualizado
-  const [avatar, setAvatar] = useState<string | undefined>(user?.avatar);
-  
-  // Actualizar el estado del avatar cuando cambia el usuario y depurar el objeto user
+  // Depurar el objeto user para ver su contenido
   useEffect(() => {
     console.log('Objeto user completo:', JSON.stringify(user));
     console.log('Avatar del usuario:', user?.avatar);
     
     if (user?.avatar) {
-      console.log('Actualizando avatar desde el objeto user:', user.avatar.substring(0, 50) + '...');
-      setAvatar(user.avatar);
+      console.log('Avatar disponible:', user.avatar.substring(0, 50) + '...');
     }
   }, [user]);
   
@@ -199,8 +195,10 @@ const ProfilePage = () => {
           const result = reader.result as string;
           // Comprimir imagen antes de guardarla
           const compressedImage = await compressImage(result);
-          setAvatar(compressedImage);
+          console.log("Nueva imagen comprimida lista para guardar");
           
+          // Actualizar perfil con la nueva imagen - la UI se actualizará automáticamente cuando
+          // la caché de react-query se refresque después de la mutación
           updateProfileMutation.mutate({
             displayName: user?.displayName || "",
             avatar: compressedImage,
@@ -263,15 +261,23 @@ const ProfilePage = () => {
               <div
                 className={cn(
                   "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
-                  avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
+                  user.avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
                 )}
               >
-                {avatar ? (
-                  <OptimizedImage
-                    src={avatar}
+                {user.avatar ? (
+                  <img 
+                    src={user.avatar}
                     alt={user.displayName || user.email}
                     className="w-full h-full img-persist"
-                    priority={true} // Dar alta prioridad al avatar
+                    style={{
+                      objectFit: "cover",
+                      transform: 'translateZ(0)',
+                      backfaceVisibility: 'hidden',
+                      WebkitBackfaceVisibility: 'hidden',
+                      willChange: 'contents'
+                    }}
+                    loading="eager"
+                    decoding="async"
                   />
                 ) : (
                   getInitials(user.displayName, user.email)
