@@ -56,7 +56,19 @@ const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
+  // Cargar el avatar directamente desde el usuario para asegurar que siempre está actualizado
   const [avatar, setAvatar] = useState<string | undefined>(user?.avatar);
+  
+  // Actualizar el estado del avatar cuando cambia el usuario y depurar el objeto user
+  useEffect(() => {
+    console.log('Objeto user completo:', JSON.stringify(user));
+    console.log('Avatar del usuario:', user?.avatar);
+    
+    if (user?.avatar) {
+      console.log('Actualizando avatar desde el objeto user:', user.avatar.substring(0, 50) + '...');
+      setAvatar(user.avatar);
+    }
+  }, [user]);
   
   // Efecto para hacer que el toast desaparezca después de 3 segundos
   useEffect(() => {
