@@ -183,7 +183,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 {/* Imagen del producto */}
                 <div className="relative w-full h-40 overflow-hidden">
                   <ProductImage 
-                    url={item.purchaseLink}
+                    purchaseLink={item.purchaseLink}
                     imageUrl={item.imageUrl}
                     alt={item.title}
                     className="w-full h-full object-contain"
