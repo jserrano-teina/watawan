@@ -311,6 +311,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const finalWishlistId = targetWishlist.id;
       console.log(`[POST /wishlist/:id/items] Usando wishlist ID para el item: ${finalWishlistId}`);
       
+      // Limitar el título a 100 caracteres si está presente
+      if (itemData.title && itemData.title.length > 100) {
+        itemData.title = itemData.title.substring(0, 100);
+        console.log('⚠️ Título truncado a 100 caracteres en creación de item');
+      }
+      
       // Validar y crear el item
       console.log(`[POST /wishlist/:id/items] Validando datos de item antes de crear`);
       const validatedItemData = insertWishItemSchema.parse({ ...itemData, wishlistId: finalWishlistId });
@@ -362,6 +368,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Don't allow updating reserved status through this endpoint
     const { isReserved, reservedBy, ...updateData } = req.body;
+    
+    // Limitar el título a 100 caracteres si está presente
+    if (updateData.title && updateData.title.length > 100) {
+      updateData.title = updateData.title.substring(0, 100);
+      console.log('⚠️ Título truncado a 100 caracteres en actualización de item');
+    }
     
     // Si se actualizó la URL de compra, intentar extraer la imagen y el precio automáticamente
     if (
@@ -761,6 +773,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // IMPORTANTE: Asegurarse de que el precio SIEMPRE sea una cadena vacía (no null o undefined)
       // según la nueva especificación, ya que el precio lo introducirá manualmente el usuario
       metadata.price = '';
+      
+      // Limitar el título a 100 caracteres como máximo
+      if (metadata.title && metadata.title.length > 100) {
+        metadata.title = metadata.title.substring(0, 100);
+        console.log('⚠️ Título truncado a 100 caracteres');
+      }
       
       // Logs y respuesta
       console.log("Metadatos extraídos:", {
