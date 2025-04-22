@@ -64,13 +64,19 @@ export const wishItems = pgTable("wish_items", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
-export const insertWishItemSchema = createInsertSchema(wishItems).pick({
+// Crear el schema base
+const baseWishItemSchema = createInsertSchema(wishItems).pick({
   wishlistId: true,
   title: true,
   description: true,
   purchaseLink: true,
   imageUrl: true,
   price: true,
+});
+
+// Extender el esquema para agregar validaciones adicionales
+export const insertWishItemSchema = baseWishItemSchema.extend({
+  title: z.string().max(100, "El título debe tener como máximo 100 caracteres"),
 });
 
 // Reservation schema
