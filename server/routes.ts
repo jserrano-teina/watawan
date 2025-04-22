@@ -12,6 +12,9 @@ import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, requireAuth } from "./auth";
 import path from "path";
+import { db } from "./db";
+import * as schema from "@shared/schema";
+import { eq, sql } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
