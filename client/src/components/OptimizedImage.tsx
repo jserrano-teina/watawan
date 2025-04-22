@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   normalizeImageUrl, 
   isImageCached, 
-  addImageToCache 
+  preloadImage
 } from '../lib/imageCache';
 
 interface OptimizedImageProps {
@@ -61,27 +61,16 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       }
     }
     
-    // Crear nueva imagen para precarga
-    const img = new Image();
-    img.src = normalizedUrl;
-    
-    img.onload = () => {
-      // Marcar como cargada en el caché global
-      addImageToCache(src);
-      setIsLoaded(true);
-      if (onLoad) onLoad();
-    };
-    
-    img.onerror = () => {
-      console.error('Error al cargar imagen:', normalizedUrl, 'URL original:', src);
-      if (onError) onError();
-    };
-    
-    // Cleanup function
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
+    // Usar nuestra función de precarga del caché centralizado
+    preloadImage(normalizedUrl)
+      .then(() => {
+        setIsLoaded(true);
+        if (onLoad) onLoad();
+      })
+      .catch((error) => {
+        console.error('Error al cargar imagen:', normalizedUrl, 'URL original:', src, error);
+        if (onError) onError();
+      });
   }, [src, onLoad, onError, priority]);
   
   return (

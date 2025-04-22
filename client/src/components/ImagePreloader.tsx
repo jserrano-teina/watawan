@@ -1,32 +1,32 @@
-import { useEffect, useState } from 'react';
-import { preloadInterfaceImages } from '../lib/imageCache';
+import React, { useEffect, useState } from 'react';
+import { preloadInterfaceImages } from '@/lib/imageCache';
 
 /**
- * Componente que se encarga de precargar imágenes estáticas de la interfaz
- * al iniciar la aplicación. No renderiza nada visible.
+ * Componente que se encarga de precargar todas las imágenes estáticas
+ * de la interfaz al iniciar la aplicación
+ * 
+ * No tiene renderizado visual, solo funcionalidad
  */
 const ImagePreloader: React.FC = () => {
-  const [imagesPreloaded, setImagesPreloaded] = useState(false);
-  
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+
   useEffect(() => {
-    // Solo ejecutar una vez al montar el componente
-    if (!imagesPreloaded) {
-      console.log('🖼️ Precargando imágenes estáticas de la interfaz...');
+    if (!imagesLoaded) {
+      console.log('🔄 Iniciando precarga de imágenes desde ImagePreloader...');
       
-      // Precargar todas las imágenes de la interfaz
       preloadInterfaceImages()
         .then(() => {
-          setImagesPreloaded(true);
-          console.log('✅ Imágenes de interfaz precargadas correctamente');
+          console.log('✅ Precarga de imágenes completada con éxito');
+          setImagesLoaded(true);
         })
-        .catch(error => {
-          console.error('❌ Error al precargar imágenes:', error);
-          // Marcamos como precargado incluso con errores para no intentarlo de nuevo
-          setImagesPreloaded(true);
+        .catch(err => {
+          console.error('❌ Error en precarga de imágenes:', err);
+          // Marcar como completado incluso con errores para no reintentar
+          setImagesLoaded(true);
         });
     }
-  }, [imagesPreloaded]);
-  
+  }, [imagesLoaded]);
+
   // Este componente no renderiza nada visible
   return null;
 };

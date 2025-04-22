@@ -1,123 +1,189 @@
 /**
- * Sistema global de caché y precarga de imágenes para la aplicación.
- * Este módulo se encarga de:
- * 1. Mantener un caché global de imágenes ya cargadas
- * 2. Precargar imágenes importantes de la interfaz al inicio de la aplicación
- * 3. Proporcionar métodos para normalizar URLs y gestionar la caché
+ * Sistema centralizado de caché de imágenes y precarga
+ * 
+ * Este módulo proporciona funciones para:
+ * 1. Mantener una caché global de imágenes precargadas
+ * 2. Precargar imágenes críticas de la interfaz al iniciar la aplicación
+ * 3. Proporcionar métodos de utilidad para trabajar con imágenes
  */
 
-// Tipos de imágenes que queremos precargar
-export enum ImageType {
-  INTERFACE = 'interface',
-  PRODUCT = 'product',
-  LOGO = 'logo'
+// Caché global de imágenes - accesible desde cualquier lugar de la aplicación
+interface ImageCacheEntry {
+  loaded: boolean;
+  error: boolean;
+  url: string;
+  element?: HTMLImageElement;
+  timestamp: number;
 }
 
-// Caché global para almacenar las imágenes ya cargadas
-export const imageCache: Record<string, boolean> = {};
+// Mapa global para almacenar las imágenes precargadas
+const imageCache = new Map<string, ImageCacheEntry>();
+
+// Lista de imágenes de interfaz críticas que deben precargarse al inicio
+const CRITICAL_UI_IMAGES = [
+  // Imágenes de UI para estados vacíos
+  "/empty-state-gifts.png",
+  "/empty-state-notifications.png",
+  "/empty-state-wishlist.png",
+  // Logo de la aplicación
+  "/logo.png",
+  // Imágenes de placeholder de tiendas
+  "/store-logos/amazon.png",
+  "/store-logos/generic.png",
+  "/store-logos/aliexpress.png",
+  "/store-logos/ebay.png",
+  "/store-logos/zara.png",
+  "/store-logos/pccomponentes.png",
+  "/store-logos/nike.png",
+  // Iconos PWA
+  "/icons/icon-192x192.png",
+  "/icons/icon-512x512.png"
+];
 
 /**
- * Normaliza una URL de imagen para garantizar que sea absoluta
- * si es una imagen del sistema de archivos
+ * Precarga una imagen y la almacena en la caché global
+ */
+export function preloadImage(url: string): Promise<HTMLImageElement> {
+  // Normalizar la URL
+  const normalizedUrl = normalizeImageUrl(url);
+  
+  // Si la imagen ya está en la caché y está cargada, devolvemos la promesa resuelta
+  if (imageCache.has(normalizedUrl) && imageCache.get(normalizedUrl)?.loaded) {
+    console.log(`✅ Imagen ya en caché: ${normalizedUrl}`);
+    return Promise.resolve(imageCache.get(normalizedUrl)!.element as HTMLImageElement);
+  }
+  
+  // Agregar la entrada a la caché mientras se carga
+  if (!imageCache.has(normalizedUrl)) {
+    imageCache.set(normalizedUrl, {
+      loaded: false,
+      error: false,
+      url: normalizedUrl,
+      timestamp: Date.now()
+    });
+  }
+  
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    
+    img.onload = () => {
+      // Actualizar la caché con la imagen cargada
+      imageCache.set(normalizedUrl, {
+        loaded: true,
+        error: false,
+        url: normalizedUrl,
+        element: img,
+        timestamp: Date.now()
+      });
+      resolve(img);
+    };
+    
+    img.onerror = (error) => {
+      // Marcar la imagen como fallida en la caché
+      imageCache.set(normalizedUrl, {
+        loaded: false,
+        error: true,
+        url: normalizedUrl,
+        timestamp: Date.now()
+      });
+      console.error(`❌ Error al precargar imagen: ${normalizedUrl}`, error);
+      reject(error);
+    };
+    
+    // Comenzar la carga de la imagen
+    img.src = normalizedUrl;
+  });
+}
+
+/**
+ * Precargar todas las imágenes de interfaz críticas
+ */
+export function preloadInterfaceImages(): Promise<HTMLImageElement[]> {
+  console.log(`🖼️ Precargando ${CRITICAL_UI_IMAGES.length} imágenes de UI...`);
+  
+  const preloadPromises = CRITICAL_UI_IMAGES.map(url => 
+    preloadImage(url)
+      .catch(error => {
+        console.error(`Error al precargar imagen UI (${url}):`, error);
+        // Devolvemos una promesa resuelta para que Promise.all no falle
+        return new Image();
+      })
+  );
+  
+  return Promise.all(preloadPromises);
+}
+
+/**
+ * Verifica si una imagen está en la caché
+ */
+export function isImageCached(url: string): boolean {
+  const normalizedUrl = normalizeImageUrl(url);
+  return imageCache.has(normalizedUrl) && imageCache.get(normalizedUrl)?.loaded === true;
+}
+
+/**
+ * Obtiene una imagen de la caché si existe
+ */
+export function getImageFromCache(url: string): HTMLImageElement | undefined {
+  const normalizedUrl = normalizeImageUrl(url);
+  const entry = imageCache.get(normalizedUrl);
+  return entry?.loaded ? entry.element : undefined;
+}
+
+/**
+ * Normaliza una URL de imagen para que sea consistente en la caché
  */
 export function normalizeImageUrl(url: string): string {
-  // Si es una URL vacía, devolverla tal cual
-  if (!url) return url;
+  if (!url) return "";
   
-  // Si ya es una URL absoluta, devolverla tal cual
+  // Si es una URL absoluta externa, la devolvemos tal cual
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
   
-  // Si es una URL de uploads, convertirla a absoluta usando el origen actual
-  if (url.includes('/uploads/')) {
-    // Asegurarnos de que empieza con / si no lo tiene
-    const pathUrl = url.startsWith('/') ? url : `/${url}`;
-    const absoluteUrl = `${window.location.origin}${pathUrl}`;
-    return absoluteUrl;
+  // Si es una URL relativa, la hacemos absoluta
+  if (url.startsWith('/')) {
+    return window.location.origin + url;
   }
   
-  // Si es una imagen estática de la interfaz (/images/), asegurarnos de que sea absoluta
-  if (url.includes('/images/')) {
-    const pathUrl = url.startsWith('/') ? url : `/${url}`;
-    const absoluteUrl = `${window.location.origin}${pathUrl}`;
-    return absoluteUrl;
-  }
+  // Si no tiene / inicial, agregamos uno
+  return window.location.origin + '/' + url;
+}
+
+/**
+ * Limpia imágenes antiguas de la caché (imágenes que no se han usado en más de 1 hora)
+ */
+export function cleanImageCache(): void {
+  const now = Date.now();
+  const ONE_HOUR = 60 * 60 * 1000;
   
-  // Para otros tipos de URLs, devolverlas sin cambios
-  return url;
-}
-
-/**
- * Verifica si una imagen ya está en caché
- */
-export function isImageCached(url: string): boolean {
-  return !!imageCache[url];
-}
-
-/**
- * Marca una imagen como cargada en la caché
- */
-export function addImageToCache(url: string): void {
-  imageCache[url] = true;
-}
-
-/**
- * Precarga una imagen y la almacena en caché
- */
-export function preloadImage(url: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    // Normalizar URL
-    const normalizedUrl = normalizeImageUrl(url);
-    
-    // Si ya está en caché, no hacer nada
-    if (imageCache[url]) {
-      resolve();
+  let removedCount = 0;
+  
+  imageCache.forEach((entry, url) => {
+    // No limpiamos imágenes críticas de UI
+    if (CRITICAL_UI_IMAGES.some(criticalUrl => url.includes(criticalUrl))) {
       return;
     }
     
-    // Crear objeto imagen para precargar
-    const img = new Image();
-    img.src = normalizedUrl;
-    
-    img.onload = () => {
-      // Marcar como cargada en el caché global
-      imageCache[url] = true;
-      console.log(`✓ Imagen precargada: ${url}`);
-      resolve();
-    };
-    
-    img.onerror = (error) => {
-      console.error(`✗ Error al precargar imagen: ${url}`, error);
-      reject(error);
-    };
+    // Eliminar imágenes que no se han usado en más de 1 hora
+    if (now - entry.timestamp > ONE_HOUR) {
+      imageCache.delete(url);
+      removedCount++;
+    }
   });
-}
-
-// Lista de imágenes estáticas de la interfaz que queremos precargar al inicio
-const INTERFACE_IMAGES = [
-  '/images/empty_list.png',
-  '/images/notification_bell.png',
-  '/images/eyes.png', 
-  '/images/error.png',
-  '/images/wishlist_icon.png',
-  '/images/logo.png'
-];
-
-/**
- * Precarga todas las imágenes estáticas de la interfaz
- */
-export async function preloadInterfaceImages(): Promise<void> {
-  console.log('Precargando imágenes de interfaz...');
   
-  try {
-    await Promise.all(INTERFACE_IMAGES.map(url => 
-      preloadImage(url).catch(err => 
-        console.warn(`No se pudo precargar: ${url}`, err)
-      )
-    ));
-    console.log('✓ Todas las imágenes de interfaz han sido precargadas');
-  } catch (error) {
-    console.error('Error al precargar imágenes de interfaz:', error);
+  if (removedCount > 0) {
+    console.log(`🧹 Limpieza de caché: eliminadas ${removedCount} imágenes antiguas`);
   }
 }
+
+// Iniciar una limpieza periódica de la caché cada 15 minutos
+setInterval(cleanImageCache, 15 * 60 * 1000);
+
+export default {
+  preloadImage,
+  preloadInterfaceImages,
+  isImageCached,
+  getImageFromCache,
+  normalizeImageUrl
+};
