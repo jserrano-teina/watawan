@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -13,34 +13,18 @@ import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { NetworkMonitor } from "@/components/NetworkMonitor";
 import ImagePreloader from "@/components/ImagePreloader";
-import PersistentTabs from '@/components/PersistentTabs';
 import React, { useEffect } from "react";
 import { useSafeArea } from "@/hooks/useSafeArea";
 
 /**
  * Router principal de la aplicación con rutas protegidas y públicas
- * Las pestañas principales (/, /notifications, /profile) se manejan con PersistentTabs
- * para evitar la recarga de imágenes al cambiar entre ellas
  */
 function Router() {
-  const [location] = useLocation();
-  const isMainTab = ['/', '/notifications', '/profile'].includes(location);
-  
-  // Si estamos en una de las pestañas principales, usamos PersistentTabs
-  // que mantiene todas las pestañas montadas en el DOM
-  if (isMainTab) {
-    return (
-      <Switch>
-        <ProtectedRoute path="/" component={() => <PersistentTabs />} />
-        <ProtectedRoute path="/notifications" component={() => <PersistentTabs />} />
-        <ProtectedRoute path="/profile" component={() => <PersistentTabs />} />
-      </Switch>
-    );
-  }
-  
-  // Para las demás rutas, usamos el enrutador normal
   return (
     <Switch>
+      <ProtectedRoute path="/" component={Home} />
+      <ProtectedRoute path="/notifications" component={NotificationsPage} />
+      <ProtectedRoute path="/profile" component={ProfilePage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/auth" component={LoginPage} />

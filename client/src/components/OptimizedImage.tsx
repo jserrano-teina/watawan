@@ -82,8 +82,23 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         <img 
           src={normalizeImageUrl(src)} 
           alt={alt} 
-          className={className}
-          style={{ width: '100%', height: '100%', objectFit }}
+          // Añadimos la clase img-persist para forzar retención en memoria
+          className={`img-persist ${className}`}
+          style={{ 
+            width: '100%', 
+            height: '100%', 
+            objectFit,
+            // Estas propiedades también ayudan a la retención en GPU
+            transform: 'translateZ(0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            willChange: 'contents'
+          }}
+          // Aumentamos prioridad de carga para imágenes visibles
+          loading="eager"
+          // @ts-ignore - TypeScript no reconoce fetchpriority
+          fetchpriority={priority ? "high" : "auto"}
+          decoding="async"
           onLoad={() => {
             if (onLoad) onLoad();
           }}

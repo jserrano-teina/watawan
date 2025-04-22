@@ -435,4 +435,28 @@ html {
     position: -webkit-sticky !important;
     touch-action: none !important;
   }
+  
+  /* Optimización de imágenes */
+  .img-persist {
+    content-visibility: auto;
+    contain: content;
+    will-change: contents;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    /* Forzar el uso de GPU */
+    filter: contrast(1);
+  }
+  
+  /* Forzar que las imágenes permanezcan en memoria */
+  img {
+    /* Esta técnica fuerza que las imágenes permanezcan en la GPU */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Configurar el comportamiento de carga */
+    loading: eager;
+    /* Prioridad alta para imágenes visibles */
+    fetchpriority: high;
+  }
 }
