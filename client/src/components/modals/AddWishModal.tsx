@@ -18,7 +18,9 @@ const stepOneSchema = z.object({
 
 // Esquema para el segundo paso (detalles completos)
 const stepTwoSchema = z.object({
-  title: z.string().min(1, 'El nombre del producto es obligatorio'),
+  title: z.string()
+    .min(1, 'El nombre del producto es obligatorio')
+    .max(100, 'El nombre del producto no puede tener más de 100 caracteres'),
   description: z.string().optional(),
   purchaseLink: z.string().optional(), // Hacemos opcional sin validación de URL
   price: z.string()
@@ -200,10 +202,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Establecer el título si existe
+        // Establecer el título si existe, limitándolo a 100 caracteres
         if (metadata.title) {
           console.log('Título extraído:', metadata.title);
-          setValueStepTwo('title', metadata.title);
+          // Truncar el título a un máximo de 100 caracteres
+          const truncatedTitle = metadata.title.substring(0, 100);
+          setValueStepTwo('title', truncatedTitle);
         }
         
         // Extraer solo el valor numérico del precio si existe
@@ -576,6 +580,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     type="text" 
                     id="title" 
                     placeholder="Introduce un nombre"
+                    maxLength={100}
                     {...registerStepTwo('title')}
                   />
                   {errorsStepTwo.title && (
