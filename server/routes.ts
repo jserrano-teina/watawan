@@ -876,6 +876,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Respuesta mínima para el cliente
     res.status(200).json({ ok: true, timestamp: new Date().toISOString() });
   });
+  
+  // Endpoint para obtener perfil público de usuario y su lista de deseos
+  router.get("/user/:username/public", async (req: Request, res: Response) => {
+    try {
+      const { username } = req.params;
+      
+      if (!username) {
+        return res.status(400).json({ message: "Username is required" });
+      }
+      
+      // Convertir el nombre de usuario formateado (user-name-001) a posibles displayNames
+      // Quitamos los números del final si existen
+      const normalizedUsername = username.replace(/-\d+$/, '');
+      
+      // Reemplazamos guiones por espacios para buscar por displayName
+      const displayNameQuery = normalizedUsername.replace(/-/g, ' ');
+      
+      console.log(`Buscando usuario público por nombre: ${displayNameQuery}`);
+      
+      // Obtener un usuario que coincida con el displayName (aproximado)
+      const users = await db.select()
+        .from(schema.users)
+        .where(
+          sql`LOWER(display_name) LIKE ${`%${displayNameQuery.toLowerCase()}%`}`
+        );
+      
+      if (!users.length) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Tomamos el primer usuario que coincida
+      const user = users[0];
+      
+      // Obtener la lista de deseos del usuario (primera disponible)
+      const [wishlist] = await db.select()
+        .from(schema.wishlists)
+        .where(eq(schema.wishlists.userId, user.id));
+      
+      if (!wishlist) {
+        return res.status(404).json({ message: "User has no wishlists" });
+      }
+      
+      // Obtener los items de la lista
+      const items = await db.select()
+        .from(schema.wishItems)
+        .where(eq(schema.wishItems.wishlistId, wishlist.id));
+      
+      // Filtrar solo la información pública del usuario
+      const publicUserInfo = {
+        id: user.id,
+        email: user.email,
+        displayName: user.displayName,
+        initials: user.initials,
+        avatar: user.avatar
+      };
+      
+      res.json({
+        user: publicUserInfo,
+        wishlist: {
+          id: wishlist.id,
+          name: wishlist.name
+        },
+        items: items
+      });
+      
+    } catch (error) {
+      console.error("Error obteniendo perfil público:", error);
+      res.status(500).json({ 
+        message: "Error retrieving public profile",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   app.use("/api", router);
   return httpServer;
