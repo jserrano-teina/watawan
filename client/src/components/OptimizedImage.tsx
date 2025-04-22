@@ -38,20 +38,38 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       return;
     }
     
+    // Manejar URL absolutas y relativas
+    let imageSrc = src;
+    
+    // Si es una URL relativa que empieza con /uploads, asegurar que se carga correctamente
+    if (src && src.startsWith('/uploads/') && !src.startsWith('http')) {
+      // Usamos la URL actual como base para URLs relativas
+      const currentOrigin = window.location.origin;
+      imageSrc = `${currentOrigin}${src}`;
+      console.log('Convirtiendo URL relativa a absoluta:', imageSrc);
+    }
+    
     const img = new Image();
-    img.src = src;
+    img.src = imageSrc;
     
     img.onload = () => {
       // Marcar como cargada en el caché global
       imageCache[src] = true;
       setIsLoaded(true);
+      if (onLoad) onLoad();
+    };
+    
+    img.onerror = () => {
+      console.error('Error al cargar imagen:', imageSrc);
+      if (onError) onError();
     };
     
     // Cleanup function
     return () => {
       img.onload = null;
+      img.onerror = null;
     };
-  }, [src]);
+  }, [src, onLoad, onError]);
   
   return (
     <div 
@@ -60,7 +78,10 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     >
       {isLoaded && (
         <img 
-          src={src} 
+          src={src && src.startsWith('/uploads/') && !src.startsWith('http') 
+            ? `${window.location.origin}${src}` // URL absoluta para imágenes locales
+            : src
+          } 
           alt={alt} 
           className={className}
           style={{ width: '100%', height: '100%', objectFit }}

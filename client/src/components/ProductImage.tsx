@@ -195,12 +195,22 @@ const ProductImage: React.FC<ProductImageProps> = ({
     // Consideramos URLs locales seguras, pero igual verificamos que no tengan protocolos peligrosos
     const isSafe = !/^(?:javascript|vbscript|file):/i.test(url);
     
-    return isSafe && (
+    // Verificar si es una URL relativa (/uploads/) o con origen del mismo dominio
+    const isLocal = (
       url.startsWith('blob:') || 
       url.startsWith('data:image/') || // Solo permitimos data: URLs para imágenes
       url.startsWith('/') ||
-      url.startsWith('http://localhost')
+      url.startsWith('http://localhost') ||
+      (url.includes('/uploads/'))
     );
+    
+    // Si es una URL que incluye /uploads/ pero es relativa, considerarla local aunque venga desde otro origen
+    if (url.includes('/uploads/')) {
+      console.log('Es una URL local de uploads, considerándola segura', url);
+      return isSafe;
+    }
+    
+    return isSafe && isLocal;
   };
   
   // Detectar si debemos usar un placeholder inmediatamente

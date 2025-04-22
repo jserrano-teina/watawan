@@ -820,8 +820,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Escribir el archivo
       fs.writeFileSync(filePath, imageBuffer);
       
-      // URL pública que puede ser accedida desde el cliente
-      const imageUrl = `/uploads/${fileName}`;
+      // Generar URL completa (absoluta) para que funcione en cualquier dispositivo
+      let imageUrl = `/uploads/${fileName}`;
+      
+      // Si tenemos información del host, creamos una URL absoluta
+      if (req.headers.host) {
+        const protocol = req.secure || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        imageUrl = `${protocol}://${req.headers.host}${imageUrl}`;
+        console.log(`Generando URL absoluta para imagen: ${imageUrl}`);
+      } else {
+        console.log(`Usando URL relativa para imagen: ${imageUrl}`);
+      }
       
       return res.status(200).json({ imageUrl });
     } catch (error) {

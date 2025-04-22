@@ -38,6 +38,23 @@ export function sanitizeUrl(url: string | undefined | null): string {
     return trimmedUrl;
   }
   
+  // Permitir explícitamente URLs que apunten a nuestro directorio de uploads
+  if (trimmedUrl.includes('/uploads/')) {
+    console.log('Permitiendo URL de upload:', trimmedUrl);
+    
+    // Si es una URL absoluta que ya contiene nuestro host, usarla tal cual
+    if (trimmedUrl.startsWith('http://') || trimmedUrl.startsWith('https://')) {
+      return trimmedUrl;
+    }
+    
+    // Si es una URL relativa de uploads, asegurarnos de que empieza con /
+    if (!trimmedUrl.startsWith('/')) {
+      return '/' + trimmedUrl;
+    }
+    
+    return trimmedUrl;
+  }
+  
   // Verificar si la URL es segura (no permite javascript:, vbscript:, etc)
   const urlPattern = /^(?:(?:https?|ftp):\/\/|www\.|\/)[^\s/$.?#].[^\s]*$/i;
   const isValid = urlPattern.test(trimmedUrl);
