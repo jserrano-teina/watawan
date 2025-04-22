@@ -258,7 +258,8 @@ const ProfilePage = () => {
                   <OptimizedImage
                     src={avatar}
                     alt={user.displayName || user.email}
-                    className="w-full h-full"
+                    className="w-full h-full img-persist"
+                    priority={true} // Dar alta prioridad al avatar
                   />
                 ) : (
                   getInitials(user.displayName, user.email)
@@ -320,8 +321,9 @@ const ProfilePage = () => {
             <OptimizedImage 
               src="/images/waw_logo.svg" 
               alt="WataWan" 
-              className="h-8 mx-auto mb-1" 
+              className="h-8 mx-auto mb-1 img-persist" 
               objectFit="contain"
+              priority={true} // Dar alta prioridad al logo
             />
             <span className="text-xs text-gray-500">Versión 1.0.0</span>
           </div>
