@@ -12,6 +12,7 @@ import ProfilePage from "./pages/profile-page";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ProtectedRoute } from "@/lib/protected-route";
 import { NetworkMonitor } from "@/components/NetworkMonitor";
+import ImagePreloader from "@/components/ImagePreloader";
 import React, { useEffect } from "react";
 import { useSafeArea } from "@/hooks/useSafeArea";
 
@@ -67,6 +68,8 @@ function App() {
       <AuthProvider>
         {/* Contenedor principal con clase app-container para PWA */}
         <div className="app-container">
+          {/* Precarga imágenes al iniciar la aplicación */}
+          <ImagePreloader />
           <Router />
           <NetworkMonitor />
           <Toaster />

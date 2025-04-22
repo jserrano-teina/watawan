@@ -1,4 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  normalizeImageUrl, 
+  isImageCached, 
+  addImageToCache 
+} from '../lib/imageCache';
 
 interface OptimizedImageProps {
   src: string;
@@ -9,10 +14,8 @@ interface OptimizedImageProps {
   objectFit?: "cover" | "contain" | "fill" | "none" | "scale-down";
   onLoad?: () => void;
   onError?: () => void;
+  priority?: boolean; // Si es true, se carga con prioridad (útil para imágenes "above the fold")
 }
-
-// Caché global para almacenar las imágenes precargadas
-const imageCache: Record<string, boolean> = {};
 
 /**
  * Componente de imagen optimizado que precarga y almacena en caché imágenes
@@ -26,57 +29,51 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   height,
   objectFit = "cover",
   onLoad,
-  onError
+  onError,
+  priority = false
 }) => {
-  const [isLoaded, setIsLoaded] = useState(imageCache[src] || false);
-  
-  // Función auxiliar para normalizar URLs de imágenes
-  const normalizeImageUrl = (url: string): string => {
-    // Si es una URL vacía, devolverla tal cual
-    if (!url) return url;
-    
-    // Si ya es una URL absoluta, devolverla tal cual
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    
-    // Si es una URL de uploads, convertirla a absoluta usando el origen actual
-    if (url.includes('/uploads/')) {
-      // Asegurarnos de que empieza con / si no lo tiene
-      const pathUrl = url.startsWith('/') ? url : `/${url}`;
-      const absoluteUrl = `${window.location.origin}${pathUrl}`;
-      console.log('Convirtiendo URL relativa a absoluta:', absoluteUrl);
-      return absoluteUrl;
-    }
-    
-    // Para otros tipos de URLs, devolverlas sin cambios
-    return url;
-  };
+  // Verificar si la imagen ya está en caché
+  const [isLoaded, setIsLoaded] = useState(isImageCached(src));
 
   // Precargar la imagen cuando el componente se monte
   useEffect(() => {
     // Si ya está en caché, no hacer nada
-    if (imageCache[src]) {
+    if (isImageCached(src)) {
       setIsLoaded(true);
       return;
     }
     
     // Normalizar la URL para asegurar que funciona en todos los dispositivos
-    const imageSrc = normalizeImageUrl(src);
+    const normalizedUrl = normalizeImageUrl(src);
+    
+    // Si es una imagen prioritaria, cargarla con alta prioridad
+    if (priority) {
+      try {
+        const link = document.createElement('link');
+        link.rel = 'preload';
+        link.as = 'image';
+        link.href = normalizedUrl;
+        // @ts-ignore - TypeScript no reconoce fetchPriority
+        link.fetchPriority = 'high';
+        document.head.appendChild(link);
+      } catch (error) {
+        console.warn('Error al precargar imagen prioritaria:', error);
+      }
+    }
     
     // Crear nueva imagen para precarga
     const img = new Image();
-    img.src = imageSrc;
+    img.src = normalizedUrl;
     
     img.onload = () => {
-      // Marcar como cargada en el caché global (usamos la URL original como clave)
-      imageCache[src] = true;
+      // Marcar como cargada en el caché global
+      addImageToCache(src);
       setIsLoaded(true);
       if (onLoad) onLoad();
     };
     
     img.onerror = () => {
-      console.error('Error al cargar imagen:', imageSrc, 'URL original:', src);
+      console.error('Error al cargar imagen:', normalizedUrl, 'URL original:', src);
       if (onError) onError();
     };
     
@@ -85,7 +82,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
       img.onload = null;
       img.onerror = null;
     };
-  }, [src, onLoad, onError]);
+  }, [src, onLoad, onError, priority]);
   
   return (
     <div 
