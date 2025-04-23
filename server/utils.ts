@@ -24,8 +24,9 @@ export function generateShareableId(length: number = 10): string {
 
 /**
  * Crea una URL amigable para compartir una lista de deseos
+ * Formato: watawan.com/user/[username]
  */
-export function buildFriendlyShareUrl(username: string, listSlug: string): string {
+export function buildFriendlyShareUrl(username: string): string {
   const userSlug = generateSlug(username);
-  return `/lista/${userSlug}/${listSlug}`;
+  return `https://watawan.com/user/${userSlug}`;
 }
