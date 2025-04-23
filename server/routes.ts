@@ -100,6 +100,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ wishlist, owner: ownerInfo });
   });
   
+  // Find user by username (email or displayName)
+  router.get("/users/by-username/:username", async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+      console.log(`[GET /users/by-username] Buscando usuario por username: ${username}`);
+      
+      // Buscar al usuario por email o displayName
+      const user = await storage.getUserByUsernameOrEmail(username);
+      
+      if (!user) {
+        console.log(`[GET /users/by-username] Usuario no encontrado: ${username}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`[GET /users/by-username] Usuario encontrado: ${user.id}`);
+      
+      // Don't include password in response
+      const { password, ...userInfo } = user;
+      
+      res.json({ user: userInfo });
+    } catch (error) {
+      console.error(`[GET /users/by-username] Error al buscar usuario ${username}:`, error);
+      res.status(500).json({ 
+        message: "Error al buscar usuario",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get default wishlist for a user
+  router.get("/users/:userId/default-wishlist", async (req, res) => {
+    const { userId } = req.params;
+    const userIdNum = parseInt(userId, 10);
+    
+    if (isNaN(userIdNum)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    
+    try {
+      console.log(`[GET /users/:userId/default-wishlist] Buscando wishlist para userId: ${userIdNum}`);
+      
+      // Obtener todas las wishlists del usuario
+      const wishlists = await storage.getUserWishlists(userIdNum);
+      
+      if (wishlists.length === 0) {
+        console.log(`[GET /users/:userId/default-wishlist] No se encontraron wishlists para userId: ${userIdNum}`);
+        return res.status(404).json({ message: "No wishlists found for this user" });
+      }
+      
+      // Usar la primera wishlist como predeterminada
+      const defaultWishlist = wishlists[0];
+      console.log(`[GET /users/:userId/default-wishlist] Wishlist encontrada: ${defaultWishlist.id}`);
+      
+      // Obtener el propietario
+      const owner = await storage.getUser(defaultWishlist.userId);
+      if (!owner) {
+        return res.status(404).json({ message: "Wishlist owner not found" });
+      }
+      
+      // Don't include password in response
+      const { password, ...ownerInfo } = owner;
+      
+      res.json({ wishlist: defaultWishlist, owner: ownerInfo });
+    } catch (error) {
+      console.error(`[GET /users/:userId/default-wishlist] Error:`, error);
+      res.status(500).json({ 
+        message: "Error al obtener la wishlist predeterminada",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
   // Get wishlist by username and slug (new friendly URL format)
   router.get("/wl/:username/:slug", async (req, res) => {
     const { username, slug } = req.params;

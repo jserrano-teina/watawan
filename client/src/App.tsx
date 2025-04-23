@@ -5,6 +5,8 @@ import { Toaster } from "@/components/ui/toaster";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import SharedList from "@/pages/SharedList";
+import UserWishlist from "@/pages/UserWishlist";
+import PublicHomePage from "@/pages/PublicHomePage";
 import LoginPage from "./pages/login-page";
 import RegisterPage from "./pages/register-page";
 import NotificationsPage from "./pages/NotificationsPage";
@@ -15,11 +17,39 @@ import { NetworkMonitor } from "@/components/NetworkMonitor";
 import ImagePreloader from "@/components/ImagePreloader";
 import React, { useEffect } from "react";
 import { useSafeArea } from "@/hooks/useSafeArea";
+import { useDomainDetection } from "@/hooks/useDomainDetection";
 
 /**
  * Router principal de la aplicación con rutas protegidas y públicas
+ * Incluye lógica para manejar diferentes dominios (app.watawan.com y watawan.com)
  */
 function Router() {
+  const { domainType, isReady } = useDomainDetection();
+  
+  // Si no está listo, mostramos una pantalla de carga
+  if (!isReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#121212]">
+        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  
+  // Router específico para el dominio público (watawan.com)
+  if (domainType === 'public') {
+    return (
+      <Switch>
+        <Route path="/" component={PublicHomePage} />
+        <Route path="/user/:username" component={UserWishlist} />
+        {/* Mantener compatibilidad con rutas antiguas */}
+        <Route path="/s/:id" component={SharedList} />
+        <Route path="/shared/:id" component={SharedList} />
+        <Route component={NotFound} />
+      </Switch>
+    );
+  }
+  
+  // Router para app.watawan.com y cualquier otro dominio
   return (
     <Switch>
       <ProtectedRoute path="/" component={Home} />
