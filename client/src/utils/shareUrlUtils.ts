@@ -3,16 +3,14 @@
  * Elimina caracteres especiales, espacios, etc.
  */
 export function generateSlug(text: string): string {
-  if (!text) return '';
-  
   return text
     .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .normalize('NFD') // Normaliza acentos
+    .replace(/[\u0300-\u036f]/g, '') // Elimina diacríticos
+    .replace(/[^\w\s-]/g, '') // Elimina caracteres especiales
+    .replace(/\s+/g, '-') // Reemplaza espacios por guiones
+    .replace(/-+/g, '-') // Elimina guiones duplicados
+    .replace(/^-+|-+$/g, ''); // Elimina guiones del principio y final
 }
 
 /**
@@ -20,8 +18,6 @@ export function generateSlug(text: string): string {
  * Formato: watawan.com/user/[username]
  */
 export function buildFriendlyShareUrl(username: string): string {
-  if (!username) return '';
-  
   const userSlug = generateSlug(username);
   return `https://watawan.com/user/${userSlug}`;
 }

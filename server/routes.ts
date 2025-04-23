@@ -25,6 +25,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     next();
   });
   
+  // Middleware para manejar las rutas públicas de usuario (watawan.com/user/:username)
+  app.use('/user/:username', (req, res, next) => {
+    if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+      console.log(`[Middleware] Redirigiendo ruta de usuario pública a index.html: ${req.url}`);
+      return res.sendFile(path.resolve(process.cwd(), 'client/dist/index.html'));
+    }
+    next();
+  });
+  
   const router = express.Router();
 
   // Configurar autenticación
@@ -130,7 +139,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Get default wishlist for a user
+  // Get default wishlist for a user by ID
   router.get("/users/:userId/default-wishlist", async (req, res) => {
     const { userId } = req.params;
     const userIdNum = parseInt(userId, 10);
@@ -168,6 +177,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error(`[GET /users/:userId/default-wishlist] Error:`, error);
       res.status(500).json({ 
         message: "Error al obtener la wishlist predeterminada",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get default wishlist for a user by username (for new public URL format)
+  router.get("/user/:username/wishlist", async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+      console.log(`[GET /user/:username/wishlist] Buscando wishlist para username: ${username}`);
+      
+      // Buscar la wishlist por nombre de usuario
+      const wishlist = await storage.getWishlistByUsername(username);
+      
+      if (!wishlist) {
+        console.log(`[GET /user/:username/wishlist] No se encontró wishlist para username: ${username}`);
+        return res.status(404).json({ message: "Wishlist not found" });
+      }
+      
+      console.log(`[GET /user/:username/wishlist] Wishlist encontrada: ${wishlist.id}`);
+      
+      // Obtener el propietario
+      const owner = await storage.getUser(wishlist.userId);
+      if (!owner) {
+        return res.status(404).json({ message: "Wishlist owner not found" });
+      }
+      
+      // Don't include password in response
+      const { password, ...ownerInfo } = owner;
+      
+      res.json({ wishlist, owner: ownerInfo });
+    } catch (error) {
+      console.error(`[GET /user/:username/wishlist] Error:`, error);
+      res.status(500).json({ 
+        message: "Error al obtener la wishlist",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
+  
+  // Get items for a user's default wishlist (for new public URL format)
+  router.get("/user/:username/items", async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+      console.log(`[GET /user/:username/items] Buscando items para username: ${username}`);
+      
+      // Buscar la wishlist por nombre de usuario
+      const wishlist = await storage.getWishlistByUsername(username);
+      
+      if (!wishlist) {
+        console.log(`[GET /user/:username/items] No se encontró wishlist para username: ${username}`);
+        return res.status(404).json({ message: "Wishlist not found" });
+      }
+      
+      console.log(`[GET /user/:username/items] Wishlist encontrada: ${wishlist.id}, obteniendo items`);
+      
+      // Para listas compartidas, nunca incluimos los elementos recibidos
+      const includeReceived = false;
+      
+      const items = await storage.getWishItemsForWishlist(wishlist.id, includeReceived);
+      console.log(`[GET /user/:username/items] Se encontraron ${items.length} items`);
+      
+      res.json(items);
+    } catch (error) {
+      console.error(`[GET /user/:username/items] Error:`, error);
+      res.status(500).json({ 
+        message: "Error al obtener items de la wishlist",
         error: error instanceof Error ? error.message : String(error)
       });
     }

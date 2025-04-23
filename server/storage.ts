@@ -26,6 +26,7 @@ export interface IStorage {
   // Wishlist operations
   getWishlist(id: number): Promise<Wishlist | undefined>;
   getWishlistByShareableLink(link: string): Promise<Wishlist | undefined>;
+  getWishlistByUsername(username: string): Promise<Wishlist | undefined>;
   getUserWishlists(userId: number): Promise<Wishlist[]>;
   createWishlist(wishlist: InsertWishlist): Promise<Wishlist>;
   
@@ -206,6 +207,37 @@ export class DatabaseStorage implements IStorage {
   async getWishlistByShareableLink(link: string): Promise<Wishlist | undefined> {
     const result = await db.select().from(wishlists).where(eq(wishlists.shareableLink, link));
     return result.length ? result[0] : undefined;
+  }
+  
+  async getWishlistByUsername(username: string): Promise<Wishlist | undefined> {
+    console.log(`[getWishlistByUsername] Buscando wishlist para usuario=${username}`);
+    
+    try {
+      // Buscar el usuario por nombre de usuario (displayName) o por email
+      const user = await this.getUserByUsernameOrEmail(username);
+      
+      if (!user) {
+        console.log(`[getWishlistByUsername] No se encontró usuario con username=${username}`);
+        return undefined;
+      }
+      
+      console.log(`[getWishlistByUsername] Usuario encontrado: id=${user.id}, email=${user.email}`);
+      
+      // Obtener las listas de deseos del usuario, ordenadas por fecha de creación descendente
+      const userWishlists = await this.getUserWishlists(user.id);
+      
+      if (!userWishlists || userWishlists.length === 0) {
+        console.log(`[getWishlistByUsername] No se encontraron wishlists para el usuario ${user.id}`);
+        return undefined;
+      }
+      
+      // Devolver la primera wishlist (la más reciente)
+      console.log(`[getWishlistByUsername] Devolviendo wishlist: id=${userWishlists[0].id}`);
+      return userWishlists[0];
+    } catch (error) {
+      console.error(`[getWishlistByUsername] Error:`, error);
+      return undefined;
+    }
   }
   
   async getWishlistByUserAndSlug(username: string, slug: string): Promise<Wishlist | undefined> {
