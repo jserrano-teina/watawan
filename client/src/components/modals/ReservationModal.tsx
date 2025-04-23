@@ -1,112 +1,100 @@
 import React, { useState } from 'react';
-import { X } from 'lucide-react';
 import { WishItem } from '../../types';
+import { Button } from "@/components/ui/button";
+import { X } from 'lucide-react';
+import { 
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetClose
+} from "@/components/ui/sheet";
 import { sanitizeInput } from '@/lib/sanitize';
 
 interface ReservationModalProps {
-  item: WishItem;
+  isOpen: boolean;
   onClose: () => void;
   onConfirm: (reserverName: string) => void;
+  item?: WishItem;
 }
 
-const ReservationModal: React.FC<ReservationModalProps> = ({ item, onClose, onConfirm }) => {
+const ReservationModal: React.FC<ReservationModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  onConfirm,
+  item
+}) => {
   const [reserverName, setReserverName] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!reserverName.trim()) {
-      setError('Por favor, introduce tu nombre');
-      return;
-    }
-    
-    setIsLoading(true);
-    setError('');
-    
-    try {
-      await onConfirm(reserverName);
-      onClose();
-    } catch (error) {
-      console.error('Error en reserva:', error);
-      setError('Ha ocurrido un error al reservar el regalo');
-    } finally {
-      setIsLoading(false);
-    }
+  const handleConfirm = () => {
+    // Sanitizar el nombre antes de enviarlo
+    const sanitizedName = sanitizeInput(reserverName);
+    onConfirm(sanitizedName);
+    setReserverName('');
+    // Ya no llamamos a onClose() aquí porque el componente padre
+    // se encargará de cerrar este modal manteniendo abierto el de detalles
   };
+  
+  // Si no hay item, no renderizamos nada
+  if (!item) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#1E1E1E] rounded-lg w-full max-w-[400px] overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b border-gray-800">
-          <h2 className="text-lg font-medium">Reservar regalo</h2>
+    <Sheet open={isOpen} onOpenChange={onClose}>
+      <SheetContent 
+        side="bottom" 
+        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0 z-[60]"
+      >
+        <SheetHeader className="sr-only">
+          <SheetTitle>Reservar regalo</SheetTitle>
+          <SheetDescription>Reserva un regalo de la lista de deseos</SheetDescription>
+        </SheetHeader>
+        
+        <div className="text-left px-6 pt-6 pb-2 flex items-start justify-between">
+          <h3 className="text-white text-xl font-medium">{item.title}</h3>
           <button 
             onClick={onClose}
-            className="text-gray-400 hover:text-white p-1"
+            className="text-white opacity-70 hover:opacity-100 transition-opacity pl-5 pr-1 ml-3 mt-1"
           >
-            <X size={20} />
+            <X className="h-7 w-7" />
           </button>
         </div>
-
-        <div className="p-4">
+        
+        <div className="px-6 mt-4">
+          <p className="text-white/80 mb-6">¿Quieres reservar este regalo? Una vez confirmes, ningún otro podrá reservarlo.</p>
+          
           <div className="mb-6">
-            <p className="mb-2">Estás a punto de reservar:</p>
-            <h3 className="text-primary font-medium mb-1">{sanitizeInput(item.title)}</h3>
-            {item.price && (
-              <p className="text-sm text-gray-300">{item.price}</p>
-            )}
+            <label htmlFor="reserverName" className="block text-white/90 font-medium mb-2">Tu nombre (opcional)</label>
+            <input 
+              type="text" 
+              id="reserverName" 
+              className="w-full h-[50px] px-3 py-2 border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent bg-[#121212] text-white" 
+              placeholder="¿Cómo te llama esta persona?"
+              value={reserverName}
+              onChange={(e) => setReserverName(e.target.value)}
+            />
+            <p className="text-white/50 text-xs mt-1">Tranquilo, no le mostraremos tu nombre hasta que lo reciba</p>
           </div>
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-4">
-              <label htmlFor="reserverName" className="block text-sm font-medium mb-1">
-                Tu nombre (para que sepan quién lo ha reservado)
-              </label>
-              <input
-                id="reserverName"
-                type="text"
-                value={reserverName}
-                onChange={(e) => setReserverName(e.target.value)}
-                placeholder="Escribe tu nombre"
-                className="w-full p-3 rounded-lg bg-[#121212] border border-gray-700 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-primary"
-                maxLength={50}
-                disabled={isLoading}
-              />
-              {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-4 py-2 rounded-lg bg-gray-800 text-white"
-                disabled={isLoading}
+          
+          <div className="flex flex-col gap-3 pt-2">
+            <Button 
+              onClick={handleConfirm}
+              className="w-full bg-primary hover:bg-primary/90 text-black h-[50px]"
+            >
+              Confirmar reserva
+            </Button>
+            <SheetClose asChild>
+              <Button 
+                variant="outline" 
+                className="w-full border-[#444] text-white hover:bg-[#2a2a2a] hover:text-white h-[50px]"
               >
                 Cancelar
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 rounded-lg bg-primary text-black font-medium flex items-center justify-center"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <span className="flex items-center">
-                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Reservando...
-                  </span>
-                ) : (
-                  'Confirmar reserva'
-                )}
-              </button>
-            </div>
-          </form>
+              </Button>
+            </SheetClose>
+          </div>
         </div>
-      </div>
-    </div>
+      </SheetContent>
+    </Sheet>
   );
 };
 

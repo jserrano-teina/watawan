@@ -7,32 +7,34 @@ interface SafeLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {
 }
 
 /**
- * Componente que renderiza un enlace seguro sanitizando la URL
- * y aplicando atributos de seguridad recomendados para enlaces externos
+ * Componente para renderizar enlaces de manera segura
+ * Sanitiza las URLs para prevenir ataques XSS
  */
-export const SafeLink: React.FC<SafeLinkProps> = ({ 
+export function SafeLink({ 
   href, 
   children, 
-  target, 
-  rel, 
+  target = '_blank',
+  rel = 'noopener noreferrer', 
   ...props 
-}) => {
+}: SafeLinkProps) {
   // Sanitizar la URL
-  const safeHref = sanitizeUrl(href);
+  const safeUrl = sanitizeUrl(href);
   
-  // Si es un enlace externo, aplicar atributos de seguridad
-  const isExternal = safeHref.startsWith('http') && !safeHref.includes(window.location.hostname);
-  const safeTarget = isExternal ? '_blank' : target;
-  const safeRel = isExternal ? 'noopener noreferrer nofollow' : rel;
+  // Si la URL no es segura, no renderizar nada o mostrar un mensaje
+  if (!safeUrl) {
+    console.warn('Se intentó renderizar un enlace con una URL no segura:', href);
+    return <span {...props}>{children}</span>;
+  }
   
+  // Asegurar que enlaces externos siempre tengan target="_blank" y rel="noopener noreferrer"
   return (
     <a 
-      href={safeHref} 
-      target={safeTarget} 
-      rel={safeRel} 
+      href={safeUrl} 
+      target={target}
+      rel={rel}
       {...props}
     >
       {children}
     </a>
   );
-};
+}
