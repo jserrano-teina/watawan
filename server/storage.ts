@@ -84,6 +84,31 @@ export class DatabaseStorage implements IStorage {
       settings: result[0].settings as Record<string, any> | null
     };
   }
+  
+  async getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined> {
+    try {
+      // Buscar por email o por displayName, que funciona como username
+      const result = await db.select().from(users).where(
+        or(
+          eq(users.email, usernameOrEmail),
+          sql`LOWER(${users.email}) = LOWER(${usernameOrEmail})`,
+          sql`LOWER(${users.displayName}) = LOWER(${usernameOrEmail})`
+        )
+      ).limit(1);
+      
+      if (!result.length) return undefined;
+      
+      // Asegurarnos de que los tipos coinciden con la interfaz User
+      return {
+        ...result[0],
+        // Convertir explícitamente el campo settings a Record<string, any> | null
+        settings: result[0].settings as Record<string, any> | null
+      };
+    } catch (error) {
+      console.error('Error en getUserByUsernameOrEmail:', error);
+      throw error;
+    }
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     try {

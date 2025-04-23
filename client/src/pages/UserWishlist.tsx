@@ -20,7 +20,7 @@ const UserWishlist: React.FC = () => {
     variant: 'success' 
   });
 
-  // Buscar el usuario por nombre de usuario (debe incluir lógica para manejar nombres con números)
+  // Buscar el usuario por nombre de usuario
   const { data: userData, isLoading: userLoading, error: userError } = useQuery({
     queryKey: [`/api/users/by-username/${username}`],
     queryFn: async () => {
@@ -34,25 +34,19 @@ const UserWishlist: React.FC = () => {
     }
   });
 
-  // Una vez que tengamos el usuario, buscar su wishlist predeterminada
-  const { data: wishlistData, isLoading: wishlistLoading, error: wishlistError } = useQuery({
-    queryKey: [`/api/users/${userData?.user?.id}/default-wishlist`],
+  // Una vez que tengamos el usuario, buscar los items de su wishlist directamente
+  const { data: items = [], isLoading: itemsLoading, error: itemsError } = useQuery<WishItem[]>({
+    queryKey: [`/api/users/${username}/wishlist-items`],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', `/api/users/${userData?.user?.id}/default-wishlist`);
+        const res = await apiRequest('GET', `/api/users/${username}/wishlist-items`);
         return res.json();
       } catch (err) {
-        console.error('Error fetching default wishlist:', err);
+        console.error('Error fetching wishlist items:', err);
         throw err;
       }
     },
-    enabled: !!userData?.user?.id
-  });
-
-  // Buscar los items de la wishlist
-  const { data: items = [], isLoading: itemsLoading } = useQuery<WishItem[]>({
-    queryKey: [`/api/wishlist/${wishlistData?.wishlist?.id}/items`],
-    enabled: !!wishlistData?.wishlist?.id,
+    enabled: !!userData?.user // Solo habilitamos esta consulta si hemos encontrado el usuario
   });
 
   // Mutación para reservar un item
@@ -85,8 +79,8 @@ const UserWishlist: React.FC = () => {
   };
 
   // Verificar si hay errores o si está cargando
-  const isLoading = userLoading || wishlistLoading || itemsLoading;
-  const hasError = userError || wishlistError;
+  const isLoading = userLoading || itemsLoading;
+  const hasError = userError || itemsError;
   
   if (isLoading) {
     return (
@@ -117,19 +111,19 @@ const UserWishlist: React.FC = () => {
     );
   }
 
-  if (!wishlistData?.wishlist) {
+  if (items.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
         <div className="p-6 text-center max-w-[500px] mx-auto">
           <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
             <img 
               src="/images/not_found.png" 
-              alt="Lista no encontrada" 
+              alt="Lista vacía" 
               className="w-full h-full object-contain"
             />
           </div>
-          <h2 className="font-bold text-2xl text-white mb-3">Lista no encontrada</h2>
-          <p className="text-white/60 mb-6">Este usuario no tiene una lista de deseos pública.</p>
+          <h2 className="font-bold text-2xl text-white mb-3">Lista vacía</h2>
+          <p className="text-white/60 mb-6">Este usuario no tiene elementos en su lista de deseos.</p>
         </div>
       </div>
     );

@@ -228,6 +228,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const items = await storage.getWishItemsForWishlist(wishlist.id, includeReceived);
     res.json(items);
   });
+  
+  // Get wishlist items for a user's default wishlist (public URL format watawan.com/user/:username)
+  router.get("/users/:username/wishlist-items", async (req, res) => {
+    const { username } = req.params;
+    
+    try {
+      console.log(`[GET /users/:username/wishlist-items] Buscando wishlist items para username: ${username}`);
+      
+      // Primero buscamos el usuario
+      const user = await storage.getUserByUsernameOrEmail(username);
+      
+      if (!user) {
+        console.log(`[GET /users/:username/wishlist-items] Usuario no encontrado: ${username}`);
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      console.log(`[GET /users/:username/wishlist-items] Usuario encontrado: ${user.id}`);
+      
+      // Luego obtenemos sus wishlists
+      const wishlists = await storage.getUserWishlists(user.id);
+      
+      if (wishlists.length === 0) {
+        console.log(`[GET /users/:username/wishlist-items] No se encontraron wishlists para el usuario ${user.id}`);
+        return res.status(404).json({ message: "No wishlists found" });
+      }
+      
+      // Usamos la primera wishlist (la predeterminada)
+      const defaultWishlist = wishlists[0];
+      console.log(`[GET /users/:username/wishlist-items] Usando wishlist: ${defaultWishlist.id}`);
+      
+      // Para listas compartidas, nunca incluimos los elementos recibidos
+      const includeReceived = false;
+      
+      const items = await storage.getWishItemsForWishlist(defaultWishlist.id, includeReceived);
+      console.log(`[GET /users/:username/wishlist-items] Items encontrados: ${items.length}`);
+      
+      res.json(items);
+    } catch (error) {
+      console.error(`[GET /users/:username/wishlist-items] Error:`, error);
+      res.status(500).json({ 
+        message: "Error al obtener elementos de la wishlist",
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 
   // Get wish items for a wishlist
   router.get("/wishlist/:id/items", async (req: Request & { user?: User }, res) => {
