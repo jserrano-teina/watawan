@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'wouter';
 import { useQuery } from '@tanstack/react-query';
 import { apiRequest } from '../lib/queryClient';
-import { WishItem, User } from '../types';
+import { WishItem } from '../types';
 import SharedWishlistView from '../components/SharedWishlistView';
 import { Toast, ToastContainer } from '@/components/ui/toast';
 import { Check, AlertCircle, Loader2 } from 'lucide-react';
@@ -20,33 +20,33 @@ const UserWishlist: React.FC = () => {
     variant: 'success' 
   });
 
-  // Buscar el usuario por nombre de usuario
-  const { data: userData, isLoading: userLoading, error: userError } = useQuery({
-    queryKey: [`/api/users/by-username/${username}`],
+  // Buscar la wishlist directamente con el nuevo endpoint (usando la URL amigable)
+  const { data: wishlistData, isLoading: wishlistLoading, error: wishlistError } = useQuery({
+    queryKey: [`/api/user/${username}/wishlist`],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', `/api/users/by-username/${username}`);
+        const res = await apiRequest('GET', `/api/user/${username}/wishlist`);
         return res.json();
       } catch (err) {
-        console.error('Error fetching user by username:', err);
+        console.error('Error fetching wishlist by username:', err);
         throw err;
       }
     }
   });
 
-  // Una vez que tengamos el usuario, buscar los items de su wishlist directamente
+  // Buscar los items de la wishlist usando el nuevo endpoint
   const { data: items = [], isLoading: itemsLoading, error: itemsError } = useQuery<WishItem[]>({
-    queryKey: [`/api/users/${username}/wishlist-items`],
+    queryKey: [`/api/user/${username}/items`],
     queryFn: async () => {
       try {
-        const res = await apiRequest('GET', `/api/users/${username}/wishlist-items`);
+        const res = await apiRequest('GET', `/api/user/${username}/items`);
         return res.json();
       } catch (err) {
         console.error('Error fetching wishlist items:', err);
         throw err;
       }
     },
-    enabled: !!userData?.user // Solo habilitamos esta consulta si hemos encontrado el usuario
+    enabled: !!wishlistData?.wishlist // Solo habilitamos esta consulta si hemos encontrado la wishlist
   });
 
   // Mutación para reservar un item
@@ -79,8 +79,8 @@ const UserWishlist: React.FC = () => {
   };
 
   // Verificar si hay errores o si está cargando
-  const isLoading = userLoading || itemsLoading;
-  const hasError = userError || itemsError;
+  const isLoading = wishlistLoading || itemsLoading;
+  const hasError = wishlistError || itemsError;
   
   if (isLoading) {
     return (
@@ -93,7 +93,7 @@ const UserWishlist: React.FC = () => {
     );
   }
 
-  if (hasError || !userData?.user) {
+  if (hasError || !wishlistData?.wishlist || !wishlistData?.owner) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#121212]">
         <div className="p-6 text-center max-w-[500px] mx-auto">
@@ -132,7 +132,7 @@ const UserWishlist: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
       <SharedWishlistView 
-        owner={userData.user} 
+        owner={wishlistData.owner} 
         items={items || []} 
         onReserveItem={handleReserveItem} 
       />
