@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { Copy, X, Check } from 'lucide-react';
 import {
   Sheet,
@@ -8,6 +8,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { CustomInput } from "@/components/ui/custom-input";
+import { useAuth } from "@/hooks/use-auth";
+import { buildFriendlyShareUrl } from "@/utils/shareUrlUtils";
 
 interface ShareModalProps {
   isOpen: boolean;
@@ -18,8 +20,23 @@ interface ShareModalProps {
 const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink }) => {
   const linkRef = useRef<HTMLInputElement>(null);
   const [copied, setCopied] = useState(false);
+  const { user } = useAuth();
   
-  const fullShareableLink = `${window.location.origin}/s/${shareableLink}`;
+  // URL pública usando el formato nuevo watawan.com/user/username
+  const [publicShareableUrl, setPublicShareableUrl] = useState('');
+  // URL tradicional como fallback
+  const legacyShareableLink = `${window.location.origin}/s/${shareableLink}`;
+  
+  // Actualizar la URL pública cuando cambia el usuario
+  useEffect(() => {
+    if (user?.displayName) {
+      // Usar el nombre de usuario para construir el enlace público
+      setPublicShareableUrl(buildFriendlyShareUrl(user.displayName));
+    }
+  }, [user]);
+  
+  // Usar preferentemente el enlace público, con fallback al enlace legado
+  const fullShareableLink = publicShareableUrl || legacyShareableLink;
   
   const copyToClipboard = () => {
     if (linkRef.current) {

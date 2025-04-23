@@ -3,6 +3,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/use-auth";
+import { buildFriendlyShareUrl } from "@/utils/shareUrlUtils";
 
 interface ShareDialogProps {
   open: boolean;
@@ -18,9 +20,24 @@ export function ShareDialog({
   wishlistName
 }: ShareDialogProps) {
   const { toast } = useToast();
+  const { user } = useAuth();
   const inputRef = React.useRef<HTMLInputElement>(null);
   
-  const shareUrl = `${window.location.origin}/s/${shareableId}`;
+  // URL tradicional como fallback
+  const legacyShareUrl = `${window.location.origin}/s/${shareableId}`;
+  // URL pública usando el formato nuevo watawan.com/user/username
+  const [publicShareableUrl, setPublicShareableUrl] = React.useState('');
+  
+  // Actualizar la URL pública cuando cambia el usuario
+  React.useEffect(() => {
+    if (user?.displayName) {
+      // Usar el nombre de usuario para construir el enlace público
+      setPublicShareableUrl(buildFriendlyShareUrl(user.displayName));
+    }
+  }, [user]);
+  
+  // Usar preferentemente el enlace público, con fallback al enlace legado
+  const shareUrl = publicShareableUrl || legacyShareUrl;
   
   const handleCopyLink = () => {
     if (inputRef.current) {
