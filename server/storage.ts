@@ -111,8 +111,7 @@ export class DatabaseStorage implements IStorage {
       
       const allUsers = await db.select().from(users);
       
-      // Importar la función generateSlug para crear slugs con el mismo algoritmo
-      const { generateSlug } = await import('../utils');
+      // Usamos la función generateSlug importada en la parte superior del archivo
       
       // Buscar un usuario cuyo email o displayName genere un slug que coincida con el valor buscado
       const matchingUser = allUsers.find(user => {
