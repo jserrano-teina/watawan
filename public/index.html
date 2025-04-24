@@ -91,6 +91,46 @@
   </div>
   
   <div id="root"></div>
+
+  <!-- Script de diagnóstico -->
+  <script>
+    // Verificación de carga, muestra un mensaje en la consola y pantalla
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM cargado correctamente en index.html de public');
+      
+      // Solo mostrar mensaje de diagnóstico si no se ha cargado React
+      setTimeout(function() {
+        const root = document.getElementById('root');
+        if (!root || !root.hasChildNodes()) {
+          console.error('El script principal no se ha cargado correctamente');
+          
+          // Crear un elemento para mostrar un mensaje al usuario
+          const message = document.createElement('div');
+          message.innerHTML = `
+            <div style="padding: 20px; margin: 20px; background-color: #333; border-radius: 10px; max-width: 500px; margin: 20px auto;">
+              <h2>Diagnóstico WataWan</h2>
+              <p>La aplicación está intentando cargar desde: <strong>${window.location.href}</strong></p>
+              <p>Fecha y hora: ${new Date().toLocaleString()}</p>
+              <p>URL completa: ${window.location.toString()}</p>
+              <p>Pathname: ${window.location.pathname}</p>
+              <p>Origin: ${window.location.origin}</p>
+              <hr>
+              <p>Resolveremos este problema pronto. Mientras tanto, puedes intentar volver a la <a href="/" style="color: #FFE066;">página principal</a>.</p>
+            </div>
+          `;
+          document.body.appendChild(message);
+          
+          // Ocultar la pantalla de splash
+          const splash = document.getElementById('splash-screen');
+          if (splash) {
+            splash.classList.add('hidden');
+          }
+        }
+      }, 5000); // Esperar 5 segundos para ver si se carga React
+    });
+  </script>
+  
+  <!-- Script principal de la aplicación -->
   <script type="module" src="/src/main.tsx"></script>
   
   <!-- Registro del Service Worker -->

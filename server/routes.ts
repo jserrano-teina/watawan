@@ -17,65 +17,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   
   // Middleware para enlaces compartidos antiguos con formato /s/ID
+  // NOTA: Ahora dejamos que estas rutas sean manejadas por el middleware de Vite o serveStatic
+  // Este middleware solo recopila información de diagnóstico
   app.use('/s/:id', (req, res, next) => {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      console.log(`[Middleware] Redirigiendo enlace compartido antiguo a index.html: ${req.url}`);
-      
-      // Usar la ruta correcta al archivo index.html en la carpeta public
-      const indexPath = path.join(process.cwd(), 'public', 'index.html');
-      
-      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
-      
-      // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(indexPath);
+      console.log(`[Middleware] Detectado enlace compartido antiguo: ${req.url}`);
+      console.log(`[Middleware] Permitiendo que siga al siguiente middleware para procesamiento por Vite`);
     }
     next();
   });
   
   // Middleware para enlaces compartidos con formato /shared/ID
+  // NOTA: Ahora dejamos que estas rutas sean manejadas por el middleware de Vite o serveStatic
+  // Este middleware solo recopila información de diagnóstico
   app.use('/shared/:id', (req, res, next) => {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      console.log(`[Middleware] Redirigiendo enlace compartido a index.html: ${req.url}`);
-      
-      // Usar la ruta correcta al archivo index.html en la carpeta public
-      const indexPath = path.join(process.cwd(), 'public', 'index.html');
-      
-      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
-      
-      // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(indexPath);
+      console.log(`[Middleware] Detectado enlace compartido: ${req.url}`);
+      console.log(`[Middleware] Permitiendo que siga al siguiente middleware para procesamiento por Vite`);
     }
     next();
   });
   
   // Middleware para redirigir URLs amigables a la página principal
+  // NOTA: Ahora dejamos que estas rutas sean manejadas por el middleware de Vite o serveStatic
+  // Este middleware solo recopila información de diagnóstico
   app.use('/lista/:username/:slug', (req, res, next) => {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      console.log(`[Middleware] Redirigiendo URL amigable a index.html: ${req.url}`);
-      
-      // Usar la ruta correcta al archivo index.html en la carpeta public
-      const indexPath = path.join(process.cwd(), 'public', 'index.html');
-      
-      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
-      
-      // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(indexPath);
+      console.log(`[Middleware] Detectada URL amigable: ${req.url}`);
+      console.log(`[Middleware] Permitiendo que siga al siguiente middleware para procesamiento por Vite`);
     }
     next();
   });
   
   // Middleware para manejar las rutas públicas de usuario (watawan.com/user/:username)
+  // NOTA: Ahora dejamos que estas rutas sean manejadas por el middleware de Vite o serveStatic
+  // Este middleware solo recopila información de diagnóstico
   app.use('/user/:username', (req, res, next) => {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      console.log(`[Middleware] Redirigiendo ruta de usuario pública a index.html: ${req.url}`);
-      
-      // Usar la ruta correcta al archivo index.html en la carpeta public
-      const indexPath = path.join(process.cwd(), 'public', 'index.html');
-      
-      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
-      
-      // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(indexPath);
+      console.log(`[Middleware] Detectada ruta de usuario pública: ${req.url}`);
+      console.log(`[Middleware] Permitiendo que siga al siguiente middleware para procesamiento por Vite`);
     }
     next();
   });
@@ -1121,18 +1101,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.use("/api", router);
   
-  // Middleware general para servir index.html para cualquier ruta no manejada (debe ir al final)
+  // Middleware diagnóstico para rutas no manejadas
+  // NOTA: Ya no intentamos servir archivos HTML directamente, dejamos que el middleware de Vite lo haga
   app.use('*', (req, res, next) => {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
-      console.log(`[Middleware] Capturando ruta desconocida: ${req.originalUrl}`);
-      
-      // Usar la ruta correcta al archivo index.html en la carpeta public
-      const indexPath = path.join(process.cwd(), 'public', 'index.html');
-      
-      console.log(`[Middleware] Sirviendo archivo index.html desde public: ${indexPath}`);
-      
-      // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(indexPath);
+      console.log(`[Middleware] Detectada ruta HTML: ${req.originalUrl}`);
+      console.log(`[Middleware] Permitiendo que siga al siguiente middleware para procesamiento por Vite`);
     }
     next();
   });
