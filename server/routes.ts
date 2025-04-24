@@ -1120,5 +1120,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.use("/api", router);
+  
+  // Middleware general para servir index.html para cualquier ruta no manejada (debe ir al final)
+  app.use('*', (req, res, next) => {
+    if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+      console.log(`[Middleware] Capturando ruta desconocida: ${req.originalUrl}`);
+      
+      // Usar la ruta correcta al archivo index.html en la carpeta public
+      const indexPath = path.join(process.cwd(), 'public', 'index.html');
+      
+      console.log(`[Middleware] Sirviendo archivo index.html desde public: ${indexPath}`);
+      
+      // Servir el archivo estático index.html desde la ubicación correcta
+      return res.sendFile(indexPath);
+    }
+    next();
+  });
+  
   return httpServer;
 }
