@@ -21,14 +21,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo enlace compartido antiguo a index.html: ${req.url}`);
       
-      // Usar la ruta correcta a los archivos estáticos construidos de Vite
-      const publicPath = path.join(process.cwd(), 'public');
-      const clientDistPath = path.join(publicPath, 'index.html');
+      // Usar la ruta correcta al archivo index.html
+      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientDistPath}`);
+      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientDistPath);
+      return res.sendFile(clientIndexPath);
+    }
+    next();
+  });
+  
+  // Middleware para enlaces compartidos con formato /shared/ID
+  app.use('/shared/:id', (req, res, next) => {
+    if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
+      console.log(`[Middleware] Redirigiendo enlace compartido a index.html: ${req.url}`);
+      
+      // Usar la ruta correcta al archivo index.html
+      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
+      
+      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
+      
+      // Servir el archivo estático index.html desde la ubicación correcta
+      return res.sendFile(clientIndexPath);
     }
     next();
   });
@@ -38,14 +53,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo URL amigable a index.html: ${req.url}`);
       
-      // Usar la ruta correcta a los archivos estáticos construidos de Vite
-      const publicPath = path.join(process.cwd(), 'public');
-      const clientDistPath = path.join(publicPath, 'index.html');
+      // Usar la ruta correcta al archivo index.html
+      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientDistPath}`);
+      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientDistPath);
+      return res.sendFile(clientIndexPath);
     }
     next();
   });
@@ -55,14 +69,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo ruta de usuario pública a index.html: ${req.url}`);
       
-      // Usar la ruta correcta a los archivos estáticos construidos de Vite
-      const publicPath = path.join(process.cwd(), 'public');
-      const clientDistPath = path.join(publicPath, 'index.html');
+      // Usar la ruta correcta al archivo index.html
+      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientDistPath}`);
+      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientDistPath);
+      return res.sendFile(clientIndexPath);
     }
     next();
   });
