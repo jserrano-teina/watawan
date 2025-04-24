@@ -21,13 +21,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo enlace compartido antiguo a index.html: ${req.url}`);
       
-      // Usar la ruta correcta al archivo index.html
-      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
+      // Usar la ruta correcta al archivo index.html en la carpeta public
+      const indexPath = path.join(process.cwd(), 'public', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
+      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientIndexPath);
+      return res.sendFile(indexPath);
     }
     next();
   });
@@ -37,13 +37,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo enlace compartido a index.html: ${req.url}`);
       
-      // Usar la ruta correcta al archivo index.html
-      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
+      // Usar la ruta correcta al archivo index.html en la carpeta public
+      const indexPath = path.join(process.cwd(), 'public', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
+      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientIndexPath);
+      return res.sendFile(indexPath);
     }
     next();
   });
@@ -53,13 +53,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo URL amigable a index.html: ${req.url}`);
       
-      // Usar la ruta correcta al archivo index.html
-      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
+      // Usar la ruta correcta al archivo index.html en la carpeta public
+      const indexPath = path.join(process.cwd(), 'public', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
+      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientIndexPath);
+      return res.sendFile(indexPath);
     }
     next();
   });
@@ -69,13 +69,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (req.method === 'GET' && req.headers.accept?.includes('text/html')) {
       console.log(`[Middleware] Redirigiendo ruta de usuario pública a index.html: ${req.url}`);
       
-      // Usar la ruta correcta al archivo index.html
-      const clientIndexPath = path.join(process.cwd(), 'client', 'index.html');
+      // Usar la ruta correcta al archivo index.html en la carpeta public
+      const indexPath = path.join(process.cwd(), 'public', 'index.html');
       
-      console.log(`[Middleware] Intentando servir archivo: ${clientIndexPath}`);
+      console.log(`[Middleware] Intentando servir archivo desde public: ${indexPath}`);
       
       // Servir el archivo estático index.html desde la ubicación correcta
-      return res.sendFile(clientIndexPath);
+      return res.sendFile(indexPath);
     }
     next();
   });

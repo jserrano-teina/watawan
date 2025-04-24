@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WataWan - Tu lista de deseos</title>
+  
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Crea y comparte listas de deseos con amigos y familiares">
+  <meta name="theme-color" content="#121212">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="WataWan">
+  
+  <!-- Favicon -->
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  
+  <!-- PWA Icons -->
+  <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512x512.png">
+  
+  <!-- Apple Touch Icons -->
+  <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon/apple-icon-152x152.png">
+  <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon/apple-icon-167x167.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon/apple-icon-180x180.png">
+  <link rel="apple-touch-icon" sizes="192x192" href="/icons/icon-192x192.png">
+  
+  <!-- Microsoft Icons -->
+  <meta name="msapplication-TileImage" content="/icons/ms-icon-144x144.png">
+  <meta name="msapplication-TileColor" content="#121212">
+  
+  <!-- Web App Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  
+  <!-- Fonts and Styles -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.0.0/css/all.css" rel="stylesheet">
+  <style>
+    html {
+      scroll-behavior: smooth;
+      background-color: #121212;
+    }
+    body {
+      background-color: #121212;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      text-rendering: optimizeLegibility;
+      -webkit-font-smoothing: antialiased;
+      overscroll-behavior-y: contain;
+      color: white;
+    }
+    .modal {
+      backdrop-filter: blur(8px);
+    }
+    
+    /* Estilos simples del splash screen */
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #121212;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    #splash-screen.hidden {
+      display: none;
+    }
+    #splash-screen img {
+      width: 180px;
+      height: 180px;
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(0.95); }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen para PWA -->
+  <div id="splash-screen">
+    <img src="/icons/logo.svg" alt="WataWan Logo">
+  </div>
+  
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  
+  <!-- Registro del Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(function(registration) {
+            console.log('Service Worker registrado correctamente con alcance: ', registration.scope);
+          })
+          .catch(function(error) {
+            console.log('Error al registrar el Service Worker: ', error);
+          });
+      });
+    }
+    
+    // El splash screen se ocultará automáticamente después de un tiempo razonable
+    setTimeout(function() {
+      const splashScreen = document.getElementById('splash-screen');
+      if (splashScreen) {
+        console.log('Ocultando splash screen después de 3 segundos');
+        splashScreen.classList.add('hidden');
+      }
+    }, 3000);
+  </script>
+</body>
+</html>
