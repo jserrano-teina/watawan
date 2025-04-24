@@ -88,8 +88,9 @@ export class DatabaseStorage implements IStorage {
   
   async getUserByUsernameOrEmail(usernameOrEmail: string): Promise<User | undefined> {
     try {
-      // Buscar por email o por displayName, que funciona como username
-      const result = await db.select().from(users).where(
+      console.log(`[getUserByUsernameOrEmail] Buscando usuario con valor: "${usernameOrEmail}"`);
+      // Intentar buscar primero como valor exacto
+      const resultExact = await db.select().from(users).where(
         or(
           eq(users.email, usernameOrEmail),
           sql`LOWER(${users.email}) = LOWER(${usernameOrEmail})`,
@@ -97,14 +98,43 @@ export class DatabaseStorage implements IStorage {
         )
       ).limit(1);
       
-      if (!result.length) return undefined;
+      if (resultExact.length) {
+        console.log(`[getUserByUsernameOrEmail] Usuario encontrado por valor exacto: ${resultExact[0].email}`);
+        return {
+          ...resultExact[0],
+          settings: resultExact[0].settings as Record<string, any> | null
+        };
+      }
       
-      // Asegurarnos de que los tipos coinciden con la interfaz User
-      return {
-        ...result[0],
-        // Convertir explícitamente el campo settings a Record<string, any> | null
-        settings: result[0].settings as Record<string, any> | null
-      };
+      // Si no se encuentra, buscar todos los usuarios y comparar slugs
+      console.log(`[getUserByUsernameOrEmail] No se encontró usuario por valor exacto, buscando por slug: "${usernameOrEmail}"`);
+      
+      const allUsers = await db.select().from(users);
+      
+      // Importar la función generateSlug para crear slugs con el mismo algoritmo
+      const { generateSlug } = await import('../utils');
+      
+      // Buscar un usuario cuyo email o displayName genere un slug que coincida con el valor buscado
+      const matchingUser = allUsers.find(user => {
+        // Compara con slug de email
+        if (generateSlug(user.email) === usernameOrEmail) return true;
+        
+        // Compara con slug de displayName si existe
+        if (user.displayName && generateSlug(user.displayName) === usernameOrEmail) return true;
+        
+        return false;
+      });
+      
+      if (matchingUser) {
+        console.log(`[getUserByUsernameOrEmail] Usuario encontrado por slug: ${matchingUser.email}`);
+        return {
+          ...matchingUser,
+          settings: matchingUser.settings as Record<string, any> | null
+        };
+      }
+      
+      console.log(`[getUserByUsernameOrEmail] No se encontró ningún usuario para: "${usernameOrEmail}"`);
+      return undefined;
     } catch (error) {
       console.error('Error en getUserByUsernameOrEmail:', error);
       throw error;
@@ -242,32 +272,27 @@ export class DatabaseStorage implements IStorage {
   
   async getWishlistByUserAndSlug(username: string, slug: string): Promise<Wishlist | undefined> {
     console.log(`[getWishlistByUserAndSlug] Buscando wishlist para usuario=${username}, slug=${slug}`);
-    // Primero, buscar el usuario por nombre de usuario (displayName) o por email
-    const user = await db.select().from(users).where(
-      or(
-        eq(users.email, username),
-        sql`LOWER(${users.email}) = LOWER(${username})`,
-        sql`LOWER(${users.displayName}) = LOWER(${username})`
-      )
-    ).limit(1);
     
-    if (!user.length) {
+    // Usar el método mejorado para buscar el usuario
+    const user = await this.getUserByUsernameOrEmail(username);
+    
+    if (!user) {
       console.log(`[getWishlistByUserAndSlug] No se encontró usuario con username=${username}`);
       return undefined;
     }
     
-    console.log(`[getWishlistByUserAndSlug] Usuario encontrado: id=${user[0].id}, email=${user[0].email}`);
+    console.log(`[getWishlistByUserAndSlug] Usuario encontrado: id=${user.id}, email=${user.email}`);
     
     // Buscar la wishlist por userId y slug
     const result = await db.select().from(wishlists).where(
       and(
-        eq(wishlists.userId, user[0].id),
+        eq(wishlists.userId, user.id),
         eq(wishlists.slug, slug)
       )
     );
     
     if (!result.length) {
-      console.log(`[getWishlistByUserAndSlug] No se encontró wishlist para userId=${user[0].id}, slug=${slug}`);
+      console.log(`[getWishlistByUserAndSlug] No se encontró wishlist para userId=${user.id}, slug=${slug}`);
     } else {
       console.log(`[getWishlistByUserAndSlug] Wishlist encontrada: id=${result[0].id}`);
     }
