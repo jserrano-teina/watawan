@@ -32,13 +32,23 @@ export async function extractOpenGraphData(url: string, clientUserAgent?: string
   };
   
   try {
-    // Usar el User-Agent del cliente si está disponible, o un User-Agent de navegador de escritorio por defecto
-    const userAgent = clientUserAgent || 
-      'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+    // Desktop User-Agent por defecto
+    const desktopUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
     
-    // Registrar información de dispositivo para depuración
+    // Determinar si es un dispositivo móvil
     const isMobile = clientUserAgent && (clientUserAgent.includes('Mobile') || clientUserAgent.includes('Android'));
-    console.log(`🌐 Usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'} para: ${url}`);
+    
+    // Si la URL es de Amazon, usamos siempre User-Agent de escritorio para obtener la versión completa del sitio
+    // independientemente del dispositivo del cliente
+    let userAgent;
+    if (url.includes('amazon')) {
+      userAgent = desktopUserAgent;
+      console.log(`🌐 URL de Amazon detectada - Forzando User-Agent de escritorio para: ${url}`);
+    } else {
+      // Para el resto de sitios, usar el User-Agent del cliente si está disponible
+      userAgent = clientUserAgent || desktopUserAgent;
+      console.log(`🌐 Usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'} para: ${url}`);
+    }
     
     // Configurar cabeceras para simular el navegador del cliente
     const headers = {
