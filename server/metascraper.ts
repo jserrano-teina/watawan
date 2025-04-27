@@ -1343,10 +1343,10 @@ async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: 
   try {
     let productHtml = html;
     
-    // Usar User-Agent del cliente o uno aleatorio
-    const userAgent = clientUserAgent || getRandomUserAgent();
-    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
-    debug(`extractAmazonTitle: usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'}: ${userAgent}`);
+    // IMPORTANTE: Para Amazon SIEMPRE usamos User-Agent de escritorio para extraer metadatos correctamente
+    // ignoramos el User-Agent del cliente
+    const userAgent = USER_AGENTS.desktop;
+    debug(`extractAmazonTitle: forzando User-Agent de escritorio para extraer correctamente: ${userAgent}`);
     
     // Si no tenemos HTML, intentamos obtenerlo
     if (!productHtml) {
@@ -1356,7 +1356,7 @@ async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: 
         
         const response = await fetchWithCorrectTypes(url, {
           headers: {
-            'User-Agent': userAgent, // Usamos el User-Agent del cliente para consistencia
+            'User-Agent': userAgent, // Siempre User-Agent de escritorio
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
@@ -1435,10 +1435,21 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
   try {
     debug(`Procesando URL para extraer metadatos completos: ${url}`);
     
-    // Si recibimos el User-Agent del cliente, lo usamos para preservar la consistencia
-    // entre lo que ve el usuario y lo que extrae el sistema
-    // Si no, usamos un User-Agent aleatorio
-    const userAgent = clientUserAgent || getRandomUserAgent();
+    // Verificar si es una URL de Amazon
+    const isAmazonUrl = !!url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || 
+                        !!url.match(/amzn\.(to|eu)/i) || 
+                        !!url.match(/a\.co\//i);
+    
+    // Para Amazon siempre usamos un User-Agent de escritorio independientemente del dispositivo
+    let userAgent;
+    if (isAmazonUrl) {
+      userAgent = USER_AGENTS.desktop;
+      debug(`URL de Amazon detectada. Forzando User-Agent de escritorio para extracción consistente.`);
+    } else {
+      // Para otras URLs respetamos el User-Agent del cliente o usamos uno aleatorio
+      userAgent = clientUserAgent || getRandomUserAgent();
+    }
+    
     debug(`Usando User-Agent: ${userAgent}`);
     
     // Determinar si es móvil para adaptar la extracción
