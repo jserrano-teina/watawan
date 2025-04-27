@@ -940,13 +940,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
       
-      // Usar nuestro nuevo extractor de Open Graph con timeout
+      // Verificar si es una URL de Amazon
+      const isAmazonUrl = !!url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || 
+                         !!url.match(/amzn\.(to|eu)/i) || 
+                         !!url.match(/a\.co\//i);
+      
+      // Para Amazon siempre usamos un extractor específico con User-Agent de escritorio
+      if (isAmazonUrl) {
+        console.log(`🛒 Detectada URL de Amazon. Usando extractor con User-Agent de escritorio.`);
+        
+        // User-Agent de escritorio fijo para todas las peticiones de Amazon
+        const desktopUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+        
+        // Importar el extractor de metadatos
+        const { getUrlMetadata } = await import('./metascraper');
+        
+        // Crear una promesa con timeout
+        const fetchWithTimeout = async (ms: number): Promise<any> => {
+          return Promise.race([
+            getUrlMetadata(url, desktopUserAgent), // Usar siempre UA de escritorio para Amazon
+            new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Timeout obteniendo metadatos de Amazon')), ms)
+            )
+          ]);
+        };
+        
+        // Dar 8 segundos para Amazon que puede tardar más
+        const amazonMetadata = await fetchWithTimeout(8000);
+        return res.json({
+          title: amazonMetadata.title || '',
+          description: amazonMetadata.description || '',
+          imageUrl: amazonMetadata.imageUrl || '',
+          price: '' // Siempre vacío según la especificación
+        });
+      }
+      
+      // Para otras URLs seguimos usando el extractor genérico
       const { extractOpenGraphData } = await import('./open-graph');
       
       // Crear una promesa con timeout para evitar bloqueos
       const fetchWithTimeout = async (ms: number): Promise<any> => {
         return Promise.race([
-          extractOpenGraphData(url, userAgent), // Pasamos el User-Agent original para mantener consistencia
+          extractOpenGraphData(url, userAgent), // Para URLs no-Amazon mantenemos el UA original
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
           )
