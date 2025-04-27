@@ -1026,8 +1026,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Extraer el título específicamente para Amazon
             try {
               console.log(`🔍 Intentando extraer título usando métodos específicos...`);
-              const amazonTitle = await extractAmazonTitle(url);
+              let amazonTitle = await extractAmazonTitle(url);
+              
+              // Limpieza adicional para títulos problemáticos
               if (amazonTitle) {
+                // Verificar si el título parece una URL o contiene el protocolo (casos raros)
+                if (amazonTitle.includes('http:') || amazonTitle.includes('https:') || 
+                    amazonTitle.startsWith('www.') || /^[a-z]+:/.test(amazonTitle)) {
+                  
+                  console.log(`⚠️ Detectado título con formato de URL o protocolo: "${amazonTitle}". Usando título genérico.`);
+                  
+                  // Si tenemos ASIN, usamos un título genérico en su lugar
+                  if (asin) {
+                    amazonTitle = `Producto Amazon (${asin})`;
+                  } else {
+                    amazonTitle = `Producto de Amazon`;
+                  }
+                }
+                
                 amazonMetadata.title = amazonTitle;
                 console.log(`✓ Título de Amazon extraído correctamente: ${amazonTitle}`);
               }
