@@ -1438,7 +1438,15 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
     const userAgent = USER_AGENTS.desktop;
     debug(`extractAmazonTitle: forzando User-Agent de escritorio para extraer correctamente: ${userAgent}`);
     
-    // Primero vamos a intentar extraer el ASIN de la URL para posibles títulos conocidos
+    // Primero vamos a verificar si la URL está en un formato básico
+    // Algunas URLs vienen con el protocolo como parte del título
+    if (url.includes('https://www.amazon.') && url.includes('/dp/')) {
+      // Limpiar la URL para la extracción adecuada
+      const cleanUrl = url.replace(/^https?:\/\//, '').trim();
+      url = 'https://' + cleanUrl;
+    }
+    
+    // Intentar extraer el ASIN de la URL para posibles títulos conocidos
     let asin: string | undefined;
     let asinFromUrl = false;
     
@@ -1456,6 +1464,7 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
       if (match && match[1]) {
         asin = match[1].toUpperCase();
         asinFromUrl = true;
+        debug(`ASIN extraído de URL para título: ${asin}`);
         break;
       }
     }
@@ -1588,9 +1597,14 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
         if (genericTitle.trim().length > 10) {
           return genericTitle.trim();
         } else {
-          // Si no pudimos extraer información útil, volvemos al formato genérico
+          // Si no pudimos extraer información útil, volvemos al formato genérico estándar
           return `Producto Amazon (${asin})`;
         }
+      }
+      
+      // Si hemos llegado hasta aquí y no tenemos título, intentemos construir algo básico con el ASIN
+      if (asin) {
+        return `Producto Amazon (${asin})`;
       }
       
       return undefined;
