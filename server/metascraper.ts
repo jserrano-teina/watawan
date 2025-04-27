@@ -49,7 +49,7 @@ const scraper = metascraper([
 ]);
 
 // Función específica para extraer imágenes de Amazon
-async function extractAmazonImage(url: string): Promise<string | undefined> {
+export async function extractAmazonImage(url: string): Promise<string | undefined> {
   try {
     console.log(`Intentando extraer imagen de: ${url}`);
     let fullUrl = url;
