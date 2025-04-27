@@ -966,65 +966,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         try {
           // Importar las funciones necesarias
-          const { extractAmazonTitle, extractAmazonImage } = await import('./metascraper');
+          const { getUrlMetadata, extractAmazonTitle, extractAmazonImage } = await import('./metascraper');
           
-          // Intentar extraer ASIN de la URL de Amazon
-          let asin: string | undefined;
-          const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
-          if (asinMatch && asinMatch[1]) {
-            asin = asinMatch[1];
-            console.log(`✓ ASIN extraído de URL Amazon: ${asin}`);
-          } else {
-            // Intentar otros patrones de URL de Amazon
-            const altMatch = url.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
-            if (altMatch && altMatch[1]) {
-              asin = altMatch[1];
-              console.log(`✓ ASIN alternativo extraído de URL Amazon: ${asin}`);
-            }
-          }
+          // Primero intentamos obtener metadatos con el método original
+          let amazonMetadata;
+          let metadataSuccess = false;
           
-          // Resultado que vamos a devolver al cliente
-          const amazonMetadata: any = {
-            title: '',
-            description: '',
-            imageUrl: '',
-            price: ''
-          };
-          
-          // Extraer el título específicamente para Amazon
           try {
-            const amazonTitle = await extractAmazonTitle(url);
-            if (amazonTitle) {
-              amazonMetadata.title = amazonTitle;
-              console.log(`✓ Título de Amazon extraído correctamente: ${amazonTitle}`);
-            }
-          } catch (titleError) {
-            console.error('Error al extraer título específico de Amazon:', titleError);
-          }
-          
-          // Si no tenemos título pero tenemos ASIN, podemos crear un título genérico
-          if (!amazonMetadata.title && asin) {
-            amazonMetadata.title = `Producto Amazon (${asin})`;
-            console.log(`ℹ️ Generando título genérico basado en ASIN: ${amazonMetadata.title}`);
-          }
-          
-          // Extraer imagen para Amazon, ya sea extrayéndola de la página o usando el ASIN para CDN
-          try {
-            if (asin) {
-              // Si tenemos el ASIN, siempre podemos generar una URL de imagen del CDN de Amazon
-              const cdnImageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
-              amazonMetadata.imageUrl = cdnImageUrl;
-              console.log(`✓ URL de imagen de Amazon generada por ASIN: ${cdnImageUrl}`);
+            console.log(`📊 Intentando extracción de metadatos completos con método principal...`);
+            // Crear una promesa con timeout de 5 segundos
+            const fetchWithTimeout = async (ms: number): Promise<any> => {
+              return Promise.race([
+                getUrlMetadata(url, desktopUserAgent),
+                new Promise((_, reject) => 
+                  setTimeout(() => reject(new Error('Timeout obteniendo metadatos completos de Amazon')), ms)
+                )
+              ]);
+            };
+            
+            // Dar 5 segundos para la extracción completa
+            amazonMetadata = await fetchWithTimeout(5000);
+            
+            // Verificar si obtuvimos datos completos
+            if (amazonMetadata && amazonMetadata.title && amazonMetadata.imageUrl) {
+              console.log(`✅ Extracción completa exitosa - Título: ${amazonMetadata.title.substring(0, 30)}... Imagen: ${amazonMetadata.imageUrl ? 'Sí' : 'No'}`);
+              metadataSuccess = true;
             } else {
-              // Si no tenemos ASIN, intentamos extraer la imagen directamente
+              console.log(`⚠️ La extracción completa no obtuvo todos los datos necesarios. Usando método alternativo.`);
+            }
+          } catch (error: any) {
+            console.log(`⚠️ Error en extracción completa: ${error.message || 'desconocido'}. Usando método alternativo.`);
+          }
+          
+          // Si la extracción completa falló, usamos el método alternativo
+          if (!metadataSuccess) {
+            // Intentar extraer ASIN de la URL de Amazon
+            let asin: string | undefined;
+            const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
+            if (asinMatch && asinMatch[1]) {
+              asin = asinMatch[1];
+              console.log(`✓ ASIN extraído de URL Amazon: ${asin}`);
+            } else {
+              // Intentar otros patrones de URL de Amazon
+              const altMatch = url.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
+              if (altMatch && altMatch[1]) {
+                asin = altMatch[1];
+                console.log(`✓ ASIN alternativo extraído de URL Amazon: ${asin}`);
+              }
+            }
+            
+            // Inicializar estructura de metadatos
+            amazonMetadata = {
+              title: '',
+              description: '',
+              imageUrl: '',
+              price: ''
+            };
+            
+            // Extraer el título específicamente para Amazon
+            try {
+              console.log(`🔍 Intentando extraer título usando métodos específicos...`);
+              const amazonTitle = await extractAmazonTitle(url);
+              if (amazonTitle) {
+                amazonMetadata.title = amazonTitle;
+                console.log(`✓ Título de Amazon extraído correctamente: ${amazonTitle}`);
+              }
+            } catch (titleError) {
+              console.error('Error al extraer título específico de Amazon:', titleError);
+            }
+            
+            // Si no tenemos título pero tenemos ASIN, podemos crear un título genérico
+            if (!amazonMetadata.title && asin) {
+              amazonMetadata.title = `Producto Amazon (${asin})`;
+              console.log(`ℹ️ Generando título genérico basado en ASIN: ${amazonMetadata.title}`);
+            }
+            
+            // Extraer imagen para Amazon, ya sea extrayéndola de la página o usando el ASIN para CDN
+            try {
+              console.log(`🔍 Intentando extraer imagen usando métodos específicos...`);
+              // Primero intentamos extraer la imagen directamente
               const amazonImage = await extractAmazonImage(url);
               if (amazonImage) {
                 amazonMetadata.imageUrl = amazonImage;
                 console.log(`✓ Imagen de Amazon extraída correctamente: ${amazonImage}`);
+              } 
+              // Si no obtuvimos imagen y tenemos ASIN, usamos el CDN como fallback
+              else if (asin) {
+                const cdnImageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
+                amazonMetadata.imageUrl = cdnImageUrl;
+                console.log(`ℹ️ Usando URL de fallback de Amazon CDN: ${cdnImageUrl}`);
+              }
+            } catch (imageError) {
+              // Si hay un error y tenemos ASIN, usamos el CDN como fallback
+              if (asin) {
+                const cdnImageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
+                amazonMetadata.imageUrl = cdnImageUrl;
+                console.log(`ℹ️ Error al extraer imagen. Usando fallback de Amazon CDN: ${cdnImageUrl}`);
+              } else {
+                console.error('Error al extraer imagen específica de Amazon y no hay ASIN disponible:', imageError);
               }
             }
-          } catch (imageError) {
-            console.error('Error al extraer imagen específica de Amazon:', imageError);
           }
           
           // Devolver objeto con estructura consistente
