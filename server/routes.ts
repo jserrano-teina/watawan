@@ -940,10 +940,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
       
+      // Función para crear un objeto de respuesta consistente siempre con la misma estructura
+      const createResponseObject = (data: any) => {
+        return {
+          title: data.title || '',
+          description: data.description || '',
+          imageUrl: data.imageUrl || '',
+          price: '' // Siempre vacío según la especificación
+        };
+      };
+      
       // Verificar si es una URL de Amazon
       const isAmazonUrl = !!url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || 
                          !!url.match(/amzn\.(to|eu)/i) || 
                          !!url.match(/a\.co\//i);
+      
+      console.log(`🔍 Extrayendo metadatos para: ${url}`);
       
       // Para Amazon siempre usamos un extractor específico con User-Agent de escritorio
       if (isAmazonUrl) {
@@ -952,27 +964,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // User-Agent de escritorio fijo para todas las peticiones de Amazon
         const desktopUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
         
-        // Importar el extractor de metadatos
-        const { getUrlMetadata } = await import('./metascraper');
-        
-        // Crear una promesa con timeout
-        const fetchWithTimeout = async (ms: number): Promise<any> => {
-          return Promise.race([
-            getUrlMetadata(url, desktopUserAgent), // Usar siempre UA de escritorio para Amazon
-            new Promise((_, reject) => 
-              setTimeout(() => reject(new Error('Timeout obteniendo metadatos de Amazon')), ms)
-            )
-          ]);
-        };
-        
-        // Dar 8 segundos para Amazon que puede tardar más
-        const amazonMetadata = await fetchWithTimeout(8000);
-        return res.json({
-          title: amazonMetadata.title || '',
-          description: amazonMetadata.description || '',
-          imageUrl: amazonMetadata.imageUrl || '',
-          price: '' // Siempre vacío según la especificación
-        });
+        try {
+          // Importar el extractor de metadatos
+          const { getUrlMetadata } = await import('./metascraper');
+          
+          // También importar la función para extraer el título de Amazon
+          const { extractAmazonTitle } = await import('./openai-utils'); // Esta función ya está diseñada para Amazon
+          
+          // Crear una promesa con timeout
+          const fetchWithTimeout = async (ms: number): Promise<any> => {
+            return Promise.race([
+              getUrlMetadata(url, desktopUserAgent), // Usar siempre UA de escritorio para Amazon
+              new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout obteniendo metadatos de Amazon')), ms)
+              )
+            ]);
+          };
+          
+          // Dar 8 segundos para Amazon que puede tardar más
+          const amazonMetadata = await fetchWithTimeout(8000);
+          
+          // Intentar extraer el título de Amazon específicamente, si no lo tenemos ya
+          if (!amazonMetadata.title) {
+            try {
+              // Extraer el título de la URL específicamente para Amazon
+              const amazonTitle = await extractAmazonTitle(url);
+              if (amazonTitle) {
+                amazonMetadata.title = amazonTitle;
+                console.log(`✓ Título de Amazon extraído correctamente: ${amazonTitle}`);
+              }
+            } catch (titleError) {
+              console.error('Error al extraer título específico de Amazon:', titleError);
+            }
+          }
+          
+          // Devolver objeto con estructura consistente
+          return res.json(createResponseObject(amazonMetadata));
+        } catch (error) {
+          console.error('Error al extraer metadatos de Amazon:', error);
+          
+          // Si falla, intentamos con el método genérico como fallback
+          console.log('⚠️ Fallback: usando extractor genérico para URL de Amazon');
+        }
       }
       
       // Para otras URLs seguimos usando el extractor genérico
