@@ -1339,7 +1339,7 @@ async function extractGenericPrice(html: string): Promise<string | undefined> {
 }
 
 // Función para extraer el título de productos de Amazon
-async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: string): Promise<string | undefined> {
+export async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: string): Promise<string | undefined> {
   try {
     let productHtml = html;
     
