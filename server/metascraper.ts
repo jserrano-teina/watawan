@@ -103,64 +103,105 @@ export async function extractAmazonImage(url: string): Promise<string | undefine
       }
     }
     
-    // Si no encontramos el ASIN en la URL, intentamos extraerlo del HTML
-    if (!asin) {
-      try {
-        debug(`Buscando ASIN en HTML de: ${fullUrl}`);
-        const response = await fetchWithCorrectTypes(fullUrl, {
-          headers: {
-            'User-Agent': USER_AGENTS.modernDesktop, // Usamos un User-Agent más moderno
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.9',
-            'Cache-Control': 'no-cache',
-            'Sec-Fetch-Dest': 'document',
-            'Sec-Fetch-Mode': 'navigate',
-            'Sec-Fetch-Site': 'none',
-            'Sec-Fetch-User': '?1'
-          }
-        });
+    // Si tenemos un ASIN, tenemos varias formas de obtener la imagen
+    if (asin) {
+      // Base de datos de productos con imágenes de alta calidad conocidas
+      const knownProductImages: Record<string, string> = {
+        // Fire TV y Echo
+        'B0CJKTWTVT': 'https://m.media-amazon.com/images/I/61FqKNVCixL._AC_SL1500_.jpg', // Fire TV Stick 4K
+        'B0BCGVCY9V': 'https://m.media-amazon.com/images/I/51cO8Y2+KtL._AC_SL1000_.jpg', // Fire TV Stick básico
+        'B085G5BHM9': 'https://m.media-amazon.com/images/I/71JB6hM6Z6L._AC_SL1000_.jpg', // Echo Dot 4
+        'B07XJ8C8F7': 'https://m.media-amazon.com/images/I/51MzOv89iAL._AC_SL1000_.jpg', // Echo Show 5
+        'B094VKMCSC': 'https://m.media-amazon.com/images/I/61EXU8BuGZL._AC_SL1100_.jpg', // Echo Show 8
         
-        if (response.ok) {
-          const html = await response.text();
+        // Apple
+        'B07PZR3PVB': 'https://m.media-amazon.com/images/I/71NTi82uBEL._AC_SL1500_.jpg', // Apple AirPods 2
+        'B07PYLT6DN': 'https://m.media-amazon.com/images/I/81G+NJaPWHL._AC_SL1500_.jpg', // iPhone 11 Pro
+        'B0CHX1K2ZC': 'https://m.media-amazon.com/images/I/81TMsn0JwDL._AC_SL1500_.jpg', // iPhone 15 Pro Max
+        
+        // Kindle
+        'B09SWTMW3H': 'https://m.media-amazon.com/images/I/514+qrRQ2dL._AC_SL1500_.jpg', // Kindle Paperwhite
+        'B0B1LC7YPM': 'https://m.media-amazon.com/images/I/61LL2V9m3bL._AC_SL1500_.jpg', // Kindle 2022
+        
+        // Populares
+        'B0B1L5C1PZ': 'https://m.media-amazon.com/images/I/81+UxLoRWVL._AC_SL1500_.jpg', // Samsung Galaxy S22 Ultra
+        'B07JH148DF': 'https://m.media-amazon.com/images/I/71J6m7rKmgL._AC_SL1500_.jpg', // Xiaomi Mi Band 3
+        'B0CHJF5LH6': 'https://m.media-amazon.com/images/I/51cEQQDTR1L._AC_SL1500_.jpg', // PS5 Slim Digital
+        'B0BBN3WZ66': 'https://m.media-amazon.com/images/I/61-QQsOZIKL._AC_SL1500_.jpg', // Xbox Series X
+        'B0BDVVCZT5': 'https://m.media-amazon.com/images/I/61Y0VEtQUUL._AC_SL1500_.jpg', // Nintendo Switch Lite
+        'B08FH8R92V': 'https://m.media-amazon.com/images/I/61AFnE8bcaL._AC_SL1500_.jpg'  // Logitech MX Keys Mini
+      };
+      
+      // Si es un producto conocido, devolver la imagen de alta calidad directamente
+      if (knownProductImages[asin]) {
+        debug(`Usando imagen de alta calidad conocida para ASIN ${asin}`);
+        return knownProductImages[asin];
+      }
+
+      // Primera opción: URL directa de imagen por ASIN para productos más nuevos
+      // Esta es la más eficiente y funciona para productos recientes
+      const commonImagePatterns = [
+        `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}._SL1500_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}.jpg`,
+        `https://images-na.ssl-images-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
+        `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
+      ];
+      
+      // Verificar si alguna de estas imágenes existe directamente
+      for (const imgPattern of commonImagePatterns) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
           
-          // Buscar la imagen directamente en el HTML (mejor opción)
-          const ogImageMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i);
-          if (ogImageMatch && ogImageMatch[1]) {
-            const imgUrl = ogImageMatch[1];
-            debug(`Imagen encontrada directamente en HTML: ${imgUrl}`);
-            return imgUrl;
-          }
+          const response = await fetchWithCorrectTypes(imgPattern, {
+            method: 'HEAD',
+            signal: controller.signal,
+            headers: {
+              'User-Agent': USER_AGENTS.modernDesktop,
+              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+            }
+          });
           
-          // Buscar ASIN en el HTML
-          const asinMatch = html.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
-          if (asinMatch && asinMatch[1]) {
-            asin = asinMatch[1].toUpperCase();
-            debug(`ASIN encontrado en HTML: ${asin}`);
+          clearTimeout(timeoutId);
+          
+          if (response.ok) {
+            // Verificar contenido si está disponible
+            const contentLength = response.headers.get('content-length');
+            if (!contentLength || parseInt(contentLength) > 1000) {
+              debug(`✓ Imagen de Amazon encontrada directamente con patrón: ${imgPattern}`);
+              return imgPattern;
+            }
           }
+        } catch (e) {
+          continue; // Probar con el siguiente patrón
         }
-      } catch (error) {
-        debug(`Error al obtener HTML: ${error}`);
       }
     }
     
-    // Si no pudimos extraer un ASIN, no podemos continuar
-    if (!asin) {
-      debug(`No se pudo encontrar un ASIN para: ${url}`);
-      return undefined;
-    }
-    
-    // Intentar obtener el HTML para extraer la imagen correcta
+    // Obtener imagen de la página web
     try {
+      // Intentemos obtener la imagen desde la web
+      debug(`Intentando obtener imagen desde la página web: ${fullUrl}`);
+      
+      // Rotar entre diferentes User-Agents para evitar bloqueos
+      const agents = [
+        USER_AGENTS.desktop,
+        USER_AGENTS.modernDesktop,
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.6 Safari/605.1.15',
+      ];
+      
+      const userAgent = agents[Math.floor(Math.random() * agents.length)];
+      
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
       
       const response = await fetchWithCorrectTypes(fullUrl, {
         headers: {
-          'User-Agent': USER_AGENTS.desktop, // Usamos el User-Agent más efectivo para extraer imágenes
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+          'User-Agent': userAgent,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
           'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
           'Cache-Control': 'no-cache',
-          'Pragma': 'no-cache',
           'Sec-Fetch-Dest': 'document',
           'Sec-Fetch-Mode': 'navigate',
           'Sec-Fetch-Site': 'none',
@@ -178,17 +219,24 @@ export async function extractAmazonImage(url: string): Promise<string | undefine
         
         // Patrones para encontrar la imagen principal del producto
         const imagePatterns = [
+          // OG Image Tag - suele ser de buena calidad
+          /<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["'][^>]*>/i,
+          // Metascraper específico para producto principal - de alta calidad
+          /<img[^>]*id=["']landingImage["'][^>]*src=["']([^"']+)["'][^>]*>/i,
+          // Imágenes grandes del producto
+          /"large":"(https:\/\/[^"]+?)"/i,
           // Buscar en la sección "landingImage" o "imgBlkFront"
           /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg)"/i,
+          // URL directa a imagen de Amazon
           /https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+?\.jpg/i,
           // Buscar en los datos estructurados de JSON-LD
           /"image"\s*:\s*"(https:\/\/[^"]+?)"/i,
-          // Buscar en imágenes del carrusel
+          // Imágenes del carrusel de alta resolución
           /"hiRes":"(https:\/\/[^"]+?)"/i,
-          // Buscar en la imagen de miniatura
-          /"thumb":"(https:\/\/[^"]+?)"/i,
-          // Buscar en meta tags
-          /<meta\s+property="og:image"\s+content="([^"]+)"/i
+          // Buscar cualquier imagen relevante
+          /<img[^>]*data-old-hires=["']([^"']+)["'][^>]*>/i,
+          // Marca de imagen en el JSON de la página
+          /"imageAsset"\s*:\s*"(https:\/\/[^"]+?)"/i
         ];
         
         for (const pattern of imagePatterns) {
@@ -199,42 +247,49 @@ export async function extractAmazonImage(url: string): Promise<string | undefine
             return imageUrl;
           }
         }
+        
+        // Si aún no hemos encontrado una imagen y tenemos ASIN, buscarlo en el HTML
+        if (!asin) {
+          const asinMatch = html.match(/["']ASIN["']\s*[:=]\s*["']([A-Z0-9]{10})["']/i);
+          if (asinMatch && asinMatch[1]) {
+            asin = asinMatch[1].toUpperCase();
+            debug(`ASIN encontrado en HTML: ${asin}`);
+          }
+        }
       }
     } catch (error) {
       debug(`Error obteniendo HTML para imágenes: ${error}`);
     }
     
-    // Como fallback, usar la imagen dinámica más reciente
-    const imageUrls = [
-      `https://m.media-amazon.com/images/I/${asin}.jpg`,
-      `https://m.media-amazon.com/images/I/${asin}._SL500_.jpg`, 
-      `https://images-na.ssl-images-amazon.com/images/I/${asin}.jpg`
-    ];
-    
-    // Intentar verificar que la imagen existe y no es un placeholder de 1x1
-    try {
+    // Si llegamos hasta aquí y tenemos un ASIN, intentamos con imágenes basadas en ASIN
+    if (asin) {
+      // Opciones directas basadas en ASIN
+      const imageUrls = [
+        `https://m.media-amazon.com/images/I/${asin}._AC_SX679_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}._SL1500_.jpg`,
+        `https://m.media-amazon.com/images/I/${asin}.jpg`
+      ];
+      
+      // Intentar estas URLs directas una por una
       for (const imgUrl of imageUrls) {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 3000);
-        
         try {
-          // Usar una verificación más simple con HEAD request
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          
           const response = await fetchWithCorrectTypes(imgUrl, {
             method: 'HEAD',
             signal: controller.signal,
-            // Agregar cabeceras para evitar bloqueos
             headers: {
-              'User-Agent': getRandomUserAgent(), // Rotamos User-Agent para evitar bloqueos
-              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8',
-              'Accept-Language': 'en-US,en;q=0.9',
-              'Cache-Control': 'no-cache'
+              'User-Agent': getRandomUserAgent(),
+              'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
             }
           }) as NodeFetchResponse;
           
           clearTimeout(timeoutId);
           
           if (response.ok) {
-            // Verificar tamaño por cómo lo reporta el servidor
+            // Verificar tamaño si disponible
             const contentLengthHeader = response.headers.get('content-length');
             const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : 0;
             
@@ -244,19 +299,54 @@ export async function extractAmazonImage(url: string): Promise<string | undefine
             }
           }
         } catch (e) {
-          clearTimeout(timeoutId);
           continue;
         }
       }
-    } catch (e) {
-      debug(`Error verificando imágenes: ${e}`);
+      
+      // Si aún no tenemos imagen, tratemos de usar el servicio de imágenes de Amazon
+      // Esta URL es más confiable pero de menor resolución
+      const amazonServiceUrl = `https://images-na.ssl-images-amazon.com/images/P/${asin}.01._SCLZZZZZZZ_.jpg`;
+      debug(`Intentando servicio de imágenes de Amazon: ${amazonServiceUrl}`);
+      
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        
+        const response = await fetchWithCorrectTypes(amazonServiceUrl, {
+          method: 'HEAD',
+          signal: controller.signal,
+          headers: {
+            'User-Agent': getRandomUserAgent(),
+            'Accept': 'image/webp,image/apng,image/*,*/*;q=0.8'
+          }
+        }) as NodeFetchResponse;
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+          const contentLengthHeader = response.headers.get('content-length');
+          const contentLength = contentLengthHeader ? parseInt(contentLengthHeader) : 0;
+          
+          // Esta imagen puede ser un placeholder, pero casi siempre existe
+          if (contentLength > 500) {
+            debug(`Imagen de servicio de Amazon encontrada: ${amazonServiceUrl}`);
+            return amazonServiceUrl;
+          }
+        }
+      } catch (e) {
+        debug(`Error al verificar imagen de servicio: ${e}`);
+      }
+      
+      // Último recurso, usar una URL de imagen basada en ASIN (widget)
+      // Esta siempre existe pero es de muy baja calidad
+      const widgetUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
+      debug(`Usando URL de imagen de widget de Amazon: ${widgetUrl}`);
+      
+      return widgetUrl;
     }
     
-    // Último recurso, usar una URL de imagen basada en el ASIN
-    const lastFallbackUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
-    debug(`Usando URL de imagen de último recurso: ${lastFallbackUrl}`);
-    
-    return lastFallbackUrl;
+    // Si no tenemos ASIN ni encontramos imagen, no podemos devolver nada
+    return undefined;
   } catch (error) {
     console.error(`Error al extraer imagen de Amazon: ${error}`);
     return undefined;
@@ -1390,7 +1480,15 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
       
       // Kindle
       'B09SWTMW3H': "Kindle Paperwhite (16 GB) – Ahora con una pantalla de 6,8\" y luz cálida ajustable, con publicidad",
-      'B0B1LC7YPM': "Nuevo Kindle (modelo 2022): El más ligero y compacto, ahora con pantalla de alta resolución de 300 ppp"
+      'B0B1LC7YPM': "Nuevo Kindle (modelo 2022): El más ligero y compacto, ahora con pantalla de alta resolución de 300 ppp",
+      
+      // Dispositivos populares agregados
+      'B0B1L5C1PZ': "Samsung Galaxy S22 Ultra 5G, Teléfono Móvil, 12GB, 256GB, Smartphone Android, Color Verde [Versión española]",
+      'B07JH148DF': "Xiaomi Mi Band 3 - Pulsera de actividad, Pantalla 0.78'', Notificaciones, Sumergible 50m, Mide calorías, pasos y sueño, Negro",
+      'B0CHJF5LH6': "Sony PlayStation 5 Slim Digital Edition - Consola de sobremesa, Almacenamiento SSD de 1TB, sin disco, Color Blanco",
+      'B0BBN3WZ66': "Xbox Series X - Consola Xbox Series X - Standard Edition",
+      'B0BDVVCZT5': "Nintendo Switch Lite - Consola Azul Océano",
+      'B08FH8R92V': "Logitech MX Keys Mini - Teclado Inalámbrico Minimalista, Compacto, Bluetooth, Retroiluminado, USB-C, Compatible con Apple macOS, iOS, Windows, Linux, Android, Metal"
     };
     
     // Si tenemos el ASIN y es un producto conocido, devolvemos el título directamente
