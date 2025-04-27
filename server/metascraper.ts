@@ -1343,9 +1343,10 @@ async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: 
   try {
     let productHtml = html;
     
-    // Siempre usamos un User-Agent de escritorio para Amazon, independientemente del dispositivo del cliente
-    const userAgent = USER_AGENTS.modernDesktop;
-    debug(`extractAmazonTitle: Forzando User-Agent de escritorio para Amazon: ${userAgent.substring(0, 50)}...`);
+    // Usar User-Agent del cliente o uno aleatorio
+    const userAgent = clientUserAgent || getRandomUserAgent();
+    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
+    debug(`extractAmazonTitle: usando ${isMobile ? 'User-Agent móvil' : 'User-Agent desktop'}: ${userAgent}`);
     
     // Si no tenemos HTML, intentamos obtenerlo
     if (!productHtml) {
@@ -1355,7 +1356,7 @@ async function extractAmazonTitle(url: string, html?: string, clientUserAgent?: 
         
         const response = await fetchWithCorrectTypes(url, {
           headers: {
-            'User-Agent': userAgent, // Siempre usando User-Agent de escritorio
+            'User-Agent': userAgent, // Usamos el User-Agent del cliente para consistencia
             'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
             'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
             'Cache-Control': 'no-cache',
@@ -1434,25 +1435,15 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
   try {
     debug(`Procesando URL para extraer metadatos completos: ${url}`);
     
-    // User-Agent de escritorio predeterminado para obtener versiones completas de los sitios
-    const desktopUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+    // Si recibimos el User-Agent del cliente, lo usamos para preservar la consistencia
+    // entre lo que ve el usuario y lo que extrae el sistema
+    // Si no, usamos un User-Agent aleatorio
+    const userAgent = clientUserAgent || getRandomUserAgent();
+    debug(`Usando User-Agent: ${userAgent}`);
     
-    // Si la URL es de Amazon, usamos siempre un User-Agent de escritorio
-    // para obtener la versión completa del sitio
-    let userAgent;
-    if (url.includes('amazon')) {
-      userAgent = desktopUserAgent;
-      debug(`URL de Amazon detectada - Forzando User-Agent de escritorio para consistencia`);
-    } else {
-      // Para el resto de sitios, podemos usar el User-Agent del cliente o uno aleatorio
-      userAgent = clientUserAgent || getRandomUserAgent();
-    }
-    
-    debug(`Usando User-Agent: ${userAgent.substring(0, 50)}...`);
-    
-    // Determinar si es móvil para adaptar la extracción en otros sitios (no Amazon)
-    const isMobile = clientUserAgent && (clientUserAgent.includes('Mobile') || clientUserAgent.includes('Android'));
-    debug(`Cliente original: ${isMobile ? 'dispositivo móvil' : 'dispositivo desktop'}, Usado para petición: ${userAgent.includes('Mobile') ? 'móvil' : 'desktop'}`);
+    // Determinar si es móvil para adaptar la extracción
+    const isMobile = userAgent.includes('Mobile') || userAgent.includes('Android');
+    debug(`Detectado ${isMobile ? 'dispositivo móvil' : 'dispositivo desktop'}`);
     
     // Registrar inicio para analizar tiempos
     const startTime = Date.now();
@@ -1521,8 +1512,7 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
         // Extraer precio y título específicos de Amazon
         price = await extractAmazonPrice(url, productHtml);
         // También intentamos extraer el título específico de Amazon (lo asignaremos más adelante)
-        // Siempre pasamos un User-Agent de escritorio para Amazon
-        const amazonTitle = await extractAmazonTitle(url, productHtml);
+        const amazonTitle = await extractAmazonTitle(url, productHtml, userAgent);
         debug(`Precio de Amazon extraído: ${price}`);
         debug(`Título de Amazon extraído: ${amazonTitle}`);
       } else if (url.match(/pccomponentes\.com/i)) {
@@ -1626,8 +1616,8 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
       
       // Si estamos en Amazon, preferimos el título extraído por el método específico
       if (url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || url.match(/amzn\.(to|eu)/i)) {
-        // Siempre usamos un User-Agent de escritorio para Amazon
-        const amazonTitle = await extractAmazonTitle(url, productHtml);
+        // Intentamos extraer el título específico de Amazon usando el User-Agent del cliente
+        const amazonTitle = await extractAmazonTitle(url, productHtml, userAgent);
         if (amazonTitle) {
           title = amazonTitle;
           debug(`Usando título específico de Amazon: ${title}`);
