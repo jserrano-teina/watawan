@@ -110,26 +110,46 @@ export async function extractAmazonImage(url: string): Promise<string | undefine
         // Fire TV y Echo
         'B0CJKTWTVT': 'https://m.media-amazon.com/images/I/61FqKNVCixL._AC_SL1500_.jpg', // Fire TV Stick 4K
         'B0BCGVCY9V': 'https://m.media-amazon.com/images/I/51cO8Y2+KtL._AC_SL1000_.jpg', // Fire TV Stick básico
+        'B09BPCZJ7B': 'https://m.media-amazon.com/images/I/41Y5jS-bsjL._AC_SL1000_.jpg', // Fire TV Stick 4K Max
         'B085G5BHM9': 'https://m.media-amazon.com/images/I/71JB6hM6Z6L._AC_SL1000_.jpg', // Echo Dot 4
         'B07XJ8C8F7': 'https://m.media-amazon.com/images/I/51MzOv89iAL._AC_SL1000_.jpg', // Echo Show 5
         'B094VKMCSC': 'https://m.media-amazon.com/images/I/61EXU8BuGZL._AC_SL1100_.jpg', // Echo Show 8
+        'B0BJ7XVCCP': 'https://m.media-amazon.com/images/I/61xdkHaj-HL._AC_SL1000_.jpg', // Echo Dot 5
         
         // Apple
         'B07PZR3PVB': 'https://m.media-amazon.com/images/I/71NTi82uBEL._AC_SL1500_.jpg', // Apple AirPods 2
         'B07PYLT6DN': 'https://m.media-amazon.com/images/I/81G+NJaPWHL._AC_SL1500_.jpg', // iPhone 11 Pro
+        'B08L5WHFT9': 'https://m.media-amazon.com/images/I/71IkeW1u1FL._AC_SL1500_.jpg', // iPhone 12 Pro Max
+        'B09G9FPGTN': 'https://m.media-amazon.com/images/I/617FFRO3vcL._AC_SL1500_.jpg', // iPhone 13 Pro Max
         'B0CHX1K2ZC': 'https://m.media-amazon.com/images/I/81TMsn0JwDL._AC_SL1500_.jpg', // iPhone 15 Pro Max
+        'B0BDJH3V3Q': 'https://m.media-amazon.com/images/I/61SUj2aKoEL._AC_SL1500_.jpg', // AirPods Pro 2
+        'B0CHY5WLB7': 'https://m.media-amazon.com/images/I/719LaBbothL._AC_SL1500_.jpg', // Apple Watch Series 9
         
         // Kindle
         'B09SWTMW3H': 'https://m.media-amazon.com/images/I/514+qrRQ2dL._AC_SL1500_.jpg', // Kindle Paperwhite
         'B0B1LC7YPM': 'https://m.media-amazon.com/images/I/61LL2V9m3bL._AC_SL1500_.jpg', // Kindle 2022
+        'B0B1D34QXR': 'https://m.media-amazon.com/images/I/61Ek6wU7pIL._AC_SL1500_.jpg', // Kindle Paperwhite Signature
         
-        // Populares
+        // Smartphones y tablets
         'B0B1L5C1PZ': 'https://m.media-amazon.com/images/I/81+UxLoRWVL._AC_SL1500_.jpg', // Samsung Galaxy S22 Ultra
+        'B0CFVY3742': 'https://m.media-amazon.com/images/I/71LbcO5XT-L._AC_SL1500_.jpg', // Samsung Galaxy S24 Ultra
+        'B0CFVYLC4Y': 'https://m.media-amazon.com/images/I/61uAUni6KtL._AC_SL1500_.jpg', // Samsung Galaxy S24
+        'B09V1M1FRQ': 'https://m.media-amazon.com/images/I/71V5eY4eA4L._AC_SL1500_.jpg', // Xiaomi Redmi Note 11
+        'B087J9QNMW': 'https://m.media-amazon.com/images/I/71L1ZP+Y23L._AC_SL1500_.jpg', // Samsung Galaxy A23
+        
+        // Wearables y accesorios
         'B07JH148DF': 'https://m.media-amazon.com/images/I/71J6m7rKmgL._AC_SL1500_.jpg', // Xiaomi Mi Band 3
+        'B09JL6J7F4': 'https://m.media-amazon.com/images/I/71MJbf+mMIL._AC_SL1500_.jpg', // KUXIU Smartwatch
+        'B09JQKBQSB': 'https://m.media-amazon.com/images/I/71+D+JkPNDL._AC_SL1500_.jpg', // BIAOQINBO Smartwatch
+        'B08FH8R92V': 'https://m.media-amazon.com/images/I/61AFnE8bcaL._AC_SL1500_.jpg', // Logitech MX Keys Mini
+        
+        // Consolas de videojuegos
         'B0CHJF5LH6': 'https://m.media-amazon.com/images/I/51cEQQDTR1L._AC_SL1500_.jpg', // PS5 Slim Digital
         'B0BBN3WZ66': 'https://m.media-amazon.com/images/I/61-QQsOZIKL._AC_SL1500_.jpg', // Xbox Series X
         'B0BDVVCZT5': 'https://m.media-amazon.com/images/I/61Y0VEtQUUL._AC_SL1500_.jpg', // Nintendo Switch Lite
-        'B08FH8R92V': 'https://m.media-amazon.com/images/I/61AFnE8bcaL._AC_SL1500_.jpg'  // Logitech MX Keys Mini
+        
+        // Ordenadores y portátiles
+        'B0C7RX7MPL': 'https://m.media-amazon.com/images/I/71H5rkP13fL._AC_SL1500_.jpg' // MacBook Air M2
       };
       
       // Si es un producto conocido, devolver la imagen de alta calidad directamente
@@ -1474,11 +1494,13 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
       // Fire TV
       'B0CJKTWTVT': "Amazon Fire TV Stick 4K (Última generación), Dispositivo de streaming compatible con Wi-Fi 6, Dolby Vision, Dolby Atmos y HDR10+",
       'B0BCGVCY9V': "Fire TV Stick | Dispositivo de streaming HD con control por voz Alexa",
+      'B09BPCZJ7B': "Amazon Fire TV Stick 4K Max, Dispositivo de streaming, Compatible con Wi-Fi 6, Control por voz Alexa",
       
       // Echo y Alexa
       'B085G5BHM9': "Echo Dot (4.ª generación) | Altavoz inteligente con Alexa | Antracita",
       'B07XJ8C8F7': "Echo Show 5 (2.ª generación, modelo de 2021) | Pantalla inteligente con Alexa y cámara de 2 MP | Antracita",
       'B094VKMCSC': "Echo Show 8 (2.ª generación) | Pantalla HD inteligente con Alexa y cámara de 13 MP",
+      'B0BJ7XVCCP': "Echo Dot (5.ª generación, modelo de 2022) | Altavoz inteligente con Alexa | Antracita",
       
       // Dispositivos Apple
       'B07PZR3PVB': "Apple AirPods (2nd Generation) MV7N2ZM/A - Auriculares (Inalámbrico, Dentro de oído, Binaural, Intraaural, Blanco)",
@@ -1486,10 +1508,13 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
       'B08L5WHFT9': "Apple iPhone 12 Pro Max (128 GB) - Grafito",
       'B09G9FPGTN': "Apple iPhone 13 Pro Max (256 GB) - Azul Sierra",
       'B0CHX1K2ZC': "Apple iPhone 15 Pro Max (256 GB) - Titanio azul",
+      'B0BDJH3V3Q': "Apple AirPods Pro (2.ª generación) con Carcasa MagSafe",
+      'B0CHY5WLB7': "Apple Watch Series 9 GPS 41mm Caja de Aluminio en Azul Medianoche - Correa Deportiva Medianoche",
       
       // Kindle
       'B09SWTMW3H': "Kindle Paperwhite (16 GB) – Ahora con una pantalla de 6,8\" y luz cálida ajustable, con publicidad",
       'B0B1LC7YPM': "Nuevo Kindle (modelo 2022): El más ligero y compacto, ahora con pantalla de alta resolución de 300 ppp",
+      'B0B1D34QXR': "Kindle Paperwhite Signature Edition (32 GB)",
       
       // Dispositivos populares agregados
       'B0B1L5C1PZ': "Samsung Galaxy S22 Ultra 5G, Teléfono Móvil, 12GB, 256GB, Smartphone Android, Color Verde [Versión española]",
@@ -1497,7 +1522,14 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
       'B0CHJF5LH6': "Sony PlayStation 5 Slim Digital Edition - Consola de sobremesa, Almacenamiento SSD de 1TB, sin disco, Color Blanco",
       'B0BBN3WZ66': "Xbox Series X - Consola Xbox Series X - Standard Edition",
       'B0BDVVCZT5': "Nintendo Switch Lite - Consola Azul Océano",
-      'B08FH8R92V': "Logitech MX Keys Mini - Teclado Inalámbrico Minimalista, Compacto, Bluetooth, Retroiluminado, USB-C, Compatible con Apple macOS, iOS, Windows, Linux, Android, Metal"
+      'B08FH8R92V': "Logitech MX Keys Mini - Teclado Inalámbrico Minimalista, Compacto, Bluetooth, Retroiluminado, USB-C, Compatible con Apple macOS, iOS, Windows, Linux, Android, Metal",
+      'B09JL6J7F4': "KUXIU Reloj Inteligente Hombre Mujer, 1.7'' Smartwatch con Llamadas Bluetooth, 112 Modos Deportivos, Pulsómetro, Monitor de Sueño, Oxímetro, IP68 Impermeable Reloj Deportivo para Android iOS",
+      'B09JQKBQSB': "BIAOQINBO Reloj Inteligente Hombre Mujer, 1.85'' Smartwatch con Llamada Bluetooth, 112 Modos Deportivos, Pulsómetro, Monitor de Sueño, IP68 Impermeable Reloj Deportivo para Android iOS",
+      'B0CFVY3742': "Samsung Galaxy S24 Ultra, Smartphone, Android, 512GB, Titanio Gris (Versión Española)",
+      'B0CFVYLC4Y': "Samsung Galaxy S24, Smartphone, Android, 256GB, Onyx Black (Versión Española)",
+      'B0C7RX7MPL': "Apple MacBook Air 13.6 pulgadas (chip M2 con CPU de 8 núcleos y GPU de 10 núcleos, 8GB RAM, 512GB SSD) - Azul Medianoche",
+      'B09V1M1FRQ': "Xiaomi Redmi Note 11 - Smartphone 4+64GB, 6.43\" AMOLED DotDisplay, Snapdragon 680, Cámara principal de 50MP, 5000mAh, Graphite Gray",
+      'B087J9QNMW': "Samsung Galaxy A23 5G, Teléfono Móvil, 4 GB RAM, 128 GB Memoria interna ampliable, Pantalla Infinity-V de 6,6 pulgadas, Android, Negro"
     };
     
     // Si tenemos el ASIN y es un producto conocido, devolvemos el título directamente
