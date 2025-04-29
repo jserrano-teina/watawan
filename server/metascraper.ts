@@ -1591,45 +1591,189 @@ export async function extractAmazonTitle(url: string, html?: string, clientUserA
     if (!productHtml) {
       // Si tenemos el ASIN pero no pudimos obtener el HTML, creamos un título genérico mejorado
       if (asin) {
-        // Extraemos información de la URL para crear un título más descriptivo
-        let brandFromUrl = '';
-        let categoryFromUrl = '';
-        let modelFromUrl = '';
-        
-        // Extraer partes de la URL para generar un título más significativo
-        const urlParts = url.split('/');
-        for (const part of urlParts) {
-          const cleanPart = part.replace(/-+/g, ' ').replace(/\s+/g, ' ').trim();
+        try {
+          // Extraemos información de la URL para crear un título más descriptivo
+          let brandFromUrl = '';
+          let categoryFromUrl = '';
+          let modelFromUrl = '';
+          let colorFromUrl = '';
+          let capacityFromUrl = '';
           
-          if (cleanPart.length > 3 && !/^\d+$/.test(cleanPart) && !cleanPart.includes('.') && 
-              !['www', 'amazon', 'com', 'es', 'dp', 'product', 'gp'].includes(cleanPart.toLowerCase())) {
+          // Extraer partes de la URL para generar un título más significativo
+          // Analizamos tanto las rutas como los parámetros de la URL
+          const urlObj = new URL(url);
+          const pathParts = urlObj.pathname.split(/[\/\-_]/);
+          
+          // Analizamos también los parámetros de búsqueda que pueden contener información del producto
+          const queryParts: string[] = [];
+          urlObj.searchParams.forEach((value, key) => {
+            if (key.toLowerCase() !== 'tag' && key.toLowerCase() !== 'ref' && 
+                key.toLowerCase() !== 'linkcode' && key.toLowerCase() !== 'linkid') {
+              queryParts.push(value);
+            }
+          });
+          
+          // Combinar todas las partes para análisis
+          const urlParts = [...pathParts, ...queryParts];
+          
+          // Lista expandida de marcas conocidas para mejor detección
+          const knownBrands = [
+            'apple', 'samsung', 'sony', 'lg', 'logitech', 'kindle', 'amazon', 'microsoft', 'nintendo', 
+            'echo', 'xiaomi', 'huawei', 'lenovo', 'asus', 'acer', 'dell', 'hp', 'msi', 'razer', 
+            'corsair', 'canon', 'nikon', 'philips', 'bosch', 'dyson', 'braun', 'rowenta', 'siemens',
+            'fire', 'echo', 'bose', 'jbl', 'sennheiser', 'akg', 'oneplus', 'oppo', 'realme', 'vivo',
+            'airpods', 'iphone', 'ipad', 'macbook', 'galaxy', 'xperia', 'zenbook', 'thinkpad',
+            'playstation', 'xbox', 'switch', 'jabra', 'garmin', 'fitbit', 'polar', 'gopro'
+          ];
+          
+          // Categorías de productos conocidas 
+          const knownCategories = [
+            'smartphone', 'auriculares', 'altavoz', 'reloj', 'watch', 'tv', 'monitor', 'teclado',
+            'ratón', 'mouse', 'impresora', 'ordenador', 'portátil', 'laptop', 'tablet', 'cámara', 
+            'teléfono', 'móvil', 'consola', 'router', 'batería', 'headphones', 'earbuds', 'phone',
+            'stick', 'smartwatch', 'televisor', 'webcam', 'pendrive', 'memoria', 'disco', 'ssd', 
+            'hdd', 'fuente', 'tarjeta', 'gráfica', 'procesador', 'placa', 'base', 'gaming', 'series',
+            'funda', 'case', 'cubierta', 'power', 'bank', 'controlador', 'controller', 'wifi'
+          ];
+          
+          // Colores comunes que podemos identificar
+          const knownColors = [
+            'negro', 'blanco', 'azul', 'rojo', 'verde', 'gris', 'rosa', 'morado', 'púrpura', 'amarillo',
+            'naranja', 'marrón', 'black', 'white', 'blue', 'red', 'green', 'gray', 'grey', 'pink', 'purple',
+            'yellow', 'orange', 'brown', 'silver', 'gold', 'titanium', 'titanio', 'plata', 'oro'
+          ];
+          
+          // Capacidades/tamaños comunes
+          const knownCapacities = [
+            '16gb', '32gb', '64gb', '128gb', '256gb', '512gb', '1tb', '2tb',
+            '16 gb', '32 gb', '64 gb', '128 gb', '256 gb', '512 gb', '1 tb', '2 tb'
+          ];
+          
+          // Palabras a ignorar (preposiciones, artículos, etc.)
+          const ignoreWords = [
+            'www', 'amazon', 'com', 'es', 'dp', 'product', 'gp', 'ref', 'https', 'http',
+            'psc', 'pd', 'pf', 'sl', 'tag', 'dchild', 'keywords', 'sr', 'ie', 'qid', 'the',
+            'para', 'con', 'por', 'sin', 'sobre', 'bajo', 'ante', 'tras', 'desde', 'hacia',
+            'en', 'de', 'a', 'and', 'or', 'for', 'with', 'without', 'by', 'at', 'to', 'from'
+          ];
+          
+          for (const part of urlParts) {
+            if (!part) continue;
             
-            // Identificar si es una marca conocida
-            const knownBrands = ['apple', 'samsung', 'sony', 'lg', 'logitech', 'kindle', 'amazon', 'microsoft', 'nintendo', 'echo'];
+            // Limpiar parte de guiones y otros caracteres
+            const cleanPart = part.replace(/-+/g, ' ')
+                                 .replace(/_+/g, ' ')
+                                 .replace(/\++/g, ' ')
+                                 .replace(/\s+/g, ' ')
+                                 .trim();
+            
+            // Ignorar partes que son muy cortas, números solos o palabras de la lista de ignorar
+            if (cleanPart.length <= 2 || 
+                /^\d+$/.test(cleanPart) || 
+                cleanPart.includes('.') || 
+                ignoreWords.includes(cleanPart.toLowerCase())) {
+              continue;
+            }
+            
             const lowerPart = cleanPart.toLowerCase();
             
-            if (knownBrands.some(brand => lowerPart.includes(brand))) {
-              brandFromUrl = cleanPart;
-            } else if (!categoryFromUrl && cleanPart.length < 20) {
+            // Identificar marca
+            if (!brandFromUrl && knownBrands.some(brand => lowerPart.includes(brand) || lowerPart === brand)) {
+              // Capitalizar primera letra para marcas
+              brandFromUrl = cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
+            } 
+            // Identificar categoría
+            else if (!categoryFromUrl && knownCategories.some(cat => lowerPart.includes(cat) || lowerPart === cat)) {
               categoryFromUrl = cleanPart;
-            } else if (!modelFromUrl && cleanPart.length < 25) {
+            }
+            // Identificar color
+            else if (!colorFromUrl && knownColors.some(color => lowerPart.includes(color) || lowerPart === color)) {
+              colorFromUrl = cleanPart;
+            }
+            // Identificar capacidad
+            else if (!capacityFromUrl && knownCapacities.some(cap => lowerPart.includes(cap))) {
+              capacityFromUrl = cleanPart;
+            }
+            // Si no es ninguna de las anteriores, podría ser parte del modelo
+            else if (!modelFromUrl && cleanPart.length < 25) {
               modelFromUrl = cleanPart;
             }
           }
-        }
-        
-        // Generar un título mejorado basado en las partes de la URL y el ASIN
-        let genericTitle = '';
-        if (brandFromUrl) genericTitle += `${brandFromUrl} `;
-        if (categoryFromUrl) genericTitle += `${categoryFromUrl} `;
-        if (modelFromUrl && modelFromUrl !== categoryFromUrl && modelFromUrl !== brandFromUrl) {
-          genericTitle += `${modelFromUrl} `;
-        }
-        
-        if (genericTitle.trim().length > 10) {
-          return genericTitle.trim();
-        } else {
-          // Si no pudimos extraer información útil, volvemos al formato genérico estándar
+          
+          // Si encontramos un número de modelo pero no una marca, buscar patrones comunes de nombres de producto
+          if (!brandFromUrl && modelFromUrl) {
+            // Patrones comunes de nombres de modelo específicos por marca
+            if (/^(iphone|ipad|macbook|imac|airpods)/i.test(modelFromUrl)) {
+              brandFromUrl = "Apple";
+            } else if (/^galaxy/i.test(modelFromUrl)) {
+              brandFromUrl = "Samsung";
+            } else if (/^(mi|redmi|poco)/i.test(modelFromUrl)) {
+              brandFromUrl = "Xiaomi";
+            } else if (/^(playstation|ps5|ps4)/i.test(modelFromUrl)) {
+              brandFromUrl = "Sony";
+            } else if (/^(xbox)/i.test(modelFromUrl)) {
+              brandFromUrl = "Microsoft";
+            } else if (/^(switch)/i.test(modelFromUrl)) {
+              brandFromUrl = "Nintendo";
+            }
+          }
+          
+          // Generar un título mejorado basado en las partes de la URL y el ASIN
+          let genericTitle = '';
+          
+          if (brandFromUrl) {
+            // Capitalizar correctamente las marcas
+            const brandWords = brandFromUrl.split(' ');
+            const capitalizedBrand = brandWords.map(word => 
+              word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+            ).join(' ');
+            genericTitle += `${capitalizedBrand} `;
+          }
+          
+          if (categoryFromUrl && categoryFromUrl.toLowerCase() !== brandFromUrl?.toLowerCase()) {
+            genericTitle += `${categoryFromUrl} `;
+          }
+          
+          if (modelFromUrl && 
+              modelFromUrl.toLowerCase() !== categoryFromUrl?.toLowerCase() && 
+              modelFromUrl.toLowerCase() !== brandFromUrl?.toLowerCase()) {
+            genericTitle += `${modelFromUrl} `;
+          }
+          
+          if (capacityFromUrl && !genericTitle.toLowerCase().includes(capacityFromUrl.toLowerCase())) {
+            genericTitle += `${capacityFromUrl} `;
+          }
+          
+          if (colorFromUrl && !genericTitle.toLowerCase().includes(colorFromUrl.toLowerCase())) {
+            genericTitle += `${colorFromUrl} `;
+          }
+          
+          // Limpiar título generado
+          genericTitle = genericTitle.trim();
+          
+          // Eliminar palabras repetidas
+          if (genericTitle.length > 0) {
+            const words = genericTitle.split(' ');
+            const uniqueWords: string[] = [];
+            
+            for (const word of words) {
+              if (!uniqueWords.some(w => w.toLowerCase() === word.toLowerCase())) {
+                uniqueWords.push(word);
+              }
+            }
+            
+            genericTitle = uniqueWords.join(' ');
+          }
+          
+          // Si el título es demasiado corto o no pudimos generar uno, usar el formato genérico
+          if (genericTitle.length < 10) {
+            return `Producto Amazon (${asin})`;
+          }
+          
+          return genericTitle;
+        } catch (error) {
+          // Si hay algún error, volvemos al formato genérico
+          debug(`Error generando título desde URL: ${error}`);
           return `Producto Amazon (${asin})`;
         }
       }
