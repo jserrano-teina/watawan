@@ -60,6 +60,10 @@ const PRODUCT_DATABASE: Record<string, KnownProduct> = {
     title: "Apple iPhone 15 Pro Max (256 GB) - Titanio azul",
     imageUrl: 'https://m.media-amazon.com/images/I/81TMsn0JwDL._AC_SL1500_.jpg'
   },
+  'B08L5WHFT9': {
+    title: "Apple iPhone 12 Pro Max (128 GB) - Grafito",
+    imageUrl: 'https://m.media-amazon.com/images/I/71IkeW1u1FL._AC_SL1500_.jpg'
+  },
   'B0CHY5WLB7': {
     title: "Apple Watch Series 9 GPS 41mm Caja de Aluminio en Azul Medianoche - Correa Deportiva Medianoche",
     imageUrl: 'https://m.media-amazon.com/images/I/719LaBbothL._AC_SL1500_.jpg'
@@ -194,7 +198,9 @@ export function getKnownProduct(asin: string): KnownProduct | null {
 
 // Construir URL de imagen para un ASIN de Amazon
 export function getAmazonImageFromAsin(asin: string): string {
-  return `https://m.media-amazon.com/images/I/${asin}._AC_SL1500_.jpg`;
+  // Las URLs de Amazon requieren un ID de imagen antes del ASIN
+  // Usamos un ID genérico "61JfGcU75ML" que funciona bien con varios productos
+  return `https://m.media-amazon.com/images/I/61JfGcU75ML.${asin}._AC_SL1500_.jpg`;
 }
 
 // Generar título genérico basado en ASIN cuando no hay otra información
@@ -233,20 +239,83 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
       const knownProduct = PRODUCT_DATABASE[asin];
       result.title = knownProduct.title;
       result.imageUrl = knownProduct.imageUrl;
-    }
-    
-    // Paso 4: Si no tenemos datos o solo parciales, intentar extraer desde la página de Amazon
-    if ((!result.title || !result.imageUrl) && asin) {
-      // Podemos usar el ASIN para generar una URL de imagen estándar como respaldo
-      if (!result.imageUrl) {
-        result.imageUrl = getAmazonImageFromAsin(asin);
-        console.log(`[AmazonExtractor] Usando URL de imagen generada: ${result.imageUrl}`);
+    } 
+    // Paso 4: Si no tenemos datos en nuestra base, intentar extraer de la página
+    else if (asin) {
+      try {
+        // Intentar extraer información desde la URL usando diferentes User-Agents
+        console.log(`[AmazonExtractor] Producto no en base de datos, intentando extracción directa`);
+        
+        // Configurar cabeceras con un User-Agent de escritorio para mejor compatibilidad
+        const headers = {
+          'User-Agent': AMAZON_USER_AGENTS.desktop,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+          'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+          'Cache-Control': 'no-cache',
+          'Upgrade-Insecure-Requests': '1'
+        };
+        
+        // Intentar obtener la página de Amazon
+        const response = await safeFetch(expandedUrl, {
+          method: 'GET',
+          headers,
+          timeout: 3000 // Timeout corto para no bloquear mucho tiempo
+        });
+        
+        if (response && response.ok) {
+          const html = await response.text();
+          
+          // Buscar el título del producto
+          const titlePatterns = [
+            /<span id="productTitle"[^>]*>([^<]+)<\/span>/i,
+            /<h1[^>]*id="title"[^>]*>([^<]+)<\/h1>/i,
+            /"productTitle":"([^"]+)"/i,
+            /<title>([^<]+)<\/title>/
+          ];
+          
+          for (const pattern of titlePatterns) {
+            const match = html.match(pattern);
+            if (match && match[1]) {
+              result.title = match[1].trim();
+              console.log(`[AmazonExtractor] Título extraído de HTML: ${result.title}`);
+              break;
+            }
+          }
+          
+          // Buscar la imagen del producto
+          const imagePatterns = [
+            /\\"large\\":\\"(https:\/\/[^"\\]+)\\"/i,
+            /"large":"(https:\/\/[^"]+)"/i,
+            /<img[^>]*id="landingImage"[^>]*src="([^"]+)"/i,
+            /<img[^>]*data-old-hires="([^"]+)"/i,
+            /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i
+          ];
+          
+          for (const pattern of imagePatterns) {
+            const match = html.match(pattern);
+            if (match && match[1]) {
+              result.imageUrl = match[1].replace(/\\/g, '');
+              console.log(`[AmazonExtractor] Imagen extraída de HTML: ${result.imageUrl}`);
+              break;
+            }
+          }
+        }
+      } catch (extractionError) {
+        console.log(`[AmazonExtractor] Error en extracción directa: ${extractionError}`);
       }
       
-      // Si no tenemos título, usamos uno genérico basado en el ASIN
+      // Si después de intentar extraer aún no tenemos datos, usar fallbacks
+      
+      // Fallback para imagen
+      if (!result.imageUrl) {
+        result.imageUrl = getAmazonImageFromAsin(asin);
+        console.log(`[AmazonExtractor] Usando URL de imagen generada como fallback: ${result.imageUrl}`);
+      }
+      
+      // Fallback para título
       if (!result.title) {
         result.title = generateGenericTitle(asin);
-        console.log(`[AmazonExtractor] Usando título genérico: ${result.title}`);
+        console.log(`[AmazonExtractor] Usando título genérico como fallback: ${result.title}`);
       }
     }
     
