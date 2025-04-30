@@ -1835,6 +1835,7 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
   title?: string,
   description?: string 
 }> {
+  console.log(`📋 Extrayendo metadatos de URL: ${url}`);
   try {
     debug(`Procesando URL para extraer metadatos completos: ${url}`);
     
@@ -1843,10 +1844,20 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
                         !!url.match(/amzn\.(to|eu)/i) || 
                         !!url.match(/a\.co\//i);
     
+    // Detector de dispositivo más confiable a partir del User-Agent
+    const deviceType = clientUserAgent ? 
+      (clientUserAgent.includes('Mobile') || clientUserAgent.includes('Android') ? 'mobile' : 'desktop') : 
+      'desktop';
+      
+    console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${clientUserAgent ? clientUserAgent.substring(0, 20) + '...' : 'no definido'}`);
+    
     // Para Amazon siempre usamos un User-Agent de escritorio independientemente del dispositivo
     let userAgent;
     if (isAmazonUrl) {
+      // IMPORTANTE: Siempre usamos un User-Agent de escritorio para Amazon
+      // Esto es crítico para extraer consistentemente los metadatos
       userAgent = USER_AGENTS.desktop;
+      console.log(`🛒 Detectada URL de Amazon. Usando extractor con User-Agent de escritorio.`);
       debug(`URL de Amazon detectada. Forzando User-Agent de escritorio para extracción consistente.`);
     } else {
       // Para otras URLs respetamos el User-Agent del cliente o usamos uno aleatorio
@@ -1915,6 +1926,54 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
 
       if (!response.ok) {
         debug(`No se pudo obtener el contenido de ${url}. Código de estado: ${response.status}`);
+        console.log(`⚠️ La extracción completa no obtuvo todos los datos necesarios. Usando método alternativo.`);
+        
+        // Si es Amazon pero no pudimos obtener el HTML directamente, intentamos extraer con métodos específicos
+        if (isAmazonUrl) {
+          let asin = undefined;
+          
+          // Extraer ASIN de la URL de Amazon
+          const asinPatterns = [
+            /\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/gp\/product\/([A-Z0-9]{10})(?:\/|\?|$)/i,
+            /\/(B[0-9A-Z]{9})(?:\/|\?|$)/i
+          ];
+          
+          // Intentar extraer ASIN de la URL
+          for (const pattern of asinPatterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+              asin = match[1].toUpperCase();
+              console.log(`✓ ASIN extraído de URL Amazon: ${asin}`);
+              break;
+            }
+          }
+          
+          // Si tenemos el ASIN, podemos obtener título e imagen
+          if (asin) {
+            console.log(`🔍 Intentando extraer título usando métodos específicos...`);
+            const title = await extractAmazonTitle(url, undefined, userAgent);
+            if (title) {
+              console.log(`✓ Título de Amazon extraído correctamente: ${title}`);
+            }
+            
+            console.log(`🔍 Intentando extraer imagen usando métodos específicos...`);
+            const image = await extractAmazonImage(url);
+            if (image) {
+              console.log(`✓ Imagen de Amazon extraída correctamente: ${image}`);
+            }
+            
+            console.log(`📊 Datos de Amazon extraídos (título: ${title ? 'sí' : 'no'}, imagen: ${image ? 'sí' : 'no'})`);
+            return { 
+              imageUrl: image, 
+              price: undefined,
+              title: title,
+              description: undefined
+            };
+          }
+        }
+        
         return { imageUrl: undefined, price: undefined, title: undefined, description: undefined };
       }
 
@@ -2192,6 +2251,15 @@ export async function getUrlMetadata(url: string, clientUserAgent?: string): Pro
       const processingTime = endTime - startTime;
       debug(`✅ Extracción completada en ${processingTime}ms. User-Agent: ${userAgent.substring(0, 20)}...`);
       debug(`Datos extraídos: imagen=${!!imageUrl}, precio=${!!price}, título=${!!title}`);
+      
+      // Logs detallados para analizar en producción
+      const titleForLog = title ? (title.length > 20 ? title.substring(0, 20) + '...' : title) : 'No disponible';
+      console.log(`✅ Extracción completa exitosa - Título: ${titleForLog}... Imagen: ${imageUrl ? 'Sí' : 'No'}`);
+      
+      // Si hay resultados de Amazon, hacemos un log adicional
+      if (isAmazonUrl) {
+        console.log(`📊 Datos de Amazon extraídos (título: ${title ? 'sí' : 'no'}, imagen: ${imageUrl ? 'sí' : 'no'})`);
+      }
       
       return { imageUrl, price, title, description };
     } catch (error) {
