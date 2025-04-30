@@ -493,8 +493,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (itemData.purchaseLink) {
         try {
           console.log(`[POST /wishlist/:id/items] Intentando extraer metadata de: ${itemData.purchaseLink}`);
-          const { getUrlMetadata } = await import('./metascraper');
-          const metadata = await getUrlMetadata(itemData.purchaseLink);
+          
+          // Verificar si es una URL de Amazon para usar el extractor especializado
+          const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
+          const isAmazon = isAmazonUrl(itemData.purchaseLink);
+          
+          let metadata;
+          if (isAmazon) {
+            console.log(`[POST /wishlist/:id/items] URL de Amazon detectada, usando extractor especializado`);
+            metadata = await extractAmazonMetadata(itemData.purchaseLink, req.headers['user-agent'] as string);
+            // Si no tenemos título o está vacío, intentar extraer con getUrlMetadata como respaldo
+            if (!metadata.title && (!itemData.title || itemData.title === 'Nuevo deseo')) {
+              console.log(`[POST /wishlist/:id/items] Usando extractor genérico como respaldo para título`);
+              const { getUrlMetadata } = await import('./metascraper');
+              const backupMetadata = await getUrlMetadata(itemData.purchaseLink);
+              if (backupMetadata.title) {
+                metadata.title = backupMetadata.title;
+              }
+            }
+          } else {
+            // Para otros sitios, usar el extractor genérico
+            console.log(`[POST /wishlist/:id/items] Usando extractor genérico para URL no-Amazon`);
+            const { getUrlMetadata } = await import('./metascraper');
+            metadata = await getUrlMetadata(itemData.purchaseLink);
+          }
+          
+          // Log de resultados
+          console.log(`[POST /wishlist/:id/items] Metadatos extraídos:`, 
+            metadata.title ? `título: ${metadata.title.substring(0, 30)}...` : "título: no encontrado", 
+            metadata.imageUrl ? "imagen: encontrada" : "imagen: no encontrada",
+            metadata.price ? `precio: ${metadata.price}` : "precio: no encontrado"
+          );
+          
+          // Usar el título extraído solo si no se proporcionó uno manualmente o si es genérico
+          if ((!itemData.title || itemData.title === 'Nuevo deseo') && metadata.title) {
+            console.log(`[POST /wishlist/:id/items] Título extraído correctamente: ${metadata.title}`);
+            itemData.title = metadata.title;
+          }
           
           // Usar la imagen extraída solo si no se proporcionó una manualmente
           if (!originalImageUrl && metadata.imageUrl) {
@@ -608,8 +643,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       try {
         console.log(`Intentando extraer metadata para actualización de: ${updateData.purchaseLink}`);
-        const { getUrlMetadata } = await import('./metascraper');
-        const metadata = await getUrlMetadata(updateData.purchaseLink);
+        
+        // Verificar si es una URL de Amazon para usar el extractor especializado
+        const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
+        const isAmazon = isAmazonUrl(updateData.purchaseLink);
+        
+        let metadata;
+        if (isAmazon) {
+          console.log(`URL de Amazon detectada, usando extractor especializado para actualización`);
+          metadata = await extractAmazonMetadata(updateData.purchaseLink, req.headers['user-agent'] as string);
+          // Si no tenemos título o está vacío, intentar extraer con getUrlMetadata como respaldo
+          if (!metadata.title) {
+            console.log(`Usando extractor genérico como respaldo para título en actualización`);
+            const { getUrlMetadata } = await import('./metascraper');
+            const backupMetadata = await getUrlMetadata(updateData.purchaseLink);
+            if (backupMetadata.title) {
+              metadata.title = backupMetadata.title;
+            }
+          }
+        } else {
+          // Para otros sitios, usar el extractor genérico
+          console.log(`Usando extractor genérico para URL no-Amazon en actualización`);
+          const { getUrlMetadata } = await import('./metascraper');
+          metadata = await getUrlMetadata(updateData.purchaseLink);
+        }
         
         // Usar la imagen extraída solo si no se proporcionó una manualmente
         if (!originalImageUrl && metadata.imageUrl) {
@@ -950,148 +1007,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
         };
       };
       
-      // Verificar si es una URL de Amazon
-      const isAmazonUrl = !!url.match(/amazon\.(com|es|mx|co|uk|de|fr|it|nl|jp|ca)/i) || 
-                         !!url.match(/amzn\.(to|eu)/i) || 
-                         !!url.match(/a\.co\//i);
+      // Importar el módulo de extracción de Amazon
+      const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
+      const isAmazon = isAmazonUrl(url);
       
-      console.log(`🔍 Extrayendo metadatos para: ${url}`);
+      console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''}`);
       
-      // Para Amazon siempre usamos un extractor específico con User-Agent de escritorio
-      if (isAmazonUrl) {
-        console.log(`🛒 Detectada URL de Amazon. Usando extractor con User-Agent de escritorio.`);
-        
-        // User-Agent de escritorio fijo para todas las peticiones de Amazon
-        const desktopUserAgent = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36';
+      // Para Amazon usamos nuestro extractor especializado
+      if (isAmazon) {
+        console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado.`);
         
         try {
-          // Importar las funciones necesarias
-          const { getUrlMetadata, extractAmazonTitle, extractAmazonImage } = await import('./metascraper');
+          // Obtener metadatos con nuestro extractor especializado
+          console.log(`📊 Iniciando extracción con amazon-extractor...`);
+          const amazonMetadata = await extractAmazonMetadata(url, req.headers['user-agent'] as string);
           
-          // Primero intentamos obtener metadatos con el método original
-          let amazonMetadata;
-          let metadataSuccess = false;
-          
-          try {
-            console.log(`📊 Intentando extracción de metadatos completos con método principal...`);
-            // Crear una promesa con timeout de 5 segundos
-            const fetchWithTimeout = async (ms: number): Promise<any> => {
-              return Promise.race([
-                getUrlMetadata(url, desktopUserAgent),
-                new Promise((_, reject) => 
-                  setTimeout(() => reject(new Error('Timeout obteniendo metadatos completos de Amazon')), ms)
-                )
-              ]);
+          // Verificar si obtuvimos datos
+          if (amazonMetadata && (amazonMetadata.title || amazonMetadata.imageUrl)) {
+            console.log(`✅ Extracción especializada exitosa:`);
+            console.log(`   - Título: ${amazonMetadata.title ? amazonMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+            console.log(`   - Imagen: ${amazonMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+            
+            return res.json(createResponseObject({
+              title: amazonMetadata.title || 'Producto Amazon',
+              description: amazonMetadata.description || '',
+              imageUrl: amazonMetadata.imageUrl || ''
+            }));
+          } else {
+            console.log(`⚠️ La extracción especializada no obtuvo todos los datos. Intentando método alternativo.`);
+            
+            // Importar el extractor genérico como respaldo
+            const { getUrlMetadata } = await import('./metascraper');
+            const backupMetadata = await getUrlMetadata(url, req.headers['user-agent'] as string);
+            
+            // Combinar los resultados dando prioridad al extractor especializado
+            const combinedMetadata = {
+              title: amazonMetadata.title || backupMetadata.title || 'Producto Amazon',
+              description: amazonMetadata.description || backupMetadata.description || '',
+              imageUrl: amazonMetadata.imageUrl || backupMetadata.imageUrl || ''
             };
             
-            // Dar 5 segundos para la extracción completa
-            amazonMetadata = await fetchWithTimeout(5000);
-            
-            // Verificar si obtuvimos datos completos
-            if (amazonMetadata && amazonMetadata.title && amazonMetadata.imageUrl) {
-              console.log(`✅ Extracción completa exitosa - Título: ${amazonMetadata.title.substring(0, 30)}... Imagen: ${amazonMetadata.imageUrl ? 'Sí' : 'No'}`);
-              metadataSuccess = true;
-            } else {
-              console.log(`⚠️ La extracción completa no obtuvo todos los datos necesarios. Usando método alternativo.`);
-            }
-          } catch (error: any) {
-            console.log(`⚠️ Error en extracción completa: ${error.message || 'desconocido'}. Usando método alternativo.`);
+            return res.json(createResponseObject(combinedMetadata));
           }
+        } catch (error: any) {
+          console.log(`⚠️ Error en extracción especializada: ${error.message || 'desconocido'}. Usando método genérico.`);
           
-          // Si la extracción completa falló, usamos el método alternativo
-          if (!metadataSuccess) {
-            // Intentar extraer ASIN de la URL de Amazon
-            let asin: string | undefined;
-            const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})(?:\/|\?|$)/);
-            if (asinMatch && asinMatch[1]) {
-              asin = asinMatch[1];
-              console.log(`✓ ASIN extraído de URL Amazon: ${asin}`);
-            } else {
-              // Intentar otros patrones de URL de Amazon
-              const altMatch = url.match(/\/([A-Z0-9]{10})(?:\/|\?|$)/);
-              if (altMatch && altMatch[1]) {
-                asin = altMatch[1];
-                console.log(`✓ ASIN alternativo extraído de URL Amazon: ${asin}`);
-              }
-            }
-            
-            // Inicializar estructura de metadatos
-            amazonMetadata = {
-              title: '',
-              description: '',
-              imageUrl: '',
-              price: ''
-            };
-            
-            // Extraer el título específicamente para Amazon
-            try {
-              console.log(`🔍 Intentando extraer título usando métodos específicos...`);
-              let amazonTitle = await extractAmazonTitle(url);
-              
-              // Limpieza adicional para títulos problemáticos
-              if (amazonTitle) {
-                // Verificar si el título parece una URL o contiene el protocolo (casos raros)
-                if (amazonTitle.includes('http:') || amazonTitle.includes('https:') || 
-                    amazonTitle.startsWith('www.') || /^[a-z]+:/.test(amazonTitle)) {
-                  
-                  console.log(`⚠️ Detectado título con formato de URL o protocolo: "${amazonTitle}". Usando título genérico.`);
-                  
-                  // Si tenemos ASIN, usamos un título genérico en su lugar
-                  if (asin) {
-                    amazonTitle = `Producto Amazon (${asin})`;
-                  } else {
-                    amazonTitle = `Producto de Amazon`;
-                  }
-                }
-                
-                amazonMetadata.title = amazonTitle;
-                console.log(`✓ Título de Amazon extraído correctamente: ${amazonTitle}`);
-              }
-            } catch (titleError) {
-              console.error('Error al extraer título específico de Amazon:', titleError);
-            }
-            
-            // Si no tenemos título pero tenemos ASIN, podemos crear un título genérico
-            if (!amazonMetadata.title && asin) {
-              amazonMetadata.title = `Producto Amazon (${asin})`;
-              console.log(`ℹ️ Generando título genérico basado en ASIN: ${amazonMetadata.title}`);
-            }
-            
-            // Extraer imagen para Amazon, ya sea extrayéndola de la página o usando el ASIN para CDN
-            try {
-              console.log(`🔍 Intentando extraer imagen usando métodos específicos...`);
-              // Primero intentamos extraer la imagen directamente
-              const amazonImage = await extractAmazonImage(url);
-              if (amazonImage) {
-                amazonMetadata.imageUrl = amazonImage;
-                console.log(`✓ Imagen de Amazon extraída correctamente: ${amazonImage}`);
-              } 
-              // Si no obtuvimos imagen y tenemos ASIN, usamos el CDN como fallback
-              else if (asin) {
-                const cdnImageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
-                amazonMetadata.imageUrl = cdnImageUrl;
-                console.log(`ℹ️ Usando URL de fallback de Amazon CDN: ${cdnImageUrl}`);
-              }
-            } catch (imageError) {
-              // Si hay un error y tenemos ASIN, usamos el CDN como fallback
-              if (asin) {
-                const cdnImageUrl = `https://ws-eu.amazon-adsystem.com/widgets/q?_encoding=UTF8&MarketPlace=ES&ASIN=${asin}&ServiceVersion=20070822&ID=AsinImage`;
-                amazonMetadata.imageUrl = cdnImageUrl;
-                console.log(`ℹ️ Error al extraer imagen. Usando fallback de Amazon CDN: ${cdnImageUrl}`);
-              } else {
-                console.error('Error al extraer imagen específica de Amazon y no hay ASIN disponible:', imageError);
-              }
-            }
-          }
+          // Si falla completamente, usar el método genérico
+          const { getUrlMetadata } = await import('./metascraper');
+          const genericMetadata = await getUrlMetadata(url, req.headers['user-agent'] as string);
           
-          // Devolver objeto con estructura consistente
-          console.log(`📊 Datos de Amazon extraídos (título: ${amazonMetadata.title ? 'sí' : 'no'}, imagen: ${amazonMetadata.imageUrl ? 'sí' : 'no'})`);
-          return res.json(amazonMetadata);
-        } catch (error) {
-          console.error('Error al extraer metadatos de Amazon:', error);
-          
-          // Si falla, intentamos con el método genérico como fallback
-          console.log('⚠️ Fallback: usando extractor genérico para URL de Amazon');
+          return res.json(createResponseObject(genericMetadata));
         }
       }
       
@@ -1101,7 +1066,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Crear una promesa con timeout para evitar bloqueos
       const fetchWithTimeout = async (ms: number): Promise<any> => {
         return Promise.race([
-          extractOpenGraphData(url, userAgent), // Para URLs no-Amazon mantenemos el UA original
+          extractOpenGraphData(url, req.headers['user-agent'] as string), // Usar el UA original del cliente
           new Promise((_, reject) => 
             setTimeout(() => reject(new Error('Timeout obteniendo metadatos')), ms)
           )
