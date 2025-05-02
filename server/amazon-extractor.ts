@@ -92,6 +92,22 @@ const PRODUCT_DATABASE: Record<string, KnownProduct> = {
     title: "BIAOQINBO Reloj Inteligente Hombre Mujer, 1.85'' Smartwatch con Llamada Bluetooth, 112 Modos Deportivos, Pulsómetro, Monitor de Sueño, IP68 Impermeable Reloj Deportivo para Android iOS",
     imageUrl: 'https://m.media-amazon.com/images/I/71+D+JkPNDL._AC_SL1500_.jpg'
   },
+  'B07VS8QCXC': {
+    title: "Seagate Portable Drive 5TB, Unidad De Disco Duro Externo, USB 3.0 para PC, ordenador portátil y Mac y servicios Rescue, Amazon Special Edition (STGX5000400)",
+    imageUrl: 'https://m.media-amazon.com/images/I/31nMFhO266L._AC_.jpg'
+  },
+  'B09H2WPXFT': {
+    title: "Apple 2022 iPad Air (Wi-Fi, 64 GB) - Azul (5.ª generación)",
+    imageUrl: 'https://m.media-amazon.com/images/I/61XZQXFQeVL._AC_SL1500_.jpg'
+  },
+  'B09DGD9X2S': {
+    title: "Casio Reloj de Pulsera EFV-120DB-1AVUEF",
+    imageUrl: 'https://m.media-amazon.com/images/I/61vDwxFgP1L._AC_SL1200_.jpg'
+  },
+  'B09QKY977T': {
+    title: "Apple AirTag",
+    imageUrl: 'https://m.media-amazon.com/images/I/71L8NFURnoL._AC_SL1500_.jpg'
+  },
   
   // Consolas de videojuegos
   'B0CHJF5LH6': {
@@ -255,9 +271,9 @@ export function getKnownProduct(asin: string): KnownProduct | null {
 
 // Construir URL de imagen para un ASIN de Amazon
 export function getAmazonImageFromAsin(asin: string): string {
-  // Las URLs de Amazon requieren un ID de imagen antes del ASIN
-  // Usamos un ID genérico "61JfGcU75ML" que funciona bien con varios productos
-  return `https://m.media-amazon.com/images/I/61JfGcU75ML.${asin}._AC_SL1500_.jpg`;
+  // Usamos la URL de imagen de Amazon que funciona con cualquier ASIN
+  // Esta URL usa el formato estándar de imagen de Amazon para cuando no podemos extraer la imagen real
+  return `https://m.media-amazon.com/images/P//${asin}.01._SL500_.jpg`;
 }
 
 // Generar título genérico basado en ASIN cuando no hay otra información
