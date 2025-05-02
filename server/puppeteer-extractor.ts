@@ -29,7 +29,7 @@ async function getBrowser(): Promise<Browser> {
 
   console.log('[PuppeteerExtractor] Iniciando navegador headless...');
   
-  // Configuración para entornos como Replit
+  // Configuración avanzada para evadir detección en entornos como Replit
   const browser = await puppeteer.launch({
     args: [
       '--no-sandbox',
@@ -38,9 +38,21 @@ async function getBrowser(): Promise<Browser> {
       '--disable-accelerated-2d-canvas',
       '--no-first-run',
       '--no-zygote',
-      '--disable-gpu'
+      '--disable-gpu',
+      '--window-size=1920,1080',
+      '--hide-scrollbars',
+      '--mute-audio',
+      '--disable-infobars',
+      '--disable-breakpad',
+      '--disable-web-security',
+      '--disable-features=IsolateOrigins,site-per-process',
+      '--disable-site-isolation-trials'
     ],
-    headless: true
+    headless: true,
+    defaultViewport: {
+      width: 1920,
+      height: 1080
+    }
   });
   
   browserInstance = browser;
@@ -91,70 +103,226 @@ export async function extractAmazonMetadataWithPuppeteer(url: string): Promise<{
 
   console.log(`[PuppeteerExtractor] Extrayendo metadatos para: ${url}`);
   
-  try {
-    const browser = await getBrowser();
-    const page = await browser.newPage();
-    
-    // Configurar un timeout razonable
-    page.setDefaultNavigationTimeout(30000);
-    
-    // Imitar un navegador normal
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36');
-    
-    // Configurar cabeceras adicionales
-    await page.setExtraHTTPHeaders({
-      'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
-      'Cache-Control': 'no-cache',
-      'Pragma': 'no-cache'
-    });
-    
-    // Interceptar y bloquear recursos que no necesitamos para acelerar el proceso
-    await page.setRequestInterception(true);
-    page.on('request', (request) => {
-      const resourceType = request.resourceType();
-      if (
-        resourceType === 'image' || 
-        resourceType === 'stylesheet' || 
-        resourceType === 'font' ||
-        resourceType === 'media'
-      ) {
-        // Permitir imágenes solo si contienen la URL del producto principal
-        if (resourceType === 'image' && request.url().includes('/images/I/')) {
-          request.continue();
-        } else {
-          request.abort();
+  let retryCount = 0;
+  const maxRetries = 3;
+  
+  // Lista de user agents modernos y comunes
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:121.0) Gecko/20100101 Firefox/121.0',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1'
+  ];
+  
+  // URLs alternativas (Amazon regional) para intentar si falla la original
+  const alternativeUrls = asin ? [
+    `https://www.amazon.es/dp/${asin}`,
+    `https://www.amazon.com/dp/${asin}`,
+    `https://www.amazon.co.uk/dp/${asin}`,
+    `https://www.amazon.de/dp/${asin}`
+  ] : [];
+  
+  // Función para hacer clic en elementos que podrían interferir
+  async function dismissPopups(page: Page): Promise<void> {
+    try {
+      // Aceptar cookies si aparece el diálogo
+      const cookieSelectors = [
+        '#sp-cc-accept', 
+        '#a-autoid-0', 
+        'input[data-action-type="DISMISS"]',
+        '#accept-amazon-cookie-button'
+      ];
+      
+      for (const selector of cookieSelectors) {
+        const buttonExists = await page.$(selector);
+        if (buttonExists) {
+          console.log(`[PuppeteerExtractor] Haciendo clic en botón de cookies: ${selector}`);
+          await page.click(selector).catch(() => {});
+          // Esperar a que desaparezca el diálogo
+          await new Promise(resolve => setTimeout(resolve, 500));
+          break;
         }
-      } else {
-        request.continue();
       }
-    });
-    
-    console.log(`[PuppeteerExtractor] Navegando a: ${url}`);
-    await page.goto(url, { waitUntil: 'domcontentloaded' });
-    
-    // Esperar un poco para que cargue el contenido dinámico
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // Extraer los datos
-    const result = await extractProductDataFromPage(page, url);
-    
-    console.log(`[PuppeteerExtractor] Extracción completada: ${result.title ? '✓' : '✗'}`);
-    
-    // Cerrar la página para liberar recursos
-    await page.close();
-    
-    // Programar el cierre del navegador después de un período de inactividad
-    scheduleBrowserClose();
-    
-    return result;
-  } catch (error) {
-    console.error(`[PuppeteerExtractor] Error: ${error instanceof Error ? error.message : String(error)}`);
-    // Programar el cierre del navegador en caso de error
-    scheduleBrowserClose();
-    
-    // Retornar un objeto vacío en caso de error
-    return {};
+      
+      // Cerrar otros posibles popups
+      const closeButtons = await page.$$('button[data-action="close"], .a-button-close, .a-icon-close');
+      for (const button of closeButtons) {
+        await button.click().catch(() => {});
+      }
+    } catch (e) {
+      // Ignorar errores al intentar cerrar popups
+      console.log('[PuppeteerExtractor] Error al intentar cerrar popups:', e);
+    }
   }
+  
+  while (retryCount < maxRetries) {
+    try {
+      const browser = await getBrowser();
+      const page = await browser.newPage();
+      
+      // Configurar un timeout razonable
+      page.setDefaultNavigationTimeout(30000);
+      
+      // Usar un user agent aleatorio
+      const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+      await page.setUserAgent(randomUserAgent);
+      
+      // Configurar cabeceras avanzadas para parecer más un navegador real
+      await page.setExtraHTTPHeaders({
+        'Accept-Language': 'es-ES,es;q=0.9,en;q=0.8',
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'none',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1'
+      });
+      
+      // Configurar para emular un navegador real
+      await page.evaluateOnNewDocument(() => {
+        // Ocultar que estamos usando Puppeteer/Headless
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+        
+        // Simular plugins de navegador
+        Object.defineProperty(navigator, 'plugins', {
+          get: () => [
+            { name: 'Chrome PDF Plugin', filename: 'internal-pdf-viewer' }, 
+            { name: 'Chrome PDF Viewer', filename: 'mhjfbmdgcfjbbpaeojofohoefgiehjai' }, 
+            { name: 'Native Client', filename: 'internal-nacl-plugin' }
+          ]
+        });
+        
+        // Fingerprinting prevention
+        Object.defineProperty(navigator, 'languages', {
+          get: () => ['es-ES', 'es', 'en-US', 'en']
+        });
+      });
+      
+      // Ahora permitimos más recursos para asegurar que la página carga completamente
+      await page.setRequestInterception(true);
+      page.on('request', (request) => {
+        // Filtrar solicitudes para mejorar el rendimiento sin bloquear recursos cruciales
+        const url = request.url();
+        const resourceType = request.resourceType();
+        
+        // Bloquear analytics, ads, etc
+        if (
+          url.includes('google-analytics') || 
+          url.includes('googleads') || 
+          url.includes('/ads/') || 
+          url.includes('analytics')
+        ) {
+          request.abort();
+          return;
+        }
+        
+        // Permitir todas las imágenes de productos pero bloquear otras imágenes menos importantes
+        if (resourceType === 'image') {
+          if (url.includes('/images/I/') || url.includes('product-image')) {
+            request.continue();
+          } else {
+            request.abort();
+          }
+          return;
+        }
+        
+        // Permitir la mayoría de recursos necesarios para el renderizado adecuado
+        request.continue();
+      });
+      
+      // Determinar URL a usar en este intento
+      let currentUrl = url;
+      if (retryCount > 0 && asin && alternativeUrls.length > 0) {
+        // Usar URL alternativa en reintentos
+        currentUrl = alternativeUrls[(retryCount - 1) % alternativeUrls.length];
+        console.log(`[PuppeteerExtractor] Reintento ${retryCount} usando URL alternativa: ${currentUrl}`);
+      }
+      
+      console.log(`[PuppeteerExtractor] Navegando a: ${currentUrl} (User-Agent: ${randomUserAgent.substring(0, 50)}...)`);
+      await page.goto(currentUrl, { waitUntil: 'networkidle2' });
+      
+      // Intentar cerrar popups y aceptar cookies
+      await dismissPopups(page);
+      
+      // Scroll para cargar imágenes y contenido lazy
+      await page.evaluate(() => {
+        window.scrollTo(0, 300);
+        return new Promise((resolve) => {
+          setTimeout(resolve, 500);
+        });
+      });
+      
+      // Esperar un poco más para que cargue el contenido dinámico
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Intentar cerrar popups nuevamente después del scroll
+      await dismissPopups(page);
+      
+      // Extraer los datos
+      const result = await extractProductDataFromPage(page, currentUrl);
+      
+      // Si no tenemos título o imagen, es posible que necesitemos reintentar
+      if ((!result.title || !result.imageUrl) && retryCount < maxRetries - 1) {
+        console.log(`[PuppeteerExtractor] Datos incompletos en intento ${retryCount + 1}, reintentando...`);
+        await page.close();
+        retryCount++;
+        continue;
+      }
+      
+      console.log(`[PuppeteerExtractor] Extracción completada en intento ${retryCount + 1}: ${result.title ? '✓' : '✗'}`);
+      
+      // Si tenemos el ASIN pero no tenemos una imagen válida, intentar crear una URL de imagen directo
+      if (asin && !result.imageUrl) {
+        result.imageUrl = `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`;
+        console.log(`[PuppeteerExtractor] Usando URL de imagen generada por ASIN: ${result.imageUrl}`);
+      }
+      
+      // Cerrar la página para liberar recursos
+      await page.close();
+      
+      // Programar el cierre del navegador después de un período de inactividad
+      scheduleBrowserClose();
+      
+      return result;
+    } catch (error) {
+      console.error(`[PuppeteerExtractor] Error en intento ${retryCount + 1}: ${error instanceof Error ? error.message : String(error)}`);
+      retryCount++;
+      
+      if (retryCount >= maxRetries) {
+        // Si tenemos el ASIN pero hemos agotado los reintentos, proporcionar al menos la imagen generada
+        if (asin) {
+          const imageUrl = `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`;
+          console.log(`[PuppeteerExtractor] Fallback a imagen generada por ASIN después de reintentos: ${imageUrl}`);
+          
+          // Programar el cierre del navegador
+          scheduleBrowserClose();
+          
+          return {
+            title: asin ? `Producto Amazon (${asin})` : undefined,
+            imageUrl: imageUrl
+          };
+        }
+        
+        // Programar el cierre del navegador en caso de error
+        scheduleBrowserClose();
+        
+        // Retornar un objeto vacío si no tenemos nada
+        return {};
+      }
+      
+      // Esperar un poco antes del siguiente intento
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    }
+  }
+  
+  // Si llegamos aquí es porque agotamos todos los reintentos sin éxito
+  return {};
 }
 
 /**
