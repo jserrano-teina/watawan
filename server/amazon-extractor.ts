@@ -271,14 +271,45 @@ export function getKnownProduct(asin: string): KnownProduct | null {
 
 // Construir URL de imagen para un ASIN de Amazon
 export function getAmazonImageFromAsin(asin: string): string {
-  // Usamos la URL de imagen de Amazon que funciona con cualquier ASIN
-  // Esta URL usa el formato estándar de imagen de Amazon para cuando no podemos extraer la imagen real
-  return `https://m.media-amazon.com/images/P//${asin}.01._SL500_.jpg`;
+  // Si el ASIN ya contiene un patrón de imagen, usarlo directamente
+  if (asin.includes('.') && (asin.includes('_SL') || asin.includes('_AC_'))) {
+    return `https://m.media-amazon.com/images/I/${asin}`;
+  }
+  
+  // Probar múltiples formatos para aumentar probabilidad de obtener una imagen válida
+  // Amazon usa diferentes patrones para diferentes tipos de productos
+  return `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`;
 }
 
 // Generar título genérico basado en ASIN cuando no hay otra información
 export function generateGenericTitle(asin: string): string {
   return `Producto Amazon (${asin})`;
+}
+
+// Limpiar título de posibles errores y formatos incorrectos
+export function cleanAmazonTitle(title: string, asin?: string): string {
+  if (!title) return asin ? generateGenericTitle(asin) : "Producto no identificado";
+  
+  // Corregir títulos mal formateados que contienen HTTPS + ASIN
+  if (/https?:\s*[A-Z0-9]{10}/i.test(title)) {
+    // Si tenemos el ASIN, usarlo para generar un título genérico
+    if (asin) return generateGenericTitle(asin);
+    
+    // Si no, extraerlo del título malformado
+    const match = title.match(/([A-Z0-9]{10})/i);
+    if (match && match[1]) {
+      return `Producto Amazon (${match[1]})`;
+    }
+  }
+  
+  // Eliminar información de vendedor que a veces aparece
+  title = title.replace(/\s*by\s+Amazon\.com\s*/gi, ' ');
+  title = title.replace(/\s*at\s+Amazon$/gi, '');
+  
+  // Eliminar espacios y saltos de línea múltiples
+  title = title.replace(/\s+/g, ' ').trim();
+  
+  return title;
 }
 
 // Función auxiliar para decodificar entidades HTML
@@ -515,10 +546,17 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
         console.log(`[AmazonExtractor] Usando URL de imagen generada como fallback: ${result.imageUrl}`);
       }
       
-      // Fallback para título
+      // Fallback para título o limpieza del título existente
       if (!result.title) {
         result.title = generateGenericTitle(asin);
         console.log(`[AmazonExtractor] Usando título genérico como fallback: ${result.title}`);
+      } else {
+        // Limpiar título para corregir formatos incorrectos
+        const cleanedTitle = cleanAmazonTitle(result.title, asin);
+        if (cleanedTitle !== result.title) {
+          console.log(`[AmazonExtractor] Título limpiado: "${result.title}" -> "${cleanedTitle}"`);
+          result.title = cleanedTitle;
+        }
       }
     }
     

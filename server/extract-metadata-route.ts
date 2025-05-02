@@ -37,12 +37,16 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     // Para Amazon usamos nuestro extractor especializado
     if (isAmazon) {
+      const { cleanAmazonTitle, extractAsin } = await import('./amazon-extractor');
       console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado.`);
       
       try {
         // Obtener metadatos con nuestro extractor especializado
         console.log(`📊 Iniciando extracción con amazon-extractor...`);
         const amazonMetadata = await extractAmazonMetadata(url, req.headers['user-agent'] as string);
+        
+        // Extraer ASIN para usarlo en caso necesario
+        const asin = extractAsin(url);
         
         // Verificar si obtuvimos datos
         if (amazonMetadata && (amazonMetadata.title || amazonMetadata.imageUrl)) {
@@ -51,21 +55,30 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           console.log(`   - Imagen: ${amazonMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
           
           // Si el título comienza con "Producto Amazon", significa que usamos el título genérico
-          // En ese caso, intentamos con Puppeteer para obtener datos más precisos
-          if (amazonMetadata.title && amazonMetadata.title.startsWith('Producto Amazon')) {
-            console.log(`🤖 El título es genérico. Intentando con Puppeteer para obtener metadatos más precisos...`);
+          // o está mal formateado, así que intentamos con Puppeteer para obtener datos más precisos
+          if (!amazonMetadata.title || 
+              amazonMetadata.title.startsWith('Producto Amazon') ||
+              /https?:\s*[A-Z0-9]{10}/i.test(amazonMetadata.title)) {
+            
+            console.log(`🤖 El título es genérico o malformado. Intentando con Puppeteer para obtener metadatos más precisos...`);
             
             try {
               const { extractAmazonMetadataWithPuppeteer } = await import('./puppeteer-extractor');
               const puppeteerMetadata = await extractAmazonMetadataWithPuppeteer(url);
               
-              if (puppeteerMetadata && puppeteerMetadata.title && !puppeteerMetadata.title.startsWith('Producto Amazon')) {
+              if (puppeteerMetadata && puppeteerMetadata.title && 
+                  !puppeteerMetadata.title.startsWith('Producto Amazon') &&
+                  !/https?:\s*[A-Z0-9]{10}/i.test(puppeteerMetadata.title)) {
+                
+                // Limpiar el título para asegurar que no tiene problemas de formato
+                const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title || '', asin || undefined);
+                
                 console.log(`✅ Extracción con Puppeteer exitosa:`);
-                console.log(`   - Título: ${puppeteerMetadata.title.substring(0, 30)}...`);
+                console.log(`   - Título: ${cleanedTitle.substring(0, 30)}...`);
                 console.log(`   - Imagen: ${puppeteerMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
                 
                 return res.json(createResponseObject({
-                  title: puppeteerMetadata.title,
+                  title: cleanedTitle,
                   description: puppeteerMetadata.description || '',
                   imageUrl: puppeteerMetadata.imageUrl || amazonMetadata.imageUrl || ''
                 }));
@@ -76,8 +89,11 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             }
           }
           
+          // Limpiar el título antes de devolverlo
+          const cleanedTitle = cleanAmazonTitle(amazonMetadata.title || '', asin);
+          
           return res.json(createResponseObject({
-            title: amazonMetadata.title || 'Producto Amazon',
+            title: cleanedTitle || 'Producto Amazon',
             description: amazonMetadata.description || '',
             imageUrl: amazonMetadata.imageUrl || ''
           }));
@@ -90,12 +106,15 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             const puppeteerMetadata = await extractAmazonMetadataWithPuppeteer(url);
             
             if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
+              // Limpiar el título usando nuestra función especializada
+              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title || '', asin);
+              
               console.log(`✅ Extracción con Puppeteer exitosa:`);
-              console.log(`   - Título: ${puppeteerMetadata.title ? puppeteerMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+              console.log(`   - Título: ${cleanedTitle ? cleanedTitle.substring(0, 30) + '...' : 'No disponible'}`);
               console.log(`   - Imagen: ${puppeteerMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
               
               return res.json(createResponseObject({
-                title: puppeteerMetadata.title || 'Producto Amazon',
+                title: cleanedTitle || 'Producto Amazon',
                 description: puppeteerMetadata.description || '',
                 imageUrl: puppeteerMetadata.imageUrl || ''
               }));
