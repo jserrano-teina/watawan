@@ -287,7 +287,7 @@ export function generateGenericTitle(asin: string): string {
 }
 
 // Limpiar título de posibles errores y formatos incorrectos
-export function cleanAmazonTitle(title: string, asin?: string): string {
+export function cleanAmazonTitle(title: string, asin?: string | null): string {
   if (!title) return asin ? generateGenericTitle(asin) : "Producto no identificado";
   
   // Corregir títulos mal formateados que contienen HTTPS + ASIN

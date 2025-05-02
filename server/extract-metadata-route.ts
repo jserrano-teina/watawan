@@ -90,7 +90,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           }
           
           // Limpiar el título antes de devolverlo
-          const cleanedTitle = cleanAmazonTitle(amazonMetadata.title || '', asin);
+          const cleanedTitle = cleanAmazonTitle(amazonMetadata.title || '', asin || undefined);
           
           return res.json(createResponseObject({
             title: cleanedTitle || 'Producto Amazon',
@@ -107,7 +107,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             
             if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
               // Limpiar el título usando nuestra función especializada
-              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title || '', asin);
+              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title || '', asin || undefined);
               
               console.log(`✅ Extracción con Puppeteer exitosa:`);
               console.log(`   - Título: ${cleanedTitle ? cleanedTitle.substring(0, 30) + '...' : 'No disponible'}`);
@@ -150,6 +150,12 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           const puppeteerMetadata = await extractAmazonMetadataWithPuppeteer(url);
           
           if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
+            // Limpiar el título si es necesario
+            if (puppeteerMetadata.title) {
+              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title, asin || undefined);
+              puppeteerMetadata.title = cleanedTitle;
+            }
+            
             console.log(`✅ Recuperación con Puppeteer exitosa después de fallo en el extractor principal`);
             return res.json(createResponseObject(puppeteerMetadata));
           } else {
