@@ -113,26 +113,83 @@ type FetchOptions = {
   signal?: AbortSignal;
 };
 
-// Función segura para obtener datos con timeout
+// Función segura para obtener datos con timeout y múltiples reintentos
 async function safeFetch(url: string, options: FetchOptions = {}): Promise<NodeFetchResponse | null> {
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), options.timeout || TIMEOUT);
-    
-    const signal = options.signal || controller.signal;
-    
-    const response = await fetch(url, {
-      ...options,
-      signal
-    });
-    
-    clearTimeout(timeoutId);
-    
-    return response;
-  } catch (error) {
-    console.log(`[AmazonExtractor] Error en fetch para ${url}: ${error instanceof Error ? error.message : String(error)}`);
-    return null;
+  // Número máximo de intentos
+  const MAX_RETRIES = 3;
+  
+  // Lista de User Agents para rotar y evitar bloqueos
+  const rotatingUserAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.5 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36 Edg/115.0.1901.203',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+  ];
+  
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), options.timeout || TIMEOUT);
+      
+      const signal = options.signal || controller.signal;
+      
+      // Crear nuevas cabeceras para este intento
+      const headers: Record<string, string> = {};
+      
+      // Configurar User-Agent rotativo
+      headers['User-Agent'] = rotatingUserAgents[attempt % rotatingUserAgents.length];
+      
+      // Agregar cabeceras estándar
+      headers['Accept'] = 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8';
+      headers['Accept-Language'] = 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7';
+      headers['sec-ch-ua'] = '"Chromium";v="116", "Not)A;Brand";v="24", "Google Chrome";v="116"';
+      headers['sec-ch-ua-mobile'] = '?0';
+      headers['sec-ch-ua-platform'] = '"Windows"';
+      headers['Cache-Control'] = 'no-cache';
+      headers['Pragma'] = 'no-cache';
+      headers['DNT'] = '1';
+      
+      // Copiar cabeceras personalizadas desde las opciones, si existen
+      if (options.headers) {
+        // Obtener las cabeceras de las opciones excluyendo las que no queremos
+        Object.entries(options.headers).forEach(([key, value]) => {
+          // Ignorar las cabeceras sensibles
+          if (key !== 'Cookie' && key !== 'Referer') {
+            headers[key] = value;
+          }
+        });
+      }
+      
+      console.log(`[AmazonExtractor] Intento ${attempt + 1}/${MAX_RETRIES} para ${url}`);
+      
+      const response = await fetch(url, {
+        method: options.method || 'GET',
+        headers,
+        signal,
+        redirect: 'follow'
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (response.ok) {
+        return response;
+      } else {
+        console.log(`[AmazonExtractor] Intento ${attempt + 1} falló con código: ${response.status}`);
+      }
+    } catch (error) {
+      console.log(`[AmazonExtractor] Error en fetch para ${url} (intento ${attempt + 1}): ${error instanceof Error ? error.message : String(error)}`);
+      
+      // Si es error de timeout o de red, esperar antes del siguiente intento
+      if (attempt < MAX_RETRIES - 1) {
+        const waitTime = Math.pow(2, attempt) * 500; // Espera exponencial: 500ms, 1s, 2s
+        console.log(`[AmazonExtractor] Esperando ${waitTime}ms antes del siguiente intento...`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+    }
   }
+  
+  console.log(`[AmazonExtractor] Todos los intentos fallaron para ${url}`);
+  return null;
 }
 
 // Extraer ASIN de una URL de Amazon
@@ -208,6 +265,116 @@ export function generateGenericTitle(asin: string): string {
   return `Producto Amazon (${asin})`;
 }
 
+// Función auxiliar para decodificar entidades HTML
+function decodeHTMLEntities(text: string): string {
+  const entities = [
+    ['&amp;', '&'],
+    ['&lt;', '<'],
+    ['&gt;', '>'],
+    ['&quot;', '"'],
+    ['&apos;', "'"],
+    ['&#x27;', "'"],
+    ['&#x2F;', '/'],
+    ['&#39;', "'"],
+    ['&#47;', '/'],
+    ['&nbsp;', ' ']
+  ];
+  
+  let decodedText = text;
+  for (const [entity, replacement] of entities) {
+    decodedText = decodedText.replace(new RegExp(entity, 'g'), replacement);
+  }
+  
+  // Decode numeric entities
+  decodedText = decodedText.replace(/&#(\d+);/g, (_, numStr) => {
+    try {
+      return String.fromCharCode(parseInt(numStr, 10));
+    } catch (e) {
+      return _;
+    }
+  });
+  
+  return decodedText.trim();
+}
+
+// Intenta acceder a la página de producto desde diferentes regiones
+async function tryDifferentRegionalEndpoints(asin: string): Promise<{ title?: string; imageUrl?: string }> {
+  const domains = ['amazon.es', 'amazon.com', 'amazon.co.uk', 'amazon.de'];
+  const result: { title?: string; imageUrl?: string } = {};
+  
+  for (const domain of domains) {
+    console.log(`[AmazonExtractor] Intentando obtener datos de ${domain} para ASIN ${asin}`);
+    const url = `https://${domain}/dp/${asin}`;
+    
+    try {
+      const response = await safeFetch(url, {
+        method: 'GET',
+        timeout: 4000
+      });
+      
+      if (response && response.ok) {
+        const html = await response.text();
+        
+        // Patrones específicos para títulos
+        const titlePatterns = [
+          /<span id="productTitle"[^>]*>([^<]+)<\/span>/i,
+          /<h1[^>]*id="title"[^>]*>([^<]+)<\/h1>/i,
+          /"productTitle":"([^"]+)"/i,
+          /"title":"([^"]+)"/i,
+          /<title>([^<|:]+)(?:\:|<)/i,
+          /id="productTitle"[^>]*>[\s\n]*([^<]+)[\s\n]*<\/span>/i,
+          /class="a-size-large product-title-word-break">[\s\n]*([^<]+)[\s\n]*<\/span>/i
+        ];
+        
+        // Buscar título
+        for (const pattern of titlePatterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            result.title = decodeHTMLEntities(match[1].trim());
+            if (result.title && result.title.length > 5) {
+              console.log(`[AmazonExtractor] Título encontrado en ${domain}: ${result.title}`);
+              break;
+            }
+          }
+        }
+        
+        // Patrones para imágenes
+        const imagePatterns = [
+          /\\"large\\":\\"(https:\/\/[^"\\]+)\\"/i,
+          /"large":"(https:\/\/[^"]+)"/i,
+          /<img[^>]*id="landingImage"[^>]*src="([^"]+)"/i,
+          /<img[^>]*data-old-hires="([^"]+)"/i,
+          /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+\.jpg)"/i,
+          /\\"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"\\]+\.jpg)\\"/i,
+          /data-a-dynamic-image="{\&quot;(https:\/\/[^"]+)"/i,
+          /id="imgTagWrapperId"[\s\S]*?<img[\s\S]*?src="([^"]+)"/i
+        ];
+        
+        // Buscar imagen
+        for (const pattern of imagePatterns) {
+          const match = html.match(pattern);
+          if (match && match[1]) {
+            result.imageUrl = match[1].replace(/\\/g, '');
+            if (result.imageUrl && result.imageUrl.includes('amazon') && result.imageUrl.includes('images')) {
+              console.log(`[AmazonExtractor] Imagen encontrada en ${domain}: ${result.imageUrl}`);
+              break;
+            }
+          }
+        }
+        
+        // Si encontramos ambos datos, podemos terminar
+        if (result.title && result.imageUrl) {
+          return result;
+        }
+      }
+    } catch (error) {
+      console.log(`[AmazonExtractor] Error obteniendo datos de ${domain}: ${error}`);
+    }
+  }
+  
+  return result;
+}
+
 // Extraer metadatos completos para una URL de Amazon
 export async function extractAmazonMetadata(url: string, clientUserAgent?: string): Promise<{ 
   title?: string;
@@ -243,7 +410,7 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
     // Paso 4: Si no tenemos datos en nuestra base, intentar extraer de la página
     else if (asin) {
       try {
-        // Intentar extraer información desde la URL usando diferentes User-Agents
+        // Método 1: Intentar extraer información desde la URL original
         console.log(`[AmazonExtractor] Producto no en base de datos, intentando extracción directa`);
         
         // Configurar cabeceras con un User-Agent de escritorio para mejor compatibilidad
@@ -259,7 +426,7 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
         const response = await safeFetch(expandedUrl, {
           method: 'GET',
           headers,
-          timeout: 3000 // Timeout corto para no bloquear mucho tiempo
+          timeout: 4000
         });
         
         if (response && response.ok) {
@@ -270,13 +437,16 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
             /<span id="productTitle"[^>]*>([^<]+)<\/span>/i,
             /<h1[^>]*id="title"[^>]*>([^<]+)<\/h1>/i,
             /"productTitle":"([^"]+)"/i,
-            /<title>([^<]+)<\/title>/
+            /"title":"([^"]+)"/i,
+            /<title>([^<|:]+)(?:\:|<)/i,
+            /id="productTitle"[^>]*>[\s\n]*([^<]+)[\s\n]*<\/span>/i,
+            /class="a-size-large product-title-word-break">[\s\n]*([^<]+)[\s\n]*<\/span>/i
           ];
           
           for (const pattern of titlePatterns) {
             const match = html.match(pattern);
             if (match && match[1]) {
-              result.title = match[1].trim();
+              result.title = decodeHTMLEntities(match[1].trim());
               console.log(`[AmazonExtractor] Título extraído de HTML: ${result.title}`);
               break;
             }
@@ -288,7 +458,10 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
             /"large":"(https:\/\/[^"]+)"/i,
             /<img[^>]*id="landingImage"[^>]*src="([^"]+)"/i,
             /<img[^>]*data-old-hires="([^"]+)"/i,
-            /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+)"/i
+            /"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"]+\.jpg)"/i,
+            /\\"(https:\/\/m\.media-amazon\.com\/images\/I\/[^"\\]+\.jpg)\\"/i,
+            /data-a-dynamic-image="{\&quot;(https:\/\/[^"]+)"/i,
+            /id="imgTagWrapperId"[\s\S]*?<img[\s\S]*?src="([^"]+)"/i
           ];
           
           for (const pattern of imagePatterns) {
@@ -302,6 +475,20 @@ export async function extractAmazonMetadata(url: string, clientUserAgent?: strin
         }
       } catch (extractionError) {
         console.log(`[AmazonExtractor] Error en extracción directa: ${extractionError}`);
+      }
+      
+      // Método 2: Si no tuvimos éxito con el método 1, intentar con diferentes dominios regionales
+      if (!result.title || !result.imageUrl) {
+        console.log(`[AmazonExtractor] Intentando extraer datos de diferentes dominios regionales`);
+        const regionalData = await tryDifferentRegionalEndpoints(asin);
+        
+        if (regionalData.title && !result.title) {
+          result.title = regionalData.title;
+        }
+        
+        if (regionalData.imageUrl && !result.imageUrl) {
+          result.imageUrl = regionalData.imageUrl;
+        }
       }
       
       // Si después de intentar extraer aún no tenemos datos, usar fallbacks
