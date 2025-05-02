@@ -133,7 +133,7 @@ export async function extractAmazonMetadataWithPuppeteer(url: string): Promise<{
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     
     // Esperar un poco para que cargue el contenido dinámico
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Extraer los datos
     const result = await extractProductDataFromPage(page, url);
@@ -176,7 +176,7 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
   // Detectar el tipo de sitio
   if (url.includes('amazon')) {
     // Extraer título - múltiples selectores para mayor robustez
-    result.title = await page.evaluate(() => {
+    const titleResult = await page.evaluate(() => {
       const selectors = [
         '#productTitle',
         '#title',
@@ -198,15 +198,17 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
         return title.split(':').slice(1).join(':').trim() || title;
       }
       
-      return null;
+      return undefined;
     });
+    
+    result.title = titleResult;
     
     if (result.title) {
       console.log(`[PuppeteerExtractor] Título extraído: ${result.title}`);
     }
     
     // Extraer imagen - múltiples selectores para mayor robustez
-    result.imageUrl = await page.evaluate(() => {
+    const imageUrlResult = await page.evaluate(() => {
       // Lista de selectores para encontrar la imagen principal
       const imageSelectors = [
         '#landingImage',
@@ -254,15 +256,17 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
         img.height > 200
       );
       
-      return productImage ? productImage.src : null;
+      return productImage ? productImage.src : undefined;
     });
+    
+    result.imageUrl = imageUrlResult;
     
     if (result.imageUrl) {
       console.log(`[PuppeteerExtractor] Imagen extraída: ${result.imageUrl}`);
     }
     
     // Extraer precio (opcional)
-    result.price = await page.evaluate(() => {
+    const priceResult = await page.evaluate(() => {
       const priceSelectors = [
         '.a-price .a-offscreen',
         '#priceblock_ourprice',
@@ -278,8 +282,10 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
         }
       }
       
-      return null;
+      return undefined;
     });
+    
+    result.price = priceResult;
   }
   
   return result;
@@ -316,7 +322,7 @@ export async function extractMetadataWithPuppeteer(url: string): Promise<{
     await page.goto(url, { waitUntil: 'domcontentloaded' });
     
     // Esperar para que cargue el contenido
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Extraer metadatos generales
     const result = await page.evaluate(() => {
@@ -336,13 +342,17 @@ export async function extractMetadataWithPuppeteer(url: string): Promise<{
       data.title = metaTitle || h1Title || pageTitle || '';
       
       // Imagen: primero meta tags, luego imágenes grandes
-      data.imageUrl = document.querySelector('meta[property="og:image"]')?.getAttribute('content') ||
-                      document.querySelector('meta[name="twitter:image"]')?.getAttribute('content');
+      const ogImage = document.querySelector('meta[property="og:image"]')?.getAttribute('content');
+      const twitterImage = document.querySelector('meta[name="twitter:image"]')?.getAttribute('content');
       
-      // Si no hay imagen en meta tags, buscar la imagen más grande en la página
-      if (!data.imageUrl) {
+      if (ogImage) {
+        data.imageUrl = ogImage;
+      } else if (twitterImage) {
+        data.imageUrl = twitterImage;
+      } else {
+        // Si no hay imagen en meta tags, buscar la imagen más grande en la página
         const images = Array.from(document.querySelectorAll('img'));
-        let bestImage = null;
+        let bestImage: HTMLImageElement | null = null;
         let bestImageArea = 0;
         
         for (const img of images) {
@@ -362,8 +372,10 @@ export async function extractMetadataWithPuppeteer(url: string): Promise<{
       }
       
       // Descripción
-      data.description = document.querySelector('meta[property="og:description"]')?.getAttribute('content') ||
-                         document.querySelector('meta[name="description"]')?.getAttribute('content') || '';
+      const ogDescription = document.querySelector('meta[property="og:description"]')?.getAttribute('content');
+      const metaDescription = document.querySelector('meta[name="description"]')?.getAttribute('content');
+      
+      data.description = ogDescription || metaDescription || '';
       
       return data;
     });

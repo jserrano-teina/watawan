@@ -980,7 +980,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
+  // Usa una implementación mejorada con Puppeteer para obtener metadatos más precisos
   router.get("/extract-metadata", async (req: Request, res) => {
+    // Importar la implementación desde un archivo separado para mayor claridad
+    const { handleExtractMetadataRequest } = await import('./extract-metadata-route');
+    return handleExtractMetadataRequest(req, res);
+  });
+  
+  // Esta es la implementación anterior del endpoint /extract-metadata, se mantiene comentada como referencia
+  router.get("/extract-metadata-old", async (req: Request, res) => {
     const url = req.query.url as string;
     
     if (!url) {
