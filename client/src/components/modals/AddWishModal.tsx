@@ -71,6 +71,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isIOS, setIsIOS] = useState(false);
   const { toast } = useToast();
   
   // Estado para mensajes de alerta internos (toast customizado)
@@ -139,6 +140,19 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       return () => clearTimeout(timer);
     }
   }, [internalAlert]);
+  
+  // Detectar si el dispositivo es iOS
+  useEffect(() => {
+    const checkIOS = () => {
+      const userAgent = window.navigator.userAgent.toLowerCase();
+      const isIOSDevice = /iphone|ipad|ipod/.test(userAgent);
+      console.log('User Agent:', userAgent);
+      console.log('Detectado como iOS:', isIOSDevice);
+      return isIOSDevice;
+    };
+    
+    setIsIOS(checkIOS());
+  }, []);
 
   // Reset forms when editing an item
   useEffect(() => {
@@ -618,16 +632,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </div>
 
                   
-                  {/* Botón para pegar desde el portapapeles */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full mt-4 text-base flex items-center justify-center"
-                    onClick={handlePasteFromClipboard}
-                  >
-                    <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
-                    <span style={{ marginLeft: '0' }}>Pegar enlace</span>
-                  </Button>
+                  {/* Botón para pegar desde el portapapeles (oculto en iOS) */}
+                  {!isIOS && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4 text-base flex items-center justify-center"
+                      onClick={handlePasteFromClipboard}
+                    >
+                      <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
+                      <span style={{ marginLeft: '0' }}>Pegar enlace</span>
+                    </Button>
+                  )}
                   
                   {/* Botón para omitir paso */}
                   <div className="flex justify-center mt-4">
