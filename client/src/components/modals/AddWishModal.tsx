@@ -401,9 +401,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       }
       
       // Verificar si es una URL válida
+      let isValidUrl = false;
       try {
         // Intentar crear un objeto URL como validación básica
         new URL(text);
+        isValidUrl = true;
         
         // Si llegamos aquí, es una URL válida
         console.log('URL válida, estableciendo valor');
@@ -412,11 +414,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       } catch (urlError) {
         // No es una URL válida
         console.log('URL inválida, mostrando toast');
-        toast({
-          title: "Enlace inválido",
-          description: "El texto copiado no es un enlace válido",
-          variant: "warning",
-        });
+        setTimeout(() => {
+          toast({
+            title: "Enlace inválido",
+            description: "El texto copiado no es un enlace válido",
+            variant: "warning",
+          });
+        }, 100);
+      }
+      
+      // Si no es una URL válida y no establecimos el valor, también mostramos un toast
+      if (!isValidUrl) {
+        console.log('No se pegó ningún contenido porque no es una URL válida');
       }
     } catch (error) {
       console.error('Error al acceder al portapapeles:', error);
