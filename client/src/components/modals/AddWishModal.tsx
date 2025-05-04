@@ -415,7 +415,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         console.log('Portapapeles vacío, mostrando alerta interna');
         setInternalAlert({
           visible: true,
-          message: "No hay nada para pegar en el portapapeles",
+          message: "Copia primero un enlace para pegarlo",
           type: "warning"
         });
         
@@ -573,12 +573,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           
           {/* Alerta interna fija (común para ambos pasos) */}
           {internalAlert && internalAlert.visible && (
-            <div className="fixed bottom-[120px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
+            <div className="fixed bottom-[100px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
               <div className={`px-5 py-3 rounded-lg shadow-lg flex items-center transition-opacity duration-300 ${
                 internalAlert.type === 'error' 
                   ? 'bg-destructive text-white' 
                   : internalAlert.type === 'warning'
-                  ? 'bg-[#1d1810] text-[#FFE066] border border-[#FFE066]/30' 
+                  ? 'bg-[#1d1810] text-[#FFE066] border border-[#FFE066]/20' 
                   : 'bg-[#0d1710] text-white border border-green-800/30'
               }`}>
                 <div className="flex items-center w-full">
