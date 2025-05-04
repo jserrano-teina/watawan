@@ -618,11 +618,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full mt-4 text-base"
+                    className="w-full mt-4 text-base flex items-center justify-center"
                     onClick={handlePasteFromClipboard}
                   >
-                    <ClipboardPaste className="h-[16px] w-[16px] mr-[8px]" />
-                    Pegar enlace
+                    <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
+                    <span style={{ marginLeft: '0' }}>Pegar enlace</span>
                   </Button>
                   
                   {/* Botón para omitir paso */}
@@ -639,11 +639,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       }}
                       className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg text-base"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-[8px]">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 5 19 12 12 19"></polyline>
                       </svg>
-                      <span>Omite este paso</span>
+                      <span style={{ marginLeft: '0' }}>Omite este paso</span>
                     </button>
                   </div>
                 </div>
