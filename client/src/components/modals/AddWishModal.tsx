@@ -549,39 +549,42 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             </button>
           </div>
           
+          {/* Alerta interna fija (común para ambos pasos) */}
+          {internalAlert && internalAlert.visible && (
+            <div className="fixed bottom-[80px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
+              <div className={`px-5 py-3 rounded-lg shadow-lg flex items-center justify-between transition-opacity duration-300 ${
+                internalAlert.type === 'error' 
+                  ? 'bg-destructive text-white' 
+                  : internalAlert.type === 'warning'
+                  ? 'bg-[#493a14] text-amber-200 border border-amber-700/30' 
+                  : 'bg-[#152218] text-white border border-green-800/30'
+              }`}>
+                <div className="flex items-center">
+                  {internalAlert.type === 'error' ? (
+                    <XCircle className="h-5 w-5 mr-2 text-white" />
+                  ) : (
+                    <AlertCircle className="h-5 w-5 mr-2 text-amber-200" />
+                  )}
+                  <div>
+                    <span className="text-sm">{internalAlert.message}</span>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => setInternalAlert(null)}
+                  className="ml-2 opacity-70 hover:opacity-100 transition-opacity"
+                >
+                  <XCircle className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          )}
           {/* Formulario paso 1 */}
           {step === 1 ? (
             <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
               <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
                 <div className="flex flex-col justify-center w-full">
-                  {/* Alerta interna */}
-                  {internalAlert && internalAlert.visible && (
-                    <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
-                      internalAlert.type === 'error' 
-                        ? 'bg-red-950 text-red-200 border border-red-800' 
-                        : internalAlert.type === 'warning'
-                        ? 'bg-amber-950 text-amber-200 border border-amber-800'
-                        : 'bg-blue-950 text-blue-200 border border-blue-800'
-                    }`}>
-                      <div className="flex items-center">
-                        {internalAlert.type === 'error' ? (
-                          <XCircle className="h-5 w-5 mr-2 text-red-400" />
-                        ) : (
-                          <AlertCircle className="h-5 w-5 mr-2 text-amber-400" />
-                        )}
-                        <span className="text-sm">{internalAlert.message}</span>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => setInternalAlert(null)}
-                        className="text-gray-400 hover:text-white"
-                      >
-                        <XCircle className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
-                
                   <div className="mb-0">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
                       Enlace de compra
@@ -626,6 +629,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </p>
                 </div>
               </div>
+              
+
               
               {/* Barra de navegación fija inferior */}
               <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
@@ -768,6 +773,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   />
                 )}
               </div>
+              
+
               
               {/* Barra de navegación fija inferior */}
               <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
