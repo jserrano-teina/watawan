@@ -373,6 +373,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     try {
       // Verificar si la API de portapapeles está disponible
       if (!navigator.clipboard || !navigator.clipboard.readText) {
+        console.log('El navegador no soporta clipboard.readText');
         toast({
           title: "Error al acceder al portapapeles",
           description: "Tu navegador no permite el acceso al portapapeles",
@@ -383,14 +384,19 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       
       // Leer desde el portapapeles
       const text = await navigator.clipboard.readText();
+      console.log('Contenido del portapapeles:', text ? 'Tiene contenido' : 'Vacío');
       
       // Verificar si hay contenido en el portapapeles
-      if (!text) {
-        toast({
-          title: "Portapapeles vacío",
-          description: "No hay nada para pegar",
-          variant: "warning",
-        });
+      if (!text || text.trim() === '') {
+        console.log('Portapapeles vacío, mostrando toast');
+        // Forzar un pequeño retraso antes de mostrar el toast
+        setTimeout(() => {
+          toast({
+            title: "Portapapeles vacío",
+            description: "No hay nada para pegar",
+            variant: "warning",
+          });
+        }, 100);
         return;
       }
       
@@ -400,10 +406,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         new URL(text);
         
         // Si llegamos aquí, es una URL válida
+        console.log('URL válida, estableciendo valor');
         setValueStepOne('purchaseLink', text);
         
       } catch (urlError) {
         // No es una URL válida
+        console.log('URL inválida, mostrando toast');
         toast({
           title: "Enlace inválido",
           description: "El texto copiado no es un enlace válido",
