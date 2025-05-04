@@ -542,7 +542,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   {/* Botón para pegar desde el portapapeles */}
                   <Button
                     type="button"
-                    className="w-full mt-2 bg-[#252525] hover:bg-[#303030] text-white border-none"
+                    variant="outline"
+                    className="w-full mt-4"
                     onClick={handlePasteFromClipboard}
                   >
                     <ClipboardPaste className="h-4 w-4 mr-2" />
@@ -550,7 +551,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </Button>
                   
                   <p className="text-gray-400 text-sm mt-4">
-                    Un enlace a la página de tu producto en Amazon o cualquier otra tienda.{" "}
+                    Pega un enlace a la página de compra del producto que deseas{" "}
                     <button 
                       type="button"
                       onClick={() => {
