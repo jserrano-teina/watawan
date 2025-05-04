@@ -620,7 +620,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       Pega un enlace a la página de compra del producto que deseas
                     </p>
                     <CustomInput
-                      type="url" 
+                      type="text" 
                       id="purchaseLink" 
                       placeholder="https://..."
                       {...registerStepOne('purchaseLink')}
@@ -710,7 +710,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       Enlace de compra
                     </label>
                     <CustomInput
-                      type="url" 
+                      type="text" 
                       id="purchaseLink" 
                       placeholder="https://..."
                       {...registerStepTwo('purchaseLink')}
