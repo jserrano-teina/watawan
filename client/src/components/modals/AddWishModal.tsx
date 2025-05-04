@@ -618,10 +618,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <Button
                     type="button"
                     variant="outline"
-                    className="w-full mt-4"
+                    className="w-full mt-4 text-base"
                     onClick={handlePasteFromClipboard}
                   >
-                    <ClipboardPaste className="h-4 w-4 mr-2" />
+                    <ClipboardPaste className="h-[16px] w-[16px] mr-2" />
                     Pegar enlace
                   </Button>
                   
