@@ -616,35 +616,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
                     )}
                   </div>
-                  {/* Input oculto para capturar pegado en iOS */}
-                  <input
-                    ref={hiddenInputRef}
-                    type="text"
-                    inputMode="text"
-                    autoComplete="off"
-                    className="opacity-0 h-0 max-h-0 w-0 max-w-0 absolute top-0 left-0 overflow-hidden pointer-events-auto"
-                    onPaste={(e) => {
-                      e.preventDefault();
-                      const text = e.clipboardData.getData('text');
-                      console.log('Texto pegado desde el evento onPaste:', text);
-                      processClipboardContent(text);
-                      // Desenfocamos el input después de pegar
-                      setTimeout(() => {
-                        if (hiddenInputRef.current) {
-                          hiddenInputRef.current.blur();
-                          // Limpiar el valor del input oculto
-                          hiddenInputRef.current.value = '';
-                        }
-                      }, 100);
-                    }}
-                    onBlur={() => {
-                      // Limpiar el valor del input oculto al perder el foco
-                      if (hiddenInputRef.current) {
-                        hiddenInputRef.current.value = '';
-                      }
-                    }}
-                    aria-hidden="true"
-                  />
+
                   
                   {/* Botón para pegar desde el portapapeles */}
                   <Button
