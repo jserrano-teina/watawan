@@ -215,11 +215,11 @@ const NotificationsPage: React.FC = () => {
             {notifications.map(({ item, reservation }) => (
               <div 
                 key={reservation.id} 
-                className="bg-[#1a1a1a] p-4 rounded-lg border border-[#333] cursor-pointer active:bg-[#222]"
+                className="bg-[#1a1a1a] p-3 rounded-lg border border-[#333] cursor-pointer active:bg-[#222]"
                 onClick={() => handleOpenDetail(item)}
               >
-                <div className="flex items-start gap-4">
-                  <div className="h-16 w-16 rounded overflow-hidden flex-shrink-0 bg-[#222]" style={{ borderRadius: '6px' }}>
+                <div className="flex items-start gap-3">
+                  <div className="w-[72px] h-[72px] rounded overflow-hidden flex-shrink-0 bg-[#222]" style={{ borderRadius: '6px' }}>
                     <ProductImage 
                       imageUrl={item.imageUrl} 
                       productId={getProductId(item.purchaseLink)}
@@ -231,7 +231,7 @@ const NotificationsPage: React.FC = () => {
                   
                   <div className="flex-1 min-w-0">
                     <div className="text-white text-sm">
-                      <p className="text-white">¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
+                      <p className="text-white text-base">¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
                     </div>
                     
                     <p className="text-white/50 text-sm mt-2">
