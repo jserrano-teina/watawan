@@ -394,8 +394,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         console.log('El navegador no soporta clipboard.readText');
         setInternalAlert({
           visible: true,
-          message: "Tu navegador no permite el acceso al portapapeles",
-          type: "error"
+          message: "Copia primero un enlace para pegarlo",
+          type: "warning"
         });
         
         // Ocultar automáticamente después de 3 segundos
@@ -443,7 +443,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         console.log('URL inválida, mostrando alerta interna');
         setInternalAlert({
           visible: true,
-          message: "El texto copiado no es un enlace válido",
+          message: "Copia primero un enlace para pegarlo",
           type: "warning"
         });
         
@@ -461,8 +461,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       console.error('Error al acceder al portapapeles:', error);
       setInternalAlert({
         visible: true,
-        message: "Error al leer del portapapeles. Copia primero un enlace.",
-        type: "error"
+        message: "Copia primero un enlace para pegarlo",
+        type: "warning"
       });
       
       // Ocultar automáticamente después de 3 segundos
