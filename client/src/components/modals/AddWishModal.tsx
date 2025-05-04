@@ -601,14 +601,15 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
                 <div className="flex flex-col justify-center w-full">
                   <div className="mb-0">
-                    <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
+                    <p className="text-white text-base mb-4 mt-4">
                       Pega un enlace a la página de compra del producto que deseas
-                    </label>
+                    </p>
                     <CustomInput
                       type="url" 
                       id="purchaseLink" 
                       placeholder="https://..."
                       {...registerStepOne('purchaseLink')}
+                      aria-label="Pega un enlace a la página de compra del producto que deseas"
                     />
                     {errorsStepOne.purchaseLink && (
                       <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
@@ -621,8 +622,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     className="w-full mt-4 text-base flex items-center justify-center"
                     onClick={handlePasteFromClipboard}
                   >
-                    <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '8px' }} />
-                    <span style={{ marginLeft: '0' }}>Pegar enlace</span>
+                    <ClipboardPaste className="h-[16px] w-[16px] mr-2" />
+                    Pegar enlace
                   </Button>
                   
                   {/* Botón para omitir paso */}
