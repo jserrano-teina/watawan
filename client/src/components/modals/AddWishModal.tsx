@@ -4,12 +4,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
-import { Package, Image, Edit3, ChevronLeft } from 'lucide-react';
+import { Package, Image, Edit3, ChevronLeft, ClipboardPaste, AlertCircle } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
 import { CustomTextarea } from "@/components/ui/custom-textarea";
 import useScrollLock from "@/hooks/useScrollLock";
+import { useToast } from "@/hooks/use-toast";
 
 // Esquema para el primer paso (solo enlace)
 const stepOneSchema = z.object({
@@ -69,6 +70,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
   
   // Bloquear scroll del body cuando el modal está abierto
   useScrollLock(isOpen);
@@ -366,6 +368,58 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     });
   };
 
+  // Función para pegar enlace desde el portapapeles
+  const handlePasteFromClipboard = async () => {
+    try {
+      // Verificar si la API de portapapeles está disponible
+      if (!navigator.clipboard || !navigator.clipboard.readText) {
+        toast({
+          title: "Error al acceder al portapapeles",
+          description: "Tu navegador no permite el acceso al portapapeles",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Leer desde el portapapeles
+      const text = await navigator.clipboard.readText();
+      
+      // Verificar si hay contenido en el portapapeles
+      if (!text) {
+        toast({
+          title: "Portapapeles vacío",
+          description: "No hay nada para pegar",
+          variant: "warning",
+        });
+        return;
+      }
+      
+      // Verificar si es una URL válida
+      try {
+        // Intentar crear un objeto URL como validación básica
+        new URL(text);
+        
+        // Si llegamos aquí, es una URL válida
+        setValueStepOne('purchaseLink', text);
+        
+      } catch (urlError) {
+        // No es una URL válida
+        toast({
+          title: "Enlace inválido",
+          description: "El texto copiado no es un enlace válido",
+          variant: "warning",
+        });
+      }
+    } catch (error) {
+      console.error('Error al acceder al portapapeles:', error);
+      toast({
+        title: "Error al leer del portapapeles",
+        description: "Copia primero un enlace",
+        variant: "warning",
+      });
+    }
+  };
+  
   // Manejar clic en botón de subir imagen
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -485,7 +539,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
                     )}
                   </div>
-                  <p className="text-gray-400 text-sm mt-2">
+                  {/* Botón para pegar desde el portapapeles */}
+                  <Button
+                    type="button"
+                    className="w-full mt-2 bg-[#252525] hover:bg-[#303030] text-white border-none"
+                    onClick={handlePasteFromClipboard}
+                  >
+                    <ClipboardPaste className="h-4 w-4 mr-2" />
+                    Pegar enlace
+                  </Button>
+                  
+                  <p className="text-gray-400 text-sm mt-4">
                     Un enlace a la página de tu producto en Amazon o cualquier otra tienda.{" "}
                     <button 
                       type="button"
