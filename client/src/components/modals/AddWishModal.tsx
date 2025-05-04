@@ -626,22 +626,28 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </Button>
                   
                   <p className="text-gray-400 text-sm mt-4">
-                    Pega un enlace a la página de compra del producto que deseas{" "}
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        // Ir al paso 2 sin enlace
-                        setValueStepTwo('purchaseLink', '');
-                        setStep(2);
-                        // Asegurarnos de que ambos estados de carga estén desactivados
-                        setIsLoading(false);
-                        setIsSaving(false);
-                      }}
-                      className="text-gray-400 underline hover:text-white focus:outline-none inline-block"
-                    >
-                      Omite este paso
-                    </button>
+                    Pega un enlace a la página de compra del producto que deseas
                   </p>
+                  
+                  {/* Botón para omitir paso */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Ir al paso 2 sin enlace
+                      setValueStepTwo('purchaseLink', '');
+                      setStep(2);
+                      // Asegurarnos de que ambos estados de carga estén desactivados
+                      setIsLoading(false);
+                      setIsSaving(false);
+                    }}
+                    className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg mt-4 w-full justify-center"
+                  >
+                    <span>Omite este paso</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2">
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                      <polyline points="12 5 19 12 12 19"></polyline>
+                    </svg>
+                  </button>
                 </div>
               </div>
               
