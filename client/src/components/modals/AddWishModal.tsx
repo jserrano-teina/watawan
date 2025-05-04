@@ -71,6 +71,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const hiddenInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
   // Estado para mensajes de alerta internos (toast customizado)
@@ -390,8 +391,23 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Función para pegar enlace desde el portapapeles
   const handlePasteFromClipboard = async () => {
     try {
-      // Verificar si la API de portapapeles está disponible
-      if (!navigator.clipboard || !navigator.clipboard.readText) {
+      // Solución para iOS: enfocar y mostrar el campo oculto
+      if (hiddenInputRef.current) {
+        // Enfocamos el input oculto, lo que activará el teclado con la opción de pegar en iOS
+        hiddenInputRef.current.focus();
+        return;
+      }
+      
+      // Para navegadores con soporte nativo de clipboard API
+      if (navigator.clipboard && navigator.clipboard.readText) {
+        // Leer desde el portapapeles
+        const text = await navigator.clipboard.readText();
+        console.log('Contenido del portapapeles:', text ? 'Tiene contenido' : 'Vacío');
+        
+        // Procesamos el contenido del portapapeles
+        processClipboardContent(text);
+      } else {
+        // Si no hay soporte para clipboard API ni tenemos el input oculto (caso poco probable)
         console.log('El navegador no soporta clipboard.readText');
         setInternalAlert({
           visible: true,
@@ -403,60 +419,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         setTimeout(() => {
           setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
         }, 3000);
-        
-        return;
-      }
-      
-      // Leer desde el portapapeles
-      const text = await navigator.clipboard.readText();
-      console.log('Contenido del portapapeles:', text ? 'Tiene contenido' : 'Vacío');
-      
-      // Verificar si hay contenido en el portapapeles
-      if (!text || text.trim() === '') {
-        console.log('Portapapeles vacío, mostrando alerta interna');
-        setInternalAlert({
-          visible: true,
-          message: "Copia primero un enlace para pegarlo",
-          type: "warning"
-        });
-        
-        // Ocultar automáticamente después de 3 segundos
-        setTimeout(() => {
-          setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
-        }, 3000);
-        
-        return;
-      }
-      
-      // Verificar si es una URL válida
-      let isValidUrl = false;
-      try {
-        // Intentar crear un objeto URL como validación básica
-        new URL(text);
-        isValidUrl = true;
-        
-        // Si llegamos aquí, es una URL válida
-        console.log('URL válida, estableciendo valor');
-        setValueStepOne('purchaseLink', text);
-        
-      } catch (urlError) {
-        // No es una URL válida
-        console.log('URL inválida, mostrando alerta interna');
-        setInternalAlert({
-          visible: true,
-          message: "Copia primero un enlace para pegarlo",
-          type: "warning"
-        });
-        
-        // Ocultar automáticamente después de 3 segundos
-        setTimeout(() => {
-          setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
-        }, 3000);
-      }
-      
-      // Si no es una URL válida y no establecimos el valor, también mostramos un toast
-      if (!isValidUrl) {
-        console.log('No se pegó ningún contenido porque no es una URL válida');
       }
     } catch (error) {
       console.error('Error al acceder al portapapeles:', error);
@@ -470,6 +432,61 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setTimeout(() => {
         setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
       }, 3000);
+    }
+  };
+  
+  // Función para procesar el contenido del portapapeles
+  const processClipboardContent = (text: string) => {
+    // Verificar si hay contenido
+    if (!text || text.trim() === '') {
+      console.log('Portapapeles vacío, mostrando alerta interna');
+      setInternalAlert({
+        visible: true,
+        message: "Copia primero un enlace para pegarlo",
+        type: "warning"
+      });
+      
+      // Ocultar automáticamente después de 3 segundos
+      setTimeout(() => {
+        setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+      }, 3000);
+      
+      return;
+    }
+    
+    // Verificar si es una URL válida
+    let isValidUrl = false;
+    try {
+      // Intentar crear un objeto URL como validación básica
+      new URL(text);
+      isValidUrl = true;
+      
+      // Si llegamos aquí, es una URL válida
+      console.log('URL válida, estableciendo valor');
+      setValueStepOne('purchaseLink', text);
+      
+      // Para iOS: después de pegar, desenfocamos el campo oculto
+      if (hiddenInputRef.current) {
+        hiddenInputRef.current.blur();
+      }
+    } catch (urlError) {
+      // No es una URL válida
+      console.log('URL inválida, mostrando alerta interna');
+      setInternalAlert({
+        visible: true,
+        message: "Copia primero un enlace para pegarlo",
+        type: "warning"
+      });
+      
+      // Ocultar automáticamente después de 3 segundos
+      setTimeout(() => {
+        setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+      }, 3000);
+    }
+    
+    // Si no es una URL válida, mostramos un mensaje en la consola
+    if (!isValidUrl) {
+      console.log('No se pegó ningún contenido porque no es una URL válida');
     }
   };
   
@@ -616,6 +633,36 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       <p className="text-destructive text-sm mt-2">{errorsStepOne.purchaseLink.message}</p>
                     )}
                   </div>
+                  {/* Input oculto para capturar pegado en iOS */}
+                  <input
+                    ref={hiddenInputRef}
+                    type="text"
+                    inputMode="text"
+                    autoComplete="off"
+                    className="opacity-0 h-0 max-h-0 w-0 max-w-0 absolute top-0 left-0 overflow-hidden pointer-events-auto"
+                    onPaste={(e) => {
+                      e.preventDefault();
+                      const text = e.clipboardData.getData('text');
+                      console.log('Texto pegado desde el evento onPaste:', text);
+                      processClipboardContent(text);
+                      // Desenfocamos el input después de pegar
+                      setTimeout(() => {
+                        if (hiddenInputRef.current) {
+                          hiddenInputRef.current.blur();
+                          // Limpiar el valor del input oculto
+                          hiddenInputRef.current.value = '';
+                        }
+                      }, 100);
+                    }}
+                    onBlur={() => {
+                      // Limpiar el valor del input oculto al perder el foco
+                      if (hiddenInputRef.current) {
+                        hiddenInputRef.current.value = '';
+                      }
+                    }}
+                    aria-hidden="true"
+                  />
+                  
                   {/* Botón para pegar desde el portapapeles */}
                   <Button
                     type="button"
