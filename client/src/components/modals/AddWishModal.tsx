@@ -621,29 +621,31 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     className="w-full mt-4 text-base"
                     onClick={handlePasteFromClipboard}
                   >
-                    <ClipboardPaste className="h-[16px] w-[16px] mr-2" />
+                    <ClipboardPaste className="h-[16px] w-[16px] mr-[8px]" />
                     Pegar enlace
                   </Button>
                   
                   {/* Botón para omitir paso */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      // Ir al paso 2 sin enlace
-                      setValueStepTwo('purchaseLink', '');
-                      setStep(2);
-                      // Asegurarnos de que ambos estados de carga estén desactivados
-                      setIsLoading(false);
-                      setIsSaving(false);
-                    }}
-                    className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg mt-4 w-full justify-center"
-                  >
-                    <span>Omite este paso</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="ml-2">
-                      <line x1="5" y1="12" x2="19" y2="12"></line>
-                      <polyline points="12 5 19 12 12 19"></polyline>
-                    </svg>
-                  </button>
+                  <div className="flex justify-center mt-4">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Ir al paso 2 sin enlace
+                        setValueStepTwo('purchaseLink', '');
+                        setStep(2);
+                        // Asegurarnos de que ambos estados de carga estén desactivados
+                        setIsLoading(false);
+                        setIsSaving(false);
+                      }}
+                      className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg text-base"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-[8px]">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                      <span>Omite este paso</span>
+                    </button>
+                  </div>
                 </div>
               </div>
               
