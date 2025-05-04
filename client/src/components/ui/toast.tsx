@@ -84,7 +84,7 @@ const ToastPortal: React.FC = () => {
   }
   
   return createPortal(
-    <div className="fixed bottom-[5.5rem] left-1/2 transform -translate-x-1/2 flex flex-col p-4 gap-2 w-[90%] max-w-[500px] max-h-screen z-[100]">
+    <div className="fixed bottom-[5.5rem] left-1/2 transform -translate-x-1/2 flex flex-col p-4 gap-2 w-[90%] max-w-[500px] max-h-screen z-[9999]">
       {globalState.toasts.map(({id, node}) => (
         <div key={id}>{node}</div>
       ))}
@@ -113,7 +113,7 @@ const ToastContainer: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({
   return (
     <div
       className={cn(
-        "fixed bottom-[5.5rem] left-1/2 transform -translate-x-1/2 z-[100] w-[90%] max-w-[500px]",
+        "fixed bottom-[5.5rem] left-1/2 transform -translate-x-1/2 z-[9999] w-[90%] max-w-[500px]",
         className
       )}
       {...props}
