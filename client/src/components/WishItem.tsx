@@ -95,12 +95,12 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
 
   return (
     <div 
-      className="bg-[#1e1e1e] rounded-xl p-4 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c] max-w-full overflow-hidden"
+      className="bg-[#1e1e1e] rounded-xl p-3 my-0.5 relative cursor-pointer hover:bg-[#262626] transition-colors shadow-md border border-[#2c2c2c] max-w-full overflow-hidden"
       onClick={handleItemClick}
     >
       <div className="flex items-center w-full">
         {/* Imagen a la izquierda con border radius reducido y altura reducida */}
-        <div className="w-20 h-20 bg-[#252525] rounded overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
+        <div className="w-[72px] h-[72px] bg-[#252525] rounded overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
           <ProductImage 
             imageUrl={item.imageUrl} 
             productId={productId}
@@ -126,13 +126,13 @@ const WishItem: React.FC<WishItemProps> = ({ item, onEdit, onDelete, onClick, on
                 </span>
               )}
               
-              {/* Nombre del producto con mayor tamaño y peso */}
-              <h3 className="font-semibold text-lg truncate text-white overflow-hidden text-ellipsis">{item.title}</h3>
+              {/* Nombre del producto con tamaño reducido */}
+              <h3 className="font-semibold text-base truncate text-white overflow-hidden text-ellipsis">{item.title}</h3>
               
               <div className="flex items-center mt-1 gap-2">
-                {/* Precio con mayor tamaño y color blanco */}
+                {/* Precio con tamaño reducido */}
                 {item.price && (
-                  <span className="text-white font-medium text-base">
+                  <span className="text-white font-medium text-sm">
                     {item.price}
                   </span>
                 )}

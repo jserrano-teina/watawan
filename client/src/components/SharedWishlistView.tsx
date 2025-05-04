@@ -246,7 +246,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           sortedItems.map(item => (
             <div 
               key={item.id} 
-              className={`bg-[#1a1a1a] border border-[#333] rounded-lg p-4 my-3 ${item.isReserved ? 'opacity-75' : 'hover:bg-[#252525]'} transition-colors relative`}
+              className={`bg-[#1a1a1a] border border-[#333] rounded-lg p-3 my-3 ${item.isReserved ? 'opacity-75' : 'hover:bg-[#252525]'} transition-colors relative`}
             >
               {/* Icono de enlace externo (solo para items no reservados con enlace) */}
               {!item.isReserved && item.purchaseLink && item.purchaseLink.trim() !== "" && (
@@ -269,7 +269,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                 }}
               >
                 {/* Imagen a la izquierda con border radius reducido */}
-                <div className="w-20 h-20 bg-[#252525] overflow-hidden mr-4 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
+                <div className="w-[72px] h-[72px] bg-[#252525] overflow-hidden mr-3 flex-shrink-0 flex items-center justify-center shadow-sm" style={{ borderRadius: '6px' }}>
                   <ProductImage 
                     imageUrl={item.imageUrl} 
                     productId={getProductId(item.purchaseLink)}
@@ -288,12 +288,12 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                     </span>
                   )}
                   
-                  {/* Nombre del producto */}
-                  <h3 className="font-semibold text-lg truncate mr-2 text-white">{item.title}</h3>
+                  {/* Nombre del producto con tamaño reducido */}
+                  <h3 className="font-semibold text-base truncate mr-2 text-white">{item.title}</h3>
                   
-                  {/* Precio */}
+                  {/* Precio con tamaño reducido */}
                   {item.price && (
-                    <span className="text-white font-medium text-base mt-1">
+                    <span className="text-white font-medium text-sm mt-1">
                       {item.price}
                     </span>
                   )}
