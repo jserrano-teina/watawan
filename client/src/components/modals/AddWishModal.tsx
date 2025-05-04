@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { apiRequest } from '../../lib/queryClient';
-import { Package, Image, Edit3, ChevronLeft, ClipboardPaste, AlertCircle } from 'lucide-react';
+import { Package, Image, Edit3, ChevronLeft, ClipboardPaste, AlertCircle, XCircle } from 'lucide-react';
 import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
@@ -72,6 +72,13 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   
+  // Estado para mensajes de alerta internos (toast customizado)
+  const [internalAlert, setInternalAlert] = useState<{
+    visible: boolean;
+    message: string;
+    type: 'error' | 'warning' | 'info';
+  } | null>(null);
+  
   // Bloquear scroll del body cuando el modal está abierto
   useScrollLock(isOpen);
   
@@ -120,6 +127,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setPurchaseLinkValue(watchedPurchaseLink);
     }
   }, [watchedPurchaseLink]);
+  
+  // Ocultar automáticamente la alerta interna después de 3 segundos
+  useEffect(() => {
+    if (internalAlert && internalAlert.visible) {
+      const timer = setTimeout(() => {
+        setInternalAlert(null);
+      }, 3000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [internalAlert]);
 
   // Reset forms when editing an item
   useEffect(() => {
@@ -374,10 +392,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       // Verificar si la API de portapapeles está disponible
       if (!navigator.clipboard || !navigator.clipboard.readText) {
         console.log('El navegador no soporta clipboard.readText');
-        toast({
-          title: "Error al acceder al portapapeles",
-          description: "Tu navegador no permite el acceso al portapapeles",
-          variant: "destructive",
+        setInternalAlert({
+          visible: true,
+          message: "Tu navegador no permite el acceso al portapapeles",
+          type: "error"
         });
         return;
       }
@@ -388,15 +406,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       
       // Verificar si hay contenido en el portapapeles
       if (!text || text.trim() === '') {
-        console.log('Portapapeles vacío, mostrando toast');
-        // Forzar un pequeño retraso antes de mostrar el toast
-        setTimeout(() => {
-          toast({
-            title: "Portapapeles vacío",
-            description: "No hay nada para pegar",
-            variant: "warning",
-          });
-        }, 100);
+        console.log('Portapapeles vacío, mostrando alerta interna');
+        setInternalAlert({
+          visible: true,
+          message: "No hay nada para pegar en el portapapeles",
+          type: "warning"
+        });
         return;
       }
       
@@ -413,14 +428,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         
       } catch (urlError) {
         // No es una URL válida
-        console.log('URL inválida, mostrando toast');
-        setTimeout(() => {
-          toast({
-            title: "Enlace inválido",
-            description: "El texto copiado no es un enlace válido",
-            variant: "warning",
-          });
-        }, 100);
+        console.log('URL inválida, mostrando alerta interna');
+        setInternalAlert({
+          visible: true,
+          message: "El texto copiado no es un enlace válido",
+          type: "warning"
+        });
       }
       
       // Si no es una URL válida y no establecimos el valor, también mostramos un toast
@@ -429,10 +442,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       }
     } catch (error) {
       console.error('Error al acceder al portapapeles:', error);
-      toast({
-        title: "Error al leer del portapapeles",
-        description: "Copia primero un enlace",
-        variant: "warning",
+      setInternalAlert({
+        visible: true,
+        message: "Error al leer del portapapeles. Copia primero un enlace.",
+        type: "error"
       });
     }
   };
@@ -542,6 +555,33 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               {/* Contenido scrollable */}
               <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
                 <div className="flex flex-col justify-center w-full">
+                  {/* Alerta interna */}
+                  {internalAlert && internalAlert.visible && (
+                    <div className={`mb-4 p-3 rounded-lg flex items-center justify-between ${
+                      internalAlert.type === 'error' 
+                        ? 'bg-red-950 text-red-200 border border-red-800' 
+                        : internalAlert.type === 'warning'
+                        ? 'bg-amber-950 text-amber-200 border border-amber-800'
+                        : 'bg-blue-950 text-blue-200 border border-blue-800'
+                    }`}>
+                      <div className="flex items-center">
+                        {internalAlert.type === 'error' ? (
+                          <XCircle className="h-5 w-5 mr-2 text-red-400" />
+                        ) : (
+                          <AlertCircle className="h-5 w-5 mr-2 text-amber-400" />
+                        )}
+                        <span className="text-sm">{internalAlert.message}</span>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setInternalAlert(null)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
+                
                   <div className="mb-0">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
                       Enlace de compra
