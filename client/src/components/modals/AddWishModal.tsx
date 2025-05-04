@@ -397,6 +397,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           message: "Tu navegador no permite el acceso al portapapeles",
           type: "error"
         });
+        
+        // Ocultar automáticamente después de 3 segundos
+        setTimeout(() => {
+          setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+        }, 3000);
+        
         return;
       }
       
@@ -412,6 +418,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           message: "No hay nada para pegar en el portapapeles",
           type: "warning"
         });
+        
+        // Ocultar automáticamente después de 3 segundos
+        setTimeout(() => {
+          setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+        }, 3000);
+        
         return;
       }
       
@@ -434,6 +446,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           message: "El texto copiado no es un enlace válido",
           type: "warning"
         });
+        
+        // Ocultar automáticamente después de 3 segundos
+        setTimeout(() => {
+          setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+        }, 3000);
       }
       
       // Si no es una URL válida y no establecimos el valor, también mostramos un toast
@@ -447,6 +464,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         message: "Error al leer del portapapeles. Copia primero un enlace.",
         type: "error"
       });
+      
+      // Ocultar automáticamente después de 3 segundos
+      setTimeout(() => {
+        setInternalAlert(prev => prev ? { ...prev, visible: false } : null);
+      }, 3000);
     }
   };
   
@@ -551,31 +573,24 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           
           {/* Alerta interna fija (común para ambos pasos) */}
           {internalAlert && internalAlert.visible && (
-            <div className="fixed bottom-[80px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
-              <div className={`px-5 py-3 rounded-lg shadow-lg flex items-center justify-between transition-opacity duration-300 ${
+            <div className="fixed bottom-[120px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
+              <div className={`px-5 py-3 rounded-lg shadow-lg flex items-center transition-opacity duration-300 ${
                 internalAlert.type === 'error' 
                   ? 'bg-destructive text-white' 
                   : internalAlert.type === 'warning'
-                  ? 'bg-[#493a14] text-amber-200 border border-amber-700/30' 
-                  : 'bg-[#152218] text-white border border-green-800/30'
+                  ? 'bg-[#1d1810] text-[#FFE066] border border-[#FFE066]/30' 
+                  : 'bg-[#0d1710] text-white border border-green-800/30'
               }`}>
-                <div className="flex items-center">
+                <div className="flex items-center w-full">
                   {internalAlert.type === 'error' ? (
                     <XCircle className="h-5 w-5 mr-2 text-white" />
                   ) : (
-                    <AlertCircle className="h-5 w-5 mr-2 text-amber-200" />
+                    <AlertCircle className="h-5 w-5 mr-2 text-[#FFE066]" />
                   )}
-                  <div>
+                  <div className="flex-1">
                     <span className="text-sm">{internalAlert.message}</span>
                   </div>
                 </div>
-                <button 
-                  type="button"
-                  onClick={() => setInternalAlert(null)}
-                  className="ml-2 opacity-70 hover:opacity-100 transition-opacity"
-                >
-                  <XCircle className="h-4 w-4" />
-                </button>
               </div>
             </div>
           )}
