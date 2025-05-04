@@ -9,6 +9,7 @@ import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
 import { CustomTextarea } from "@/components/ui/custom-textarea";
+import { AutoHeightInput } from "@/components/ui/auto-height-input";
 import useScrollLock from "@/hooks/useScrollLock";
 import { useToast } from "@/hooks/use-toast";
 
@@ -723,11 +724,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="title" className="block text-sm font-medium mb-2 text-white">
                     Nombre del producto
                   </label>
-                  <CustomInput
-                    type="text" 
+                  <AutoHeightInput
                     id="title" 
                     placeholder="Introduce un nombre"
                     maxLength={100}
+                    minHeight={50}
                     {...registerStepTwo('title')}
                   />
                   {errorsStepTwo.title && (
