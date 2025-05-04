@@ -621,7 +621,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     className="w-full mt-4 text-base flex items-center justify-center"
                     onClick={handlePasteFromClipboard}
                   >
-                    <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
+                    <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '8px' }} />
                     <span style={{ marginLeft: '0' }}>Pegar enlace</span>
                   </Button>
                   
@@ -639,7 +639,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       }}
                       className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg text-base"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '4px' }}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: '8px' }}>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                         <polyline points="12 5 19 12 12 19"></polyline>
                       </svg>
