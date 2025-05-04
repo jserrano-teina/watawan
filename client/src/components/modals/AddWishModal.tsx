@@ -602,7 +602,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 <div className="flex flex-col justify-center w-full">
                   <div className="mb-0">
                     <label htmlFor="purchaseLink" className="block text-sm font-medium mb-2 text-white">
-                      Enlace de compra
+                      Pega un enlace a la página de compra del producto que deseas
                     </label>
                     <CustomInput
                       type="url" 
@@ -624,10 +624,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     <ClipboardPaste className="h-4 w-4 mr-2" />
                     Pegar enlace
                   </Button>
-                  
-                  <p className="text-gray-400 text-sm mt-4">
-                    Pega un enlace a la página de compra del producto que deseas
-                  </p>
                   
                   {/* Botón para omitir paso */}
                   <button
