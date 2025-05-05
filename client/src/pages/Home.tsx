@@ -291,7 +291,7 @@ const Home: React.FC = () => {
         </main>
       ) : (
         // Si no hay items, eliminamos el scroll y centramos perfectamente en el medio
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center">
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
           <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
             <EmptyWishlist onAddWish={handleAddWishClick} />
           </div>

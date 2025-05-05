@@ -248,7 +248,7 @@ const ProfilePage = () => {
 
   return (
     <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
-      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
+      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col fixed-height-container">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
         <div className="flex flex-col items-center justify-between h-full">
           {/* Espacio superior flexible para centrar verticalmente */}
