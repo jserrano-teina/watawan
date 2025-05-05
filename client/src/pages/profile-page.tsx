@@ -247,8 +247,8 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden no-scroll-page" style={{ height: '100vh', overflow: 'hidden', position: 'fixed', width: '100%', left: 0, right: 0, top: 0, bottom: 0 }}>
-      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col fixed-height-container">
+    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
+      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
         <div className="flex flex-col items-center justify-between h-full">
           {/* Espacio superior flexible para centrar verticalmente */}
@@ -335,7 +335,7 @@ const ProfilePage = () => {
           <div className="flex-1"></div>
           
           {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mb-[90px]">
+          <div className="flex flex-col items-center mb-16">
             <OptimizedImage 
               src="/images/waw_logo.svg" 
               alt="WataWan" 

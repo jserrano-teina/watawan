@@ -47,8 +47,8 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   };
 
   return (
-    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg safe-area-bottom" style={{ zIndex: 9999, position: 'fixed', bottom: 0, left: 0, right: 0 }}>
-      <div className="flex justify-around items-center h-16 max-w-[500px] mx-auto">
+    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg safe-area-bottom" style={{ zIndex: 50 }}>
+      <div className="flex justify-around items-center h-[64px] max-w-[500px] mx-auto">
         <button 
           onClick={() => navigateTo('/')}
           className={`flex flex-col items-center justify-center w-full h-full ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
