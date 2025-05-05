@@ -261,43 +261,42 @@ const Home: React.FC = () => {
       
       <Header user={user} />
       {/* Contenido principal - cambia su comportamiento según haya items o no */}
-      {myWishItems.length > 0 ? (
-        // Si hay items, usamos una estructura de scroll optimizada
-        <main className="flex-grow container mx-auto px-4 max-w-[500px]">
-          <ShareBanner onShareClick={() => setShowShareModal(true)} />
-          
-          <div className="mt-6">
-            <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
-            {/* Contenedor scrollable que solo ocupa el espacio necesario */}
-            <div className="scrollable-area" style={{
-              height: 'calc(100vh - 200px)',
-              paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))'
-            }}>
-              <div className="grid gap-2">
-                {myWishItems.map(item => (
-                  <WishItem 
-                    key={item.id} 
-                    item={item} 
-                    onEdit={handleEditWish} 
-                    onDelete={handleDeleteWish}
-                    onClick={handleItemClick}
-                    onSheetClose={handleSheetClosed}
-                    onMarkAsReceived={handleMarkAsReceived}
-                    onUnreserve={handleUnreserve}
-                  />
-                ))}
+      <div className="fixed-page-container px-4">
+        {myWishItems.length > 0 ? (
+          // Si hay items, usamos una estructura de scroll optimizada
+          <main className="flex-grow">
+            <ShareBanner onShareClick={() => setShowShareModal(true)} />
+            
+            <div className="mt-6">
+              <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
+              {/* Contenedor scrollable con altura específica */}
+              <div className="scrollable-area">
+                <div className="grid gap-2">
+                  {myWishItems.map(item => (
+                    <WishItem 
+                      key={item.id} 
+                      item={item} 
+                      onEdit={handleEditWish} 
+                      onDelete={handleDeleteWish}
+                      onClick={handleItemClick}
+                      onSheetClose={handleSheetClosed}
+                      onMarkAsReceived={handleMarkAsReceived}
+                      onUnreserve={handleUnreserve}
+                    />
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        </main>
-      ) : (
-        // Si no hay items, eliminamos el scroll y centramos perfectamente en el medio
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
-          <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
-            <EmptyWishlist onAddWish={handleAddWishClick} />
-          </div>
-        </main>
-      )}
+          </main>
+        ) : (
+          // Si no hay items, eliminamos el scroll y centramos perfectamente en el medio
+          <main className="flex-grow flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
+              <EmptyWishlist onAddWish={handleAddWishClick} />
+            </div>
+          </main>
+        )}
+      </div>
       
       {myWishItems.length > 0 && (
         <FloatingActionButton onClick={handleAddWishClick} />
