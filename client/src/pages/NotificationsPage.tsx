@@ -191,22 +191,27 @@ const NotificationsPage: React.FC = () => {
     return undefined;
   };
 
+  // Determine if there are any notifications to display
+  const hasNotifications = !isLoading && notifications.length > 0;
+  const shouldPreventScroll = !hasNotifications;
+
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212] text-white">
+    <div className={`flex flex-col min-h-screen bg-[#121212] text-white ${shouldPreventScroll ? 'no-scroll-page' : ''}`} style={{ height: '100vh', overflow: shouldPreventScroll ? 'hidden' : 'auto' }}>
       <Header user={user as User} />
       
       {isLoading ? (
         // Estado de carga con spinner centrado
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center">
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </main>
-      ) : notifications.length > 0 ? (
+      ) : hasNotifications ? (
         // Si hay notificaciones, mantenemos el scroll
         <main 
           className="flex-grow container mx-auto px-4 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
           style={{ 
             WebkitOverflowScrolling: 'touch', 
-            height: 'calc(100vh - 56px)'
+            height: 'calc(100vh - 56px)',
+            paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))'
           }}
         >
           <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>

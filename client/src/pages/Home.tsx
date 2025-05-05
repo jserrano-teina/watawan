@@ -248,8 +248,12 @@ const Home: React.FC = () => {
     );
   }
 
+  // Determine if we should show the empty state or the list
+  const hasWishItems = myWishItems.length > 0;
+  const shouldPreventScroll = !hasWishItems;
+
   return (
-    <div className="flex flex-col min-h-screen relative bg-[#121212] text-white">
+    <div className={`flex flex-col min-h-screen relative bg-[#121212] text-white ${shouldPreventScroll ? 'no-scroll-page' : ''}`} style={{ height: '100vh', overflow: shouldPreventScroll ? 'hidden' : 'auto' }}>
       {/* Overlay de carga durante el guardado */}
       {isSaving && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">

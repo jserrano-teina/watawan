@@ -247,7 +247,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden no-scroll-page" style={{ height: '100vh', overflow: 'hidden', position: 'fixed', width: '100%', left: 0, right: 0, top: 0, bottom: 0 }}>
       <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col fixed-height-container">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
         <div className="flex flex-col items-center justify-between h-full">
