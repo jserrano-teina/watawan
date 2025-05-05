@@ -33,7 +33,6 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { useMutation } from "@tanstack/react-query";
 import { EditProfileSheet } from "@/components/EditProfileSheet";
 import { LogoutSheet } from "@/components/LogoutSheet";
-import PwaLayout from "@/components/PwaLayout";
 
 // Función para generar iniciales automáticamente desde el nombre o email
 const getInitials = (displayName: string | undefined | null, email: string): string => {
@@ -237,142 +236,134 @@ const ProfilePage = () => {
   }
 
   return (
-    <PwaLayout 
-      hasScroll={false}
-      footer={<BottomNavigation />}
-      className="bg-[#121212] text-white"
-      contentClassName="p-4 max-w-[500px] mx-auto"
-    >
-      <>
-        <div className="flex flex-col items-center justify-between h-full">
-          {/* Espacio superior flexible para centrar verticalmente */}
-          <div className="flex-1"></div>
-          
-          {/* Sección central con avatar e información - perfectamente centrada */}
-          <div className="flex flex-col items-center">
-            {/* Avatar con botón de edición */}
-            <div className="relative mb-4">
-              <div
-                className={cn(
-                  "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
-                  user.avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
-                )}
-              >
-                {user.avatar ? (
-                  <img 
-                    src={user.avatar}
-                    alt={user.displayName || user.email}
-                    className="w-full h-full img-persist"
-                    style={{
-                      objectFit: "cover",
-                      transform: 'translateZ(0)',
-                      backfaceVisibility: 'hidden',
-                      WebkitBackfaceVisibility: 'hidden',
-                      willChange: 'contents'
-                    }}
-                    loading="eager"
-                    decoding="async"
-                  />
-                ) : (
-                  getInitials(user.displayName, user.email)
-                )}
-              </div>
-              <label
-                htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-md border border-[#333] bg-[#121212] hover:bg-[#252525] transition-colors"
-              >
-                <Pencil size={16} className="text-white" />
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleAvatarChange}
+    <div className="flex flex-col min-h-screen bg-[#121212] text-white">
+      <div className="h-[calc(100vh-64px)] p-4 flex flex-col items-center justify-center max-w-[500px] mx-auto">
+        <div className="flex flex-col items-center">
+          {/* Avatar con botón de edición */}
+          <div className="relative mb-4">
+            <div
+              className={cn(
+                "w-24 h-24 rounded-full flex items-center justify-center text-xl font-medium",
+                user.avatar ? "overflow-hidden" : "bg-[#252525] text-[#5883C6]"
+              )}
+            >
+              {user.avatar ? (
+                <img 
+                  src={user.avatar}
+                  alt={user.displayName || user.email}
+                  className="w-full h-full img-persist"
+                  style={{
+                    objectFit: "cover",
+                    transform: 'translateZ(0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    willChange: 'contents'
+                  }}
+                  loading="eager"
+                  decoding="async"
                 />
-              </label>
+              ) : (
+                getInitials(user.displayName, user.email)
+              )}
             </div>
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 p-2 rounded-full cursor-pointer shadow-md border border-[#333] bg-[#121212] hover:bg-[#252525] transition-colors"
+            >
+              <Pencil size={16} className="text-white" />
+              <input
+                id="avatar-upload"
+                type="file"
+                className="hidden"
+                accept="image/*"
+                onChange={handleAvatarChange}
+              />
+            </label>
+          </div>
 
-            {/* Información del usuario */}
-            <h2 className="text-xl font-bold mb-1">
-              {user.displayName || user.email.split('@')[0]}
-            </h2>
-            <p className="text-gray-500 text-sm mb-4">{user.email}</p>
-            
-            {/* Botón de editar */}
+          {/* Información del usuario */}
+          <h2 className="text-xl font-bold mb-1">
+            {user.displayName || user.email.split('@')[0]}
+          </h2>
+          <p className="text-gray-500 text-sm mb-4">{user.email}</p>
+          
+          {/* Botón de editar */}
+          <button
+            onClick={() => setIsEditingProfile(true)}
+            className="mt-2 px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+              <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+            </svg>
+            Editar perfil
+          </button>
+        
+          {/* Botón de cerrar sesión */}
+          <div className="mt-3 flex justify-center">
             <button
-              onClick={() => setIsEditingProfile(true)}
-              className="mt-2 px-6 py-3 border border-[#333] rounded-lg text-white font-medium hover:bg-[#252525] transition-colors flex items-center"
+              onClick={() => setIsLogoutDialogOpen(true)}
+              className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
-              Editar perfil
+              <span>Cerrar sesión</span>
             </button>
-          
-            {/* Botón de cerrar sesión */}
-            <div className="mt-3 flex justify-center">
-              <button
-                onClick={() => setIsLogoutDialogOpen(true)}
-                className="text-white flex items-center py-2 px-4 hover:bg-[#252525] transition-colors rounded-lg"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                  <polyline points="16 17 21 12 16 7"></polyline>
-                  <line x1="21" y1="12" x2="9" y2="12"></line>
-                </svg>
-                <span>Cerrar sesión</span>
-              </button>
-            </div>
-          </div>
-          
-          {/* Espacio flexible para empujar el logo hacia abajo */}
-          <div className="flex-1"></div>
-          
-          {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mb-4">
-            <OptimizedImage 
-              src="/images/waw_logo.svg" 
-              alt="WataWan" 
-              className="h-8 mx-auto mb-1 img-persist" 
-              objectFit="contain"
-              priority={true} // Dar alta prioridad al logo
-            />
-            <span className="text-xs text-gray-500">Versión 1.0.0</span>
           </div>
         </div>
+        
+        {/* Espacio flexible para empujar el logo hacia abajo */}
+        <div className="flex-1"></div>
+        
+        {/* Logo y versión al final pero por encima de la navbar */}
+        <div className="flex flex-col items-center mt-4 mb-4">
+          <OptimizedImage 
+            src="/images/waw_logo.svg" 
+            alt="WataWan" 
+            className="h-8 mx-auto mb-1 img-persist" 
+            objectFit="contain"
+            priority={true} // Dar alta prioridad al logo
+          />
+          <span className="text-xs text-gray-500">Versión 1.0.0</span>
+        </div>
+      </div>
       
-        {/* Bottom Sheet para editar perfil */}
-        <EditProfileSheet
-          user={user}
-          isOpen={isEditingProfile}
-          onClose={() => setIsEditingProfile(false)}
-          updateProfileMutation={updateProfileMutation}
-          updateEmailMutation={updateEmailMutation}
-        />
+      {/* Barra de navegación */}
+      <BottomNavigation />
+      
+      {/* Bottom Sheet para editar perfil */}
+      {user && <EditProfileSheet
+        user={user}
+        isOpen={isEditingProfile}
+        onClose={() => setIsEditingProfile(false)}
+        updateProfileMutation={updateProfileMutation}
+        updateEmailMutation={updateEmailMutation}
+      />}
 
-        {/* Bottom Sheet para cerrar sesión */}
-        <LogoutSheet
-          isOpen={isLogoutDialogOpen}
-          onClose={() => setIsLogoutDialogOpen(false)}
-          logoutMutation={logoutMutation}
-        />
+      {/* Bottom Sheet para cerrar sesión */}
+      <LogoutSheet
+        isOpen={isLogoutDialogOpen}
+        onClose={() => setIsLogoutDialogOpen(false)}
+        logoutMutation={logoutMutation}
+      />
 
-        {toastState && (
-          <ToastContainer>
-            <Toast visible={true} variant={toastState.variant}>
-              <div className="flex items-center">
-                {toastState.variant === 'success' ? (
-                  <Check className="mr-2 h-6 w-6 text-green-400" />
-                ) : (
-                  <AlertCircle className="mr-2 h-4 w-4" />
-                )}
-                <span className="text-white font-medium">{toastState.message}</span>
-              </div>
-            </Toast>
-          </ToastContainer>
-        )}
-      </>
-    </PwaLayout>
+      {toastState && (
+        <ToastContainer>
+          <Toast visible={true} variant={toastState.variant}>
+            <div className="flex items-center">
+              {toastState.variant === 'success' ? (
+                <Check className="mr-2 h-6 w-6 text-green-400" />
+              ) : (
+                <AlertCircle className="mr-2 h-4 w-4" />
+              )}
+              <span className="text-white font-medium">{toastState.message}</span>
+            </div>
+          </Toast>
+        </ToastContainer>
+      )}
+    </div>
   );
 };
 
