@@ -33,9 +33,10 @@ import BottomNavigation from "@/components/BottomNavigation";
 import { useMutation } from "@tanstack/react-query";
 import { EditProfileSheet } from "@/components/EditProfileSheet";
 import { LogoutSheet } from "@/components/LogoutSheet";
+import PwaLayout from "@/components/PwaLayout";
 
 // Función para generar iniciales automáticamente desde el nombre o email
-const getInitials = (displayName: string | undefined, email: string) => {
+const getInitials = (displayName: string | undefined | null, email: string): string => {
   if (displayName) {
     // Si hay nombre, tomar la primera letra de cada palabra (máximo 2)
     const words = displayName.trim().split(/\s+/);
@@ -47,7 +48,7 @@ const getInitials = (displayName: string | undefined, email: string) => {
   }
   // Si no hay nombre, usar las primeras letras del email
   return email.substring(0, 2).toUpperCase();
-}
+};
 
 const ProfilePage = () => {
   const { user, error, isLoading, logoutMutation } = useAuth();
@@ -56,15 +57,6 @@ const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
-  // Depurar el objeto user para ver su contenido
-  useEffect(() => {
-    console.log('Objeto user completo:', JSON.stringify(user));
-    console.log('Avatar del usuario:', user?.avatar);
-    
-    if (user?.avatar) {
-      console.log('Avatar disponible:', user.avatar.substring(0, 50) + '...');
-    }
-  }, [user]);
   
   // Efecto para hacer que el toast desaparezca después de 3 segundos
   useEffect(() => {
@@ -195,10 +187,8 @@ const ProfilePage = () => {
           const result = reader.result as string;
           // Comprimir imagen antes de guardarla
           const compressedImage = await compressImage(result);
-          console.log("Nueva imagen comprimida lista para guardar");
           
-          // Actualizar perfil con la nueva imagen - la UI se actualizará automáticamente cuando
-          // la caché de react-query se refresque después de la mutación
+          // Actualizar perfil con la nueva imagen
           updateProfileMutation.mutate({
             displayName: user?.displayName || "",
             avatar: compressedImage,
@@ -247,9 +237,13 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
-      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col fixed-height-container">
-        {/* Contenedor principal que ocupa exactamente el espacio disponible */}
+    <PwaLayout 
+      hasScroll={false}
+      footer={<BottomNavigation />}
+      className="bg-[#121212] text-white"
+      contentClassName="p-4 max-w-[500px] mx-auto"
+    >
+      <>
         <div className="flex flex-col items-center justify-between h-full">
           {/* Espacio superior flexible para centrar verticalmente */}
           <div className="flex-1"></div>
@@ -335,7 +329,7 @@ const ProfilePage = () => {
           <div className="flex-1"></div>
           
           {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mb-[90px]">
+          <div className="flex flex-col items-center mb-4">
             <OptimizedImage 
               src="/images/waw_logo.svg" 
               alt="WataWan" 
@@ -346,43 +340,39 @@ const ProfilePage = () => {
             <span className="text-xs text-gray-500">Versión 1.0.0</span>
           </div>
         </div>
-      </main>
+      
+        {/* Bottom Sheet para editar perfil */}
+        <EditProfileSheet
+          user={user}
+          isOpen={isEditingProfile}
+          onClose={() => setIsEditingProfile(false)}
+          updateProfileMutation={updateProfileMutation}
+          updateEmailMutation={updateEmailMutation}
+        />
 
-      {/* Bottom Sheet para editar perfil */}
-      <EditProfileSheet
-        user={user}
-        isOpen={isEditingProfile}
-        onClose={() => setIsEditingProfile(false)}
-        updateProfileMutation={updateProfileMutation}
-        updateEmailMutation={updateEmailMutation}
-      />
+        {/* Bottom Sheet para cerrar sesión */}
+        <LogoutSheet
+          isOpen={isLogoutDialogOpen}
+          onClose={() => setIsLogoutDialogOpen(false)}
+          logoutMutation={logoutMutation}
+        />
 
-      {/* Bottom Sheet para cerrar sesión */}
-      <LogoutSheet
-        isOpen={isLogoutDialogOpen}
-        onClose={() => setIsLogoutDialogOpen(false)}
-        logoutMutation={logoutMutation}
-      />
-
-      <div className="fixed bottom-0 left-0 right-0 z-40">
-        <BottomNavigation />
-      </div>
-
-      {toastState && (
-        <ToastContainer>
-          <Toast visible={true} variant={toastState.variant}>
-            <div className="flex items-center">
-              {toastState.variant === 'success' ? (
-                <Check className="mr-2 h-6 w-6 text-green-400" />
-              ) : (
-                <AlertCircle className="mr-2 h-4 w-4" />
-              )}
-              <span className="text-white font-medium">{toastState.message}</span>
-            </div>
-          </Toast>
-        </ToastContainer>
-      )}
-    </div>
+        {toastState && (
+          <ToastContainer>
+            <Toast visible={true} variant={toastState.variant}>
+              <div className="flex items-center">
+                {toastState.variant === 'success' ? (
+                  <Check className="mr-2 h-6 w-6 text-green-400" />
+                ) : (
+                  <AlertCircle className="mr-2 h-4 w-4" />
+                )}
+                <span className="text-white font-medium">{toastState.message}</span>
+              </div>
+            </Toast>
+          </ToastContainer>
+        )}
+      </>
+    </PwaLayout>
   );
 };
 
