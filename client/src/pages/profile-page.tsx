@@ -277,7 +277,7 @@ const ProfilePage = () => {
     <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden" style={{ overflow: 'hidden', overscrollBehavior: 'none' }}>
       <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
-        <div className="flex flex-col items-center justify-between h-full">
+        <div className="flex flex-col items-center justify-between h-full pb-[132px]">
           {/* Espacio superior flexible para centrar verticalmente */}
           <div className="flex-1"></div>
           
