@@ -33,6 +33,14 @@
   /* Color destructive para mensajes de error */
   --destructive: 354 70% 54%;
   --destructive-foreground: 210 40% 98%;
+  
+  /* Variables para manejo de layout y navegación */
+  --bottom-nav-height: 64px;
+  --app-max-width: 500px;
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-right: env(safe-area-inset-right, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 16px);
+  --safe-area-inset-left: env(safe-area-inset-left, 0px);
 }
 
 @layer base {
@@ -411,17 +419,37 @@ html {
     touch-action: none;
   }
   
+  /* Clases para solucionar el problema de scroll */
+  
+  /* Contenedor principal que bloquea scroll para toda la página */
+  html.scroll-lock,
+  body.scroll-lock {
+    position: fixed !important;
+    height: 100% !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    touch-action: none !important;
+    -webkit-overflow-scrolling: none !important;
+  }
+  
   /* Contenedor sin scroll para páginas con poco contenido */
   .fixed-height-container {
-    height: calc(100vh - 80px) !important; /* 56px del header + 16px de espacio extra */
-    min-height: calc(100vh - 80px) !important;
+    height: calc(100vh - var(--bottom-nav-height, 64px) - var(--safe-area-inset-bottom, 16px)) !important; 
+    min-height: calc(100vh - var(--bottom-nav-height, 64px) - var(--safe-area-inset-bottom, 16px)) !important;
     overflow: hidden !important;
     overscroll-behavior: none !important;
     -webkit-overflow-scrolling: auto !important;
-    touch-action: pan-y !important;
+    touch-action: none !important;
     display: flex !important;
     flex-direction: column !important;
     position: relative !important;
+    z-index: 10 !important;
+    justify-content: center !important; /* Centrar verticalmente */
+    align-items: center !important; /* Centrar horizontalmente */
+    /* Prevenir cualquier interacción táctil que cause scroll */
+    pointer-events: auto !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
   }
   
   /* Navegación fija que no se mueve al hacer scroll */
@@ -430,7 +458,7 @@ html {
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    z-index: 50 !important;
+    z-index: 999 !important; /* Máxima prioridad */
     transform: translateZ(0) !important;
     will-change: transform !important;
     -webkit-backface-visibility: hidden !important;
