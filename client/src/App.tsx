@@ -97,7 +97,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         {/* Contenedor principal con clase app-container para PWA */}
-        <div className="app-container fixed-structure">
+        <div className="app-container">
           {/* Precarga imágenes al iniciar la aplicación */}
           <ImagePreloader />
           <Router />

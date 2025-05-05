@@ -41,11 +41,6 @@
     html {
       scroll-behavior: smooth;
       background-color: #121212;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      touch-action: none;
     }
     body {
       background-color: #121212;
@@ -54,29 +49,8 @@
       -webkit-tap-highlight-color: transparent;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior: none;
+      overscroll-behavior-y: contain;
       color: white;
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      touch-action: none;
-      /* Propiedades adicionales para evitar cualquier scroll */
-      max-height: 100vh;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    #root {
-      position: fixed;
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      touch-action: none;
-      max-height: 100vh;
     }
     .modal {
       backdrop-filter: blur(8px);

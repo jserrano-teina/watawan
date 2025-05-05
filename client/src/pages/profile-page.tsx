@@ -56,7 +56,6 @@ const ProfilePage = () => {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isLogoutDialogOpen, setIsLogoutDialogOpen] = useState(false);
   const [toastState, setToastState] = useState<{ message: string; variant: "success" | "error" } | null>(null);
-  
   // Depurar el objeto user para ver su contenido
   useEffect(() => {
     console.log('Objeto user completo:', JSON.stringify(user));
@@ -248,11 +247,15 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#121212] text-white">
-      <div className="fixed-page-container px-4">
-        <main className="flex-grow flex flex-col items-center justify-center">
+    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
+      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col fixed-height-container">
+        {/* Contenedor principal que ocupa exactamente el espacio disponible */}
+        <div className="flex flex-col items-center justify-between h-full">
+          {/* Espacio superior flexible para centrar verticalmente */}
+          <div className="flex-1"></div>
+          
           {/* Sección central con avatar e información - perfectamente centrada */}
-          <div className="flex flex-col items-center transform -translate-y-[20px]">
+          <div className="flex flex-col items-center">
             {/* Avatar con botón de edición */}
             <div className="relative mb-4">
               <div
@@ -326,21 +329,24 @@ const ProfilePage = () => {
                 <span>Cerrar sesión</span>
               </button>
             </div>
-            
-            {/* Espacio para el logo */}
-            <div className="mt-auto pt-10 flex flex-col items-center">
-              <OptimizedImage 
-                src="/images/waw_logo.svg" 
-                alt="WataWan" 
-                className="h-8 mx-auto mb-1 img-persist" 
-                objectFit="contain"
-                priority={true} // Dar alta prioridad al logo
-              />
-              <span className="text-xs text-gray-500 mb-8">Versión 1.0.0</span>
-            </div>
           </div>
-        </main>
-      </div>
+          
+          {/* Espacio flexible para empujar el logo hacia abajo */}
+          <div className="flex-1"></div>
+          
+          {/* Logo y versión al final pero por encima de la navbar */}
+          <div className="flex flex-col items-center mb-[90px]">
+            <OptimizedImage 
+              src="/images/waw_logo.svg" 
+              alt="WataWan" 
+              className="h-8 mx-auto mb-1 img-persist" 
+              objectFit="contain"
+              priority={true} // Dar alta prioridad al logo
+            />
+            <span className="text-xs text-gray-500">Versión 1.0.0</span>
+          </div>
+        </div>
+      </main>
 
       {/* Bottom Sheet para editar perfil */}
       <EditProfileSheet
@@ -358,7 +364,9 @@ const ProfilePage = () => {
         logoutMutation={logoutMutation}
       />
 
-      <BottomNavigation />
+      <div className="fixed bottom-0 left-0 right-0 z-40">
+        <BottomNavigation />
+      </div>
 
       {toastState && (
         <ToastContainer>
