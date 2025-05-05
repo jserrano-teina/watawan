@@ -175,7 +175,7 @@
 }
 
 .safe-area-bottom {
-  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) !important;
+  padding-bottom: calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 4px) !important;
 }
 
 .safe-area-left {
@@ -185,7 +185,7 @@
 .safe-area-all {
   padding-top: var(--safe-area-inset-top, env(safe-area-inset-top, 0px)) !important;
   padding-right: var(--safe-area-inset-right, env(safe-area-inset-right, 0px)) !important;
-  padding-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) !important;
+  padding-bottom: calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 4px) !important;
   padding-left: var(--safe-area-inset-left, env(safe-area-inset-left, 0px)) !important;
 }
 
@@ -199,7 +199,7 @@
 }
 
 .safe-area-margin-bottom {
-  margin-bottom: var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) !important;
+  margin-bottom: calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 16px)) + 4px) !important;
 }
 
 .safe-area-margin-left {
