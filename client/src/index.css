@@ -411,6 +411,19 @@ html {
     touch-action: none;
   }
   
+  /* Contenedor sin scroll para páginas con poco contenido */
+  .fixed-height-container {
+    height: calc(100vh - 80px) !important; /* 56px del header + 16px de espacio extra */
+    min-height: calc(100vh - 80px) !important;
+    overflow: hidden !important;
+    overscroll-behavior: none !important;
+    -webkit-overflow-scrolling: auto !important;
+    touch-action: pan-y !important;
+    display: flex !important;
+    flex-direction: column !important;
+    position: relative !important;
+  }
+  
   /* Navegación fija que no se mueve al hacer scroll */
   .fixed-navigation {
     position: fixed !important;
@@ -434,6 +447,10 @@ html {
     /* Propiedades específicas para iOS */
     position: -webkit-sticky !important;
     touch-action: none !important;
+    /* Evitar interacción con scroll de página principal */
+    pointer-events: auto !important;
+    /* Forzar mantener posición incluso con overflow */
+    inset: auto 0 0 0 !important;
   }
   
   /* Optimización de imágenes */
