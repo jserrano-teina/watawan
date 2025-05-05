@@ -41,6 +41,11 @@
     html {
       scroll-behavior: smooth;
       background-color: #121212;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
     }
     body {
       background-color: #121212;
@@ -49,8 +54,13 @@
       -webkit-tap-highlight-color: transparent;
       text-rendering: optimizeLegibility;
       -webkit-font-smoothing: antialiased;
-      overscroll-behavior-y: contain;
+      overscroll-behavior: none;
       color: white;
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: none;
     }
     .modal {
       backdrop-filter: blur(8px);

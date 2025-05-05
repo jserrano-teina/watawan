@@ -218,12 +218,16 @@
 .pwa-mode .overflow-auto,
 .pwa-mode .overflow-y-auto,
 .pwa-mode .overflow-scroll,
-.pwa-mode .scrollable-content {
+.pwa-mode .scrollable-content,
+.pwa-mode .scrollable-area {
+  overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  overscroll-behavior: contain;
+  overscroll-behavior: contain !important;
   /* Mejora de rendimiento para scrolling */
-  will-change: transform;
-  transform: translateZ(0);
+  will-change: transform !important;
+  transform: translateZ(0) !important;
+  max-height: calc(100vh - 120px) !important; /* Altura con espacio para navbar */
+  position: relative !important;
 }
 
 /* Previene que el texto se seleccione accidentalmente en la app móvil */

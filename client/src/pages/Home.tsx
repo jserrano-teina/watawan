@@ -262,30 +262,31 @@ const Home: React.FC = () => {
       <Header user={user} />
       {/* Contenido principal - cambia su comportamiento según haya items o no */}
       {myWishItems.length > 0 ? (
-        // Si hay items, mantenemos el scroll
-        <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
-          style={{ 
-            WebkitOverflowScrolling: 'touch', 
-            height: 'calc(100vh - 56px)', 
-            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
-          }}>
+        // Si hay items, usamos una estructura de scroll optimizada
+        <main className="flex-grow container mx-auto px-4 max-w-[500px]">
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
           
           <div className="mt-6">
             <h2 className="text-2xl font-semibold mb-6 text-white">Mis deseos</h2>
-            <div className="grid gap-2">
-              {myWishItems.map(item => (
-                <WishItem 
-                  key={item.id} 
-                  item={item} 
-                  onEdit={handleEditWish} 
-                  onDelete={handleDeleteWish}
-                  onClick={handleItemClick}
-                  onSheetClose={handleSheetClosed}
-                  onMarkAsReceived={handleMarkAsReceived}
-                  onUnreserve={handleUnreserve}
-                />
-              ))}
+            {/* Contenedor scrollable que solo ocupa el espacio necesario */}
+            <div className="scrollable-area" style={{
+              height: 'calc(100vh - 200px)',
+              paddingBottom: 'calc(2rem + env(safe-area-inset-bottom))'
+            }}>
+              <div className="grid gap-2">
+                {myWishItems.map(item => (
+                  <WishItem 
+                    key={item.id} 
+                    item={item} 
+                    onEdit={handleEditWish} 
+                    onDelete={handleDeleteWish}
+                    onClick={handleItemClick}
+                    onSheetClose={handleSheetClosed}
+                    onMarkAsReceived={handleMarkAsReceived}
+                    onUnreserve={handleUnreserve}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </main>
