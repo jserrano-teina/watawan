@@ -66,6 +66,33 @@ const ProfilePage = () => {
     }
   }, [user]);
   
+  // Bloquear scroll específicamente para esta página
+  useEffect(() => {
+    // Guardar el estado original de overflow
+    const originalStyle = window.getComputedStyle(document.body).overflow;
+    const originalPosition = window.getComputedStyle(document.body).position;
+    
+    // Bloquear scroll
+    document.body.style.overflow = 'hidden';
+    document.body.style.overscrollBehavior = 'none';
+    document.body.style.position = 'fixed';
+    document.body.style.width = '100%';
+    document.body.style.height = '100%';
+    document.body.style.top = '0';
+    document.body.style.left = '0';
+    
+    // Restaurar al desmontar el componente
+    return () => {
+      document.body.style.overflow = originalStyle;
+      document.body.style.overscrollBehavior = '';
+      document.body.style.position = originalPosition;
+      document.body.style.width = '';
+      document.body.style.height = '';
+      document.body.style.top = '';
+      document.body.style.left = '';
+    };
+  }, []);
+
   // Efecto para hacer que el toast desaparezca después de 3 segundos
   useEffect(() => {
     if (toastState) {
@@ -247,7 +274,7 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden">
+    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden" style={{ overflow: 'hidden', overscrollBehavior: 'none' }}>
       <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
         <div className="flex flex-col items-center justify-between h-full">
@@ -331,20 +358,8 @@ const ProfilePage = () => {
             </div>
           </div>
           
-          {/* Espacio flexible para empujar el logo hacia abajo */}
+          {/* Espacio flexible para mantener la página centrada */}
           <div className="flex-1"></div>
-          
-          {/* Logo y versión al final pero por encima de la navbar */}
-          <div className="flex flex-col items-center mb-16">
-            <OptimizedImage 
-              src="/images/waw_logo.svg" 
-              alt="WataWan" 
-              className="h-8 mx-auto mb-1 img-persist" 
-              objectFit="contain"
-              priority={true} // Dar alta prioridad al logo
-            />
-            <span className="text-xs text-gray-500">Versión 1.0.0</span>
-          </div>
         </div>
       </main>
 
@@ -363,6 +378,20 @@ const ProfilePage = () => {
         onClose={() => setIsLogoutDialogOpen(false)}
         logoutMutation={logoutMutation}
       />
+
+      {/* Logo y versión - posicionamiento absoluto para evitar scroll */}
+      <div className="fixed left-0 right-0 bottom-[80px] flex justify-center z-30">
+        <div className="flex flex-col items-center">
+          <OptimizedImage 
+            src="/images/waw_logo.svg" 
+            alt="WataWan" 
+            className="h-8 mx-auto mb-1 img-persist" 
+            objectFit="contain"
+            priority={true}
+          />
+          <span className="text-xs text-gray-500">Versión 1.0.0</span>
+        </div>
+      </div>
 
       <div className="fixed bottom-0 left-0 right-0 z-40">
         <BottomNavigation />
