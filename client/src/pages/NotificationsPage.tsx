@@ -250,7 +250,7 @@ const NotificationsPage: React.FC = () => {
       ) : (
         // Si no hay notificaciones, eliminamos el scroll y centramos perfectamente en el medio
         <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
-          <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
+          <div className="flex flex-col items-center justify-center transform translate-y-[20px]">
             {/* Imagen de notificaciones */}
             <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
               <OptimizedImage 
