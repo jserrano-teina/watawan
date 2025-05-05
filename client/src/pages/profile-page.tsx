@@ -380,7 +380,7 @@ const ProfilePage = () => {
       />
 
       {/* Logo y versión - posicionamiento absoluto para evitar scroll */}
-      <div className="fixed left-0 right-0 bottom-[80px] flex justify-center z-30">
+      <div className="fixed left-0 right-0 bottom-[88px] flex justify-center z-30">
         <div className="flex flex-col items-center">
           <OptimizedImage 
             src="/images/waw_logo.svg" 
