@@ -231,21 +231,39 @@
 }
 
 /* Mejora el comportamiento de scroll en contenedores específicos */
-/* Clase scrollable-area: el único elemento de la aplicación que puede hacer scroll */
+/* Clase scrollable-area: el ÚNICO elemento de la aplicación que puede hacer scroll */
 .scrollable-area {
+  /* Propiedades scroll */
   overflow-y: auto !important;
   overflow-x: hidden !important;
   -webkit-overflow-scrolling: touch !important;
   overscroll-behavior: contain !important;
+  
+  /* Optimización de rendimiento */
   will-change: transform !important;
   transform: translateZ(0) !important;
-  max-height: calc(100vh - 150px) !important; /* Espacio para header (56px) + navbar (80px) + margen (14px) */
+  
+  /* Dimensiones */
+  max-height: calc(100vh - 170px) !important; /* Espacio para header (56px) + navbar (80px) + margen (34px) */
+  height: 100% !important;
+  
+  /* Posición y estilos */
   position: relative !important;
-  border-radius: 8px !important; 
-  padding: 1px !important; /* Evita margin collapse */
-  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 70px) !important; /* Espacio para navbar */
+  padding: 1px 2px !important; /* Evita margin collapse */
+  padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 90px) !important; /* Extra espacio para navbar */
   margin-bottom: 20px !important;
+  border-radius: 8px !important;
   z-index: 1 !important;
+  
+  /* Comportamiento táctil */
+  touch-action: pan-y !important;
+  -ms-overflow-style: none !important; /* IE/Edge */
+  scrollbar-width: none !important; /* Firefox */
+}
+
+/* Ocultar scrollbar en Chrome/Safari/Opera */
+.scrollable-area::-webkit-scrollbar {
+  display: none !important;
 }
 
 /* Previene que el texto se seleccione accidentalmente en la app móvil */

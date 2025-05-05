@@ -195,75 +195,73 @@ const NotificationsPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-[#121212] text-white">
       <Header user={user as User} />
       
-      {isLoading ? (
-        // Estado de carga con spinner centrado
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-        </main>
-      ) : notifications.length > 0 ? (
-        // Si hay notificaciones, mantenemos el scroll
-        <main 
-          className="flex-grow container mx-auto px-4 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
-          style={{ 
-            WebkitOverflowScrolling: 'touch', 
-            height: 'calc(100vh - 56px)'
-          }}
-        >
-          <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
-          
-          <div className="space-y-3">
-            {notifications.map(({ item, reservation }) => (
-              <div 
-                key={reservation.id} 
-                className="bg-[#1a1a1a] p-3 rounded-lg border border-[#333] cursor-pointer active:bg-[#222]"
-                onClick={() => handleOpenDetail(item)}
-              >
-                <div className="flex items-start gap-3">
-                  <div className="w-[72px] h-[72px] rounded overflow-hidden flex-shrink-0 bg-[#222]" style={{ borderRadius: '6px' }}>
-                    <ProductImage 
-                      imageUrl={item.imageUrl} 
-                      productId={getProductId(item.purchaseLink)}
-                      title={item.title}
-                      purchaseLink={item.purchaseLink}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white text-sm">
-                      <p className="text-white text-base">¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
+      <div className="fixed-page-container px-4">
+        {isLoading ? (
+          // Estado de carga con spinner centrado
+          <main className="flex-grow flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+          </main>
+        ) : notifications.length > 0 ? (
+          // Si hay notificaciones, usamos el área scrollable dedicada
+          <main className="flex-grow">
+            <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
+            
+            <div className="scrollable-area">
+              <div className="space-y-3">
+                {notifications.map(({ item, reservation }) => (
+                  <div 
+                    key={reservation.id} 
+                    className="bg-[#1a1a1a] p-3 rounded-lg border border-[#333] cursor-pointer active:bg-[#222]"
+                    onClick={() => handleOpenDetail(item)}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-[72px] h-[72px] rounded overflow-hidden flex-shrink-0 bg-[#222]" style={{ borderRadius: '6px' }}>
+                        <ProductImage 
+                          imageUrl={item.imageUrl} 
+                          productId={getProductId(item.purchaseLink)}
+                          title={item.title}
+                          purchaseLink={item.purchaseLink}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      
+                      <div className="flex-1 min-w-0">
+                        <div className="text-white text-sm">
+                          <p className="text-white text-base">¡Alguien ha reservado <span className="font-semibold">{item.title}</span> para regalarte!</p>
+                        </div>
+                        
+                        <p className="text-white/50 text-sm mt-2">
+                          {formatDistanceToNow(new Date(reservation.reservedAt), { 
+                            addSuffix: true,
+                            locale: es
+                          })}
+                        </p>
+                      </div>
                     </div>
-                    
-                    <p className="text-white/50 text-sm mt-2">
-                      {formatDistanceToNow(new Date(reservation.reservedAt), { 
-                        addSuffix: true,
-                        locale: es
-                      })}
-                    </p>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        </main>
-      ) : (
-        // Si no hay notificaciones, eliminamos el scroll y centramos perfectamente en el medio
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
-          <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
-            {/* Imagen de notificaciones */}
-            <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
-              <OptimizedImage 
-                src="/images/no_notifications.png" 
-                alt="Notificaciones" 
-                className="w-full h-full"
-                objectFit="contain"
-              />
             </div>
-            <h2 className="font-bold text-2xl text-white mb-3 text-center">No hay notificaciones</h2>
-            <p className="text-white/60 mb-6 text-center">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
-          </div>
-        </main>
-      )}
+          </main>
+        ) : (
+          // Si no hay notificaciones, centrado vertical
+          <main className="flex-grow flex items-center justify-center">
+            <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
+              {/* Imagen de notificaciones */}
+              <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
+                <OptimizedImage 
+                  src="/images/no_notifications.png" 
+                  alt="Notificaciones" 
+                  className="w-full h-full"
+                  objectFit="contain"
+                />
+              </div>
+              <h2 className="font-bold text-2xl text-white mb-3 text-center">No hay notificaciones</h2>
+              <p className="text-white/60 mb-6 text-center">Cuando alguien reserve uno de tus deseos, recibirás una notificación aquí</p>
+            </div>
+          </main>
+        )}
+      </div>
       
       <BottomNavigation />
       
