@@ -70,6 +70,87 @@ export async function extractMetadataWithAI(
 }
 
 /**
+ * Verifica si el título y la imagen del producto son válidos usando OpenAI
+ * @param title El título extraído del producto
+ * @param imageUrl La URL de la imagen extraída
+ * @returns Un objeto con flags indicando si el título y la imagen son válidos
+ */
+export async function validateProductData(
+  title?: string,
+  imageUrl?: string
+): Promise<{
+  isTitleValid: boolean;
+  isImageValid: boolean;
+  message: string;
+}> {
+  try {
+    if (!title && !imageUrl) {
+      return {
+        isTitleValid: false,
+        isImageValid: false,
+        message: "No se proporcionaron datos para validar",
+      };
+    }
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content:
+            "Eres un experto en validación de metadatos de productos. Tu tarea es determinar si " +
+            "el título y la URL de imagen proporcionados son válidos para un producto real. " +
+            "Un título válido debe ser descriptivo y específico del producto (no genérico como 'Producto de Amazon'). " +
+            "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder). " +
+            "Responde solo con JSON válido sin explicaciones adicionales.",
+        },
+        {
+          role: "user",
+          content: `Valida los siguientes datos de producto:\n\nTítulo: ${title || "No proporcionado"}\n\nURL de imagen: ${imageUrl || "No proporcionada"}`,
+        },
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+
+    // Procesar la respuesta
+    const content = response.choices[0].message.content;
+    const result = content ? JSON.parse(content) : {};
+    
+    // Valores por defecto
+    let isTitleValid = false;
+    let isImageValid = false;
+    let message = "No pudimos validar los datos del producto";
+    
+    // Verificar y normalizar los resultados
+    if (typeof result.isTitleValid === 'boolean') {
+      isTitleValid = result.isTitleValid;
+    }
+    
+    if (typeof result.isImageValid === 'boolean') {
+      isImageValid = result.isImageValid;
+    }
+    
+    if (result.message && typeof result.message === 'string') {
+      message = result.message;
+    }
+    
+    return {
+      isTitleValid: isTitleValid,
+      isImageValid: isImageValid,
+      message: message
+    };
+  } catch (error) {
+    console.error("Error al validar datos de producto con IA:", error);
+    return {
+      isTitleValid: true, // Por defecto, asumimos que es válido en caso de error
+      isImageValid: true,
+      message: "Error durante la validación"
+    };
+  }
+}
+
+/**
  * Reduce el tamaño del HTML para no exceder los límites de tokens de la API
  * Se enfoca en mantener las partes más relevantes para la extracción de metadatos
  */

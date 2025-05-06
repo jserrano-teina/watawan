@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { validateProductData } from './openai-utils';
 
 // Esta función contiene la implementación actualizada del endpoint /extract-metadata
 // que utiliza Puppeteer para mejorar la extracción de metadatos
@@ -20,12 +21,48 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
     
     // Función para crear un objeto de respuesta consistente siempre con la misma estructura
-    const createResponseObject = (data: any) => {
+    const createResponseObject = async (data: any) => {
+      // Si tenemos título o imagen, validamos con IA
+      if (data.title || data.imageUrl) {
+        try {
+          console.log(`🧠 Validando calidad de datos con IA...`);
+          const validation = await validateProductData(data.title, data.imageUrl);
+          
+          console.log(`✅ Validación IA: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
+          
+          return {
+            title: data.title || '',
+            description: data.description || '',
+            imageUrl: data.imageUrl || '',
+            price: '', // Siempre vacío según la especificación
+            isTitleValid: validation.isTitleValid,
+            isImageValid: validation.isImageValid,
+            validationMessage: validation.message
+          };
+        } catch (error) {
+          console.error(`❌ Error en validación IA: ${error}`);
+          // En caso de error, asumimos válidos por defecto para no bloquear el flujo
+          return {
+            title: data.title || '',
+            description: data.description || '',
+            imageUrl: data.imageUrl || '',
+            price: '', // Siempre vacío según la especificación
+            isTitleValid: true,
+            isImageValid: true,
+            validationMessage: ''
+          };
+        }
+      }
+      
+      // Si no hay datos para validar, devolvemos todo como inválido
       return {
         title: data.title || '',
         description: data.description || '',
         imageUrl: data.imageUrl || '',
-        price: '' // Siempre vacío según la especificación
+        price: '', // Siempre vacío según la especificación
+        isTitleValid: false,
+        isImageValid: false,
+        validationMessage: 'No se pudieron extraer datos suficientes para validar'
       };
     };
     
@@ -77,7 +114,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
                 console.log(`   - Título: ${cleanedTitle.substring(0, 30)}...`);
                 console.log(`   - Imagen: ${puppeteerMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
                 
-                return res.json(createResponseObject({
+                return res.json(await createResponseObject({
                   title: cleanedTitle,
                   description: puppeteerMetadata.description || '',
                   imageUrl: puppeteerMetadata.imageUrl || amazonMetadata.imageUrl || ''
@@ -92,7 +129,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           // Limpiar el título antes de devolverlo
           const cleanedTitle = cleanAmazonTitle(amazonMetadata.title || '', asin || undefined);
           
-          return res.json(createResponseObject({
+          return res.json(await createResponseObject({
             title: cleanedTitle || 'Producto Amazon',
             description: amazonMetadata.description || '',
             imageUrl: amazonMetadata.imageUrl || ''
@@ -113,7 +150,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
               console.log(`   - Título: ${cleanedTitle ? cleanedTitle.substring(0, 30) + '...' : 'No disponible'}`);
               console.log(`   - Imagen: ${puppeteerMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
               
-              return res.json(createResponseObject({
+              return res.json(await createResponseObject({
                 title: cleanedTitle || 'Producto Amazon',
                 description: puppeteerMetadata.description || '',
                 imageUrl: puppeteerMetadata.imageUrl || ''
@@ -139,7 +176,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             imageUrl: amazonMetadata.imageUrl || backupMetadata.imageUrl || ''
           };
           
-          return res.json(createResponseObject(combinedMetadata));
+          return res.json(await createResponseObject(combinedMetadata));
         }
       } catch (error: any) {
         console.log(`⚠️ Error en extracción especializada: ${error.message || 'desconocido'}. Intentando con Puppeteer...`);
