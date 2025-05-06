@@ -67,6 +67,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [extractedData, setExtractedData] = useState<{
     imageUrl?: string,
     price?: string,
+    isTitleValid?: boolean,
+    isImageValid?: boolean,
+    validationMessage?: string,
   }>({});
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -231,7 +234,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Guardar datos extraídos para el paso 2
         setExtractedData({
           imageUrl: metadata.imageUrl,
-          price: metadata.price
+          price: metadata.price,
+          isTitleValid: metadata.isTitleValid,
+          isImageValid: metadata.isImageValid,
+          validationMessage: metadata.validationMessage
         });
         
         // Prerellenar formulario del paso 2
