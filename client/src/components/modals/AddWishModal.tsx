@@ -277,12 +277,16 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Establecer el título si existe, limitándolo a 100 caracteres
-        if (metadata.title) {
-          console.log('Título extraído:', metadata.title);
+        // Establecer el título solo si existe y es válido, limitándolo a 100 caracteres
+        if (metadata.title && metadata.isTitleValid) {
+          console.log('Título extraído válido:', metadata.title);
           // Truncar el título a un máximo de 100 caracteres
           const truncatedTitle = metadata.title.substring(0, 100);
           setValueStepTwo('title', truncatedTitle);
+        } else if (metadata.title && !metadata.isTitleValid) {
+          console.log('Título extraído inválido, dejando el campo vacío:', metadata.title);
+          // Si el título es inválido, dejamos el campo vacío para que el usuario lo complete
+          setValueStepTwo('title', '');
         }
         
         // Extraer solo el valor numérico del precio si existe
@@ -799,14 +803,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   });
                   
                   return showWarning ? (
-                    <div className="mb-6 p-4 bg-[#332500] border border-[#665000] rounded-lg flex items-start">
-                      <AlertCircle className="text-[#FFE066] mr-3 mt-0.5 shrink-0" size={18} />
+                    <div className="mb-6 p-4 bg-[#15243b] border border-[#2d4a7c] rounded-lg flex items-start">
+                      <AlertCircle className="text-[#89AADC] mr-3 mt-0.5 shrink-0" size={18} />
                       <div>
                         <p className="text-white text-sm">
                           No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas), puedes completarla manualmente.
                         </p>
                         {extractedData.validationMessage && (
-                          <p className="text-[#FFE066] text-xs mt-1">
+                          <p className="text-[#89AADC] text-xs mt-1">
                             {extractedData.validationMessage}
                           </p>
                         )}
