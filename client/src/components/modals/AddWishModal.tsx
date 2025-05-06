@@ -125,6 +125,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   // Observar campos del formulario
   const watchedPurchaseLink = watchStepOne('purchaseLink');
   const watchedImageUrl = watchStepTwo('imageUrl');
+  const watchedTitle = watchStepTwo('title');
 
   useEffect(() => {
     // Guardar el valor del enlace para mantenerlo entre pasos
@@ -132,6 +133,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setPurchaseLinkValue(watchedPurchaseLink);
     }
   }, [watchedPurchaseLink]);
+  
+  // Efecto para considerar el título como válido si el usuario lo edita manualmente
+  useEffect(() => {
+    // Solo aplicamos este efecto en el paso 2 durante la creación, no la edición
+    if (step === 2 && !itemToEdit && watchedTitle && watchedTitle.trim() !== '') {
+      // Si el usuario ha modificado el título manualmente, lo consideramos válido
+      setExtractedData(prev => ({
+        ...prev,
+        isTitleValid: true
+      }));
+    }
+  }, [watchedTitle, step, itemToEdit]);
   
   // Ocultar automáticamente la alerta interna después de 3 segundos
   useEffect(() => {
@@ -230,6 +243,15 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       if (purchaseLink) {
         const response = await apiRequest('GET', `/api/extract-metadata?url=${encodeURIComponent(purchaseLink)}`);
         const metadata = await response.json();
+        
+        // Log para debug de validación AI
+        console.log('Metadatos extraídos con validación IA:', {
+          title: metadata.title,
+          imageUrl: metadata.imageUrl ? 'Disponible' : 'No disponible',
+          isTitleValid: metadata.isTitleValid,
+          isImageValid: metadata.isImageValid,
+          validationMessage: metadata.validationMessage
+        });
         
         // Guardar datos extraídos para el paso 2
         setExtractedData({
@@ -383,9 +405,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         setValueStepTwo('imageUrl', imageUrl);
         
         // Actualizar el estado para mostrar la imagen
+        // Cuando el usuario sube una imagen manualmente, la consideramos válida
         setExtractedData({
           ...extractedData,
-          imageUrl: imageUrl
+          imageUrl: imageUrl,
+          isImageValid: true
         });
       } catch (error) {
         console.error('Error al subir la imagen:', error);
@@ -724,6 +748,24 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     {errorsStepTwo.purchaseLink && (
                       <p className="text-destructive text-sm mt-2">{errorsStepTwo.purchaseLink.message}</p>
                     )}
+                  </div>
+                )}
+                
+                {/* Mensaje de advertencia si hay datos de baja calidad */}
+                {step === 2 && !itemToEdit && (!extractedData.isTitleValid || !extractedData.isImageValid) && (
+                  <div className="mb-6 p-4 bg-[#332500] border border-[#665000] rounded-lg flex items-start">
+                    <AlertCircle className="text-[#FFE066] mr-3 mt-0.5 shrink-0" size={18} />
+                    <div>
+                      <p className="text-white text-sm">
+                        No hemos podido autocompletar la información de este deseo correctamente.
+                        Por favor, revisa y completa manualmente los campos.
+                      </p>
+                      {extractedData.validationMessage && (
+                        <p className="text-[#FFE066] text-xs mt-1">
+                          {extractedData.validationMessage}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 )}
                 
