@@ -26,9 +26,35 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       if (data.title || data.imageUrl) {
         try {
           console.log(`🧠 Validando calidad de datos con IA...`);
+          console.log(`📊 Datos a validar - Título: "${data.title || 'No disponible'}", Imagen: ${data.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // IMPORTANTE: Forzar validación más estricta para casos específicos
+          let isTitleInvalid = false;
+          if (data.title) {
+            // Detectar títulos muy cortos o genéricos
+            if (data.title.length <= 2 || 
+                /^[A-Za-z]\s?[A-Za-z]$/.test(data.title) || // Patrón tipo "R P"
+                data.title === "Amazon.com" ||
+                data.title === "Amazon.es" ||
+                data.title === "Producto" ||
+                data.title === "Producto Amazon" ||
+                data.title.includes("http") ||
+                data.title.includes("www.")) {
+              isTitleInvalid = true;
+              console.log(`⚠️ Detectado título inválido de forma explícita: "${data.title}"`);
+            }
+          }
+          
           const validation = await validateProductData(data.title, data.imageUrl);
           
+          // Si detectamos un título inválido, sobreescribimos la validación de OpenAI
+          if (isTitleInvalid) {
+            validation.isTitleValid = false;
+            validation.message = `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
+          }
+          
           console.log(`✅ Validación IA: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
+          console.log(`📝 Mensaje: ${validation.message}`);
           
           return {
             title: data.title || '',
