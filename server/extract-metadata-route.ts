@@ -189,12 +189,14 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
             // Limpiar el título si es necesario
             if (puppeteerMetadata.title) {
-              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title, asin || undefined);
+              const { extractAsin } = await import('./amazon-extractor');
+              const extractedAsin = extractAsin(url);
+              const cleanedTitle = cleanAmazonTitle(puppeteerMetadata.title, extractedAsin || undefined);
               puppeteerMetadata.title = cleanedTitle;
             }
             
             console.log(`✅ Recuperación con Puppeteer exitosa después de fallo en el extractor principal`);
-            return res.json(createResponseObject(puppeteerMetadata));
+            return res.json(await createResponseObject(puppeteerMetadata));
           } else {
             console.log(`⚠️ Puppeteer tampoco obtuvo datos. Usando método genérico.`);
           }
@@ -207,7 +209,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         const { getUrlMetadata } = await import('./metascraper');
         const genericMetadata = await getUrlMetadata(url, req.headers['user-agent'] as string);
         
-        return res.json(createResponseObject(genericMetadata));
+        return res.json(await createResponseObject(genericMetadata));
       }
     } else {
       // Para otros sitios no-Amazon
@@ -219,7 +221,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         
         if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
           console.log(`✅ Extracción con Puppeteer exitosa para sitio no-Amazon`);
-          return res.json(createResponseObject(puppeteerMetadata));
+          return res.json(await createResponseObject(puppeteerMetadata));
         } else {
           console.log(`⚠️ Puppeteer no obtuvo datos completos para sitio no-Amazon. Usando métodos alternativos...`);
         }
@@ -255,7 +257,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         metadata = await getUrlMetadata(url, req.headers['user-agent'] as string);
       }
       
-      res.json(createResponseObject(metadata));
+      res.json(await createResponseObject(metadata));
     }
   } catch (error) {
     console.error(`❌ Error extrayendo metadatos: ${error}`);
