@@ -803,18 +803,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   });
                   
                   return showWarning ? (
-                    <div className="mb-6 p-4 bg-[#15243b] border border-[#2d4a7c] rounded-lg flex items-start">
-                      <AlertCircle className="text-[#89AADC] mr-3 mt-0.5 shrink-0" size={18} />
-                      <div>
-                        <p className="text-white text-sm">
-                          No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas), puedes completarla manualmente.
-                        </p>
-                        {extractedData.validationMessage && (
-                          <p className="text-[#89AADC] text-xs mt-1">
-                            {extractedData.validationMessage}
-                          </p>
-                        )}
-                      </div>
+                    <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">
+                      <p className="text-white text-sm">
+                        No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas), puedes completarla manualmente.
+                      </p>
                     </div>
                   ) : null;
                 })()}
