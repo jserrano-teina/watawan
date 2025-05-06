@@ -7,7 +7,7 @@ interface EmptyWishlistProps {
 
 const EmptyWishlist: React.FC<EmptyWishlistProps> = ({ onAddWish }) => {
   return (
-    <div className="p-6 text-center max-w-md mx-auto translate-y-[20px]">
+    <div className="p-6 text-center max-w-md mx-auto translate-y-[40px]">
       {/* Imagen de elementos deseados */}
       <div className="mx-auto w-60 h-60 mb-6 flex items-center justify-center">
         <OptimizedImage 
