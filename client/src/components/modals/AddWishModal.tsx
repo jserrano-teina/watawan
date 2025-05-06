@@ -65,12 +65,15 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [extractedData, setExtractedData] = useState<{
+    title?: string,
+    description?: string,
     imageUrl?: string,
     price?: string,
     isTitleValid?: boolean,
     isImageValid?: boolean,
     validationMessage?: string,
     originalTitle?: string,
+    skipValidation?: boolean,
   }>({});
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -691,6 +694,15 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       onClick={() => {
                         // Ir al paso 2 sin enlace
                         setValueStepTwo('purchaseLink', '');
+                        // Marcar como omitido para evitar advertencias
+                        setExtractedData({
+                          title: '',
+                          description: '',
+                          imageUrl: '',
+                          isTitleValid: true, // Marcar como válido para no mostrar la advertencia
+                          isImageValid: true, // Marcar como válido para no mostrar la advertencia
+                          skipValidation: true // Flag que indica que se omitió la validación
+                        });
                         setStep(2);
                         // Asegurarnos de que ambos estados de carga estén desactivados
                         setIsLoading(false);
@@ -766,13 +778,21 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   // IMPORTANTE: Usamos doble negación para convertir undefined a false
                   const isTitleValid = !!extractedData.isTitleValid;
                   const isImageValid = !!extractedData.isImageValid;
-                  const showWarning = step === 2 && !itemToEdit && (!isTitleValid || !isImageValid);
+                  const wasSkipped = !!extractedData.skipValidation;
+                  
+                  // Solo mostrar advertencia si:
+                  // 1. Estamos en el paso 2
+                  // 2. No estamos editando un item existente
+                  // 3. Alguna validación falló (título o imagen)
+                  // 4. NO se omitió el paso 1 (la validación no fue omitida)
+                  const showWarning = step === 2 && !itemToEdit && (!isTitleValid || !isImageValid) && !wasSkipped;
                   
                   console.log('Estado de la condición de advertencia:', {
                     step,
                     isEditing: !!itemToEdit,
                     isTitleValid: extractedData.isTitleValid,
                     isImageValid: extractedData.isImageValid,
+                    wasSkipped,
                     isTitleValidBool: isTitleValid,
                     isImageValidBool: isImageValid,
                     showWarning
@@ -783,8 +803,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       <AlertCircle className="text-[#FFE066] mr-3 mt-0.5 shrink-0" size={18} />
                       <div>
                         <p className="text-white text-sm">
-                          No hemos podido autocompletar la información de este deseo correctamente.
-                          Por favor, revisa y completa manualmente los campos.
+                          No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas), puedes completarla manualmente.
                         </p>
                         {extractedData.validationMessage && (
                           <p className="text-[#FFE066] text-xs mt-1">
