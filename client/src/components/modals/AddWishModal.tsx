@@ -70,6 +70,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     isTitleValid?: boolean,
     isImageValid?: boolean,
     validationMessage?: string,
+    originalTitle?: string,
   }>({});
   const [purchaseLinkValue, setPurchaseLinkValue] = useState('');
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -205,10 +206,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       setPurchaseLinkValue(itemToEdit.purchaseLink);
       
       if (itemToEdit.imageUrl) {
-        setExtractedData({
-          ...extractedData,
-          imageUrl: itemToEdit.imageUrl
-        });
+        setExtractedData(prev => ({
+          ...prev,
+          imageUrl: itemToEdit.imageUrl,
+          isImageValid: true,
+          isTitleValid: true
+        }));
       }
     } else {
       setStep(1);
@@ -252,15 +255,21 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           isImageValid: metadata.isImageValid,
           validationMessage: metadata.validationMessage
         });
+        console.log('Datos inválidos encontrados:', 
+          !metadata.isTitleValid || !metadata.isImageValid ? 'SÍ' : 'NO',
+          !metadata.isTitleValid ? 'Título inválido' : '',
+          !metadata.isImageValid ? 'Imagen inválida' : '');
         
         // Guardar datos extraídos para el paso 2
-        setExtractedData({
+        setExtractedData(prev => ({
+          ...prev,
           imageUrl: metadata.imageUrl,
           price: metadata.price,
           isTitleValid: metadata.isTitleValid,
           isImageValid: metadata.isImageValid,
-          validationMessage: metadata.validationMessage
-        });
+          validationMessage: metadata.validationMessage,
+          originalTitle: metadata.title || ''
+        }));
         
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
@@ -406,11 +415,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         
         // Actualizar el estado para mostrar la imagen
         // Cuando el usuario sube una imagen manualmente, la consideramos válida
-        setExtractedData({
-          ...extractedData,
+        setExtractedData(prev => ({
+          ...prev,
           imageUrl: imageUrl,
           isImageValid: true
-        });
+        }));
       } catch (error) {
         console.error('Error al subir la imagen:', error);
         // Mostrar mensaje de error al usuario
@@ -752,22 +761,34 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 )}
                 
                 {/* Mensaje de advertencia si hay datos de baja calidad */}
-                {step === 2 && !itemToEdit && (!extractedData.isTitleValid || !extractedData.isImageValid) && (
-                  <div className="mb-6 p-4 bg-[#332500] border border-[#665000] rounded-lg flex items-start">
-                    <AlertCircle className="text-[#FFE066] mr-3 mt-0.5 shrink-0" size={18} />
-                    <div>
-                      <p className="text-white text-sm">
-                        No hemos podido autocompletar la información de este deseo correctamente.
-                        Por favor, revisa y completa manualmente los campos.
-                      </p>
-                      {extractedData.validationMessage && (
-                        <p className="text-[#FFE066] text-xs mt-1">
-                          {extractedData.validationMessage}
+                {(() => {
+                  // Evaluamos y mostramos un log para depurar
+                  const showWarning = step === 2 && !itemToEdit && (extractedData.isTitleValid === false || extractedData.isImageValid === false);
+                  console.log('Estado de la condición de advertencia:', {
+                    step,
+                    isEditing: !!itemToEdit,
+                    isTitleValid: extractedData.isTitleValid,
+                    isImageValid: extractedData.isImageValid,
+                    showWarning
+                  });
+                  
+                  return showWarning ? (
+                    <div className="mb-6 p-4 bg-[#332500] border border-[#665000] rounded-lg flex items-start">
+                      <AlertCircle className="text-[#FFE066] mr-3 mt-0.5 shrink-0" size={18} />
+                      <div>
+                        <p className="text-white text-sm">
+                          No hemos podido autocompletar la información de este deseo correctamente.
+                          Por favor, revisa y completa manualmente los campos.
                         </p>
-                      )}
+                        {extractedData.validationMessage && (
+                          <p className="text-[#FFE066] text-xs mt-1">
+                            {extractedData.validationMessage}
+                          </p>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : null;
+                })()}
                 
                 {/* Imagen */}
                 <div className="mb-2">

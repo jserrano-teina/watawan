@@ -100,8 +100,12 @@ export async function validateProductData(
           content:
             "Eres un experto en validación de metadatos de productos. Tu tarea es determinar si " +
             "el título y la URL de imagen proporcionados son válidos para un producto real. " +
-            "Un título válido debe ser descriptivo y específico del producto (no genérico como 'Producto de Amazon'). " +
-            "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder). " +
+            "Un título válido debe ser descriptivo y específico del producto. Títulos inválidos incluyen:\n" +
+            "- Textos genéricos como 'Producto', 'Producto de Amazon', 'Amazon.com'\n" +
+            "- Títulos muy cortos (menos de 5 caracteres)\n" +
+            "- Títulos que contienen una URL\n" +
+            "- Cadenas de texto sin sentido como iniciales o letras sueltas ('R P')\n\n" +
+            "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder o una imagen genérica). " +
             "Responde solo con JSON válido sin explicaciones adicionales.",
         },
         {
