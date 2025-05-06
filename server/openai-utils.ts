@@ -83,8 +83,11 @@ export async function validateProductData(
   isImageValid: boolean;
   message: string;
 }> {
+  console.log(`🔍 VALIDANDO CON OPENAI - Título: "${title || 'No disponible'}", ImageUrl: ${imageUrl ? 'Disponible' : 'No disponible'}`);
+  
   try {
     if (!title && !imageUrl) {
+      console.log(`⚠️ No hay datos para validar, devolviendo inválido por defecto`);
       return {
         isTitleValid: false,
         isImageValid: false,
@@ -119,7 +122,10 @@ export async function validateProductData(
 
     // Procesar la respuesta
     const content = response.choices[0].message.content;
+    console.log(`📊 Respuesta raw de OpenAI: ${content}`);
     const result = content ? JSON.parse(content) : {};
+    
+    console.log(`📊 Respuesta parseada:`, result);
     
     // Valores por defecto
     let isTitleValid = false;
@@ -138,6 +144,8 @@ export async function validateProductData(
     if (result.message && typeof result.message === 'string') {
       message = result.message;
     }
+    
+    console.log(`⚡ Resultado final de validación: Título ${isTitleValid ? 'VÁLIDO' : 'INVÁLIDO'}, Imagen ${isImageValid ? 'VÁLIDA' : 'INVÁLIDA'}, Mensaje: ${message}`);
     
     return {
       isTitleValid: isTitleValid,

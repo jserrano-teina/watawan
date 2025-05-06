@@ -763,12 +763,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 {/* Mensaje de advertencia si hay datos de baja calidad */}
                 {(() => {
                   // Evaluamos y mostramos un log para depurar
-                  const showWarning = step === 2 && !itemToEdit && (extractedData.isTitleValid === false || extractedData.isImageValid === false);
+                  // IMPORTANTE: Usamos doble negación para convertir undefined a false
+                  const isTitleValid = !!extractedData.isTitleValid;
+                  const isImageValid = !!extractedData.isImageValid;
+                  const showWarning = step === 2 && !itemToEdit && (!isTitleValid || !isImageValid);
+                  
                   console.log('Estado de la condición de advertencia:', {
                     step,
                     isEditing: !!itemToEdit,
                     isTitleValid: extractedData.isTitleValid,
                     isImageValid: extractedData.isImageValid,
+                    isTitleValidBool: isTitleValid,
+                    isImageValidBool: isImageValid,
                     showWarning
                   });
                   

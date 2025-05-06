@@ -45,15 +45,19 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             }
           }
           
-          const validation = await validateProductData(data.title, data.imageUrl);
+          // DESACTIVAR TEMPORALMENTE LA VALIDACIÓN DE OPENAI PARA DEPURACIÓN
+          // const validation = await validateProductData(data.title, data.imageUrl);
           
-          // Si detectamos un título inválido, sobreescribimos la validación de OpenAI
-          if (isTitleInvalid) {
-            validation.isTitleValid = false;
-            validation.message = `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
-          }
+          // Crear una validación manual en su lugar
+          const validation = {
+            isTitleValid: !isTitleInvalid && !!data.title && data.title.length > 2,
+            isImageValid: !!data.imageUrl,
+            message: isTitleInvalid 
+              ? `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`
+              : "Todo parece correcto"
+          };
           
-          console.log(`✅ Validación IA: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
+          console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
           console.log(`📝 Mensaje: ${validation.message}`);
           
           return {
