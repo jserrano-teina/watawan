@@ -163,7 +163,7 @@ const MobileView = ({
             {/* Imagen principal a sangre */}
             <div className="w-full bg-[#202020] relative">
 
-              <div className="h-80 w-full">
+              <div className="h-[280px] w-full">
                 <ProductImage 
                   imageUrl={item.imageUrl} 
                   productId={productId}
