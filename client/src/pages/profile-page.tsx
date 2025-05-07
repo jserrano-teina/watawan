@@ -329,7 +329,18 @@ const ProfilePage = () => {
             <h2 className="text-xl font-bold mb-1">
               {user.displayName || user.email.split('@')[0]}
             </h2>
-            <p className="text-gray-500 text-sm mb-4">{user.email}</p>
+            <p className="text-gray-500 text-sm mb-4">
+              watawan.com<span className="text-white">/user/{
+                (user.displayName || user.email.split('@')[0])
+                  .toLowerCase()
+                  .normalize('NFD')
+                  .replace(/[\u0300-\u036f]/g, '')
+                  .replace(/[^\w\s-]/g, '')
+                  .replace(/\s+/g, '-')
+                  .replace(/-+/g, '-')
+                  .replace(/^-+|-+$/g, '')
+              }</span>
+            </p>
             
             {/* Botón de editar */}
             <button
