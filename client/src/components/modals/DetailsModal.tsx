@@ -89,7 +89,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-4">
+            <div className="mb-6">
               <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
             
@@ -131,7 +131,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                   className="w-full border border-[#333] rounded-lg py-3 px-4 flex items-center justify-center text-white hover:border-white transition-colors"
                 >
                   <span>Ir al enlace de compra</span>
-                  <ExternalLink size={16} className="ml-2" />
+                  <ExternalLink size={16} className="ml-2 text-white" />
                 </SafeLink>
               </div>
             )}
