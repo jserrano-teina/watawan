@@ -121,31 +121,20 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
-              {item.purchaseLink ? (
-                <>
-                  <div className="text-white/80 text-sm flex items-center justify-between truncate mb-3">
-                    <span className="truncate">{item.purchaseLink}</span>
-                  </div>
-                  
-                  {/* Botón a todo ancho que solo aparece si el ítem no está reservado */}
-                  {!item.isReserved && (
-                    <SafeLink 
-                      href={item.purchaseLink}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-full border border-[#333] rounded-lg py-3 px-4 flex items-center justify-center text-white hover:bg-[#252525] transition-colors mt-2"
-                    >
-                      <span>Ir al enlace de compra</span>
-                      <ExternalLink size={16} className="ml-2" />
-                    </SafeLink>
-                  )}
-                </>
-              ) : (
-                <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
-              )}
-            </div>
+            {/* Botón de enlace de compra (solo visible si hay enlace y no está reservado) */}
+            {item.purchaseLink && !item.isReserved && (
+              <div className="mb-6">
+                <SafeLink 
+                  href={item.purchaseLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full border border-[#333] rounded-lg py-3 px-4 flex items-center justify-center text-white hover:border-white transition-colors"
+                >
+                  <span>Ir al enlace de compra</span>
+                  <ExternalLink size={16} className="ml-2" />
+                </SafeLink>
+              </div>
+            )}
             
             {item.description && (
               <div className="mb-6">
