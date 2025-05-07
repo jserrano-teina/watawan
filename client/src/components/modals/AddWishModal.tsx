@@ -804,8 +804,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   
                   return showWarning ? (
                     <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">
-                      <p className="text-white text-sm">
-                        No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas), puedes completarla manualmente.
+                      <p className="text-white text-opacity-80 text-xs">
+                        No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas). Puedes completarla manualmente.
                       </p>
                     </div>
                   ) : null;
