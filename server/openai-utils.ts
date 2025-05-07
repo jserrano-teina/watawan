@@ -33,7 +33,13 @@ export async function extractMetadataWithAI(
           content: 
             "Eres un experto en extracción de datos de páginas web de comercio electrónico. " +
             "Tu tarea es extraer el título del producto, la descripción, el precio (con el símbolo de moneda) y la URL de la imagen principal " +
-            "del HTML proporcionado. Responde solo con JSON válido en el formato especificado sin explicaciones adicionales. " +
+            "del HTML proporcionado.\n\n" +
+            "IMPORTANTE para el título:\n" +
+            "- Debe ser específico y descriptivo del producto real\n" +
+            "- NO extraigas texto genérico como 'Producto', 'Artículo', o solo el nombre de la tienda\n" +
+            "- Asegúrate de que el título contiene características específicas (marca, modelo, tipo de producto)\n" +
+            "- Si no encuentras un título específico, mejor NO incluirlo en la respuesta\n\n" +
+            "Responde solo con JSON válido en el formato especificado sin explicaciones adicionales. " +
             "Si no puedes encontrar alguno de los campos, omítelo del JSON.",
         },
         {
@@ -103,13 +109,24 @@ export async function validateProductData(
           content:
             "Eres un experto en validación de metadatos de productos. Tu tarea es determinar si " +
             "el título y la URL de imagen proporcionados son válidos para un producto real. " +
-            "Un título válido debe ser descriptivo y específico del producto. Títulos inválidos incluyen:\n" +
-            "- Textos genéricos como 'Producto', 'Producto de Amazon', 'Amazon.com'\n" +
-            "- Títulos muy cortos (menos de 5 caracteres)\n" +
-            "- Títulos que contienen una URL\n" +
-            "- Cadenas de texto sin sentido como iniciales o letras sueltas ('R P')\n\n" +
-            "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder o una imagen genérica). " +
-            "Responde solo con JSON válido sin explicaciones adicionales.",
+            "Sé extremadamente estricto en tus evaluaciones.\n\n" +
+            "Un título válido DEBE SER descriptivo y específico del producto. Títulos inválidos incluyen:\n" +
+            "- Cualquier texto genérico como 'Producto', 'Artículo', 'Item'\n" +
+            "- Cualquier título que solo contenga el nombre de una tienda o sitio web (ej: 'Amazon.com', 'Zara', 'El Corte Inglés')\n" +
+            "- Títulos que combinan nombre de tienda y la palabra 'producto' (ej: 'Producto de Amazon', 'Artículo de Zara')\n" +
+            "- Títulos muy cortos (menos de 10 caracteres)\n" +
+            "- Títulos que contienen una URL o parte de una URL\n" +
+            "- Cadenas de texto sin sentido como iniciales, letras sueltas, códigos de producto aislados\n" +
+            "- Títulos que obviamente no describen un producto real (ej: 'Página no encontrada', 'Añadir al carrito', 'Detalles')\n" +
+            "- Títulos que solo contienen categorías genéricas (ej: 'Ropa', 'Electrónica', 'Hogar')\n" +
+            "- Cualquier texto que parezca ser un placeholder o texto de relleno\n\n" +
+            "Un título VÁLIDO debe contener información específica del producto como marca, modelo, tipo de producto, o características principales.\n\n" +
+            "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder o una imagen genérica).\n\n" +
+            "Responde con un JSON que contenga:\n" +
+            "- isTitleValid: boolean (true solo si estás 100% seguro de que el título es válido)\n" +
+            "- isImageValid: boolean\n" +
+            "- message: string (razón específica si algo es inválido)\n\n" +
+            "Ante la duda, marca como inválido.",
         },
         {
           role: "user",
@@ -155,9 +172,9 @@ export async function validateProductData(
   } catch (error) {
     console.error("Error al validar datos de producto con IA:", error);
     return {
-      isTitleValid: true, // Por defecto, asumimos que es válido en caso de error
-      isImageValid: true,
-      message: "Error durante la validación"
+      isTitleValid: false, // Por defecto, asumimos que NO es válido en caso de error
+      isImageValid: false, // Es más seguro asumir que los datos no son válidos
+      message: "Error durante la validación, asumiendo datos no válidos por precaución"
     };
   }
 }
