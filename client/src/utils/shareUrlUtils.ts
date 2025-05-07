@@ -16,7 +16,7 @@ export function generateSlug(text: string): string {
 /**
  * Crea una URL amigable para compartir una lista de deseos
  * Formato: watawan.com/user/[username] en producción
- * Formato: localhost:port/user/[username] en desarrollo
+ * Formato: En desarrollo, no genera URL amigable para evitar 404
  */
 export function buildFriendlyShareUrl(username: string): string {
   const userSlug = generateSlug(username);
@@ -29,8 +29,9 @@ export function buildFriendlyShareUrl(username: string): string {
                        window.location.hostname.includes('.repl.co');
   
   if (isDevelopment) {
-    // Para desarrollo, usar la URL actual con el path /user/[username]
-    return `${window.location.origin}/user/${userSlug}`;
+    // En desarrollo, devolver una cadena vacía para que se use el enlace legado
+    // Esto hará que ShareModal use el formato /s/[shareableLink]
+    return '';
   } else {
     // Para producción, mantener la URL original
     return `https://watawan.com/user/${userSlug}`;
