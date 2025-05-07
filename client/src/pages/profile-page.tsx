@@ -330,7 +330,7 @@ const ProfilePage = () => {
               {user.displayName || user.email.split('@')[0]}
             </h2>
             <p className="text-gray-500 text-sm mb-4">
-              watawan.com<span className="text-white">/user/{
+              watawan.com/user<span className="text-white">/{
                 (user.displayName || user.email.split('@')[0])
                   .toLowerCase()
                   .normalize('NFD')
