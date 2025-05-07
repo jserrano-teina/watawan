@@ -124,15 +124,24 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
               {item.purchaseLink ? (
-                <SafeLink 
-                  href={item.purchaseLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-sm flex items-center justify-between truncate hover:underline"
-                >
-                  <span className="truncate">{item.purchaseLink}</span>
-                  <ExternalLink size={16} className="flex-shrink-0 ml-2" />
-                </SafeLink>
+                <>
+                  <div className="text-white/80 text-sm flex items-center justify-between truncate mb-3">
+                    <span className="truncate">{item.purchaseLink}</span>
+                  </div>
+                  
+                  {/* Botón a todo ancho que solo aparece si el ítem no está reservado */}
+                  {!item.isReserved && (
+                    <SafeLink 
+                      href={item.purchaseLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full border border-[#333] rounded-lg py-3 px-4 flex items-center justify-center text-white hover:bg-[#252525] transition-colors mt-2"
+                    >
+                      <span>Ir al enlace de compra</span>
+                      <ExternalLink size={16} className="ml-2" />
+                    </SafeLink>
+                  )}
+                </>
               ) : (
                 <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
               )}
