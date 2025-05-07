@@ -6,6 +6,11 @@
   "display": "standalone",
   "background_color": "#121212",
   "theme_color": "#121212",
+  "prefer_related_applications": false,
+  "navigationColor": "#121212",
+  "navigationColorDark": "#121212",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
   "orientation": "portrait",
   "icons": [
     {

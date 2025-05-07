@@ -42,6 +42,8 @@
 
   body {
     @apply font-sans antialiased bg-[var(--color-bg-primary)] text-[var(--color-text-primary)] selection:bg-primary/20;
+    color-scheme: dark;
+    background-color: #121212;
   }
 
   /* Jerarquía de títulos */
@@ -128,6 +130,9 @@
   overflow: hidden;
   touch-action: manipulation;
   -webkit-text-size-adjust: 100%; /* Previene aumento de texto al girar en iOS */
+  /* Forzar color de barras del sistema Android */
+  color-scheme: dark;
+  background-color: #121212;
 }
 
 /* Ajustes específicos para iOS en PWA */
@@ -243,6 +248,8 @@
 /* Eliminar delay de 300ms en toques móviles */
 html {
   touch-action: manipulation;
+  color-scheme: dark;
+  background-color: #121212;
 }
 
 @layer components {
