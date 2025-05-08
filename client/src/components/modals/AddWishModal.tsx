@@ -546,16 +546,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="mb-6 w-24 h-24 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="mb-6">
+          <div className="w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
         </div>
       );
     }
     
-    // Siempre mostramos un cuadrado de 96x96 (h-24 w-24) con el botón redondo
+    // Mostramos un cuadrado de 104x104 (h-26 w-26) con el botón redondo dentro
     return (
-      <div className="relative mb-6 flex">
-        <div className="w-24 h-24 rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
+      <div className="mb-6">
+        <div className="relative w-26 h-26 rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
           {imageUrl ? (
             <ProductImage 
               imageUrl={imageUrl}
@@ -566,24 +568,24 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           ) : (
             <div className="w-full h-full"></div>
           )}
-        </div>
-        
-        {/* Botón para añadir/cambiar la imagen (siempre visible) */}
-        <div className="absolute bottom-2 right-2">
-          <button 
-            type="button" 
-            onClick={handleUploadClick} 
-            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
-            title={imageUrl ? "Cambiar imagen" : "Añadir imagen"}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-              <line x1="16" y1="5" x2="22" y2="5"></line>
-              <line x1="19" y1="2" x2="19" y2="8"></line>
-              <circle cx="9" cy="9" r="2"></circle>
-              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-            </svg>
-          </button>
+          
+          {/* Botón para añadir/cambiar la imagen (siempre visible) dentro del div */}
+          <div className="absolute bottom-2 right-2">
+            <button 
+              type="button" 
+              onClick={handleUploadClick} 
+              className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
+              title={imageUrl ? "Cambiar imagen" : "Añadir imagen"}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+                <line x1="16" y1="5" x2="22" y2="5"></line>
+                <line x1="19" y1="2" x2="19" y2="8"></line>
+                <circle cx="9" cy="9" r="2"></circle>
+                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+              </svg>
+            </button>
+          </div>
         </div>
       </div>
     );
