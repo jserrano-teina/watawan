@@ -267,7 +267,7 @@ const Home: React.FC = () => {
           style={{ 
             WebkitOverflowScrolling: 'touch', 
             height: 'calc(100vh - 56px)', 
-            paddingBottom: 'calc(88px + env(safe-area-inset-bottom, 20px))' 
+            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
           }}>
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
           
