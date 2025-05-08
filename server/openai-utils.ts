@@ -189,10 +189,11 @@ export async function validateProductData(
     };
   } catch (error) {
     console.error("Error al validar datos de producto con IA:", error);
+    // Si hay un error de API, asumimos que los datos son válidos para no bloquear el flujo
     return {
-      isTitleValid: false, // Por defecto, asumimos que NO es válido en caso de error
-      isImageValid: false, // Es más seguro asumir que los datos no son válidos
-      message: "Error durante la validación, asumiendo datos no válidos por precaución"
+      isTitleValid: true, // En caso de error de API, asumimos que es válido
+      isImageValid: true, // En caso de error de API, asumimos que es válida
+      message: "Error durante la validación, asumiendo datos válidos para no bloquear el flujo"
     };
   }
 }

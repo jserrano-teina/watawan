@@ -791,9 +791,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   // 1. Estamos en el paso 2
                   // 2. No estamos editando un item existente
                   // 3. Hay un enlace de compra
-                  // 4. Faltan AMBOS: título e imagen
+                  // 4. Falta el título O la imagen
                   const hasLink = !!watchStepTwo('purchaseLink');
-                  const showWarning = step === 2 && !itemToEdit && hasLink && !hasTitle && !hasImage;
+                  const showWarning = step === 2 && !itemToEdit && hasLink && (!hasTitle || !hasImage);
                   
                   return showWarning ? (
                     <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">

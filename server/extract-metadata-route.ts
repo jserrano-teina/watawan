@@ -58,10 +58,16 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           if (!isTitleInvalid && validation.isTitleValid) {
             console.log(`✅ Título validado por OpenAI Y validación manual: "${data.title}"`);
           } else {
-            // Si cualquiera de las validaciones falla, marcamos como inválido
-            validation.isTitleValid = false;
-            validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
-            console.log(`⚠️ Título rechazado: "${data.title}" - ${validation.message}`);
+            // Solo marcamos como inválido si la validación manual también falló (caso extremo)
+            if (isTitleInvalid) {
+              validation.isTitleValid = false;
+              validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
+              console.log(`⚠️ Título rechazado por validación manual: "${data.title}"`);
+            } else {
+              // Si solo falló la validación de OpenAI pero la manual pasó, lo consideramos válido
+              console.log(`⚠️ Título rechazado por OpenAI pero aprobado por validación manual: "${data.title}"`);
+              validation.isTitleValid = true;
+            }
           }
           
           console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
