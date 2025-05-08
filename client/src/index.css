@@ -133,6 +133,7 @@
   /* Forzar color de barras del sistema Android */
   color-scheme: dark;
   background-color: #121212;
+  forced-color-adjust: none;
 }
 
 /* Ajustes específicos para iOS en PWA */
@@ -250,6 +251,25 @@ html {
   touch-action: manipulation;
   color-scheme: dark;
   background-color: #121212;
+  forced-color-adjust: none;
+}
+
+/* Forzar las barras de Android en modo oscuro */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+    background-color: #121212;
+  }
+  
+  body {
+    background-color: #121212;
+    color-scheme: dark;
+  }
+}
+
+/* Asegurar que siempre se aplica el tema oscuro independientemente del sistema */
+:root {
+  color-scheme: dark;
 }
 
 @layer components {
