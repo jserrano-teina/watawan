@@ -791,21 +791,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   // 1. Estamos en el paso 2
                   // 2. No estamos editando un item existente
                   // 3. Hay un enlace de compra
-                  // 4. Falta el título O la imagen (no ambos)
+                  // 4. Falta el título O la imagen
                   const hasLink = !!watchStepTwo('purchaseLink');
                   const showWarning = step === 2 && !itemToEdit && hasLink && (!hasTitle || !hasImage);
                   
                   return showWarning ? (
-                    <div className="mb-6 p-3 flex items-center bg-[#15243b] border border-[#2d4a7c] rounded-lg">
-                      <div className="mr-3 flex-shrink-0">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5883C6" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <circle cx="12" cy="12" r="10"></circle>
-                          <line x1="12" y1="8" x2="12" y2="12"></line>
-                          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                      </div>
-                      <p className="text-white text-opacity-90 text-xs">
-                        No hemos podido autocompletar toda la información de este deseo. Por favor, {!hasTitle && !hasImage ? "añade un título y una imagen" : !hasTitle ? "añade un título" : "añade una imagen"}.
+                    <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">
+                      <p className="text-white text-opacity-80 text-xs">
+                        No hemos podido autocompletar la información de este deseo (es normal con algunos productos o tiendas). Puedes completarla manualmente.
                       </p>
                     </div>
                   ) : null;

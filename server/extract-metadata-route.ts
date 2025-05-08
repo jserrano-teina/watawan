@@ -300,56 +300,17 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         metadata = await getUrlMetadata(url, req.headers['user-agent'] as string);
       }
       
-      // Si no tenemos imagen o título después de todo el proceso, asegurar mensaje adecuado
-      if (!metadata.title && !metadata.imageUrl) {
-        console.log(`⚠️ No se pudo extraer título ni imagen de la URL`);
-        res.json({
-          title: '',
-          description: metadata.description || '',
-          imageUrl: '',
-          price: '',
-          isTitleValid: false,
-          isImageValid: false,
-          validationMessage: 'No pudimos extraer información de este enlace'
-        });
-      } else if (!metadata.title) {
-        console.log(`⚠️ No se pudo extraer el título de la URL`);
-        res.json({
-          title: '',
-          description: metadata.description || '',
-          imageUrl: metadata.imageUrl || '',
-          price: '',
-          isTitleValid: false,
-          isImageValid: !!metadata.imageUrl,
-          validationMessage: 'No pudimos extraer el título del producto'
-        });
-      } else if (!metadata.imageUrl) {
-        console.log(`⚠️ No se pudo extraer la imagen de la URL`);
-        res.json({
-          title: metadata.title || '',
-          description: metadata.description || '',
-          imageUrl: '',
-          price: '',
-          isTitleValid: true,
-          isImageValid: false,
-          validationMessage: 'No pudimos extraer la imagen del producto'
-        });
-      } else {
-        res.json(await createResponseObject(metadata));
-      }
+      res.json(await createResponseObject(metadata));
     }
   } catch (error) {
     console.error(`❌ Error extrayendo metadatos: ${error}`);
     
-    // En caso de error, devolver un objeto con estructura correcta y flags de validación adecuados
+    // En caso de error, devolver un objeto vacío con la estructura correcta
     res.json({
       title: '',
       description: '',
       imageUrl: '',
-      price: '',
-      isTitleValid: false,
-      isImageValid: false,
-      validationMessage: 'No pudimos procesar este enlace. Por favor, asegúrate de que sea una URL válida'
+      price: ''
     });
   }
 }
