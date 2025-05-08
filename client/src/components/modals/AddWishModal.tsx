@@ -546,53 +546,35 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+        <div className="mb-6 w-24 h-24 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
           <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
       );
     }
     
-    // Si no hay imagen, mostrar un botón centrado para añadirla
-    if (!imageUrl) {
-      return (
-        <div className="mb-6 w-full h-64">
-          <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-            <button
-              type="button"
-              onClick={handleUploadClick}
-              className="px-5 py-3 bg-[#303030] hover:bg-[#404040] text-white rounded-lg transition-colors flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-              Añadir imagen del producto
-            </button>
-          </div>
-        </div>
-      );
-    }
-    
-    // Si hay una imagen, mostrarla con el botón para cambiarla
+    // Siempre mostramos un cuadrado de 96x96 (h-24 w-24) con el botón redondo
     return (
-      <div className="relative mb-6 w-full h-64">
-        <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
-          <ProductImage 
-            imageUrl={imageUrl}
-            title={productTitle}
-            purchaseLink={purchaseLink}
-            className="w-full h-full"
-          />
+      <div className="relative mb-6 flex">
+        <div className="w-24 h-24 rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
+          {imageUrl ? (
+            <ProductImage 
+              imageUrl={imageUrl}
+              title={productTitle}
+              purchaseLink={purchaseLink}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full"></div>
+          )}
         </div>
         
-        {/* Botón para cambiar la imagen */}
+        {/* Botón para añadir/cambiar la imagen (siempre visible) */}
         <div className="absolute bottom-2 right-2">
           <button 
             type="button" 
             onClick={handleUploadClick} 
             className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
-            title="Cambiar imagen"
+            title={imageUrl ? "Cambiar imagen" : "Añadir imagen"}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
