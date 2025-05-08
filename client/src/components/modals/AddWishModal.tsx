@@ -662,18 +662,39 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </div>
 
                   
-                  {/* Botón para pegar desde el portapapeles (oculto en iOS) */}
-                  {!isIOS && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full mt-4 text-base flex items-center justify-center"
-                      onClick={handlePasteFromClipboard}
+                  {/* Fila de botones principales */}
+                  <div className="flex gap-4 mt-4">
+                    {/* Botón para pegar desde el portapapeles (oculto en iOS) */}
+                    {!isIOS && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex-1 py-6 text-base flex items-center justify-center"
+                        onClick={handlePasteFromClipboard}
+                      >
+                        <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
+                        <span style={{ marginLeft: '0' }}>Pegar enlace</span>
+                      </Button>
+                    )}
+                    
+                    {/* Botón de continuar dentro del contenido */}
+                    <Button 
+                      type="submit"
+                      disabled={isLoading}
+                      className={`py-6 text-base flex-1 ${isIOS ? 'w-full' : ''}`}
                     >
-                      <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
-                      <span style={{ marginLeft: '0' }}>Pegar enlace</span>
+                      {isLoading ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        </>
+                      ) : (
+                        <span className="text-base">Continuar</span>
+                      )}
                     </Button>
-                  )}
+                  </div>
                   
                   {/* Botón para omitir paso */}
                   <div className="flex justify-center mt-4">
@@ -711,29 +732,14 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
               
               {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={handleClose}
                   variant="outline"
+                  className="w-full"
                 >
                   Cancelar
-                </Button>
-                <Button 
-                  type="submit"
-                  disabled={isLoading}
-                  className="px-6"
-                >
-                  {isLoading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                    </>
-                  ) : (
-                    'Continuar'
-                  )}
                 </Button>
               </div>
             </form>
