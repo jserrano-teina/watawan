@@ -47,11 +47,12 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   };
 
   return (
-    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg safe-area-bottom">
-      <div className="flex justify-around items-center h-[72px] max-w-[500px] mx-auto pb-3">
+    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg">
+      <div className="flex justify-around items-center h-[72px] max-w-[500px] mx-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom, 12px)' }}>
         <button 
           onClick={() => navigateTo('/')}
           className={`flex flex-col items-center justify-center w-full h-full ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
+          style={{ touchAction: 'manipulation' }}
         >
           <Home className="h-5 w-5" />
           <span className="text-xs mt-1">Mis deseos</span>
@@ -60,6 +61,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
         <button 
           onClick={() => navigateTo('/notifications')}
           className={`flex flex-col items-center justify-center w-full h-full relative ${isActive('/notifications') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
+          style={{ touchAction: 'manipulation' }}
         >
           <Bell className="h-5 w-5" />
           <span className="text-xs mt-1">Notificaciones</span>
@@ -74,6 +76,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
         <button 
           onClick={() => navigateTo('/profile')}
           className={`flex flex-col items-center justify-center w-full h-full ${isActive('/profile') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
+          style={{ touchAction: 'manipulation' }}
         >
           <User className="h-5 w-5" />
           <span className="text-xs mt-1">Perfil</span>

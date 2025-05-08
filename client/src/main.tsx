@@ -4,18 +4,35 @@ import App from "./App";
 import "./index.css";
 import { queryClient } from "./lib/queryClient";
 
-// Configuración específica para forzar el modo oscuro en Android
+// Configuración específica para forzar el modo oscuro y asegurar compatibilidad con PWA
 document.documentElement.classList.add('dark');
-if (navigator.userAgent.includes('Android')) {
-  // Forzar tema oscuro en la barra de navegación de Android
-  if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', '#121212');
-  } else {
-    // Forzar modo oscuro incluso si el sistema está en modo claro
-    const metaThemeColor = document.createElement('meta');
-    metaThemeColor.name = 'theme-color';
-    metaThemeColor.content = '#121212';
-    document.head.appendChild(metaThemeColor);
+
+// Optimizaciones para PWA en todos los dispositivos
+const isInStandaloneMode = () => 
+  window.matchMedia('(display-mode: standalone)').matches || 
+  (window.navigator as any).standalone === true;
+
+// Detectar si está en modo PWA y aplicar clases específicas
+if (isInStandaloneMode()) {
+  document.documentElement.classList.add('pwa-html-mode');
+  document.body.classList.add('pwa-mode');
+}
+
+// Forzar tema oscuro en barras de sistema para todos los dispositivos
+const metaThemeColor = document.querySelector('meta[name="theme-color"]') || 
+  document.createElement('meta');
+metaThemeColor.setAttribute('name', 'theme-color');
+metaThemeColor.setAttribute('content', '#121212');
+if (!document.querySelector('meta[name="theme-color"]')) {
+  document.head.appendChild(metaThemeColor);
+}
+
+// Configuración específica para iOS
+if (/iPhone|iPod|iPad/.test(navigator.userAgent)) {
+  const metaViewport = document.querySelector('meta[name="viewport"]');
+  if (metaViewport) {
+    metaViewport.setAttribute('content', 
+      'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover');
   }
 }
 
