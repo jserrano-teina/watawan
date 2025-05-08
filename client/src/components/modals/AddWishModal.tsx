@@ -868,7 +868,8 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </label>
                   <CustomTextarea 
                     id="description" 
-                    rows={4}
+                    rows={3}
+                    style={{ minHeight: "100px" }}
                     className="resize-none"
                     placeholder="Añade detalles como color, talla, modelo..."
                     {...registerStepTwo('description')}
@@ -879,7 +880,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 </div>
                 
                 {/* Botón de guardar a todo ancho */}
-                <div className="mb-10 mt-8">
+                <div className="mb-10 mt-6">
                   <Button 
                     type="submit"
                     disabled={isSaving}
