@@ -574,7 +574,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
             <button 
               type="button" 
               onClick={handleUploadClick} 
-              className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors border border-[#444]"
+              className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
               title={imageUrl ? "Cambiar imagen" : "Añadir imagen"}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -710,12 +710,19 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               
 
               
-              {/* Botón de guardar a todo ancho */}
-              <div className="p-4">
+              {/* Barra de navegación fija inferior */}
+              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
+                <Button 
+                  type="button" 
+                  onClick={handleClose}
+                  variant="outline"
+                >
+                  Cancelar
+                </Button>
                 <Button 
                   type="submit"
                   disabled={isLoading}
-                  className="w-full text-base"
+                  className="px-6"
                 >
                   {isLoading ? (
                     <>
@@ -727,18 +734,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   ) : (
                     'Continuar'
                   )}
-                </Button>
-              </div>
-              
-              {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
-                <Button 
-                  type="button" 
-                  onClick={handleClose}
-                  variant="outline"
-                  className="w-full"
-                >
-                  Cancelar
                 </Button>
               </div>
             </form>
@@ -894,12 +889,19 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               
 
               
-              {/* Botón de guardar a todo ancho */}
-              <div className="p-4">
+              {/* Barra de navegación fija inferior */}
+              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
+                <Button 
+                  type="button" 
+                  onClick={itemToEdit ? handleClose : goBackToStepOne}
+                  variant="outline"
+                >
+                  {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
+                  {itemToEdit ? 'Cancelar' : 'Atrás'}
+                </Button>
                 <Button 
                   type="submit"
                   disabled={isSaving}
-                  className="w-full text-base"
                 >
                   {isSaving ? (
                     <>
@@ -911,19 +913,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   ) : (
                     itemToEdit ? 'Actualizar' : 'Guardar'
                   )}
-                </Button>
-              </div>
-              
-              {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
-                <Button 
-                  type="button" 
-                  onClick={itemToEdit ? handleClose : goBackToStepOne}
-                  variant="outline"
-                  className="w-full"
-                >
-                  {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
-                  {itemToEdit ? 'Cancelar' : 'Atrás'}
                 </Button>
               </div>
             </form>
