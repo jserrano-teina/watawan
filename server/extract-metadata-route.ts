@@ -28,34 +28,35 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           console.log(`🧠 Validando calidad de datos con IA...`);
           console.log(`📊 Datos a validar - Título: "${data.title || 'No disponible'}", Imagen: ${data.imageUrl ? 'Disponible' : 'No disponible'}`);
           
-          // IMPORTANTE: Forzar validación más estricta para casos específicos
+          // Validación manual más permisiva para casos específicos
           let isTitleInvalid = false;
           if (data.title) {
-            // Detectar títulos muy cortos o genéricos
-            if (data.title.length <= 2 || 
-                /^[A-Za-z]\s?[A-Za-z]$/.test(data.title) || // Patrón tipo "R P"
+            // Detectar SOLO títulos extremadamente genéricos o incorrectos
+            if (data.title.length <= 1 || // Solo títulos de 1 caracter o menos
+                /^[A-Za-z]\s*$/.test(data.title) || // Solo una letra
                 data.title === "Amazon.com" ||
                 data.title === "Amazon.es" ||
-                data.title === "Producto" ||
-                data.title === "Producto Amazon" ||
-                data.title.includes("http") ||
+                data.title === "Producto" || // Solo la palabra "Producto" sin más
+                data.title.includes("http://") ||
+                data.title.includes("https://") ||
                 data.title.includes("www.")) {
               isTitleInvalid = true;
               console.log(`⚠️ Detectado título inválido de forma explícita: "${data.title}"`);
             }
           }
           
-          // Reactivamos la validación con OpenAI para ser más estrictos con los títulos
+          // Validación con OpenAI (ahora es más permisiva según los cambios en openai-utils.ts)
           const validation = await validateProductData(data.title, data.imageUrl);
           
-          // Añadimos la validación manual como capa adicional
-          if (!isTitleInvalid && validation.isTitleValid) {
-            console.log(`✅ Título validado por OpenAI Y validación manual: "${data.title}"`);
-          } else {
-            // Si cualquiera de las validaciones falla, marcamos como inválido
+          // Lógica de validación ajustada para ser más permisiva
+          if (isTitleInvalid) {
+            // Solo invalidamos si la validación manual detectó algo claramente incorrecto
             validation.isTitleValid = false;
-            validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
-            console.log(`⚠️ Título rechazado: "${data.title}" - ${validation.message}`);
+            validation.message = `El título "${data.title}" es demasiado genérico o contiene una URL. Por favor, introduce un título descriptivo.`;
+            console.log(`⚠️ Título rechazado por validación manual: "${data.title}"`);
+          } else {
+            // Aceptamos el resultado de la validación de OpenAI (que ahora es más permisiva)
+            console.log(`✅ Título pasó validación manual. Resultado OpenAI: ${validation.isTitleValid ? 'VÁLIDO' : 'INVÁLIDO'}: "${data.title}"`);
           }
           
           console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
