@@ -75,6 +75,18 @@ export async function extractMetadataWithAI(
     return metadata;
   } catch (error) {
     console.error("Error al extraer metadatos con IA:", error);
+    
+    // Registramos diagnóstico detallado del error para solucionar problemas
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.log(`🔴 [DIAGNÓSTICO DETALLADO] Error en extracción de metadatos con OpenAI: ${errorMsg}`);
+    
+    // Información sobre posibles problemas de cuota o clave API
+    if (errorMsg.includes('quota') || errorMsg.includes('rate limit') || 
+        errorMsg.includes('exceeded') || errorMsg.includes('billing') ||
+        errorMsg.includes('key') || errorMsg.includes('API key')) {
+      console.log(`⚠️ [ALERTA] Posible problema con la API key o límites de cuota de OpenAI`);
+    }
+    
     return {};
   }
 }
@@ -189,6 +201,18 @@ export async function validateProductData(
     };
   } catch (error) {
     console.error("Error al validar datos de producto con IA:", error);
+    
+    // Registramos diagnóstico detallado del error para solucionar problemas
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    console.log(`🔴 [DIAGNÓSTICO DETALLADO] Error en validación OpenAI: ${errorMsg}`);
+    
+    // Información sobre posibles problemas de cuota o clave API
+    if (errorMsg.includes('quota') || errorMsg.includes('rate limit') || 
+        errorMsg.includes('exceeded') || errorMsg.includes('billing') ||
+        errorMsg.includes('key') || errorMsg.includes('API key')) {
+      console.log(`⚠️ [ALERTA] Posible problema con la API key o límites de cuota de OpenAI`);
+    }
+    
     // Si hay un error de API, asumimos que los datos son válidos para no bloquear el flujo
     return {
       isTitleValid: true, // En caso de error de API, asumimos que es válido
