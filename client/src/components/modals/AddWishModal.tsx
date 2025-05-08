@@ -277,16 +277,40 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Establecer el título solo si existe y es válido, limitándolo a 100 caracteres
-        if (metadata.title && metadata.isTitleValid) {
-          console.log('Título extraído válido:', metadata.title);
+        // Siempre establecer el título si existe, y añadir una alerta si es inválido
+        if (metadata.title) {
           // Truncar el título a un máximo de 100 caracteres
           const truncatedTitle = metadata.title.substring(0, 100);
+          
+          // Siempre establecer el título, incluso si es inválido
+          console.log('Estableciendo título en formulario (válido=', metadata.isTitleValid, '):', truncatedTitle);
           setValueStepTwo('title', truncatedTitle);
-        } else if (metadata.title && !metadata.isTitleValid) {
-          console.log('Título extraído inválido, dejando el campo vacío:', metadata.title);
-          // Si el título es inválido, dejamos el campo vacío para que el usuario lo complete
-          setValueStepTwo('title', '');
+          
+          // Si el título es inválido, mostrar un mensaje de alerta pero mantener el título
+          if (!metadata.isTitleValid) {
+            console.log('Título extraído considerado inválido pero se mantiene:', metadata.title);
+            console.log('Razón de invalidez:', metadata.validationMessage);
+            
+            // Mostrar una alerta interna para que el usuario sepa que debe revisar el título
+            setInternalAlert({
+              visible: true,
+              message: "Por favor revisa el título del producto",
+              type: "warning"
+            });
+          }
+          
+          // Verificar después de setear el valor
+          setTimeout(() => {
+            const currentTitle = watchStepTwo('title');
+            console.log('Título en formulario después de setear:', currentTitle);
+            if (currentTitle !== truncatedTitle) {
+              console.log('⚠️ DIAGNÓSTICO: El título no se estableció correctamente');
+            }
+          }, 100);
+        } else {
+          console.log('No se recibió ningún título:', 
+            'title =', metadata.title, 
+            'isTitleValid =', metadata.isTitleValid);
         }
         
         // Extraer solo el valor numérico del precio si existe

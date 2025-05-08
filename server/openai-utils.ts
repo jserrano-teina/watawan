@@ -104,6 +104,19 @@ export async function validateProductData(
         message: "No se proporcionaron datos para validar",
       };
     }
+    
+    // Si el título existe pero está vacío o sólo tiene espacios, marcarlo como inválido de inmediato
+    if (title !== undefined && title.trim() === '') {
+      console.log(`⚠️ [DIAGNÓSTICO] Título vacío o solo con espacios, marcando como inválido sin consultar a OpenAI`);
+      return {
+        isTitleValid: false,
+        isImageValid: imageUrl ? true : false,
+        message: "El título está vacío",
+      };
+    }
+    
+    console.log(`🧠 [DIAGNÓSTICO] Preparando consulta a OpenAI para validación...`);
+    
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",

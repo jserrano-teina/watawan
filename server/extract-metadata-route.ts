@@ -6,7 +6,11 @@ import { validateProductData } from './openai-utils';
 export async function handleExtractMetadataRequest(req: Request, res: Response) {
   const url = req.query.url as string;
   
+  // Log completo para diagnóstico
+  console.log(`🔍 [DIAGNÓSTICO] Solicitud de extracción de metadatos recibida para URL: ${url}`);
+  
   if (!url) {
+    console.log(`❌ [DIAGNÓSTICO] Error: URL no proporcionada en la petición`);
     return res.status(400).json({ message: "URL parameter is required" });
   }
   
@@ -46,7 +50,9 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           }
           
           // Reactivamos la validación con OpenAI para ser más estrictos con los títulos
+          console.log(`🧠 [DIAGNÓSTICO] Enviando título a validar: "${data.title}"`);
           const validation = await validateProductData(data.title, data.imageUrl);
+          console.log(`🧠 [DIAGNÓSTICO] Resultado de validación recibido: título ${validation.isTitleValid ? 'VÁLIDO' : 'INVÁLIDO'}`);
           
           // Añadimos la validación manual como capa adicional
           if (!isTitleInvalid && validation.isTitleValid) {
