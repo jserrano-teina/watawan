@@ -277,27 +277,13 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Siempre establecer el título si existe, y añadir una alerta si es inválido
-        if (metadata.title) {
+        // Establecer el título solo si existe y es válido
+        if (metadata.title && metadata.isTitleValid) {
+          console.log('Título extraído válido:', metadata.title);
           // Truncar el título a un máximo de 100 caracteres
           const truncatedTitle = metadata.title.substring(0, 100);
-          
-          // Siempre establecer el título, incluso si es inválido
-          console.log('Estableciendo título en formulario (válido=', metadata.isTitleValid, '):', truncatedTitle);
+          console.log('Estableciendo título en formulario:', truncatedTitle);
           setValueStepTwo('title', truncatedTitle);
-          
-          // Si el título es inválido, mostrar un mensaje de alerta pero mantener el título
-          if (!metadata.isTitleValid) {
-            console.log('Título extraído considerado inválido pero se mantiene:', metadata.title);
-            console.log('Razón de invalidez:', metadata.validationMessage);
-            
-            // Mostrar una alerta interna para que el usuario sepa que debe revisar el título
-            setInternalAlert({
-              visible: true,
-              message: "Por favor revisa el título del producto",
-              type: "warning"
-            });
-          }
           
           // Verificar después de setear el valor
           setTimeout(() => {
@@ -307,8 +293,13 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               console.log('⚠️ DIAGNÓSTICO: El título no se estableció correctamente');
             }
           }, 100);
+        } else if (metadata.title && !metadata.isTitleValid) {
+          console.log('Título extraído inválido, dejando el campo vacío:', metadata.title);
+          console.log('Razón de invalidez:', metadata.validationMessage);
+          // Si el título es inválido, dejamos el campo vacío para que el usuario lo complete
+          setValueStepTwo('title', '');
         } else {
-          console.log('No se recibió ningún título:', 
+          console.log('No se recibió título o isTitleValid no está definido:', 
             'title =', metadata.title, 
             'isTitleValid =', metadata.isTitleValid);
         }
@@ -792,29 +783,17 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 
                 {/* Mensaje de advertencia si hay datos de baja calidad */}
                 {(() => {
-                  // Evaluamos y mostramos un log para depurar
-                  // IMPORTANTE: Usamos doble negación para convertir undefined a false
-                  const isTitleValid = !!extractedData.isTitleValid;
-                  const isImageValid = !!extractedData.isImageValid;
-                  const wasSkipped = !!extractedData.skipValidation;
+                  // Evaluamos los valores actuales de título e imagen
+                  const hasTitle = !!watchStepTwo('title');
+                  const hasImage = !!watchStepTwo('imageUrl');
                   
                   // Solo mostrar advertencia si:
                   // 1. Estamos en el paso 2
                   // 2. No estamos editando un item existente
-                  // 3. Alguna validación falló (título o imagen)
-                  // 4. NO se omitió el paso 1 (la validación no fue omitida)
-                  const showWarning = step === 2 && !itemToEdit && (!isTitleValid || !isImageValid) && !wasSkipped;
-                  
-                  console.log('Estado de la condición de advertencia:', {
-                    step,
-                    isEditing: !!itemToEdit,
-                    isTitleValid: extractedData.isTitleValid,
-                    isImageValid: extractedData.isImageValid,
-                    wasSkipped,
-                    isTitleValidBool: isTitleValid,
-                    isImageValidBool: isImageValid,
-                    showWarning
-                  });
+                  // 3. Hay un enlace de compra
+                  // 4. Faltan AMBOS: título e imagen
+                  const hasLink = !!watchStepTwo('purchaseLink');
+                  const showWarning = step === 2 && !itemToEdit && hasLink && !hasTitle && !hasImage;
                   
                   return showWarning ? (
                     <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">
