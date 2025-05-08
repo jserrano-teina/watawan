@@ -254,7 +254,18 @@ html {
   forced-color-adjust: none;
 }
 
-/* Aplicamos el tema oscuro independientemente de la configuración del sistema */
+/* Forzar las barras de Android en modo oscuro */
+@media (prefers-color-scheme: dark) {
+  html {
+    color-scheme: dark;
+    background-color: #121212;
+  }
+  
+  body {
+    background-color: #121212;
+    color-scheme: dark;
+  }
+}
 
 /* Asegurar que siempre se aplica el tema oscuro independientemente del sistema */
 :root {
