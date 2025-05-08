@@ -554,10 +554,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Mostramos un cuadrado de 104x104 (h-26 w-26) con el botón redondo dentro
+    // Mostramos un cuadrado de 104x104px con el botón redondo dentro
     return (
       <div className="mb-6">
-        <div className="relative w-26 h-26 rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
+        <div className="relative w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
           {imageUrl ? (
             <ProductImage 
               imageUrl={imageUrl}
