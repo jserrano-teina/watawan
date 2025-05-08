@@ -28,35 +28,34 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           console.log(`🧠 Validando calidad de datos con IA...`);
           console.log(`📊 Datos a validar - Título: "${data.title || 'No disponible'}", Imagen: ${data.imageUrl ? 'Disponible' : 'No disponible'}`);
           
-          // Validación manual extremadamente reducida - solo rechazar casos muy obvios
+          // IMPORTANTE: Forzar validación más estricta para casos específicos
           let isTitleInvalid = false;
           if (data.title) {
-            // ÚNICAMENTE detectar títulos completamente inválidos
-            if (data.title.length === 0 || // String vacío
-                data.title === "404" ||
-                data.title === "Error" ||
-                data.title === "Página no encontrada" ||
-                data.title === "Not Found" ||
-                data.title.includes("http://") || // URLs completas
-                data.title.includes("https://")) {
+            // Detectar títulos muy cortos o genéricos
+            if (data.title.length <= 2 || 
+                /^[A-Za-z]\s?[A-Za-z]$/.test(data.title) || // Patrón tipo "R P"
+                data.title === "Amazon.com" ||
+                data.title === "Amazon.es" ||
+                data.title === "Producto" ||
+                data.title === "Producto Amazon" ||
+                data.title.includes("http") ||
+                data.title.includes("www.")) {
               isTitleInvalid = true;
-              console.log(`⚠️ Detectado título completamente inválido: "${data.title}"`);
+              console.log(`⚠️ Detectado título inválido de forma explícita: "${data.title}"`);
             }
           }
           
-          // Para diagnosticar, ejecutamos la validación de OpenAI pero ignoramos su resultado
+          // Reactivamos la validación con OpenAI para ser más estrictos con los títulos
           const validation = await validateProductData(data.title, data.imageUrl);
-          console.log(`ℹ️ Resultado de OpenAI (solo informativo): Título ${validation.isTitleValid ? 'VÁLIDO' : 'INVÁLIDO'}`);
           
-          // Aceptamos TODOS los títulos que no sean obviamente inválidos según la validación manual
-          if (isTitleInvalid) {
-            validation.isTitleValid = false;
-            validation.message = `El título "${data.title}" parece ser un mensaje de error o una URL. Por favor, introduce un título descriptivo.`;
-            console.log(`⚠️ Título rechazado por validación manual: "${data.title}"`);
+          // Añadimos la validación manual como capa adicional
+          if (!isTitleInvalid && validation.isTitleValid) {
+            console.log(`✅ Título validado por OpenAI Y validación manual: "${data.title}"`);
           } else {
-            // Siempre aceptamos los títulos que no están en la lista negra, independientemente de OpenAI
-            validation.isTitleValid = true;
-            console.log(`✅ Título aceptado automáticamente: "${data.title}"`);
+            // Si cualquiera de las validaciones falla, marcamos como inválido
+            validation.isTitleValid = false;
+            validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
+            console.log(`⚠️ Título rechazado: "${data.title}" - ${validation.message}`);
           }
           
           console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
