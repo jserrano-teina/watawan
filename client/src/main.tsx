@@ -12,16 +12,9 @@ declare global {
   }
 }
 
-// Componente wrapper para notificar cuando la app está lista
-function AppWithReadyNotification() {
-  // La lógica de detección de PWA ahora se ha movido al hook useDomainDetection
-  // para que pueda ser compartida en toda la aplicación y considerar
-  // el tipo de dominio (app.watawan.com vs watawan.com)
-  return <App />;
-}
-
+// Renderización directa de la app para evitar problemas con la PWA
 createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AppWithReadyNotification />
+    <App />
   </React.StrictMode>
 );

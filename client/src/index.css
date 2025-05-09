@@ -121,54 +121,28 @@
   }
 }
 
-/* Estilos específicos para PWA */
-/* Ajustes a nivel de documento HTML para PWAs */
+/* Estilos básicos para PWA */
+/* Utilizamos clases sencillas para PWA para minimizar problemas de layout */
 .pwa-html-mode {
   height: 100%;
   width: 100%;
-  position: fixed;
-  overflow: hidden;
-  touch-action: manipulation;
-  -webkit-text-size-adjust: 100%; /* Previene aumento de texto al girar en iOS */
-  /* Forzar color de barras del sistema Android */
-  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
   background-color: #121212;
-  forced-color-adjust: none;
-}
-
-/* Ajustes específicos para iOS en PWA */
-@supports (-webkit-touch-callout: none) {
-  .pwa-html-mode {
-    /* Soporte para bordes redondeados en iOS */
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
-  }
 }
 
 .pwa-mode {
-  /* Configuración principal del body para PWA */
-  height: 100%;
-  width: 100%;
-  overflow-y: auto; /* Auto permite scroll vertical */
-  overflow-x: hidden; /* Previene scroll horizontal */
-  touch-action: pan-y; /* Sólo permitir scroll vertical */
-  -webkit-overflow-scrolling: touch; /* Scroll con inercia en iOS */
-  overscroll-behavior: none; /* Previene rebote */
-  position: relative;
-  /* Mejora de rendimiento en dispositivos móviles */
-  will-change: transform;
-  transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
+  /* Configuración simple para el body en PWA */
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  background-color: #121212;
 }
 
-/* Asegura que el contenido PWA respeta las áreas seguras del dispositivo */
+/* Soporte básico para safe areas */
 .pwa-mode #root,
 .pwa-mode .app-container {
   min-height: 100%;
   width: 100%;
-  padding-bottom: max(16px, env(safe-area-inset-bottom));
-  padding-top: env(safe-area-inset-top, 0);
-  padding-left: env(safe-area-inset-left, 0);
-  padding-right: env(safe-area-inset-right, 0);
 }
 
 /* Clases de utilidad para áreas seguras */
@@ -416,101 +390,39 @@ html {
     @apply bg-gradient-to-r from-[#FFE066] to-[#FFE066]/70 bg-clip-text text-transparent;
   }
   
-  /* Bloqueo de scroll para modales */
+  /* Bloqueo de scroll simplificado para modales */
   .body-scroll-lock {
     overflow: hidden !important;
-    position: fixed;
-    width: 100%;
-    height: 100%;
-    overscroll-behavior: none;
-    -webkit-overflow-scrolling: auto;
-    touch-action: none;
   }
   
-  /* Contenedor sin scroll para páginas con poco contenido */
+  /* Contenedor simplificado para páginas con poco contenido */
   .fixed-height-container {
-    height: calc(100% - 80px) !important; /* 56px del header + 16px de espacio extra */
-    min-height: calc(100% - 80px) !important;
-    max-height: calc(100% - 80px) !important;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-    -webkit-overflow-scrolling: auto !important;
-    touch-action: none !important;
-    display: flex !important;
-    flex-direction: column !important;
-    position: relative !important;
     padding-bottom: 90px !important; /* Espacio para la navbar */
   }
   
-  /* Prevenir scroll específicamente en páginas con poco contenido */
-  .no-scroll-page {
-    height: 100vh !important;
-    max-height: 100vh !important;
-    overflow: hidden !important;
-    position: fixed !important;
-    width: 100% !important;
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    overscroll-behavior: none !important;
-    touch-action: none !important;
-  }
-  
-  /* Navegación fija que no se mueve al hacer scroll */
+  /* Navegación fija simplificada */
   .fixed-navigation {
     position: fixed !important;
     bottom: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    z-index: 40 !important; /* Valor más bajo para que no tape modales y sheets */
-    transform: translateZ(0) !important;
-    will-change: transform !important;
-    -webkit-backface-visibility: hidden !important;
-    backface-visibility: hidden !important;
-    -webkit-transform: translate3d(0, 0, 0) !important;
-    transform: translate3d(0, 0, 0) !important;
+    z-index: 40 !important;
+    background-color: #121212 !important;
+    border-top: 1px solid #333 !important;
     overflow: hidden !important;
-    transition: none !important;
-    /* Forzamos que permanezca visible */
-    visibility: visible !important;
-    opacity: 1 !important;
-    /* Hacer que la altura sea constante */
-    height: 72px !important; /* Altura aumentada de 64px a 72px */
-    min-height: 72px !important;
-    max-height: 72px !important;
-    /* Asegurar que permanece por encima del contenido scrollable */
+    height: 72px !important;
     box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.1) !important;
-    /* Propiedades específicas para iOS */
-    position: -webkit-sticky !important;
-    touch-action: none !important;
-    /* Evitar interacción con scroll de página principal */
-    pointer-events: auto !important;
-    /* Forzar mantener posición incluso con overflow */
-    inset: auto 0 0 0 !important;
   }
   
-  /* Optimización de imágenes */
+  /* Optimización básica de imágenes */
   .img-persist {
-    content-visibility: auto;
-    contain: content;
-    will-change: contents;
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    transform: translateZ(0);
-    /* Forzar el uso de GPU */
-    filter: contrast(1);
+    max-width: 100%;
+    height: auto;
   }
   
-  /* Forzar que las imágenes permanezcan en memoria */
+  /* Configuración simple para imágenes */
   img {
-    /* Esta técnica fuerza que las imágenes permanezcan en la GPU */
-    transform: translateZ(0);
-    backface-visibility: hidden;
-    -webkit-backface-visibility: hidden;
-    /* Configurar el comportamiento de carga */
-    loading: eager;
-    /* Prioridad alta para imágenes visibles */
-    fetchpriority: high;
+    max-width: 100%;
+    height: auto;
   }
 }
