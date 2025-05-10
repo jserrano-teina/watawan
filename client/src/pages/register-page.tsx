@@ -93,8 +93,8 @@ export default function RegisterPage() {
   }, [user, setLocation]);
 
   return (
-    <div className="flex min-h-screen bg-background">
-      <div className="flex flex-col w-full max-w-[500px] mx-auto items-center justify-center px-4 py-12">
+    <div className="flex min-h-screen bg-background fixed-height-container">
+      <div className="flex flex-col w-full max-w-[500px] mx-auto items-center justify-center px-4">
         <div className="w-full mb-8 text-center">
           <OptimizedImage 
             src="/images/waw_logo.svg" 

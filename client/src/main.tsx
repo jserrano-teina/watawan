@@ -2,6 +2,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
+import "./pwa-fixes.css"; // Importar los estilos específicos para PWA
 import { queryClient } from "./lib/queryClient";
 
 // Declaraciones globales
