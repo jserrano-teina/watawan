@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import App from "./App";
 import "./index.css";
 import "./pwa-fixes.css"; // Importar los estilos específicos para PWA
+import "./ios-fixes.css"; // Importar los fixes específicos para iOS
 import { queryClient } from "./lib/queryClient";
 
 // Declaraciones globales

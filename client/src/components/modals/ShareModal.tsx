@@ -76,7 +76,9 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
           bottom: 0,
           left: 0,
           right: 0,
-          zIndex: 9999
+          zIndex: 9999,
+          paddingTop: 'env(safe-area-inset-top, 0)',
+          paddingBottom: 'calc(16px + env(safe-area-inset-bottom, 0))'
         }}
       >
         <SheetHeader className="sr-only">
