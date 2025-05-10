@@ -66,32 +66,8 @@ const ProfilePage = () => {
     }
   }, [user]);
   
-  // Bloquear scroll específicamente para esta página
-  useEffect(() => {
-    // Guardar el estado original de overflow
-    const originalStyle = window.getComputedStyle(document.body).overflow;
-    const originalPosition = window.getComputedStyle(document.body).position;
-    
-    // Bloquear scroll
-    document.body.style.overflow = 'hidden';
-    document.body.style.overscrollBehavior = 'none';
-    document.body.style.position = 'fixed';
-    document.body.style.width = '100%';
-    document.body.style.height = '100%';
-    document.body.style.top = '0';
-    document.body.style.left = '0';
-    
-    // Restaurar al desmontar el componente
-    return () => {
-      document.body.style.overflow = originalStyle;
-      document.body.style.overscrollBehavior = '';
-      document.body.style.position = originalPosition;
-      document.body.style.width = '';
-      document.body.style.height = '';
-      document.body.style.top = '';
-      document.body.style.left = '';
-    };
-  }, []);
+  // Ya no necesitamos bloquear el scroll manualmente
+  // Usamos las clases CSS de PWA en su lugar
 
   // Efecto para hacer que el toast desaparezca después de 3 segundos
   useEffect(() => {
@@ -274,8 +250,8 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen bg-[#121212] text-white overflow-hidden" style={{ overflow: 'hidden', overscrollBehavior: 'none' }}>
-      <main className="max-w-[500px] mx-auto p-4 flex-1 flex flex-col">
+    <div className="flex flex-col min-h-screen bg-[#121212] text-white">
+      <main className="fixed-height-container max-w-[500px] mx-auto p-4 flex-1">
         {/* Contenedor principal que ocupa exactamente el espacio disponible */}
         <div className="flex flex-col items-center justify-between h-full pb-[132px]">
           {/* Espacio superior flexible para centrar verticalmente */}
