@@ -607,9 +607,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+    <div className="modal-container">
       <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
-        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-hidden">
+        <div className="modal-content w-full h-full flex flex-col bg-[#121212] animate-slide-up">
           {/* Header con título y botón cerrar */}
           <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
             <h2 className="text-xl font-semibold text-white">
