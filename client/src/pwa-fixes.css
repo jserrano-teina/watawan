@@ -1,10 +1,13 @@
 /* 
-  PWA FIXES CSS
-  Este archivo contiene correcciones específicas para solucionar problemas
-  de layout, scroll y navbar en PWAs, con especial atención a iOS
+  PWA FIXES CSS - V2 PARA PROBLEMAS ESPECÍFICOS EN IOS
+  Este archivo contiene soluciones para los problemas persistentes de layout en iOS
+  - Espaciado extraño bajo la navbar
+  - Contenido cortado en la parte superior
+  - Problemas con modales
+  - Problemas con sheets (comparte tu lista)
 */
 
-/* ---------- RESETS PARA TODOS LOS DISPOSITIVOS ---------- */
+/* ---------- RESETS GLOBALES BÁSICOS ---------- */
 html, body, #root {
   width: 100%;
   height: 100%;
@@ -15,179 +18,206 @@ html, body, #root {
   color: white;
 }
 
-/* ---------- ESPECÍFICO PARA PWA ---------- */
-/* Usamos (standalone) O (fullscreen) para asegurar que esto aplique también a Safari en iOS */
-@media (display-mode: standalone), (display-mode: fullscreen), (-webkit-touch-callout: none) {
-  /* ===== ESTRUCTURA PRINCIPAL ===== */
-  /* Fijar el viewport para evitar rebotes y comportamientos extraños */
-  html {
-    position: fixed;
-    width: 100%;
+/* ---------- FIJACIÓN CRÍTICA DE VIEWPORT PARA PWA ---------- */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  /* ESTRUCTURA BÁSICA - NO TOCAR */
+  html, body {
     height: 100%;
+    width: 100%;
     overflow: hidden;
-    -webkit-text-size-adjust: 100%;
-  }
-  
-  /* Permitir overflow SOLO en el body, con bounces controlados */
-  body {
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: none;
-    height: 100%;
-    width: 100%;
     position: fixed;
-    padding: 0 !important;
-    margin: 0 !important;
+    margin: 0;
+    padding: 0;
+    -webkit-text-size-adjust: 100%;
+    background-color: #121212;
   }
   
-  /* Contenedor principal ocupa todo el espacio disponible */
+  /* Permitimos scroll SOLO en el root */
   #root {
     height: 100%;
     width: 100%;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    position: relative;
-  }
-  
-  /* Contenedor principal de la aplicación */
-  .app-container {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-    height: 100%;
-    position: relative;
-    overflow: hidden;
-  }
-
-  /* ===== TIPOS DE CONTENIDO ===== */
-  /* 1. SCROLLABLE: Para páginas con mucho contenido */
-  .page-content {
-    flex: 1;
     overflow-y: auto;
-    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 90px !important; /* Espacio para navbar */
-    position: relative;
-    z-index: 1;
-    height: 100%;
-    width: 100%;
-    overscroll-behavior-y: none;
+    background-color: #121212;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding-top: env(safe-area-inset-top, 0);
+    /* El bottom padding asegura espacio para la navbar + safe area */
+    padding-bottom: calc(72px + env(safe-area-inset-bottom, 0));
   }
   
-  /* 2. FIXED HEIGHT: Para páginas con poco contenido (empty states) */
+  /* FIX PARA PÁGINA CON SCROLL COMPLETO */
+  .page-content {
+    min-height: 100%;
+    width: 100%;
+    background-color: #121212;
+    /* Eliminamos padding-bottom para evitar doble espacio */
+    padding-bottom: 0 !important;
+  }
+  
+  /* CONTENEDOR DE ALTURA FIJA PARA PÁGINAS CON POCO CONTENIDO */
   .fixed-height-container {
-    height: 100%;
+    min-height: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
-    padding-bottom: 90px !important; /* Espacio para navbar */
+    background-color: #121212;
+    /* Eliminamos padding-bottom para evitar doble espacio */
+    padding-bottom: 0 !important;
   }
   
-  /* ===== NAVEGACIÓN INFERIOR ===== */
-  /* Navbar siempre fija en la parte inferior */
+  /* ==== NAVEGACIÓN INFERIOR (FIX CRÍTICO) ==== */
   .fixed-navigation {
     position: fixed !important;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 50 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    /* Altura específica sin insets */
     height: 72px !important;
+    min-height: 72px !important;
     max-height: 72px !important;
-    background-color: #1a1a1a !important;
+    background-color: #121212 !important;
     border-top: 1px solid #333 !important;
+    z-index: 50 !important;
+    /* ¡IMPORTANTE! Margen inferior SOLO es el safe-area-inset-bottom */
     padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    /* Forzamos que esté visible siempre */
     transform: translateZ(0);
-    opacity: 1 !important;
     visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+  /* ==== MODALES Y SHEETS (FIX ESPECÍFICO) ==== */
+  /* Sheet de Radix UI necesita override específico */
+  [data-radix-popper-content-wrapper] {
+    /* Asegurar que llegue hasta arriba */
+    top: 0 !important;
+    /* Extender hasta abajo considerando safe area */
+    max-height: calc(100% - env(safe-area-inset-bottom, 0)) !important;
+    /* Forzar que sea visible en PWA */
+    z-index: 999 !important;
+    overflow: visible !important;
   }
   
-  /* ===== MODALES ===== */
-  /* Contenedor del modal */
-  .modal-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    z-index: 100;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    backdrop-filter: blur(4px);
-    background-color: rgba(0, 0, 0, 0.5);
+  /* SheetContent específico para iOS */
+  .ios-sheet-fix {
+    /* Ajuste crítico para sheets en iOS */
+    padding-top: env(safe-area-inset-top, 0) !important;
+    padding-bottom: calc(env(safe-area-inset-bottom, 16px) + 16px) !important;
   }
   
-  /* Contenido scrollable del modal */
+  /* Fondo de modales y sheets */
+  [data-radix-popper-content-wrapper] > div {
+    background-color: #121212 !important;
+  }
+  
+  /* Sheet animado desde abajo */
+  [data-state="open"][data-side="bottom"] {
+    animation: slideUpAndFade 0.3s ease-out !important;
+  }
+  
+  /* Modal normal con contenido scrollable */
   .modal-content {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    background-color: #121212;
-    margin-top: env(safe-area-inset-top, 0);
-    margin-bottom: env(safe-area-inset-bottom, 0);
-    position: relative;
-    border-radius: 12px 12px 0 0;
-  }
-  
-  /* Botones sticky en modales */
-  .modal-actions {
-    position: sticky;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: #121212;
-    padding: 16px;
-    z-index: 10;
-    border-top: 1px solid #333;
-  }
-  
-  /* ===== SAFE AREAS ===== */
-  /* Ajuste para safe areas en iOS */
-  .safe-area-bottom {
-    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
-  }
-  
-  .safe-area-top {
-    padding-top: max(16px, env(safe-area-inset-top)) !important;
-  }
-  
-  /* ===== UTILIDADES ===== */
-  /* Bloquear cuerpo cuando hay un modal abierto */
-  body.modal-open {
-    overflow: hidden !important;
-  }
-  
-  /* Mejoras de rendimiento para todos los elementos scrollables */
-  .scrollable, .page-content, .modal-content {
+    padding-top: env(safe-area-inset-top, 0) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    /* Asegurar scroll suave */
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
-    transform: translateZ(0);
-    will-change: transform;
   }
   
-  /* Eliminar highlight al tocar en iOS */
+  /* Botones en modales */
+  .modal-actions {
+    /* Agregar el safe-area-inset-bottom */
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0)) !important;
+    background-color: #121212;
+  }
+  
+  /* ==== UTILIDADES AUXILIARES ==== */
+  /* Evitar selección de texto accidental */
   * {
     -webkit-tap-highlight-color: transparent;
+    user-select: none;
+  }
+  
+  /* Permitir seleccionar texto en inputs y textareas */
+  input, textarea {
+    user-select: text !important;
+  }
+  
+  /* ==== ANIMACIONES ESPECÍFICAS ==== */
+  @keyframes slideUpAndFade {
+    from {
+      opacity: 0;
+      transform: translateY(100%);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* ==== SAFE AREA UTILITIES ==== */
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0) !important;
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+  }
+  
+  .safe-all {
+    padding-top: env(safe-area-inset-top, 0) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    padding-left: env(safe-area-inset-left, 0) !important;
+    padding-right: env(safe-area-inset-right, 0) !important;
   }
 }
 
-/* Soporte específico para Safari en iOS */
+/* SOPORTE ESPECÍFICO PARA SAFARI iOS */
 @supports (-webkit-touch-callout: none) {
-  html.standalone-mode {
+  /* Overrides específicos para Safari en iOS */
+  @media (display-mode: standalone), (display-mode: fullscreen) {
+    /* Fix específico para sheet en Safari */
+    [data-radix-popper-content-wrapper] {
+      /* En Safari necesitamos ser más agresivos */
+      inset: 0 !important;
+      position: fixed !important;
+      height: 100% !important;
+      width: 100% !important;
+    }
+    
+    /* Fix para modales con contenido scrollable */
+    .modal-content, .ios-sheet-fix, .page-content {
+      /* Safari necesita estas propiedades adicionales */
+      overscroll-behavior-y: none !important;
+      -webkit-overflow-scrolling: touch !important;
+    }
+    
+    /* Safari específicamente tiene problemas con la navbar */
+    .fixed-navigation {
+      /* Forzar que nunca se oculte */
+      bottom: 0 !important;
+      transform: none !important;
+      /* Color específico para evitar transparencias */
+      background-color: #121212 !important;
+    }
+  }
+  
+  /* Soporte para detección manual de iOS standalone */
+  html.standalone-mode body {
     position: fixed;
     width: 100%;
     height: 100%;
     overflow: hidden;
   }
   
-  html.standalone-mode body {
+  html.standalone-mode #root {
     overflow-y: auto;
+    height: 100%;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior-y: none;
-    height: 100%;
   }
 }

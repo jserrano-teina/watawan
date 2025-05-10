@@ -143,8 +143,12 @@ const MobileView = ({
       style={{ opacity: modalVisible ? 1 : 0 }}
     >
       <div 
-        className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto transform transition-transform duration-300 ease-out"
-        style={{ transform: modalVisible ? 'translateY(0)' : 'translateY(100%)' }}
+        className="fixed inset-0 z-50 flex flex-col bg-[#121212] max-w-[500px] mx-auto transform transition-transform duration-300 ease-out modal-content safe-top safe-bottom"
+        style={{ 
+          transform: modalVisible ? 'translateY(0)' : 'translateY(100%)',
+          paddingTop: 'env(safe-area-inset-top, 0)',
+          paddingBottom: 'env(safe-area-inset-bottom, 0)'
+        }}
       >
         {/* Botón flotante para volver */}
         <button 

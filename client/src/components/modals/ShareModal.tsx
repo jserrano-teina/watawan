@@ -70,7 +70,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
     <Sheet open={isOpen} onOpenChange={onClose}>
       <SheetContent 
         side="bottom" 
-        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0 modal-content safe-area-bottom"
+        className="px-0 pt-0 pb-6 bg-[#121212] rounded-t-3xl border-t-0 modal-content ios-sheet-fix"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999
+        }}
       >
         <SheetHeader className="sr-only">
           <SheetTitle>Comparte tu lista</SheetTitle>
