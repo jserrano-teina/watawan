@@ -18,6 +18,7 @@ import ImagePreloader from "@/components/ImagePreloader";
 import React, { useEffect } from "react";
 import { useSafeArea } from "@/hooks/useSafeArea";
 import { useDomainDetection } from "@/hooks/useDomainDetection";
+import PWAWrapper from "@/components/PWAWrapper";
 
 /**
  * Router principal de la aplicación con rutas protegidas y públicas
@@ -96,14 +97,16 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
-        {/* Contenedor principal con clase app-container para PWA */}
-        <div className="app-container">
-          {/* Precarga imágenes al iniciar la aplicación */}
-          <ImagePreloader />
-          <Router />
-          <NetworkMonitor />
-          <Toaster />
-        </div>
+        {/* Envolvemos toda la aplicación con PWAWrapper para solucionar problemas de layout */}
+        <PWAWrapper>
+          <div className="app-container">
+            {/* Precarga imágenes al iniciar la aplicación */}
+            <ImagePreloader />
+            <Router />
+            <NetworkMonitor />
+            <Toaster />
+          </div>
+        </PWAWrapper>
       </AuthProvider>
     </QueryClientProvider>
   );

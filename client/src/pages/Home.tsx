@@ -260,15 +260,10 @@ const Home: React.FC = () => {
       )}
       
       <Header user={user} />
-      {/* Contenido principal - cambia su comportamiento según haya items o no */}
+      {/* Contenido principal usando las nuevas clases específicas para PWA */}
       {myWishItems.length > 0 ? (
-        // Si hay items, mantenemos el scroll
-        <main className="flex-grow container mx-auto px-4 pb-32 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
-          style={{ 
-            WebkitOverflowScrolling: 'touch', 
-            height: 'calc(100vh - 56px)', 
-            paddingBottom: 'calc(5rem + env(safe-area-inset-bottom))' 
-          }}>
+        // Si hay items, usamos page-content para permitir scroll adecuado
+        <main className="page-content container mx-auto px-4 max-w-[500px]">
           <ShareBanner onShareClick={() => setShowShareModal(true)} />
           
           <div className="mt-6">
@@ -290,8 +285,8 @@ const Home: React.FC = () => {
           </div>
         </main>
       ) : (
-        // Si no hay items, eliminamos el scroll y centramos perfectamente en el medio
-        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center fixed-height-container">
+        // Si no hay items, usamos fixed-height-container para prevenir scroll innecesario
+        <main className="fixed-height-container container mx-auto px-4 max-w-[500px]">
           <div className="flex flex-col items-center justify-center transform -translate-y-[45px]">
             <EmptyWishlist onAddWish={handleAddWishClick} />
           </div>

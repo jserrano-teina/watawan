@@ -1,0 +1,173 @@
+/* 
+  PWA FIXES CSS
+  Este archivo contiene correcciones específicas para solucionar problemas
+  de layout, scroll y navbar en PWAs, con especial atención a iOS
+*/
+
+/* ---------- RESETS BÁSICOS ---------- */
+/* Evitar que el tamaño sea mayor que la ventana */
+html, body, #root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background-color: #121212;
+  color: white;
+}
+
+/* ---------- ESPECÍFICO PARA PWA ---------- */
+@media (display-mode: standalone), (display-mode: fullscreen) {
+  /* Fijar el viewport para evitar rebotes y comportamientos extraños */
+  html {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  /* Permitir overflow SOLO en el body, con bounces controlados */
+  body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    height: 100%;
+    width: 100%;
+    position: fixed;
+    /* Evitar cualquier padding automático en navegadores */
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  
+  /* Contenedor principal ocupa todo el espacio disponible */
+  #root {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    /* Evitar cualquier behavior inesperado */
+    overflow: hidden;
+    position: relative;
+  }
+
+  /* ----- PÁGINA PRINCIPAL (CONTENIDO SCROLLABLE) ----- */
+  /* Contenido de página principal - scrollable, pero con bottom padding para la navbar */
+  .page-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 80px !important; /* Espacio para navbar */
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    width: 100%;
+  }
+  
+  /* ----- FIX PARA EMPTY STATES ----- */
+  /* Contenedor de altura fija para páginas con poco contenido (empty states) */
+  .fixed-height-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    /* Espacio específico para la navbar */
+    padding-bottom: 80px;
+  }
+  
+  /* ----- NAVBAR FIXES ----- */
+  /* La navbar SIEMPRE fija en la parte inferior */
+  .fixed-navigation {
+    position: fixed !important;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50 !important;
+    height: 72px !important;
+    max-height: 72px !important;
+    background-color: #1a1a1a !important;
+    border-top: 1px solid #333 !important;
+    /* Extras para iOS */
+    padding-bottom: env(safe-area-inset-bottom, 0) !important;
+    /* Forzar que no sea afectada por overflow */
+    transform: translateZ(0);
+    /* Garantizar opacidad total */
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+  
+  /* ----- MODAL FIXES ----- */
+  /* Solución para modales - se posicionan absolutamente respecto a la ventana */
+  .modal-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Backdrop filter */
+    backdrop-filter: blur(4px);
+    background-color: rgba(0, 0, 0, 0.5);
+  }
+  
+  /* El contenido del modal es scrollable si necesario */
+  .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    background-color: #121212;
+    margin-top: env(safe-area-inset-top, 0);
+    margin-bottom: env(safe-area-inset-bottom, 0);
+    position: relative;
+    border-radius: 12px 12px 0 0;
+  }
+  
+  /* Asegurar que los botones en modales no sean afectados por scroll */
+  .modal-actions {
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: #121212;
+    padding: 16px;
+    z-index: 10;
+    border-top: 1px solid #333;
+  }
+  
+  /* Fondo borroso para cuando hay un modal activo */
+  body.modal-open {
+    overflow: hidden !important;
+  }
+  
+  /* Ajuste para safe areas en iOS */
+  .safe-area-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom)) !important;
+  }
+  
+  .safe-area-top {
+    padding-top: max(16px, env(safe-area-inset-top)) !important;
+  }
+}
+
+/* ----- SOPORTE PARA MODO STAND-ALONE EN NAVEGADORES QUE NO SOPORTAN display-mode MEDIA QUERY ----- */
+/* Safari iOS específicamente */
+@supports (-webkit-touch-callout: none) {
+  html.standalone-mode {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  
+  html.standalone-mode body {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: none;
+    height: 100%;
+  }
+}
