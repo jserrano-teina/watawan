@@ -310,13 +310,13 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                       setSelectedItem(item);
                       setShowDetailsModal(true);
                     }}
-                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white text-sm hover:bg-[#2a2a2a] transition-colors"
                   >
                     Ver detalles
                   </button>
                   <button 
                     onClick={() => handleReserveClick(item)}
-                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white text-sm hover:bg-[#2a2a2a] transition-colors"
                   >
                     Lo regalaré yo
                   </button>
