@@ -14,13 +14,15 @@ interface DetailsModalProps {
   onClose: () => void;
   item: WishItem | null;
   onReserveClick: () => void;
+  isPublicView?: boolean; // Prop adicional para determinar si estamos en la vista pública
 }
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ 
   isOpen, 
   onClose, 
   item, 
-  onReserveClick 
+  onReserveClick,
+  isPublicView = false // Por defecto asumimos que no estamos en la vista pública
 }) => {
   const [modalVisible, setModalVisible] = useState(false);
   
@@ -121,22 +123,25 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
-              {item.purchaseLink ? (
-                <SafeLink 
-                  href={item.purchaseLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-sm flex items-center justify-between truncate hover:underline"
-                >
-                  <span className="truncate">{item.purchaseLink}</span>
-                  <ExternalLink size={16} className="flex-shrink-0 ml-2" />
-                </SafeLink>
-              ) : (
-                <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
-              )}
-            </div>
+            {/* Mostrar el enlace de compra solo cuando NO estamos en la vista pública */}
+            {!isPublicView && (
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
+                {item.purchaseLink ? (
+                  <SafeLink 
+                    href={item.purchaseLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-sm flex items-center justify-between truncate hover:underline"
+                  >
+                    <span className="truncate">{item.purchaseLink}</span>
+                    <ExternalLink size={16} className="flex-shrink-0 ml-2" />
+                  </SafeLink>
+                ) : (
+                  <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
+                )}
+              </div>
+            )}
             
             {item.description && (
               <div className="mb-6">
@@ -151,15 +156,34 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
           </div>
         </div>
         
-        {/* Barra inferior fija con botones - Solo visible si el item no está reservado */}
+        {/* Barra inferior fija con botones */}
         {!item.isReserved && (
           <div className="border-t border-[#333] p-4 flex justify-end">
-            <Button 
-              onClick={onReserveClick}
-              className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-black"
-            >
-              Lo regalaré yo
-            </Button>
+            {/* En vista pública, mostrar el botón de enlace de compra solo si el item no está reservado */}
+            {isPublicView && item.purchaseLink ? (
+              <Button 
+                asChild
+                variant="outline" 
+                className="h-[50px] w-full border-[#333] hover:bg-transparent hover:border-white transition-colors"
+              >
+                <a 
+                  href={item.purchaseLink} 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center"
+                >
+                  Ir al enlace de compra
+                  <ExternalLink size={16} className="ml-2" />
+                </a>
+              </Button>
+            ) : (
+              <Button 
+                onClick={onReserveClick}
+                className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-black"
+              >
+                Lo regalaré yo
+              </Button>
+            )}
           </div>
         )}
       </div>
