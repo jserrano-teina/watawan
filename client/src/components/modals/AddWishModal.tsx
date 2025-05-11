@@ -555,7 +555,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     // Si no hay imagen, mostrar un botón centrado para añadirla
     if (!imageUrl) {
       return (
-        <div className="mb-6 w-full h-64">
+        <div className="mb-6 w-full h-[280px]">
           <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
             <button
               type="button"
@@ -576,7 +576,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     // Si hay una imagen, mostrarla con el botón para cambiarla
     return (
-      <div className="relative mb-6 w-full h-64">
+      <div className="relative mb-6 w-full h-[280px]">
         <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
           <ProductImage 
             imageUrl={imageUrl}
