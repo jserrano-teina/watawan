@@ -52,13 +52,19 @@
     }
     
     /* Fix específico para los textos en la navbar */
-    .fixed-navigation span {
+    .fixed-navigation span,
+    .fixed-navigation button span {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
       color: inherit !important;
       margin-top: 4px !important;
       font-size: 12px !important;
+      position: relative !important;
+      z-index: 1 !important;
+      pointer-events: auto !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
     }
     
     /* ===== CORRECCIONES PARA MODALES Y SHEETS ===== */
@@ -131,6 +137,17 @@
       display: flex !important;
       align-items: center !important;
       justify-content: space-around !important;
+    }
+    
+    /* Ajuste específico para botones de la navbar en iOS */
+    .fixed-navigation button {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+      height: auto !important;
+      display: flex !important;
+      flex-direction: column !important;
+      align-items: center !important;
+      justify-content: center !important;
     }
     
     /* ===== MEJORAR INTERACTIVIDAD ===== */
