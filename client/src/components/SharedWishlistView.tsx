@@ -342,6 +342,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
           // Mantener el modal de detalles abierto mientras se muestra el modal de reserva
           setShowReservationModal(true);
         }}
+        isPublicList={true} // Indicar explícitamente que esta es una lista pública
       />
     </div>
     </>
