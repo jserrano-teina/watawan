@@ -60,6 +60,7 @@ function Router() {
       <Route path="/auth" component={LoginPage} />
       <Route path="/s/:id" component={SharedList} />
       <Route path="/shared/:id" component={SharedList} />
+      <Route path="/user/:username" component={UserWishlist} />
       <Route component={NotFound} />
     </Switch>
   );

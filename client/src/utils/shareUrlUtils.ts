@@ -15,9 +15,24 @@ export function generateSlug(text: string): string {
 
 /**
  * Crea una URL amigable para compartir una lista de deseos
- * Formato: watawan.com/user/[username]
+ * Formato en producción: watawan.com/user/[username]
+ * Formato en desarrollo: localhost:puerto/user/[username] (o la URL de desarrollo correspondiente)
  */
 export function buildFriendlyShareUrl(username: string): string {
   const userSlug = generateSlug(username);
-  return `https://watawan.com/user/${userSlug}`;
+  
+  // Detectar si estamos en entorno de desarrollo o producción
+  const isDevelopment = 
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('.replit.app') ||
+    window.location.hostname.includes('.repl.co');
+  
+  if (isDevelopment) {
+    // En desarrollo, usar la URL actual del host
+    return `${window.location.origin}/user/${userSlug}`;
+  } else {
+    // En producción, usar la URL watawan.com
+    return `https://watawan.com/user/${userSlug}`;
+  }
 }
