@@ -104,19 +104,6 @@ export async function validateProductData(
         message: "No se proporcionaron datos para validar",
       };
     }
-    
-    // Si el título existe pero está vacío o sólo tiene espacios, marcarlo como inválido de inmediato
-    if (title !== undefined && title.trim() === '') {
-      console.log(`⚠️ [DIAGNÓSTICO] Título vacío o solo con espacios, marcando como inválido sin consultar a OpenAI`);
-      return {
-        isTitleValid: false,
-        isImageValid: imageUrl ? true : false,
-        message: "El título está vacío",
-      };
-    }
-    
-    console.log(`🧠 [DIAGNÓSTICO] Preparando consulta a OpenAI para validación...`);
-    
 
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
@@ -126,25 +113,30 @@ export async function validateProductData(
           content:
             "Eres un experto en validación de metadatos de productos. Tu tarea es determinar si " +
             "el título y la URL de imagen proporcionados son válidos para un producto real. " +
-            "Sé MODERADAMENTE ESTRICTO en tus evaluaciones.\n\n" +
-            "Un título válido debe ser razonablemente descriptivo del producto. Títulos inválidos incluyen SOLAMENTE:\n" +
-            "- Texto extremadamente genérico como 'Producto' o 'Artículo' sin ninguna otra descripción\n" +
-            "- Títulos que SOLO contienen el nombre de una tienda sin información del producto (ej: solo 'Amazon.com')\n" +
-            "- Títulos con texto de interfaz como 'Añadir al carrito', 'Detalles', 'Ver producto'\n" +
-            "- Títulos que consisten exclusivamente en URLs o códigos\n" +
-            "- Texto sin sentido como letras aleatorias\n" +
-            "- Mensajes de error como 'Página no encontrada'\n\n" +
-            "IMPORTANTE: Los siguientes tipos de títulos DEBEN considerarse VÁLIDOS:\n" +
-            "- Títulos cortos pero descriptivos (incluso menores a 15 caracteres) si identifican el producto\n" +
-            "- Títulos que contienen el nombre de la tienda seguido de descripción del producto\n" +
-            "- Títulos simples pero específicos (ej: 'Reloj Tommy Hilfiger', 'Zapatillas Nike Air')\n" +
-            "- Títulos que no indican todos los detalles pero son suficientes para identificar el producto\n\n" +
+            "Sé EXTREMADAMENTE ESTRICTO en tus evaluaciones.\n\n" +
+            "Un título válido DEBE SER descriptivo y específico del producto. Títulos inválidos incluyen:\n" +
+            "- Cualquier texto genérico como 'Producto', 'Artículo', 'Item', 'Oferta', 'Descuento'\n" +
+            "- Cualquier título que solo contenga el nombre de una tienda o sitio web (ej: 'Amazon.com', 'Zara', 'El Corte Inglés')\n" +
+            "- Títulos que combinan nombre de tienda y la palabra 'producto' o similares (ej: 'Producto de Amazon', 'Artículo de Zara', 'Item en Amazon', 'Oferta en Amazon')\n" +
+            "- Títulos muy cortos (menos de 15 caracteres)\n" +
+            "- Títulos que contienen una URL o parte de una URL, códigos o nombres de dominio\n" +
+            "- Cadenas de texto sin sentido como iniciales, letras sueltas, códigos de producto aislados\n" +
+            "- Títulos que obviamente no describen un producto real (ej: 'Página no encontrada', 'Añadir al carrito', 'Detalles', 'Ver producto', 'Descripción')\n" +
+            "- Títulos que solo contienen categorías genéricas (ej: 'Ropa', 'Electrónica', 'Hogar', 'Moda', 'Zapatos', 'Tecnología')\n" +
+            "- Cualquier texto que parezca ser un placeholder o texto de relleno\n" +
+            "- Cualquier título con formato de lista (ej: números o viñetas al inicio)\n" +
+            "- Títulos excesivamente cortos o simples (ej: 'Reloj', 'Teléfono', 'Camisa')\n\n" +
+            "Un título VÁLIDO debe contener obligatoriamente:\n" +
+            "1. Información específica del producto (marca, modelo, tipo)\n" +
+            "2. Ser descriptivo (mencionar características clave)\n" +
+            "3. Ser único para ese producto en particular\n" +
+            "4. NO ser genérico ni aparecer como texto de interfaz de usuario\n\n" +
             "Una imagen válida debe ser una URL que parezca mostrar un producto real (no un placeholder o una imagen genérica).\n\n" +
             "Responde con un JSON que contenga:\n" +
-            "- isTitleValid: boolean (true si el título permite identificar un producto concreto)\n" +
+            "- isTitleValid: boolean (true SOLO si estás 100% seguro de que el título es válido y específico)\n" +
             "- isImageValid: boolean\n" +
             "- message: string (razón específica si algo es inválido)\n\n" +
-            "IMPORTANTE: En caso de duda, marca el título como válido si permite al usuario identificar el producto.",
+            "IMPORTANTE: Ante la más mínima duda, marca el título como inválido. Es mejor rechazar un título bueno que aceptar uno malo.",
         },
         {
           role: "user",
@@ -189,11 +181,10 @@ export async function validateProductData(
     };
   } catch (error) {
     console.error("Error al validar datos de producto con IA:", error);
-    // Si hay un error de API, asumimos que los datos son válidos para no bloquear el flujo
     return {
-      isTitleValid: true, // En caso de error de API, asumimos que es válido
-      isImageValid: true, // En caso de error de API, asumimos que es válida
-      message: "Error durante la validación, asumiendo datos válidos para no bloquear el flujo"
+      isTitleValid: false, // Por defecto, asumimos que NO es válido en caso de error
+      isImageValid: false, // Es más seguro asumir que los datos no son válidos
+      message: "Error durante la validación, asumiendo datos no válidos por precaución"
     };
   }
 }

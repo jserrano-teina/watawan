@@ -47,18 +47,14 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
   };
 
   return (
-    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg" style={{
-      height: 'calc(72px + env(safe-area-inset-bottom, 0))'
-    }}>
-      <div className="flex justify-around items-center max-w-[500px] mx-auto" style={{
-        height: '72px'
-      }}>
+    <nav className="fixed-navigation bg-[#1a1a1a] border-t border-[#333] shadow-lg safe-area-bottom">
+      <div className="flex justify-around items-center h-[72px] max-w-[500px] mx-auto pb-3">
         <button 
           onClick={() => navigateTo('/')}
           className={`flex flex-col items-center justify-center w-full h-full ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
         >
           <Home className="h-5 w-5" />
-          <span className="text-xs mt-1 tab-name">Mis deseos</span>
+          <span className="text-xs mt-1">Mis deseos</span>
         </button>
         
         <button 
@@ -66,7 +62,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
           className={`flex flex-col items-center justify-center w-full h-full relative ${isActive('/notifications') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
         >
           <Bell className="h-5 w-5" />
-          <span className="text-xs mt-1 tab-name">Notificaciones</span>
+          <span className="text-xs mt-1">Notificaciones</span>
           
           {!isLoading && unreadCount > 0 && (
             <span className="absolute top-1 right-1/3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
@@ -80,7 +76,7 @@ const BottomNavigation: React.FC<BottomNavigationProps> = () => {
           className={`flex flex-col items-center justify-center w-full h-full ${isActive('/profile') ? 'text-primary' : 'text-gray-400 hover:text-white/80'} transition-colors`}
         >
           <User className="h-5 w-5" />
-          <span className="text-xs mt-1 tab-name">Perfil</span>
+          <span className="text-xs mt-1">Perfil</span>
         </button>
       </div>
     </nav>

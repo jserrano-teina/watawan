@@ -6,11 +6,7 @@ import { validateProductData } from './openai-utils';
 export async function handleExtractMetadataRequest(req: Request, res: Response) {
   const url = req.query.url as string;
   
-  // Log completo para diagnóstico
-  console.log(`🔍 [DIAGNÓSTICO] Solicitud de extracción de metadatos recibida para URL: ${url}`);
-  
   if (!url) {
-    console.log(`❌ [DIAGNÓSTICO] Error: URL no proporcionada en la petición`);
     return res.status(400).json({ message: "URL parameter is required" });
   }
   
@@ -50,24 +46,16 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
           }
           
           // Reactivamos la validación con OpenAI para ser más estrictos con los títulos
-          console.log(`🧠 [DIAGNÓSTICO] Enviando título a validar: "${data.title}"`);
           const validation = await validateProductData(data.title, data.imageUrl);
-          console.log(`🧠 [DIAGNÓSTICO] Resultado de validación recibido: título ${validation.isTitleValid ? 'VÁLIDO' : 'INVÁLIDO'}`);
           
           // Añadimos la validación manual como capa adicional
           if (!isTitleInvalid && validation.isTitleValid) {
             console.log(`✅ Título validado por OpenAI Y validación manual: "${data.title}"`);
           } else {
-            // Solo marcamos como inválido si la validación manual también falló (caso extremo)
-            if (isTitleInvalid) {
-              validation.isTitleValid = false;
-              validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
-              console.log(`⚠️ Título rechazado por validación manual: "${data.title}"`);
-            } else {
-              // Si solo falló la validación de OpenAI pero la manual pasó, lo consideramos válido
-              console.log(`⚠️ Título rechazado por OpenAI pero aprobado por validación manual: "${data.title}"`);
-              validation.isTitleValid = true;
-            }
+            // Si cualquiera de las validaciones falla, marcamos como inválido
+            validation.isTitleValid = false;
+            validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
+            console.log(`⚠️ Título rechazado: "${data.title}" - ${validation.message}`);
           }
           
           console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);

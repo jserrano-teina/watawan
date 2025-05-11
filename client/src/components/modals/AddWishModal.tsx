@@ -277,31 +277,16 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
         // Prerellenar formulario del paso 2
         setValueStepTwo('purchaseLink', purchaseLink);
         
-        // Establecer el título solo si existe y es válido
+        // Establecer el título solo si existe y es válido, limitándolo a 100 caracteres
         if (metadata.title && metadata.isTitleValid) {
           console.log('Título extraído válido:', metadata.title);
           // Truncar el título a un máximo de 100 caracteres
           const truncatedTitle = metadata.title.substring(0, 100);
-          console.log('Estableciendo título en formulario:', truncatedTitle);
           setValueStepTwo('title', truncatedTitle);
-          
-          // Verificar después de setear el valor
-          setTimeout(() => {
-            const currentTitle = watchStepTwo('title');
-            console.log('Título en formulario después de setear:', currentTitle);
-            if (currentTitle !== truncatedTitle) {
-              console.log('⚠️ DIAGNÓSTICO: El título no se estableció correctamente');
-            }
-          }, 100);
         } else if (metadata.title && !metadata.isTitleValid) {
           console.log('Título extraído inválido, dejando el campo vacío:', metadata.title);
-          console.log('Razón de invalidez:', metadata.validationMessage);
           // Si el título es inválido, dejamos el campo vacío para que el usuario lo complete
           setValueStepTwo('title', '');
-        } else {
-          console.log('No se recibió título o isTitleValid no está definido:', 
-            'title =', metadata.title, 
-            'isTitleValid =', metadata.isTitleValid);
         }
         
         // Extraer solo el valor numérico del precio si existe
@@ -607,18 +592,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
   };
 
   return (
-    <div className="modal-container" style={{ 
-      zIndex: 9999,
-      position: 'fixed',
-      inset: 0
-    }}>
-      <div className="fixed inset-0 max-w-[500px] mx-auto overflow-hidden" style={{ zIndex: 9999 }}>
-        <div className="modal-content w-full h-full flex flex-col bg-[#121212] animate-slide-up safe-top safe-bottom"
-          style={{
-            paddingTop: 'env(safe-area-inset-top, 0)',
-            paddingBottom: 'env(safe-area-inset-bottom, 0)',
-            zIndex: 9999
-          }}>
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+      <div className="fixed inset-0 z-50 max-w-[500px] mx-auto overflow-hidden">
+        <div className="w-full h-full flex flex-col bg-[#121212] animate-slide-up overflow-hidden">
           {/* Header con título y botón cerrar */}
           <div className="sticky top-0 z-10 flex justify-between items-center p-4 border-b border-[#333] bg-[#121212]">
             <h2 className="text-xl font-semibold text-white">
@@ -792,17 +768,29 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                 
                 {/* Mensaje de advertencia si hay datos de baja calidad */}
                 {(() => {
-                  // Evaluamos los valores actuales de título e imagen
-                  const hasTitle = !!watchStepTwo('title');
-                  const hasImage = !!watchStepTwo('imageUrl');
+                  // Evaluamos y mostramos un log para depurar
+                  // IMPORTANTE: Usamos doble negación para convertir undefined a false
+                  const isTitleValid = !!extractedData.isTitleValid;
+                  const isImageValid = !!extractedData.isImageValid;
+                  const wasSkipped = !!extractedData.skipValidation;
                   
                   // Solo mostrar advertencia si:
                   // 1. Estamos en el paso 2
                   // 2. No estamos editando un item existente
-                  // 3. Hay un enlace de compra
-                  // 4. Falta el título O la imagen
-                  const hasLink = !!watchStepTwo('purchaseLink');
-                  const showWarning = step === 2 && !itemToEdit && hasLink && (!hasTitle || !hasImage);
+                  // 3. Alguna validación falló (título o imagen)
+                  // 4. NO se omitió el paso 1 (la validación no fue omitida)
+                  const showWarning = step === 2 && !itemToEdit && (!isTitleValid || !isImageValid) && !wasSkipped;
+                  
+                  console.log('Estado de la condición de advertencia:', {
+                    step,
+                    isEditing: !!itemToEdit,
+                    isTitleValid: extractedData.isTitleValid,
+                    isImageValid: extractedData.isImageValid,
+                    wasSkipped,
+                    isTitleValidBool: isTitleValid,
+                    isImageValidBool: isImageValid,
+                    showWarning
+                  });
                   
                   return showWarning ? (
                     <div className="mb-6 p-3 bg-[#15243b] border border-[#2d4a7c] rounded-lg">

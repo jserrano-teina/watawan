@@ -197,12 +197,19 @@ const NotificationsPage: React.FC = () => {
       
       {isLoading ? (
         // Estado de carga con spinner centrado
-        <main className="fixed-height-container container mx-auto px-4 max-w-[500px]">
+        <main className="flex-grow container mx-auto px-4 max-w-[500px] flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
         </main>
       ) : notifications.length > 0 ? (
-        // Si hay notificaciones, usamos la clase page-content para correcta gestión de scroll en PWA
-        <main className="page-content container mx-auto px-4 max-w-[500px]">
+        // Si hay notificaciones, mantenemos el scroll
+        <main 
+          className="flex-grow container mx-auto px-4 max-w-[500px] overflow-y-auto scrollable-container overscroll-none" 
+          style={{ 
+            WebkitOverflowScrolling: 'touch', 
+            height: 'calc(100vh - 56px)',
+            paddingBottom: 'calc(4rem + env(safe-area-inset-bottom))'
+          }}
+        >
           <h1 className="text-2xl font-bold mt-8 mb-6">Notificaciones</h1>
           
           <div className="space-y-3">
