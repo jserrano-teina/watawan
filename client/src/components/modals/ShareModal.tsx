@@ -27,6 +27,14 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   // Estado para la URL compartible
   const [friendlyShareableUrl, setFriendlyShareableUrl] = useState('');
   
+  // Efecto para resetear el estado de copiado cuando se abre/cierra el modal
+  useEffect(() => {
+    if (isOpen === false) {
+      // Cuando se cierra el modal, resetear el estado de copiado
+      setCopied(false);
+    }
+  }, [isOpen]);
+  
   // Determinar la URL según el entorno
   useEffect(() => {
     if (!user?.displayName) return;
