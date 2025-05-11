@@ -8,20 +8,28 @@ import { Button } from '@/components/ui/button';
 import { SafeLink } from '@/components/ui/SafeLink';
 import { SanitizedHTML } from '@/components/ui/SanitizedHTML';
 import { sanitizeInput } from '@/lib/sanitize';
+import { useDomainDetection } from '@/hooks/useDomainDetection';
 
 interface DetailsModalProps {
   isOpen: boolean;
   onClose: () => void;
   item: WishItem | null;
   onReserveClick: () => void;
+  isPublicList?: boolean; // Propiedad opcional para indicar si es un listado público
 }
 
 const DetailsModal: React.FC<DetailsModalProps> = ({ 
   isOpen, 
   onClose, 
   item, 
-  onReserveClick 
+  onReserveClick,
+  isPublicList = false // Por defecto, no es un listado público
 }) => {
+  // Detectar si estamos en el dominio público para mostrar la UI correspondiente
+  const { domainType } = useDomainDetection();
+  
+  // Determinar si estamos en un listado público (por prop o por dominio)
+  const isPublic = isPublicList || domainType === 'public';
   const [modalVisible, setModalVisible] = useState(false);
   
   // Animación de entrada y control de scroll del body
@@ -121,22 +129,41 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-6">
-              <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
-              {item.purchaseLink ? (
-                <SafeLink 
-                  href={item.purchaseLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-primary text-sm flex items-center justify-between truncate hover:underline"
-                >
-                  <span className="truncate">{item.purchaseLink}</span>
-                  <ExternalLink size={16} className="flex-shrink-0 ml-2" />
-                </SafeLink>
-              ) : (
-                <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
-              )}
-            </div>
+            {/* Enlace de compra: se muestra de forma diferente según si es lista pública o privada */}
+            {isPublic ? (
+              // En listas públicas, si hay enlace y el ítem no está reservado, mostrar botón a todo ancho
+              item.purchaseLink && !item.isReserved ? (
+                <div className="mb-6">
+                  <SafeLink 
+                    href={item.purchaseLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full border border-[#333] text-white rounded-lg py-3 px-4 font-medium hover:border-white transition-colors flex items-center justify-center"
+                  >
+                    <span>Ir al enlace de compra</span>
+                    <ExternalLink size={16} className="ml-2" />
+                  </SafeLink>
+                </div>
+              ) : null // No mostrar nada si está reservado o no hay enlace
+            ) : (
+              // En listas privadas, mostrar de forma normal
+              <div className="mb-6">
+                <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
+                {item.purchaseLink ? (
+                  <SafeLink 
+                    href={item.purchaseLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary text-sm flex items-center justify-between truncate hover:underline"
+                  >
+                    <span className="truncate">{item.purchaseLink}</span>
+                    <ExternalLink size={16} className="flex-shrink-0 ml-2" />
+                  </SafeLink>
+                ) : (
+                  <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
+                )}
+              </div>
+            )}
             
             {item.description && (
               <div className="mb-6">
