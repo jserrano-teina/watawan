@@ -329,7 +329,32 @@ const ProfilePage = () => {
             <h2 className="text-xl font-bold mb-1">
               {user.displayName || user.email.split('@')[0]}
             </h2>
-            <p className="text-gray-500 text-sm mb-4">{user.email}</p>
+            <p className="text-gray-500 text-sm mb-4">
+              {(() => {
+                // Generar el slug a partir del nombre de usuario
+                const generateSlug = (text: string): string => {
+                  return text
+                    .toLowerCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '')
+                    .replace(/[^\w\s-]/g, '')
+                    .replace(/\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                };
+                
+                // Obtener el nombre para mostrar (displayName o parte del email)
+                const displayName = user.displayName || user.email.split('@')[0];
+                const userSlug = generateSlug(displayName);
+                
+                // Retornar el texto formateado
+                return (
+                  <>
+                    watawan.com/user/<span className="text-white">{userSlug}</span>
+                  </>
+                );
+              })()}
+            </p>
             
             {/* Botón de editar */}
             <button
