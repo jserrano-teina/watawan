@@ -42,18 +42,20 @@
       left: 0 !important;
       right: 0 !important;
       /* Reducimos z-index para que no aparezca sobre modales */
-      z-index: 40 !important;
-      height: 72px !important;
+      z-index: 50 !important;
+      height: auto !important;
       background-color: #1a1a1a !important; /* Color sólido exacto del diseño */
       border-top: 1px solid #333 !important;
       transform: none !important; /* Prevenir transforms que puedan ocultarla */
       opacity: 1 !important;
       visibility: visible !important;
+      padding-bottom: env(safe-area-inset-bottom, 0) !important;
     }
     
     /* Fix específico para los textos en la navbar */
     .fixed-navigation span,
-    .fixed-navigation button span {
+    .fixed-navigation button span,
+    .tab-name {
       display: block !important;
       visibility: visible !important;
       opacity: 1 !important;
@@ -65,6 +67,12 @@
       pointer-events: auto !important;
       user-select: none !important;
       -webkit-user-select: none !important;
+      transform: translateZ(0) !important;
+      backface-visibility: visible !important;
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      height: auto !important;
+      min-height: 14px !important;
     }
     
     /* ===== CORRECCIONES PARA MODALES Y SHEETS ===== */
@@ -86,15 +94,41 @@
     .modal-content,
     .sheet-content,
     [data-radix-popper-content-wrapper],
-    [data-id="sheet-content"] {
+    [data-id="sheet-content"],
+    [role="dialog"],
+    .fixed.inset-0,
+    [role="presentation"],
+    [data-state="open"] > *,
+    [data-id="sheet-content"] > * {
       z-index: 9999 !important;
       position: relative !important;
+      transform: translateZ(0) !important;
     }
     
-    /* Asegurar que todos los elementos de modal y sheet tengan z-index correcto */
-    [role="dialog"],
-    .fixed.inset-0 {
+    /* Forzar que los modales estén siempre por encima de todo */
+    [role="dialog"]::before {
+      content: "" !important;
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      background: rgba(0,0,0,0.5) !important;
+      z-index: 9998 !important;
+      pointer-events: none !important;
+    }
+    
+    /* Estilo específico para el contenedor del Sheet en iOS para asegurar posicionamiento correcto */
+    .ios-sheet-fix {
+      position: fixed !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
       z-index: 9999 !important;
+      max-height: 90vh !important;
+      border-top-left-radius: 16px !important;
+      border-top-right-radius: 16px !important;
+      transform: none !important;
     }
     
     /* Para el bottom sheet específicamente */
@@ -144,10 +178,30 @@
       padding-top: 8px !important;
       padding-bottom: 8px !important;
       height: auto !important;
+      min-height: 60px !important;
+      max-height: 72px !important;
       display: flex !important;
       flex-direction: column !important;
       align-items: center !important;
       justify-content: center !important;
+    }
+    
+    /* Ajustes para los iconos de la navbar */
+    .fixed-navigation button svg {
+      margin-bottom: 4px !important;
+      display: block !important;
+      width: 20px !important;
+      height: 20px !important;
+    }
+    
+    /* Estilos específicos para forzar la visibilidad de los nombres de los tabs */
+    .tab-name {
+      font-weight: 500 !important;
+      letter-spacing: 0.2px !important;
+      text-shadow: 0 0 1px rgba(255,255,255,0.5) !important; /* Mejora legibilidad */
+      display: block !important;
+      width: 100% !important;
+      text-align: center !important;
     }
     
     /* ===== MEJORAR INTERACTIVIDAD ===== */
