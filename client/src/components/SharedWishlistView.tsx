@@ -255,7 +255,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute top-3 right-3 p-1.5 rounded-full bg-[#1a1a1a] hover:bg-[#252525] transition-colors z-10"
+                  className="absolute top-3 right-3 p-2 rounded-full bg-[#222222] border border-[#444] hover:bg-[#2a2a2a] transition-colors z-10"
                 >
                   <ExternalLink size={16} className="text-[#FFE066]" />
                 </SafeLink>
