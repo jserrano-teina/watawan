@@ -255,7 +255,7 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   onClick={(e) => e.stopPropagation()}
-                  className="absolute top-3 right-3 p-2 rounded-full bg-[#252525] border border-[#444] hover:bg-[#2a2a2a] transition-colors z-10"
+                  className="absolute top-3 right-3 p-1.5 rounded-full bg-[#1a1a1a] hover:bg-[#252525] transition-colors z-10"
                 >
                   <ExternalLink size={16} className="text-[#FFE066]" />
                 </SafeLink>
@@ -310,13 +310,13 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
                       setSelectedItem(item);
                       setShowDetailsModal(true);
                     }}
-                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors text-sm"
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
                   >
                     Ver detalles
                   </button>
                   <button 
                     onClick={() => handleReserveClick(item)}
-                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors text-sm"
+                    className="inline-flex items-center justify-center h-[50px] px-4 rounded-lg border border-[#444] bg-transparent text-white hover:bg-[#2a2a2a] transition-colors"
                   >
                     Lo regalaré yo
                   </button>

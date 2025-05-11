@@ -45,18 +45,17 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             }
           }
           
-          // Reactivamos la validación con OpenAI para ser más estrictos con los títulos
-          const validation = await validateProductData(data.title, data.imageUrl);
+          // DESACTIVAR TEMPORALMENTE LA VALIDACIÓN DE OPENAI PARA DEPURACIÓN
+          // const validation = await validateProductData(data.title, data.imageUrl);
           
-          // Añadimos la validación manual como capa adicional
-          if (!isTitleInvalid && validation.isTitleValid) {
-            console.log(`✅ Título validado por OpenAI Y validación manual: "${data.title}"`);
-          } else {
-            // Si cualquiera de las validaciones falla, marcamos como inválido
-            validation.isTitleValid = false;
-            validation.message = validation.message || `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`;
-            console.log(`⚠️ Título rechazado: "${data.title}" - ${validation.message}`);
-          }
+          // Crear una validación manual en su lugar
+          const validation = {
+            isTitleValid: !isTitleInvalid && !!data.title && data.title.length > 2,
+            isImageValid: !!data.imageUrl,
+            message: isTitleInvalid 
+              ? `El título "${data.title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`
+              : "Todo parece correcto"
+          };
           
           console.log(`✅ Validación MANUAL: Título ${validation.isTitleValid ? 'válido' : 'inválido'}, Imagen ${validation.isImageValid ? 'válida' : 'inválida'}`);
           console.log(`📝 Mensaje: ${validation.message}`);

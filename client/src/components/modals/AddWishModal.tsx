@@ -546,46 +546,62 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="mb-6">
-          <div className="w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        </div>
+      );
+    }
+    
+    // Si no hay imagen, mostrar un botón centrado para añadirla
+    if (!imageUrl) {
+      return (
+        <div className="mb-6 w-full h-64">
+          <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <button
+              type="button"
+              onClick={handleUploadClick}
+              className="px-5 py-3 bg-[#303030] hover:bg-[#404040] text-white rounded-lg transition-colors flex items-center"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                <polyline points="21 15 16 10 5 21"></polyline>
+              </svg>
+              Añadir imagen del producto
+            </button>
           </div>
         </div>
       );
     }
     
-    // Mostramos un cuadrado de 104x104px con el botón redondo dentro
+    // Si hay una imagen, mostrarla con el botón para cambiarla
     return (
-      <div className="mb-6">
-        <div className="relative w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
-          {imageUrl ? (
-            <ProductImage 
-              imageUrl={imageUrl}
-              title={productTitle}
-              purchaseLink={purchaseLink}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full"></div>
-          )}
-          
-          {/* Botón para añadir/cambiar la imagen (siempre visible) dentro del div */}
-          <div className="absolute bottom-2 right-2">
-            <button 
-              type="button" 
-              onClick={handleUploadClick} 
-              className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors border border-[#444] shadow-sm"
-              title={imageUrl ? "Cambiar imagen" : "Añadir imagen"}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-                <line x1="16" y1="5" x2="22" y2="5"></line>
-                <line x1="19" y1="2" x2="19" y2="8"></line>
-                <circle cx="9" cy="9" r="2"></circle>
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-              </svg>
-            </button>
-          </div>
+      <div className="relative mb-6 w-full h-64">
+        <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
+          <ProductImage 
+            imageUrl={imageUrl}
+            title={productTitle}
+            purchaseLink={purchaseLink}
+            className="w-full h-full"
+          />
+        </div>
+        
+        {/* Botón para cambiar la imagen */}
+        <div className="absolute bottom-2 right-2">
+          <button 
+            type="button" 
+            onClick={handleUploadClick} 
+            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
+            title="Cambiar imagen"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+              <line x1="16" y1="5" x2="22" y2="5"></line>
+              <line x1="19" y1="2" x2="19" y2="8"></line>
+              <circle cx="9" cy="9" r="2"></circle>
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -662,39 +678,18 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </div>
 
                   
-                  {/* Fila de botones principales */}
-                  <div className="flex gap-4 mt-4">
-                    {/* Botón para pegar desde el portapapeles (oculto en iOS) */}
-                    {!isIOS && (
-                      <Button
-                        type="button"
-                        variant="outline"
-                        className="flex-1 py-6 text-base flex items-center justify-center"
-                        onClick={handlePasteFromClipboard}
-                      >
-                        <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
-                        <span style={{ marginLeft: '0' }}>Pegar enlace</span>
-                      </Button>
-                    )}
-                    
-                    {/* Botón de continuar dentro del contenido */}
-                    <Button 
-                      type="submit"
-                      disabled={isLoading}
-                      className={`py-6 text-base flex-1 ${isIOS ? 'w-full' : ''}`}
+                  {/* Botón para pegar desde el portapapeles (oculto en iOS) */}
+                  {!isIOS && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="w-full mt-4 text-base flex items-center justify-center"
+                      onClick={handlePasteFromClipboard}
                     >
-                      {isLoading ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                        </>
-                      ) : (
-                        <span className="text-base">Continuar</span>
-                      )}
+                      <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
+                      <span style={{ marginLeft: '0' }}>Pegar enlace</span>
                     </Button>
-                  </div>
+                  )}
                   
                   {/* Botón para omitir paso */}
                   <div className="flex justify-center mt-4">
@@ -732,14 +727,29 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
               
               {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={handleClose}
                   variant="outline"
-                  className="w-full"
                 >
                   Cancelar
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-6"
+                >
+                  {isLoading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </>
+                  ) : (
+                    'Continuar'
+                  )}
                 </Button>
               </div>
             </form>
@@ -874,8 +884,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   </label>
                   <CustomTextarea 
                     id="description" 
-                    rows={3}
-                    style={{ minHeight: "100px" }}
+                    rows={4}
                     className="resize-none"
                     placeholder="Añade detalles como color, talla, modelo..."
                     {...registerStepTwo('description')}
@@ -883,26 +892,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   {errorsStepTwo.description && (
                     <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
                   )}
-                </div>
-                
-                {/* Botón de guardar a todo ancho */}
-                <div className="mb-10 mt-6">
-                  <Button 
-                    type="submit"
-                    disabled={isSaving}
-                    className="w-full py-6 text-base"
-                  >
-                    {isSaving ? (
-                      <>
-                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                      </>
-                    ) : (
-                      <span className="text-base">{itemToEdit ? 'Actualizar' : 'Guardar'}</span>
-                    )}
-                  </Button>
                 </div>
                 
                 {/* Campo oculto para mantener el enlace de compra (solo para el flujo de creación) */}
@@ -917,15 +906,29 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
 
               
               {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
+              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-between bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
                 <Button 
                   type="button" 
                   onClick={itemToEdit ? handleClose : goBackToStepOne}
                   variant="outline"
-                  className="w-full"
                 >
                   {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
                   {itemToEdit ? 'Cancelar' : 'Atrás'}
+                </Button>
+                <Button 
+                  type="submit"
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                    </>
+                  ) : (
+                    itemToEdit ? 'Actualizar' : 'Guardar'
+                  )}
                 </Button>
               </div>
             </form>

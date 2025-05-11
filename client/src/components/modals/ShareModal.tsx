@@ -27,13 +27,6 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   // URL tradicional como fallback
   const legacyShareableLink = `${window.location.origin}/s/${shareableLink}`;
   
-  // Resetear el estado de copiado cuando se cierra el modal
-  useEffect(() => {
-    if (!isOpen) {
-      setCopied(false);
-    }
-  }, [isOpen]);
-  
   // Actualizar la URL pública cuando cambia el usuario
   useEffect(() => {
     if (user?.displayName) {

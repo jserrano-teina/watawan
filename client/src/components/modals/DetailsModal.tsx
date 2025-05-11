@@ -70,7 +70,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         {/* Contenido scrolleable */}
         <div className="flex-grow overflow-auto">
           {/* Imagen a sangre al inicio */}
-          <div className="w-full h-[280px] bg-[#252525] relative">
+          <div className="w-full h-80 bg-[#252525] relative">
             <ProductImage 
               imageUrl={item.imageUrl} 
               title={item.title}
@@ -89,7 +89,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-6">
+            <div className="mb-4">
               <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
             
@@ -121,20 +121,22 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            {/* Botón de enlace de compra (solo visible si hay enlace y no está reservado) */}
-            {item.purchaseLink && !item.isReserved && (
-              <div className="mb-6">
+            <div className="mb-6">
+              <h3 className="text-sm font-medium mb-2 text-white">Enlace de compra</h3>
+              {item.purchaseLink ? (
                 <SafeLink 
                   href={item.purchaseLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full border border-[#333] rounded-lg py-3 px-4 flex items-center justify-center text-white hover:border-white transition-colors"
+                  className="text-primary text-sm flex items-center justify-between truncate hover:underline"
                 >
-                  <span>Ir al enlace de compra</span>
-                  <ExternalLink size={16} className="ml-2 text-white" />
+                  <span className="truncate">{item.purchaseLink}</span>
+                  <ExternalLink size={16} className="flex-shrink-0 ml-2" />
                 </SafeLink>
-              </div>
-            )}
+              ) : (
+                <p className="text-white/60 text-sm">No se añadió ningún enlace.</p>
+              )}
+            </div>
             
             {item.description && (
               <div className="mb-6">
