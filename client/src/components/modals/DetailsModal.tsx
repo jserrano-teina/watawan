@@ -70,7 +70,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
         {/* Contenido scrolleable */}
         <div className="flex-grow overflow-auto">
           {/* Imagen a sangre al inicio */}
-          <div className="w-full h-80 bg-[#252525] relative">
+          <div className="w-full h-[280px] bg-[#252525] relative">
             <ProductImage 
               imageUrl={item.imageUrl} 
               title={item.title}
