@@ -22,18 +22,40 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   const [copied, setCopied] = useState(false);
   const { user } = useAuth();
   
-  // URL pública usando el formato nuevo watawan.com/user/username
-  const [publicShareableUrl, setPublicShareableUrl] = useState('');
   // URL tradicional como fallback
   const legacyShareableLink = `${window.location.origin}/s/${shareableLink}`;
+  
+  // Detectar si estamos en entorno de desarrollo o producción
+  const isDevelopment = 
+    window.location.hostname === 'localhost' || 
+    window.location.hostname === '127.0.0.1' ||
+    window.location.hostname.includes('.replit.app') ||
+    window.location.hostname.includes('.repl.co');
+  
+  // URL amigable según el entorno (dev o prod)
+  const [publicShareableUrl, setPublicShareableUrl] = useState('');
   
   // Actualizar la URL pública cuando cambia el usuario
   useEffect(() => {
     if (user?.displayName) {
-      // Usar el nombre de usuario para construir el enlace público
-      setPublicShareableUrl(buildFriendlyShareUrl(user.displayName));
+      // Generar el slug del nombre de usuario
+      const userSlug = user.displayName
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') 
+        .replace(/[^\w\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-+|-+$/g, '');
+      
+      // Generar URL dependiendo del entorno
+      if (isDevelopment) {
+        setPublicShareableUrl(`${window.location.origin}/user/${userSlug}`);
+      } else {
+        setPublicShareableUrl(`https://watawan.com/user/${userSlug}`);
+      }
     }
-  }, [user]);
+  }, [user, isDevelopment]);
   
   // Usar preferentemente el enlace público, con fallback al enlace legado
   const fullShareableLink = publicShareableUrl || legacyShareableLink;
@@ -48,14 +70,20 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
   };
   
   const shareOnWhatsApp = () => {
+    // Aseguramos de usar la URL adecuada para el entorno actual
+    const shareUrl = fullShareableLink;
+    
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-      '¡Hola! He creado una lista de deseos. Puedes verla aquí: ' + fullShareableLink
+      '¡Hola! He creado una lista de deseos. Puedes verla aquí: ' + shareUrl
     )}`;
     window.open(whatsappUrl, '_blank');
   };
   
   const shareOnFacebook = () => {
-    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(fullShareableLink)}`;
+    // Aseguramos de usar la URL adecuada para el entorno actual
+    const shareUrl = fullShareableLink;
+    
+    const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
     window.open(facebookUrl, '_blank');
   };
 
