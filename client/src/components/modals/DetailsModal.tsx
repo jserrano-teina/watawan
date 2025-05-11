@@ -97,7 +97,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-4">
+            <div className="mb-8">
               <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
             
@@ -138,10 +138,10 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
                     href={item.purchaseLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full border border-[#333] text-white rounded-lg py-3 px-4 font-medium hover:border-white transition-colors flex items-center justify-center"
+                    className="w-full border border-[#333] text-white rounded-lg py-3 px-4 font-medium hover:border-white transition-colors flex items-center justify-center group"
                   >
                     <span>Ir al enlace de compra</span>
-                    <ExternalLink size={16} className="ml-2" />
+                    <ExternalLink size={16} className="ml-2 text-white" />
                   </SafeLink>
                 </div>
               ) : null // No mostrar nada si está reservado o no hay enlace
