@@ -134,7 +134,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               // En listas públicas, si hay enlace y el ítem no está reservado, mostrar botón a todo ancho
               item.purchaseLink && !item.isReserved ? (
                 <>
-                  <div className="mb-4">
+                  <div className="mb-3">
                     <SafeLink 
                       href={item.purchaseLink}
                       target="_blank"
