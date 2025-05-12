@@ -97,7 +97,7 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
               </div>
             )}
             
-            <div className="mb-8">
+            <div className="mb-6">
               <span className="text-sm text-white/60">Añadido {timeAgo}</span>
             </div>
             
@@ -133,17 +133,29 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             {isPublic ? (
               // En listas públicas, si hay enlace y el ítem no está reservado, mostrar botón a todo ancho
               item.purchaseLink && !item.isReserved ? (
-                <div className="mb-6">
-                  <SafeLink 
-                    href={item.purchaseLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-full border border-[#333] text-white rounded-lg py-3 px-4 font-medium hover:border-white transition-colors flex items-center justify-center group"
-                  >
-                    <span>Ir al enlace de compra</span>
-                    <ExternalLink size={16} className="ml-2 text-white" />
-                  </SafeLink>
-                </div>
+                <>
+                  <div className="mb-4">
+                    <SafeLink 
+                      href={item.purchaseLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full border border-[#333] text-white rounded-lg py-3 px-4 font-medium hover:border-white transition-colors flex items-center justify-center group"
+                    >
+                      <span>Ir al enlace de compra</span>
+                      <ExternalLink size={16} className="ml-2 text-white" />
+                    </SafeLink>
+                  </div>
+                  
+                  {/* Botón "Lo regalaré yo" debajo del enlace de compra */}
+                  <div className="mb-6">
+                    <Button 
+                      onClick={onReserveClick}
+                      className="w-full h-[50px] text-base bg-primary hover:bg-primary/90 text-black"
+                    >
+                      Lo regalaré yo
+                    </Button>
+                  </div>
+                </>
               ) : null // No mostrar nada si está reservado o no hay enlace
             ) : (
               // En listas privadas, mostrar de forma normal
@@ -177,18 +189,6 @@ const DetailsModal: React.FC<DetailsModalProps> = ({
             )}
           </div>
         </div>
-        
-        {/* Barra inferior fija con botones - Solo visible si el item no está reservado */}
-        {!item.isReserved && (
-          <div className="border-t border-[#333] p-4 flex justify-end">
-            <Button 
-              onClick={onReserveClick}
-              className="h-[50px] px-10 bg-primary hover:bg-primary/90 text-black"
-            >
-              Lo regalaré yo
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   );
