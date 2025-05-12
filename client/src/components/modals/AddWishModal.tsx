@@ -546,8 +546,11 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="mb-6">
+          {/* Mantener exactamente el mismo tamaño durante la carga para evitar saltos */}
+          <div className="relative w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
         </div>
       );
     }
@@ -864,7 +867,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <CustomTextarea 
                     id="description" 
                     rows={3}
-                    className="resize-none h-[100px]"
+                    className="resize-none"
                     placeholder="Añade detalles como color, talla, modelo..."
                     {...registerStepTwo('description')}
                   />
