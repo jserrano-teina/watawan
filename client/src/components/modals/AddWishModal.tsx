@@ -10,7 +10,6 @@ import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
 import { CustomTextarea } from "@/components/ui/custom-textarea";
 import { AutoHeightInput } from "@/components/ui/auto-height-input";
-import { FixedHeightTextarea } from "@/components/ui/fixed-height-textarea";
 import useScrollLock from "@/hooks/useScrollLock";
 import { useToast } from "@/hooks/use-toast";
 
@@ -547,44 +546,41 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="mb-6">
-          {/* Mantener exactamente el mismo tamaño durante la carga para evitar saltos */}
-          <div className="relative w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-          </div>
+        <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
         </div>
       );
     }
     
     // Siempre mostrar un contenedor de imagen reducido con el botón en la esquina
     return (
-      <div className="mb-6">
+      <div className="relative mb-6">
         {/* Contenedor de imagen 104x104 alineado a la izquierda */}
-        <div className="relative w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
+        <div className="w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
           <ProductImage 
             imageUrl={imageUrl || ''}  // Permitir que sea vacío sin errores
             title={productTitle}
             purchaseLink={purchaseLink}
             className="w-full h-full object-cover"
           />
-          
-          {/* Botón para cambiar la imagen (siempre presente en la esquina del div de la imagen) */}
-          <div className="absolute bottom-2 right-2">
-            <button 
-              type="button" 
-              onClick={handleUploadClick} 
-              className="p-2 bg-[#222222] border border-[#444] rounded-full hover:bg-[#2a2a2a] transition-colors"
-              title="Cambiar imagen"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
-                <line x1="16" y1="5" x2="22" y2="5"></line>
-                <line x1="19" y1="2" x2="19" y2="8"></line>
-                <circle cx="9" cy="9" r="2"></circle>
-                <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
-              </svg>
-            </button>
-          </div>
+        </div>
+        
+        {/* Botón para cambiar la imagen (siempre presente) */}
+        <div className="absolute bottom-2 right-2">
+          <button 
+            type="button" 
+            onClick={handleUploadClick} 
+            className="p-2 bg-[#222222] border border-[#444] rounded-full hover:bg-[#2a2a2a] transition-colors"
+            title="Cambiar imagen"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7"></path>
+              <line x1="16" y1="5" x2="22" y2="5"></line>
+              <line x1="19" y1="2" x2="19" y2="8"></line>
+              <circle cx="9" cy="9" r="2"></circle>
+              <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path>
+            </svg>
+          </button>
         </div>
       </div>
     );
@@ -865,9 +861,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
                     Descripción (opcional)
                   </label>
-                  <FixedHeightTextarea 
-                    id="description"
-                    height={100}
+                  <CustomTextarea 
+                    id="description" 
+                    rows={4}
+                    className="resize-none"
                     placeholder="Añade detalles como color, talla, modelo..."
                     {...registerStepTwo('description')}
                   />
