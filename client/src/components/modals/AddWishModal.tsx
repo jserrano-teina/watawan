@@ -552,46 +552,25 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
       );
     }
     
-    // Si no hay imagen, mostrar un botón centrado para añadirla
-    if (!imageUrl) {
-      return (
-        <div className="mb-6 w-full h-[280px]">
-          <div className="w-full h-full flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-            <button
-              type="button"
-              onClick={handleUploadClick}
-              className="px-5 py-3 bg-[#303030] hover:bg-[#404040] text-white rounded-lg transition-colors flex items-center"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="mr-2" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-              Añadir imagen del producto
-            </button>
-          </div>
-        </div>
-      );
-    }
-    
-    // Si hay una imagen, mostrarla con el botón para cambiarla
+    // Siempre mostrar un contenedor de imagen reducido con el botón en la esquina
     return (
-      <div className="relative mb-6 w-full h-[280px]">
-        <div className="w-full h-full rounded-lg overflow-hidden border border-[#333]">
+      <div className="relative mb-6">
+        {/* Contenedor de imagen 104x104 alineado a la izquierda */}
+        <div className="w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
           <ProductImage 
-            imageUrl={imageUrl}
+            imageUrl={imageUrl || ''}  // Permitir que sea vacío sin errores
             title={productTitle}
             purchaseLink={purchaseLink}
-            className="w-full h-full"
+            className="w-full h-full object-cover"
           />
         </div>
         
-        {/* Botón para cambiar la imagen */}
+        {/* Botón para cambiar la imagen (siempre presente) */}
         <div className="absolute bottom-2 right-2">
           <button 
             type="button" 
             onClick={handleUploadClick} 
-            className="p-2 bg-[#252525] bg-opacity-80 rounded-full hover:bg-[#333] transition-colors"
+            className="p-2 bg-[#222222] border border-[#444] rounded-full hover:bg-[#2a2a2a] transition-colors"
             title="Cambiar imagen"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
