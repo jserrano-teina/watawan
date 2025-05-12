@@ -25,6 +25,12 @@ const AutoHeightTextarea = React.forwardRef<HTMLTextAreaElement, AutoHeightTexta
       const element = textareaRef.current;
       if (!element) return;
       
+      // Si no hay texto, mantener la altura exactamente al minHeight
+      if (!element.value.trim()) {
+        element.style.height = `${minHeight}px`;
+        return;
+      }
+      
       // Reset height temporarily to get the correct scrollHeight
       element.style.height = "auto";
       
@@ -34,11 +40,19 @@ const AutoHeightTextarea = React.forwardRef<HTMLTextAreaElement, AutoHeightTexta
     }, [minHeight]);
 
     React.useEffect(() => {
+      // Forzar explícitamente la altura inicial
+      const element = textareaRef.current;
+      if (element) {
+        element.style.height = `${minHeight}px`;
+      }
+      
+      // Después, ejecutar el ajuste normal
       adjustHeight();
-      // Also adjust on window resize in case text wrapping changes
+      
+      // También ajustar en resize de ventana
       window.addEventListener("resize", adjustHeight);
       return () => window.removeEventListener("resize", adjustHeight);
-    }, [adjustHeight]);
+    }, [adjustHeight, minHeight]);
 
     React.useEffect(() => {
       if (props.value !== undefined) {
@@ -56,15 +70,16 @@ const AutoHeightTextarea = React.forwardRef<HTMLTextAreaElement, AutoHeightTexta
     return (
       <textarea
         className={cn(
-          "w-full px-4 py-3 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent text-white resize-none overflow-hidden",
+          "w-full px-4 py-2 bg-[#252525] border border-[#333] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#5883C6] focus:border-transparent text-white resize-none overflow-hidden",
           className
         )}
         ref={combinedRef}
         onInput={handleInput}
-        rows={3}
+        rows={1}
         style={{
           minHeight: `${minHeight}px`,
           height: `${minHeight}px`,
+          boxSizing: 'border-box'
         }}
         {...props}
       />
