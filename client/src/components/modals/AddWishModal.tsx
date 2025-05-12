@@ -544,39 +544,34 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     const productTitle = watchStepTwo('title') || '';
     const purchaseLink = watchStepTwo('purchaseLink') || watchedPurchaseLink;
     
-    // Determinamos si la imagen está en estado de carga
-    const isImageLoading = uploadingImage;
+    if (uploadingImage) {
+      return (
+        <div className="mb-6">
+          <div className="w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
+        </div>
+      );
+    }
     
+    // Siempre mostrar un contenedor de imagen reducido con el botón en la esquina
     return (
       <div className="mb-6">
         {/* Contenedor de imagen 104x104 alineado a la izquierda, con posición relativa para el botón */}
         <div className="relative w-[104px] h-[104px] rounded-lg overflow-hidden border border-[#333] bg-[#252525]">
-          {/* Overlay de carga que se muestra solo durante el estado de carga */}
-          {isImageLoading && (
-            <div className="absolute inset-0 bg-[#252525] flex items-center justify-center z-10">
-              <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
-            </div>
-          )}
+          <ProductImage 
+            imageUrl={imageUrl || ''}  // Permitir que sea vacío sin errores
+            title={productTitle}
+            purchaseLink={purchaseLink}
+            className="w-full h-full object-cover"
+          />
           
-          {/* La imagen siempre está presente, pero con opacidad durante la carga */}
-          <div className={uploadingImage ? "opacity-0" : "opacity-100 transition-opacity duration-200"}>
-            <ProductImage 
-              imageUrl={imageUrl || ''}  // Permitir que sea vacío sin errores
-              title={productTitle}
-              purchaseLink={purchaseLink}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          
-          {/* Botón para cambiar la imagen (siempre presente pero deshabilitado durante la carga) */}
+          {/* Botón para cambiar la imagen (siempre presente) */}
           <div className="absolute bottom-1 right-1">
             <button 
               type="button" 
-              onClick={handleUploadClick}
-              disabled={uploadingImage} 
-              className={`p-1.5 bg-[#222222] border border-[#444] rounded-full transition-colors ${
-                uploadingImage ? "opacity-50 cursor-not-allowed" : "hover:bg-[#2a2a2a]"
-              }`}
+              onClick={handleUploadClick} 
+              className="p-1.5 bg-[#222222] border border-[#444] rounded-full hover:bg-[#2a2a2a] transition-colors"
               title="Cambiar imagen"
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
