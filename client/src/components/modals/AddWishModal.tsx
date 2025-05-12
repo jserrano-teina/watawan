@@ -864,13 +864,16 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
                     Descripción (opcional)
                   </label>
-                  <CustomTextarea 
-                    id="description" 
-                    rows={3}
-                    className="resize-none"
-                    placeholder="Añade detalles como color, talla, modelo..."
-                    {...registerStepTwo('description')}
-                  />
+                  <div className="h-[100px]">
+                    <CustomTextarea 
+                      id="description" 
+                      rows={3}
+                      className="resize-none h-full"
+                      placeholder="Añade detalles como color, talla, modelo..."
+                      style={{ height: "100px", minHeight: "100px" }}
+                      {...registerStepTwo('description')}
+                    />
+                  </div>
                   {errorsStepTwo.description && (
                     <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
                   )}
