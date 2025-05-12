@@ -665,7 +665,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                       <Button
                         type="button"
                         variant="outline"
-                        className="flex-1 text-base flex items-center justify-center"
+                        className="flex-1 text-base h-[50px] flex items-center justify-center"
                         onClick={handlePasteFromClipboard}
                       >
                         <ClipboardPaste className="h-[16px] w-[16px]" style={{ marginRight: '4px' }} />
@@ -676,7 +676,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className={`flex-1 text-base h-[56px] ${isIOS ? 'w-full' : ''}`}
+                      className={`flex-1 text-base h-[50px] ${isIOS ? 'w-full' : ''}`}
                     >
                       {isLoading ? (
                         <>
@@ -883,7 +883,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <Button 
                     type="submit"
                     disabled={isSaving}
-                    className="w-full h-[56px] text-base"
+                    className="w-full h-[50px] text-base"
                   >
                     {isSaving ? (
                       <>
