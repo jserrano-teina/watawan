@@ -615,7 +615,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           
           {/* Alerta interna fija (común para ambos pasos) */}
           {internalAlert && internalAlert.visible && (
-            <div className="fixed bottom-[100px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
+            <div className="fixed bottom-[20px] left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-[450px]">
               <div className={`px-5 py-3 rounded-lg shadow-lg flex items-center transition-opacity duration-300 ${
                 internalAlert.type === 'error' 
                   ? 'bg-destructive text-white' 
@@ -640,7 +640,7 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
           {step === 1 ? (
             <form onSubmit={handleSubmitStepOne(submitStepOne)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
-              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[180px] flex items-center">
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-4 flex items-center">
                 <div className="flex flex-col justify-center w-full">
                   <div className="mb-0">
                     <p className="text-white text-base mb-4 mt-4">
@@ -725,23 +725,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
 
-              
-              {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-start bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
-                <Button 
-                  type="button" 
-                  onClick={handleClose}
-                  variant="outline"
-                >
-                  Cancelar
-                </Button>
-              </div>
             </form>
           ) : (
             // Formulario paso 2
             <form onSubmit={handleSubmitStepTwo(submitStepTwo)} className="flex-1 flex flex-col h-full">
               {/* Contenido scrollable */}
-              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-[100px]">
+              <div className="flex-1 overflow-y-auto scrollable-container px-4 py-4 pb-4">
                 {/* Campo de enlace para edición (solo visible en modo edición) */}
                 {itemToEdit && (
                   <div className="mb-6">
@@ -908,18 +897,6 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
               </div>
               
 
-              
-              {/* Barra de navegación fija inferior */}
-              <div className="fixed bottom-0 left-0 right-0 max-w-[500px] mx-auto w-full flex justify-start bg-[#121212] p-4 border-t border-[#333] safe-area-bottom" style={{ zIndex: 40 }}>
-                <Button 
-                  type="button" 
-                  onClick={itemToEdit ? handleClose : goBackToStepOne}
-                  variant="outline"
-                >
-                  {!itemToEdit && <ChevronLeft className="h-4 w-4 mr-1" />}
-                  {itemToEdit ? 'Cancelar' : 'Atrás'}
-                </Button>
-              </div>
             </form>
           )}
         </div>
