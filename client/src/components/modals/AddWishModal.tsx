@@ -10,6 +10,7 @@ import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
 import { CustomTextarea } from "@/components/ui/custom-textarea";
 import { AutoHeightInput } from "@/components/ui/auto-height-input";
+import { FixedHeightTextarea } from "@/components/ui/fixed-height-textarea";
 import useScrollLock from "@/hooks/useScrollLock";
 import { useToast } from "@/hooks/use-toast";
 
@@ -864,16 +865,12 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
                     Descripción (opcional)
                   </label>
-                  <div className="h-[100px]">
-                    <CustomTextarea 
-                      id="description" 
-                      rows={3}
-                      className="resize-none h-full"
-                      placeholder="Añade detalles como color, talla, modelo..."
-                      style={{ height: "100px", minHeight: "100px" }}
-                      {...registerStepTwo('description')}
-                    />
-                  </div>
+                  <FixedHeightTextarea 
+                    id="description"
+                    height={100}
+                    placeholder="Añade detalles como color, talla, modelo..."
+                    {...registerStepTwo('description')}
+                  />
                   {errorsStepTwo.description && (
                     <p className="text-destructive text-sm mt-2">{errorsStepTwo.description.message}</p>
                   )}
