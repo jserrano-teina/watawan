@@ -8,7 +8,7 @@ import { Package, Image, Edit3, ChevronLeft, ClipboardPaste, AlertCircle, XCircl
 import ProductImage from '../ProductImage';
 import { CustomInput } from "@/components/ui/custom-input";
 import { Button } from "@/components/ui/button";
-import { CustomTextarea } from "@/components/ui/custom-textarea";
+import { AutoHeightTextarea } from "@/components/ui/auto-height-textarea";
 import { AutoHeightInput } from "@/components/ui/auto-height-input";
 import useScrollLock from "@/hooks/useScrollLock";
 import { useToast } from "@/hooks/use-toast";
@@ -863,9 +863,9 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
                   <label htmlFor="description" className="block text-sm font-medium mb-2 text-white">
                     Descripción (opcional)
                   </label>
-                  <CustomTextarea 
+                  <AutoHeightTextarea 
                     id="description" 
-                    rows={4}
+                    minHeight={100}
                     className="resize-none"
                     placeholder="Añade detalles como color, talla, modelo..."
                     {...registerStepTwo('description')}
