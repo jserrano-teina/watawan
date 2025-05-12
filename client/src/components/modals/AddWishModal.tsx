@@ -546,8 +546,10 @@ const AddWishModal: React.FC<AddWishModalProps> = ({
     
     if (uploadingImage) {
       return (
-        <div className="w-full h-64 flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
-          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+        <div className="mb-6">
+          <div className="w-[104px] h-[104px] flex items-center justify-center bg-[#252525] rounded-lg border border-[#333]">
+            <div className="animate-spin h-6 w-6 border-4 border-primary border-t-transparent rounded-full"></div>
+          </div>
         </div>
       );
     }
