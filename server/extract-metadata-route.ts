@@ -244,16 +244,32 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     } else {
       // Para otros sitios no-Amazon
       try {
-        // Primero intentar con Puppeteer para una mejor extracción
-        console.log(`🤖 Usando Puppeteer para sitio no-Amazon...`);
-        const { extractMetadataWithPuppeteer } = await import('./puppeteer-extractor');
-        const puppeteerMetadata = await extractMetadataWithPuppeteer(url);
+        // Primero intentar con nuestra nueva función de captura de pantalla + OpenAI Vision
+        console.log(`🤖 Usando captura de pantalla + OpenAI Vision para sitio no-Amazon...`);
+        const { extractMetadataWithScreenshot } = await import('./puppeteer-extractor');
+        const screenshotMetadata = await extractMetadataWithScreenshot(url);
         
-        if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
-          console.log(`✅ Extracción con Puppeteer exitosa para sitio no-Amazon`);
-          return res.json(await createResponseObject(puppeteerMetadata));
+        if (screenshotMetadata && screenshotMetadata.title) {
+          console.log(`✅ Extracción con captura de pantalla + OpenAI Vision exitosa para sitio no-Amazon`);
+          return res.json(await createResponseObject({
+            title: screenshotMetadata.title,
+            imageUrl: screenshotMetadata.imageUrl || '',
+            price: '', // Siempre vacío según la especificación
+            description: ''
+          }));
         } else {
-          console.log(`⚠️ Puppeteer no obtuvo datos completos para sitio no-Amazon. Usando métodos alternativos...`);
+          console.log(`⚠️ La captura de pantalla + OpenAI Vision no obtuvo datos completos. Intentando con Puppeteer tradicional...`);
+          
+          // Intentar con el método tradicional de Puppeteer como fallback
+          const { extractMetadataWithPuppeteer } = await import('./puppeteer-extractor');
+          const puppeteerMetadata = await extractMetadataWithPuppeteer(url);
+          
+          if (puppeteerMetadata && (puppeteerMetadata.title || puppeteerMetadata.imageUrl)) {
+            console.log(`✅ Extracción con Puppeteer tradicional exitosa para sitio no-Amazon`);
+            return res.json(await createResponseObject(puppeteerMetadata));
+          } else {
+            console.log(`⚠️ Puppeteer tradicional tampoco obtuvo datos completos. Usando métodos alternativos...`);
+          }
         }
       } catch (puppeteerError) {
         console.error(`❌ Error en Puppeteer para sitio no-Amazon: ${puppeteerError}`);

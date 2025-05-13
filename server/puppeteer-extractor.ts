@@ -492,7 +492,7 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
     await page.goto(url, { waitUntil: 'networkidle2' });
     
     // Esperar a que el contenido principal se cargue
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Intentar aceptar cookies si es necesario
     try {
@@ -516,7 +516,7 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
           console.log(`[PuppeteerExtractor] Haciendo clic en botón de cookies: ${selector}`);
           await page.click(selector).catch(() => {});
           // Esperar a que desaparezca el diálogo
-          await page.waitForTimeout(500);
+          await new Promise(resolve => setTimeout(resolve, 500));
           break;
         }
       }
@@ -530,19 +530,20 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
       window.scrollTo(0, 300);
     });
     
-    await page.waitForTimeout(1000);
+    await new Promise(resolve => setTimeout(resolve, 1000));
     
     // Tomar captura de pantalla de la parte principal de la página
     console.log(`[PuppeteerExtractor] Tomando captura de pantalla...`);
     const screenshotBuffer = await page.screenshot({ 
-      type: 'jpeg', 
+      type: 'jpeg',
       quality: 80, // Calidad reducida para disminuir el tamaño
-      clip: { x: 0, y: 0, width: 1280, height: 800 }
+      fullPage: false
     });
     
-    // Convertir el buffer a base64
+    // Convertir el buffer a base64 usando Buffer.from
     const screenshotBase64 = screenshotBuffer.toString('base64');
-    console.log(`[PuppeteerExtractor] Captura realizada: ${(screenshotBase64.length / 1024).toFixed(2)} KB`);
+    const sizeKB = Math.round((screenshotBase64.length || 0) / 1024);
+    console.log(`[PuppeteerExtractor] Captura realizada: ${sizeKB} KB`);
     
     // Extraer el título y precio utilizando OpenAI Vision
     const visionResult = await extractMetadataFromScreenshot(screenshotBase64, url);
