@@ -32,6 +32,19 @@ async function getBrowser(): Promise<Browser> {
   
   // Configuración avanzada para evadir detección en entornos como Replit
   console.log('[PuppeteerExtractor] Intentando iniciar Chromium desde: /nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium');
+  
+  // Lista rotativa de User-Agents para evitar detección
+  const userAgents = [
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.159 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Safari/605.1.15',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 Edg/91.0.864.59',
+    'Mozilla/5.0 (iPhone; CPU iPhone OS 14_7_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.1.2 Mobile/15E148 Safari/604.1'
+  ];
+  
+  // Elegir un User-Agent aleatorio
+  const randomUserAgent = userAgents[Math.floor(Math.random() * userAgents.length)];
+  console.log(`[PuppeteerExtractor] Usando User-Agent: ${randomUserAgent}`);
+  
   const browser = await puppeteer.launch({
     args: [
       '--no-sandbox',
@@ -48,7 +61,9 @@ async function getBrowser(): Promise<Browser> {
       '--disable-breakpad',
       '--disable-web-security',
       '--disable-features=IsolateOrigins,site-per-process',
-      '--disable-site-isolation-trials'
+      '--disable-site-isolation-trials',
+      `--user-agent=${randomUserAgent}`,
+      '--disable-blink-features=AutomationControlled' // Oculta que es automatizado
     ],
     headless: true,
     defaultViewport: {
