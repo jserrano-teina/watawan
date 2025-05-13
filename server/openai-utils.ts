@@ -92,6 +92,44 @@ export async function validateProductData(
   console.log(`🔍 VALIDANDO CON OPENAI - Título: "${title || 'No disponible'}", ImageUrl: ${imageUrl ? 'Disponible' : 'No disponible'}`);
   
   try {
+    // Validación rápida para títulos obviamente inválidos sin llamar a la API
+    if (title) {
+      // Lista de patrones para identificar títulos inválidos
+      const invalidTitlePatterns = [
+        /^(r|p)$/i,                          // Solo "R" o "P"
+        /^r\s*p$/i,                          // "R P"
+        /^undefined$/i,                      // "undefined"
+        /^(producto|artículo|item)$/i,       // Palabras genéricas
+        /^https?:\/\//i,                     // URLs
+        /^(null|none|no title)$/i,           // Valores nulos
+        /^[\w\d]{1,3}$/i,                    // Solo 1-3 caracteres alfanuméricos
+        /error|not found|página|404/i,       // Mensajes de error
+        /^[\s\.\,\-\;\:\"\'\!\?\(\)]{1,5}$/i // Solo signos de puntuación
+      ];
+      
+      // Verificar si el título coincide con algún patrón inválido
+      for (const pattern of invalidTitlePatterns) {
+        if (pattern.test(title)) {
+          console.log(`⚠️ Detectado título inválido de forma explícita: "${title}"`);
+          return {
+            isTitleValid: false,
+            isImageValid: !!imageUrl,
+            message: `El título "${title}" no es válido o es demasiado genérico. Por favor, introduce un título descriptivo.`
+          };
+        }
+      }
+      
+      // Títulos extremadamente cortos
+      if (title.length < 5) {
+        console.log(`⚠️ Título demasiado corto: "${title}"`);
+        return {
+          isTitleValid: false,
+          isImageValid: !!imageUrl,
+          message: `El título es demasiado corto. Por favor, introduce un título más descriptivo.`
+        };
+      }
+    }
+    
     if (!title && !imageUrl) {
       console.log(`⚠️ No hay datos para validar, devolviendo inválido por defecto`);
       return {
@@ -205,28 +243,46 @@ export async function extractMetadataFromScreenshot(
     }
     
     console.log('🚀 Enviando solicitud a OpenAI Vision...');
+    
+    // Intentar extraer dominio principal para personalizar la instrucción
+    let domain = '';
+    try {
+      const urlObj = new URL(url);
+      domain = urlObj.hostname.replace('www.', '');
+      domain = domain.split('.')[0]; // obtener solo la primera parte (ej: amazon, zara, etc.)
+    } catch (e) {
+      domain = 'e-commerce';
+    }
+    
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
           role: "system",
           content: 
-            "Eres un experto en análisis de capturas de pantalla de páginas de productos de e-commerce. " +
-            "Tu tarea es extraer con precisión el título exacto del producto y su precio a partir de la imagen proporcionada.\n\n" +
-            "REGLAS IMPORTANTES:\n" +
-            "1. El título debe ser completo, específico y descriptivo del producto real\n" +
-            "2. Incluye marca, modelo y características clave en el título\n" +
-            "3. El precio debe incluir el símbolo de la moneda (€, $, etc.)\n" +
-            "4. Evalúa tu nivel de confianza en la extracción (0.0 a 1.0)\n" +
-            "5. Si no puedes identificar con certeza algún dato, déjalo vacío\n\n" +
-            "Responde solo con JSON válido en el formato especificado sin explicaciones adicionales."
+            "Eres un experto en análisis de capturas de pantalla de páginas de productos de comercio electrónico. " +
+            "Tu tarea es extraer información de productos a partir de imágenes de sitios web.\n\n" +
+            "INSTRUCCIONES PRECISAS:\n" +
+            "- EXTRAE el título completo del producto (incluye marca, modelo y detalles clave)\n" +
+            "- EXTRAE el precio exacto (con símbolo de moneda)\n" +
+            "- ASIGNA un nivel de confianza (0-1) a tu extracción\n" +
+            "- Si no puedes identificar algún dato, OMÍTELO en la respuesta\n\n" +
+            "FORMATO DE RESPUESTA:\n" +
+            "Proporciona SOLO un objeto JSON con estos campos:\n" +
+            "{\n" +
+            "  \"title\": \"[título completo del producto]\",\n" +
+            "  \"price\": \"[precio con símbolo de moneda]\",\n" +
+            "  \"confidence\": [número entre 0-1]\n" +
+            "}\n\n" +
+            "No incluyas explicaciones ni texto adicional fuera del JSON.\n" +
+            "IMPORTANTE: La extracción de datos precisos es vital para la experiencia del usuario."
         },
         {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analiza esta captura de pantalla de un producto de e-commerce de ${url}. Extrae el título exacto y el precio del producto mostrado:`
+              text: `Esta es una captura de pantalla de un producto de ${domain}. Analízala y extrae el título exacto y el precio en formato JSON:`
             },
             {
               type: "image_url",
@@ -238,7 +294,8 @@ export async function extractMetadataFromScreenshot(
         }
       ],
       response_format: { type: "json_object" },
-      temperature: 0.2,
+      temperature: 0.1, // Temperatura más baja para respuestas más deterministas
+      max_tokens: 1000, // Limitar tokens para respuestas concisas
     }).catch(err => {
       console.error(`❌ Error en la llamada a OpenAI: ${err.message}`);
       console.error(`❌ Detalles del error: ${JSON.stringify(err)}`);
