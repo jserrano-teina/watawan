@@ -493,81 +493,174 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
     const browser = await getBrowser();
     const page = await browser.newPage();
     
-    // Configuración avanzada para la página
-    page.setDefaultNavigationTimeout(30000);
-    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15');
-    
-    // Configuración de la ventana para obtener una buena captura
-    await page.setViewport({
-      width: 1280,
-      height: 800,
-      deviceScaleFactor: 1,
+    // Configurar la página para evitar detección como bot
+    await page.evaluateOnNewDocument(() => {
+      // Ocultar WebDriver
+      Object.defineProperty(navigator, 'webdriver', {
+        get: () => false,
+      });
+      
+      // Modificar la propiedad plugins para que parezca un navegador normal
+      Object.defineProperty(navigator, 'plugins', {
+        get: () => [1, 2, 3, 4, 5],
+      });
+      
+      // Modificar idiomas
+      Object.defineProperty(navigator, 'languages', {
+        get: () => ['es-ES', 'es', 'en-US', 'en'],
+      });
     });
     
-    // Navegar a la URL
-    console.log(`[PuppeteerExtractor] Navegando a: ${url}`);
-    await page.goto(url, { waitUntil: 'networkidle2' });
+    // Configuración avanzada para la página
+    page.setDefaultNavigationTimeout(45000); // Aumentar timeout para sitios lentos
     
-    // Esperar a que el contenido principal se cargue
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Lista de User-Agents móviles que suelen pasar más desapercibidos
+    const mobileUserAgents = [
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1',
+      'Mozilla/5.0 (iPad; CPU OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/96.0.4664.36 Mobile/15E148 Safari/604.1',
+      'Mozilla/5.0 (Linux; Android 12; SM-G998B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.50 Mobile Safari/537.36',
+      'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.91 Mobile Safari/537.36'
+    ];
     
-    // Intentar aceptar cookies si es necesario
+    // Elegir un User-Agent móvil aleatorio
+    const randomMobileUserAgent = mobileUserAgents[Math.floor(Math.random() * mobileUserAgents.length)];
+    await page.setUserAgent(randomMobileUserAgent);
+    console.log(`[PuppeteerExtractor] Usando User-Agent móvil: ${randomMobileUserAgent}`);
+    
+    // Configuración para la vista móvil
+    await page.setViewport({
+      width: 390,
+      height: 844,
+      deviceScaleFactor: 2,
+      isMobile: true,
+      hasTouch: true,
+    });
+    
+    // Añadir encabezados HTTP que parecen más un navegador móvil real
+    await page.setExtraHTTPHeaders({
+      'Accept-Language': 'es-ES,es;q=0.9',
+      'Accept-Encoding': 'gzip, deflate, br',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
+      'sec-ch-ua-mobile': '?1',
+      'sec-ch-ua-platform': '"Android"',
+      'Upgrade-Insecure-Requests': '1',
+      'Referer': 'https://www.google.com/',
+      'Cache-Control': 'no-cache',
+    });
+    
+    // Simular comportamiento humano con pausas aleatorias
+    const randomPause = () => new Promise(resolve => 
+      setTimeout(resolve, 500 + Math.floor(Math.random() * 1000))
+    );
+    
+    // Navegar directamente a la URL como smartphone
+    console.log(`[PuppeteerExtractor] Navegando a: ${url} como dispositivo móvil`);
+    
     try {
-      const cookieSelectors = [
-        '#sp-cc-accept', 
-        '#a-autoid-0', 
-        'input[data-action-type="DISMISS"]',
-        '#accept-amazon-cookie-button',
-        'button[data-accept-cookies]',
-        '.cookieConsentAcceptButton',
-        '#accept-cookies',
-        'button:has-text("Aceptar")',
-        'button:has-text("Accept")',
-        'button:has-text("Aceptar cookies")',
-        'button:has-text("Accept cookies")'
+      // Usar modo incógnito para evitar cookies anteriores
+      await page.goto(url, { 
+        waitUntil: 'domcontentloaded',
+        timeout: 20000 
+      });
+      
+      // Esperar carga adicional
+      await randomPause();
+      
+      // Ejecutar scrolls aleatorios para parecer humano
+      await page.evaluate(() => {
+        const maxScrolls = 2 + Math.floor(Math.random() * 3);
+        let currentScroll = 0;
+        
+        return new Promise((resolve) => {
+          const interval = setInterval(() => {
+            window.scrollBy(0, 100 + Math.floor(Math.random() * 400));
+            currentScroll++;
+            
+            if (currentScroll >= maxScrolls) {
+              clearInterval(interval);
+              // Volver arriba para la captura
+              window.scrollTo(0, 200);
+              resolve(true);
+            }
+          }, 500 + Math.floor(Math.random() * 500));
+        });
+      });
+      
+      await randomPause();
+    } catch (navError) {
+      console.log(`[PuppeteerExtractor] Error de navegación, intentando con modo simplificado: ${navError}`);
+      
+      try {
+        // Si falla, intentar con opciones más simples
+        await page.goto(url, { timeout: 25000 });
+      } catch (retryError) {
+        throw new Error(`No se pudo acceder a la página después de múltiples intentos: ${retryError}`);
+      }
+    }
+    
+    // Intentar manejar diálogos de cookies/popups
+    try {
+      // Lista ampliada de selectores para botones de cookies/aceptar en UIs móviles
+      const consentSelectors = [
+        // Selectores generales
+        'button[id*="accept"], button[id*="consent"], button[id*="cookie"], button[id*="agree"]',
+        'a[id*="accept"], a[id*="consent"], a[id*="cookie"], a[id*="agree"]',
+        // Textos comunes
+        'button:has-text("Accept"), button:has-text("Aceptar"), button:has-text("Acepto")',
+        'button:has-text("cookies"), button:has-text("Cookies"), button:has-text("Continue"), button:has-text("OK")',
+        // Específicos de móvil para varios sitios
+        '.cookie-consent-banner button',
+        '.cookie-banner button',
+        '#consent_prompt_submit',
+        '#onetrust-accept-btn-handler',
+        '.js-accept-cookies',
+        '.js-cookie-accept',
+        // Decathlon móvil específico
+        '.cookie-banner__buttons button',
+        '#decathlon-cookie-banner button',
+        '.cookieConsent button',
+        '.didomi-button',
+        '.didomi-continue-button'
       ];
       
-      for (const selector of cookieSelectors) {
-        const buttonExists = await page.$(selector);
-        if (buttonExists) {
-          console.log(`[PuppeteerExtractor] Haciendo clic en botón de cookies: ${selector}`);
-          await page.click(selector).catch(() => {});
-          // Esperar a que desaparezca el diálogo
-          await new Promise(resolve => setTimeout(resolve, 500));
-          break;
+      for (const selector of consentSelectors) {
+        try {
+          const buttons = await page.$$(selector);
+          if (buttons.length > 0) {
+            console.log(`[PuppeteerExtractor] Encontrados ${buttons.length} botones con selector ${selector}`);
+            for (const button of buttons) {
+              await button.click().catch(() => {});
+              await randomPause();
+            }
+          }
+        } catch (e) {
+          // Continuar con el siguiente selector
         }
       }
     } catch (e) {
-      // Ignorar errores al intentar cerrar popups
-      console.log('[PuppeteerExtractor] Error al intentar cerrar cookies:', e);
+      // Ignorar errores al manejar cookies
     }
     
-    // Hacer scroll para asegurar que el contenido principal está visible
-    await page.evaluate(() => {
-      window.scrollTo(0, 300);
-    });
+    // Esperar a que el contenido se estabilice
+    await randomPause();
     
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Tomar captura de pantalla de la parte principal de la página
+    // Tomar captura de pantalla
     console.log(`[PuppeteerExtractor] Tomando captura de pantalla...`);
     const screenshotBuffer = await page.screenshot({ 
       type: 'jpeg',
-      quality: 80, // Calidad reducida para disminuir el tamaño
+      quality: 85,
       fullPage: false
     });
     
     // Convertir el buffer a base64
-    const screenshotBase64 = Buffer.isBuffer(screenshotBuffer) 
-      ? screenshotBuffer.toString('base64')
-      : '';
-      
-    // Comprobar que tenemos datos válidos
-    if (!screenshotBase64) {
-      console.error(`[PuppeteerExtractor] Error: No se pudo obtener captura en base64`);
-    } else {
+    let screenshotBase64 = '';
+    if (Buffer.isBuffer(screenshotBuffer)) {
+      screenshotBase64 = screenshotBuffer.toString('base64');
       const sizeKB = Math.round(screenshotBase64.length / 1024);
       console.log(`[PuppeteerExtractor] Captura realizada: ${sizeKB} KB`);
+    } else {
+      console.error('[PuppeteerExtractor] Error: No se pudo obtener captura válida');
+      throw new Error('Captura de pantalla inválida');
     }
     
     // Extraer el título y precio utilizando OpenAI Vision
