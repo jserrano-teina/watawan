@@ -195,7 +195,16 @@ export async function extractMetadataFromScreenshot(
 }> {
   try {
     console.log('🧠 Analizando captura de pantalla con OpenAI Vision...');
+    console.log(`🔍 Tamaño de la imagen base64: ${screenshotBase64.length} caracteres`);
     
+    // Comprobar que la API key de OpenAI está disponible
+    console.log(`🔑 API Key de OpenAI disponible: ${!!process.env.OPENAI_API_KEY ? 'Sí' : 'No'}`);
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('❌ OPENAI_API_KEY no está disponible en el entorno');
+      return { confidence: 0 };
+    }
+    
+    console.log('🚀 Enviando solicitud a OpenAI Vision...');
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -230,10 +239,18 @@ export async function extractMetadataFromScreenshot(
       ],
       response_format: { type: "json_object" },
       temperature: 0.2,
+    }).catch(err => {
+      console.error(`❌ Error en la llamada a OpenAI: ${err.message}`);
+      console.error(`❌ Detalles del error: ${JSON.stringify(err)}`);
+      throw err;
     });
+    
+    console.log('✅ Respuesta recibida de OpenAI Vision');
 
     // Procesar la respuesta
     const content = response.choices[0].message.content;
+    console.log(`📄 Contenido de la respuesta: ${content}`);
+    
     const result = content ? JSON.parse(content) : {};
     
     console.log(`🔍 OpenAI Vision extrajo: Título="${result.title || 'No detectado'}", Precio="${result.price || 'No detectado'}", Confianza=${result.confidence || 0}`);

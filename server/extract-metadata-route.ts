@@ -246,19 +246,29 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       try {
         // Primero intentar con nuestra nueva función de captura de pantalla + OpenAI Vision
         console.log(`🤖 Usando captura de pantalla + OpenAI Vision para sitio no-Amazon...`);
+        console.log(`🌐 URL a procesar: ${url}`);
         const { extractMetadataWithScreenshot } = await import('./puppeteer-extractor');
-        const screenshotMetadata = await extractMetadataWithScreenshot(url);
         
-        if (screenshotMetadata && screenshotMetadata.title) {
-          console.log(`✅ Extracción con captura de pantalla + OpenAI Vision exitosa para sitio no-Amazon`);
-          return res.json(await createResponseObject({
-            title: screenshotMetadata.title,
-            imageUrl: screenshotMetadata.imageUrl || '',
-            price: '', // Siempre vacío según la especificación
-            description: ''
-          }));
-        } else {
-          console.log(`⚠️ La captura de pantalla + OpenAI Vision no obtuvo datos completos. Intentando con Puppeteer tradicional...`);
+        try {
+          console.log(`🚀 Iniciando extractMetadataWithScreenshot para ${url}`);
+          const screenshotMetadata = await extractMetadataWithScreenshot(url);
+          console.log(`📊 Resultados de extractMetadataWithScreenshot: ${JSON.stringify(screenshotMetadata)}`);
+          
+          if (screenshotMetadata && screenshotMetadata.title) {
+            console.log(`✅ Extracción con captura de pantalla + OpenAI Vision exitosa para sitio no-Amazon`);
+            return res.json(await createResponseObject({
+              title: screenshotMetadata.title,
+              imageUrl: screenshotMetadata.imageUrl || '',
+              price: '', // Siempre vacío según la especificación
+              description: ''
+            }));
+          } else {
+            console.log(`⚠️ La captura de pantalla + OpenAI Vision no obtuvo datos completos. Intentando con Puppeteer tradicional...`);
+          }
+        } catch (visionError) {
+          console.error(`❌ Error al extraer con Vision AI: ${visionError instanceof Error ? visionError.message : String(visionError)}`);
+          console.error(`❌ Stack trace: ${visionError instanceof Error ? visionError.stack : 'No disponible'}`);
+          console.log(`⚠️ Continuando con métodos alternativos de extracción...`);
           
           // Intentar con el método tradicional de Puppeteer como fallback
           const { extractMetadataWithPuppeteer } = await import('./puppeteer-extractor');

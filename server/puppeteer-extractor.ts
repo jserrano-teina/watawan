@@ -31,6 +31,7 @@ async function getBrowser(): Promise<Browser> {
   console.log('[PuppeteerExtractor] Iniciando navegador headless...');
   
   // Configuración avanzada para evadir detección en entornos como Replit
+  console.log('[PuppeteerExtractor] Intentando iniciar Chromium desde: /nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium');
   const browser = await puppeteer.launch({
     args: [
       '--no-sandbox',
@@ -53,7 +54,8 @@ async function getBrowser(): Promise<Browser> {
     defaultViewport: {
       width: 1920,
       height: 1080
-    }
+    },
+    executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium'
   });
   
   browserInstance = browser;
