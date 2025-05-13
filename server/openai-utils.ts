@@ -180,6 +180,84 @@ export async function validateProductData(
 }
 
 /**
+ * Extrae metadatos de un producto a partir de una imagen capturada por Puppeteer
+ * @param screenshotBase64 La captura de pantalla en formato base64
+ * @param url La URL de la página
+ * @returns Objeto con el título, descripción, precio e imagen del producto
+ */
+export async function extractMetadataFromScreenshot(
+  screenshotBase64: string,
+  url: string
+): Promise<{
+  title?: string;
+  price?: string;
+  confidence: number;
+}> {
+  try {
+    console.log('🧠 Analizando captura de pantalla con OpenAI Vision...');
+    
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "system",
+          content: 
+            "Eres un experto en análisis de capturas de pantalla de páginas de productos de e-commerce. " +
+            "Tu tarea es extraer con precisión el título exacto del producto y su precio a partir de la imagen proporcionada.\n\n" +
+            "REGLAS IMPORTANTES:\n" +
+            "1. El título debe ser completo, específico y descriptivo del producto real\n" +
+            "2. Incluye marca, modelo y características clave en el título\n" +
+            "3. El precio debe incluir el símbolo de la moneda (€, $, etc.)\n" +
+            "4. Evalúa tu nivel de confianza en la extracción (0.0 a 1.0)\n" +
+            "5. Si no puedes identificar con certeza algún dato, déjalo vacío\n\n" +
+            "Responde solo con JSON válido en el formato especificado sin explicaciones adicionales."
+        },
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: `Analiza esta captura de pantalla de un producto de e-commerce de ${url}. Extrae el título exacto y el precio del producto mostrado:`
+            },
+            {
+              type: "image_url",
+              image_url: {
+                url: `data:image/jpeg;base64,${screenshotBase64}`
+              }
+            }
+          ]
+        }
+      ],
+      response_format: { type: "json_object" },
+      temperature: 0.2,
+    });
+
+    // Procesar la respuesta
+    const content = response.choices[0].message.content;
+    const result = content ? JSON.parse(content) : {};
+    
+    console.log(`🔍 OpenAI Vision extrajo: Título="${result.title || 'No detectado'}", Precio="${result.price || 'No detectado'}", Confianza=${result.confidence || 0}`);
+    
+    // Normalizar los resultados
+    const metadata: {
+      title?: string;
+      price?: string;
+      confidence: number;
+    } = {
+      confidence: result.confidence || 0
+    };
+    
+    if (result.title) metadata.title = result.title;
+    if (result.price) metadata.price = result.price;
+    
+    return metadata;
+  } catch (error) {
+    console.error("Error al extraer metadatos con Vision AI:", error);
+    return { confidence: 0 };
+  }
+}
+
+/**
  * Reduce el tamaño del HTML para no exceder los límites de tokens de la API
  * Se enfoca en mantener las partes más relevantes para la extracción de metadatos
  */

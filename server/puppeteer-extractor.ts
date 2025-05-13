@@ -7,6 +7,7 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
 import { extractAsin } from './amazon-extractor';
 import { getKnownProduct } from './amazon-extractor';
+import { extractMetadataFromScreenshot } from './openai-utils';
 
 // Cache para evitar iniciar múltiples instancias del navegador
 let browserInstance: Browser | null = null;
@@ -457,6 +458,175 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
   }
   
   return result;
+}
+
+/**
+ * Extrae metadatos de un producto utilizando AI Vision con captura de pantalla
+ * Esta función toma una captura de la página y la envía a OpenAI para análisis
+ */
+export async function extractMetadataWithScreenshot(url: string): Promise<{
+  title?: string;
+  imageUrl?: string;
+  price?: string;
+  description?: string;
+}> {
+  console.log(`[PuppeteerExtractor] Extrayendo metadatos con screenshot para: ${url}`);
+  
+  try {
+    const browser = await getBrowser();
+    const page = await browser.newPage();
+    
+    // Configuración avanzada para la página
+    page.setDefaultNavigationTimeout(30000);
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15');
+    
+    // Configuración de la ventana para obtener una buena captura
+    await page.setViewport({
+      width: 1280,
+      height: 800,
+      deviceScaleFactor: 1,
+    });
+    
+    // Navegar a la URL
+    console.log(`[PuppeteerExtractor] Navegando a: ${url}`);
+    await page.goto(url, { waitUntil: 'networkidle2' });
+    
+    // Esperar a que el contenido principal se cargue
+    await page.waitForTimeout(2000);
+    
+    // Intentar aceptar cookies si es necesario
+    try {
+      const cookieSelectors = [
+        '#sp-cc-accept', 
+        '#a-autoid-0', 
+        'input[data-action-type="DISMISS"]',
+        '#accept-amazon-cookie-button',
+        'button[data-accept-cookies]',
+        '.cookieConsentAcceptButton',
+        '#accept-cookies',
+        'button:has-text("Aceptar")',
+        'button:has-text("Accept")',
+        'button:has-text("Aceptar cookies")',
+        'button:has-text("Accept cookies")'
+      ];
+      
+      for (const selector of cookieSelectors) {
+        const buttonExists = await page.$(selector);
+        if (buttonExists) {
+          console.log(`[PuppeteerExtractor] Haciendo clic en botón de cookies: ${selector}`);
+          await page.click(selector).catch(() => {});
+          // Esperar a que desaparezca el diálogo
+          await page.waitForTimeout(500);
+          break;
+        }
+      }
+    } catch (e) {
+      // Ignorar errores al intentar cerrar popups
+      console.log('[PuppeteerExtractor] Error al intentar cerrar cookies:', e);
+    }
+    
+    // Hacer scroll para asegurar que el contenido principal está visible
+    await page.evaluate(() => {
+      window.scrollTo(0, 300);
+    });
+    
+    await page.waitForTimeout(1000);
+    
+    // Tomar captura de pantalla de la parte principal de la página
+    console.log(`[PuppeteerExtractor] Tomando captura de pantalla...`);
+    const screenshotBuffer = await page.screenshot({ 
+      type: 'jpeg', 
+      quality: 80, // Calidad reducida para disminuir el tamaño
+      clip: { x: 0, y: 0, width: 1280, height: 800 }
+    });
+    
+    // Convertir el buffer a base64
+    const screenshotBase64 = screenshotBuffer.toString('base64');
+    console.log(`[PuppeteerExtractor] Captura realizada: ${(screenshotBase64.length / 1024).toFixed(2)} KB`);
+    
+    // Extraer el título y precio utilizando OpenAI Vision
+    const visionResult = await extractMetadataFromScreenshot(screenshotBase64, url);
+    
+    // Extraer también la imagen y otros datos mediante métodos tradicionales
+    let imageUrl: string | undefined;
+    
+    // Extraer imagen
+    try {
+      // Buscar la imagen principal del producto
+      imageUrl = await page.evaluate(() => {
+        // Lista de selectores para encontrar la imagen principal
+        const imageSelectors = [
+          // Selectores genéricos
+          'img.product-image-main',
+          'img.product-image',
+          'img.main-image',
+          '.product-image img',
+          '.gallery img',
+          '.product-gallery img',
+          // Selectores específicos por tienda
+          // Amazon
+          '#landingImage',
+          '#imgBlkFront',
+          // Otros
+          '.product-detail-image',
+          '.product-hero-image img',
+          // Genérico de imágenes grandes
+          'img[width][height]'
+        ];
+        
+        // Buscar por selectores específicos primero
+        for (const selector of imageSelectors) {
+          const img = document.querySelector(selector) as HTMLImageElement;
+          if (img && img.src && !img.src.includes('placeholder') && !img.src.includes('loading')) {
+            return img.src;
+          }
+        }
+        
+        // Si no encontramos nada, buscar la imagen más grande visible
+        const images = Array.from(document.querySelectorAll('img'));
+        let bestImage: HTMLImageElement | null = null;
+        let bestImageArea = 0;
+        
+        for (const img of images) {
+          // Verificar si la imagen es visible y lo suficientemente grande
+          const rect = img.getBoundingClientRect();
+          if (rect.width > 100 && rect.height > 100 && rect.top >= 0 && rect.left >= 0) {
+            const area = rect.width * rect.height;
+            if (area > bestImageArea) {
+              bestImageArea = area;
+              bestImage = img;
+            }
+          }
+        }
+        
+        return bestImage?.src;
+      });
+    } catch (error) {
+      console.error(`[PuppeteerExtractor] Error al extraer imagen: ${error}`);
+    }
+    
+    // Cerrar la página
+    await page.close();
+    
+    // Programar el cierre del navegador después de un período de inactividad
+    scheduleBrowserClose();
+    
+    // Combinar los resultados
+    const result = {
+      title: visionResult.title,
+      price: visionResult.price,
+      imageUrl: imageUrl
+    };
+    
+    console.log(`[PuppeteerExtractor] Metadatos extraídos con Vision (confianza: ${visionResult.confidence}): Título=${result.title || 'N/A'}, Precio=${result.price || 'N/A'}, Imagen=${result.imageUrl ? 'Sí' : 'No'}`);
+    
+    return result;
+  } catch (error) {
+    console.error(`[PuppeteerExtractor] Error al extraer con screenshot: ${error instanceof Error ? error.message : String(error)}`);
+    // Programar el cierre del navegador
+    scheduleBrowserClose();
+    return {};
+  }
 }
 
 /**
