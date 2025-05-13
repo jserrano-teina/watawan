@@ -334,35 +334,6 @@ async function extractProductDataFromPage(page: Page, url: string): Promise<{
   price?: string;
   description?: string;
 }> {
-  // Primero intentar con screenshot + GPT-4 Vision
-  try {
-    // Ajustar viewport para capturar área relevante
-    await page.setViewport({ width: 1200, height: 800 });
-    
-    // Esperar a que cargue el contenido principal
-    await page.waitForSelector('body', { timeout: 5000 });
-    
-    // Tomar screenshot del área principal
-    const screenshot = await page.screenshot({
-      encoding: 'base64',
-      type: 'jpeg',
-      quality: 80,
-      clip: { x: 0, y: 0, width: 1200, height: 800 }
-    });
-
-    // Enviar a OpenAI para análisis
-    const { extractMetadataFromImage } = await import('./openai-utils');
-    const aiMetadata = await extractMetadataFromImage(screenshot, url);
-    
-    if (aiMetadata?.title || aiMetadata?.price) {
-      console.log('[PuppeteerExtractor] Datos extraídos exitosamente con GPT-4 Vision');
-      return aiMetadata;
-    }
-  } catch (error) {
-    console.error('[PuppeteerExtractor] Error en extracción con GPT-4 Vision:', error);
-  }
-
-  // Si falla GPT-4 Vision, continuar con extracción DOM normal
   const result: {
     title?: string;
     imageUrl?: string;
