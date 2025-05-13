@@ -542,10 +542,18 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
       fullPage: false
     });
     
-    // Convertir el buffer a base64 usando Buffer.from
-    const screenshotBase64 = screenshotBuffer.toString('base64');
-    const sizeKB = Math.round((screenshotBase64.length || 0) / 1024);
-    console.log(`[PuppeteerExtractor] Captura realizada: ${sizeKB} KB`);
+    // Convertir el buffer a base64
+    const screenshotBase64 = Buffer.isBuffer(screenshotBuffer) 
+      ? screenshotBuffer.toString('base64')
+      : '';
+      
+    // Comprobar que tenemos datos válidos
+    if (!screenshotBase64) {
+      console.error(`[PuppeteerExtractor] Error: No se pudo obtener captura en base64`);
+    } else {
+      const sizeKB = Math.round(screenshotBase64.length / 1024);
+      console.log(`[PuppeteerExtractor] Captura realizada: ${sizeKB} KB`);
+    }
     
     // Extraer el título y precio utilizando OpenAI Vision
     const visionResult = await extractMetadataFromScreenshot(screenshotBase64, url);

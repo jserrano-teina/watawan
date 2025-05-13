@@ -251,7 +251,49 @@ export async function extractMetadataFromScreenshot(
     const content = response.choices[0].message.content;
     console.log(`📄 Contenido de la respuesta: ${content}`);
     
-    const result = content ? JSON.parse(content) : {};
+    // Definir el tipo de resultado con una interfaz
+    interface ResultData {
+      title?: string;
+      price?: string;
+      confidence: number;
+    }
+    
+    // Inicializar con valores por defecto
+    let result: ResultData = {
+      confidence: 0
+    };
+    
+    try {
+      // Si la respuesta es un objeto JSON, parsearlo
+      if (content && typeof content === 'string') {
+        const parsed = JSON.parse(content) as Record<string, any>;
+        
+        // Asignar valores del JSON con comprobaciones de tipo
+        if (parsed) {
+          if (typeof parsed.title === 'string') result.title = parsed.title;
+          if (typeof parsed.price === 'string') result.price = parsed.price;
+          if (typeof parsed.confidence === 'number') result.confidence = parsed.confidence;
+        }
+      } else {
+        // Si la respuesta no es un string válido, creamos un resultado manual
+        console.error('❌ El contenido de la respuesta de OpenAI no es un string válido');
+        
+        // Intentamos generar una respuesta directa
+        const responseText = response.choices[0].message.content || '';
+        
+        // Intentar extraer título y precio usando expresiones regulares simples
+        const titleMatch = responseText.match(/título[:\s]+["']?([^"'\n]+)["']?/i);
+        const priceMatch = responseText.match(/precio[:\s]+["']?([^"'\n]+)["']?/i);
+        
+        if (titleMatch) result.title = titleMatch[1].trim();
+        if (priceMatch) result.price = priceMatch[1].trim();
+        result.confidence = 0.5;
+      }
+    } catch (error) {
+      const parseError = error as Error;
+      console.error(`❌ Error al parsear respuesta JSON: ${parseError.message}`);
+      // En caso de error de parseo, mantener el objeto con valores por defecto
+    }
     
     console.log(`🔍 OpenAI Vision extrajo: Título="${result.title || 'No detectado'}", Precio="${result.price || 'No detectado'}", Confianza=${result.confidence || 0}`);
     
