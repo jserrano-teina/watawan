@@ -249,6 +249,34 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         console.log(`🌐 URL a procesar: ${url}`);
         const { extractMetadataWithScreenshot } = await import('./puppeteer-extractor');
         
+        // Verificar si estamos tratando con una tienda que sabemos que tiene bloqueos fuertes
+        const isDecathlon = url.includes('decathlon');
+        const isElCorteIngles = url.includes('elcorteingles');
+        const isZara = url.includes('zara.com');
+        const isDifficultSite = isDecathlon || isElCorteIngles || isZara;
+        
+        // Para sitios conocidos por bloquear, intentamos primero extracción simple de metadatos
+        if (isDifficultSite) {
+          try {
+            console.log(`🛡️ Detectado sitio con protección anti-scraping fuerte (${isDecathlon ? 'Decathlon' : isElCorteIngles ? 'El Corte Inglés' : 'Zara'}). Usando extracción básica...`);
+            
+            // Primero intentar con el método genérico que toma los metadatos OpenGraph
+            // Este método funciona más frecuentemente con sitios que bloquean scraping
+            const { getUrlMetadata } = await import('./metascraper');
+            const basicMetadata = await getUrlMetadata(url, 'Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1');
+            
+            if (basicMetadata.title && basicMetadata.title.length > 5) {
+              console.log(`✅ Extracción básica exitosa para sitio con protección: ${basicMetadata.title}`);
+              return res.json(await createResponseObject(basicMetadata));
+            }
+            
+            console.log(`⚠️ Extracción básica no produjo resultados. Intentando método alternativo...`);
+          } catch (basicError) {
+            console.error(`❌ Error en extracción básica: ${basicError}`);
+          }
+        }
+        
+        // Si no es un sitio difícil o la extracción básica falló, intentar con método avanzado
         try {
           console.log(`🚀 Iniciando extractMetadataWithScreenshot para ${url}`);
           const screenshotMetadata = await extractMetadataWithScreenshot(url);
@@ -259,7 +287,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             return res.json(await createResponseObject({
               title: screenshotMetadata.title,
               imageUrl: screenshotMetadata.imageUrl || '',
-              price: '', // Siempre vacío según la especificación
+              price: '', // Siempre vacío según la especificación actual
               description: ''
             }));
           } else {
