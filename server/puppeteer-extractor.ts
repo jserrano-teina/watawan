@@ -730,14 +730,148 @@ export async function extractMetadataWithScreenshot(url: string): Promise<{
     // Programar el cierre del navegador después de un período de inactividad
     scheduleBrowserClose();
     
-    // Combinar los resultados
-    const result = {
-      title: visionResult.title,
-      price: visionResult.price,
-      imageUrl: imageUrl
-    };
+    // Extraer también metadatos usando el DOM directamente como respaldo
+    let domTitle: string | undefined;
+    let domPrice: string | undefined;
     
-    console.log(`[PuppeteerExtractor] Metadatos extraídos con Vision (confianza: ${visionResult.confidence}): Título=${result.title || 'N/A'}, Precio=${result.price || 'N/A'}, Imagen=${result.imageUrl ? 'Sí' : 'No'}`);
+    try {
+      // Extraer texto directamente del DOM
+      const domData = await page.evaluate(() => {
+        // Función para limpiar texto
+        const cleanText = (text: string) => text.replace(/[\n\r\t]+/g, ' ').replace(/\s+/g, ' ').trim();
+        
+        // Buscar título
+        const titleSelectors = [
+          // Meta tags
+          'meta[property="og:title"]',
+          'meta[name="twitter:title"]',
+          'meta[name="title"]',
+          // Encabezados y elementos de producto
+          'h1',
+          '.product-title',
+          '.product-name',
+          '.item-title',
+          '.product-detail-name',
+          '.product-name-title',
+          '#productTitle',
+          '[data-testid="product-title"]',
+          '[data-testid="product-name"]',
+          '[itemprop="name"]',
+          '.product-heading-title',
+          '.page-title',
+          // Zara móvil
+          '.product-detail-info__name',
+          // Decathlon móvil
+          '.title--product',
+          '.svelte-product-title'
+        ];
+        
+        let title = '';
+        for (const selector of titleSelectors) {
+          let element = null;
+          if (selector.startsWith('meta')) {
+            element = document.querySelector(selector);
+            if (element && element.getAttribute('content')) {
+              title = element.getAttribute('content') || '';
+              break;
+            }
+          } else {
+            element = document.querySelector(selector);
+            if (element && element.textContent) {
+              title = element.textContent;
+              break;
+            }
+          }
+        }
+        
+        // Buscar precio
+        const priceSelectors = [
+          // Meta tags
+          'meta[property="product:price:amount"]',
+          'meta[property="og:price:amount"]',
+          // Elementos de precio
+          '.price',
+          '.product-price',
+          '.price-container',
+          '.current-price',
+          '[data-price]',
+          '[itemprop="price"]',
+          '.price__current',
+          '.price-tag',
+          '.product-detail-info__price',
+          // Decathlon móvil
+          '.product-summary-price',
+          '.svelte-price-tag',
+          '.svelte-product-price',
+          // Generales
+          '[class*="price"]'
+        ];
+        
+        let price = '';
+        for (const selector of priceSelectors) {
+          let element = null;
+          if (selector.startsWith('meta')) {
+            element = document.querySelector(selector);
+            if (element && element.getAttribute('content')) {
+              price = element.getAttribute('content') || '';
+              break;
+            }
+          } else {
+            element = document.querySelector(selector);
+            if (element && element.textContent) {
+              price = element.textContent;
+              break;
+            }
+          }
+        }
+        
+        return {
+          title: cleanText(title),
+          price: cleanText(price)
+        };
+      });
+      
+      if (domData.title) domTitle = domData.title;
+      if (domData.price) domPrice = domData.price;
+      
+      console.log(`[PuppeteerExtractor] Datos extraídos del DOM: Título="${domData.title}", Precio="${domData.price}"`);
+    } catch (domError) {
+      console.error('[PuppeteerExtractor] Error al extraer datos del DOM:', domError);
+    }
+    
+    // Seleccionar los mejores datos disponibles
+    const result: {
+      title?: string;
+      imageUrl?: string;
+      price?: string;
+      description?: string;
+    } = {};
+    
+    // Priorizar resultados de Vision AI si tienen alta confianza, sino usar DOM
+    if (visionResult && visionResult.title && visionResult.confidence > 0.5) {
+      result.title = visionResult.title;
+    } else if (domTitle && domTitle.length > 5) {
+      result.title = domTitle;
+    }
+    
+    // Priorizar precio de Vision AI, sino usar DOM
+    if (visionResult && visionResult.price) {
+      result.price = visionResult.price;
+    } else if (domPrice) {
+      result.price = domPrice;
+    }
+    
+    // Usar la URL de imagen encontrada
+    if (imageUrl) {
+      // Convertir URL relativa a absoluta si es necesario
+      if (imageUrl.startsWith('/')) {
+        const urlObj = new URL(url);
+        imageUrl = `${urlObj.origin}${imageUrl}`;
+      }
+      result.imageUrl = imageUrl;
+    }
+    
+    console.log(`[PuppeteerExtractor] Resultado final de extracción: Título="${result.title || 'No encontrado'}", Precio="${result.price || 'No encontrado'}", Imagen=${result.imageUrl ? 'Sí' : 'No'}`);
     
     return result;
   } catch (error) {
