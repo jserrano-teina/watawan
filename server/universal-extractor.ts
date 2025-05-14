@@ -193,6 +193,57 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
         }
       }
       
+      // Caso especial para Nike
+      else if (domain.includes('nike.com')) {
+        // Extraer nombre del producto de la URL 
+        // Formatos típicos:
+        // nike.com/t/calzado-air-force-1-07-LjqHwF
+        // nike.com/es/t/calzado-air-force-1-07-LjqHwF
+        
+        // Buscar el identificador del producto y la descripción
+        const match = url.match(/\/t\/([^\/]+)-([A-Za-z0-9]+)(?:\/|$)/);
+        
+        if (match && match[1]) {
+          const slug = match[1];
+          const productId = match[2];
+          
+          // Formatear el título
+          const title = decodeURIComponent(slug)
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          visionResult.title = `Nike ${title}`;
+          visionResult.price = "Consultar precio en Nike";
+          console.log(`🏷️ Asignado título específico para Nike: "${visionResult.title}"`);
+        }
+      }
+      
+      // Caso especial para PCComponentes
+      else if (domain.includes('pccomponentes.com')) {
+        // Formato típico: pccomponentes.com/xiaomi-redmi-note-13-pro-plus-12-512gb-negro-libre
+        const pathname = new URL(url).pathname;
+        const productSlug = pathname.split('/').pop();
+        
+        if (productSlug) {
+          // Formatear el título
+          const title = decodeURIComponent(productSlug)
+            .replace(/-/g, ' ')
+            .split(' ')
+            .map(word => {
+              // Mantener acrónimos y números en mayúsculas
+              if (word.length <= 2 || /^\d+$/.test(word)) return word.toUpperCase();
+              return word.charAt(0).toUpperCase() + word.slice(1);
+            })
+            .join(' ');
+          
+          visionResult.title = title;
+          visionResult.price = "Consultar precio en PCComponentes";
+          console.log(`🏷️ Asignado título específico para PCComponentes: "${visionResult.title}"`);
+        }
+      }
+      
       // Intentar con OpenAI Vision solo si no tenemos título específico
       if (!visionResult.title) {
         console.log(`🔍 No se encontró título específico, intentando con OpenAI Vision...`);
