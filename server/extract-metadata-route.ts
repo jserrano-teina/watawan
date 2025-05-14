@@ -64,7 +64,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             title: data.title || '',
             description: data.description || '',
             imageUrl: data.imageUrl || '',
-            price: '', // Siempre vacío según la especificación
+            price: data.price || '', // Ahora devolvemos el precio extraído
             isTitleValid: validation.isTitleValid,
             isImageValid: validation.isImageValid,
             validationMessage: validation.message
@@ -76,7 +76,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             title: data.title || '',
             description: data.description || '',
             imageUrl: data.imageUrl || '',
-            price: '', // Siempre vacío según la especificación
+            price: data.price || '', // Ahora devolvemos el precio extraído
             isTitleValid: true,
             isImageValid: true,
             validationMessage: ''
@@ -89,7 +89,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
         title: data.title || '',
         description: data.description || '',
         imageUrl: data.imageUrl || '',
-        price: '', // Siempre vacío según la especificación
+        price: data.price || '', // Ahora devolvemos el precio extraído
         isTitleValid: false,
         isImageValid: false,
         validationMessage: 'No se pudieron extraer datos suficientes para validar'

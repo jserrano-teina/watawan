@@ -7,7 +7,7 @@ export interface MetadataResult {
   title: string;
   description: string;
   imageUrl: string;
-  price: string; // Siempre vacío según nuevas especificaciones
+  price: string; // Ahora intentamos extraer y devolver el precio
 }
 
 // Interfaz para extractores específicos por tienda
@@ -28,7 +28,7 @@ export async function extractOpenGraphData(url: string, clientUserAgent?: string
     title: '',
     description: '',
     imageUrl: '',
-    price: '' // Siempre vacío por especificación
+    price: '' // Valor por defecto, pero ahora intentaremos extraerlo
   };
   
   try {
