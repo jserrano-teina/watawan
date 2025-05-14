@@ -686,11 +686,12 @@ async function extractWithOpenAIVision(url: string): Promise<Partial<ProductMeta
         url
       );
       
+      // OpenAI Vision solo devuelve título y precio
       return {
-        title: metadata.title,
-        description: metadata.description,
-        imageUrl: metadata.imageUrl,
-        price: metadata.price
+        title: metadata.title || '',
+        description: '',  // No disponible desde OpenAI Vision
+        imageUrl: '',     // No disponible desde OpenAI Vision
+        price: metadata.price || ''
       };
     } finally {
       await browser.close();

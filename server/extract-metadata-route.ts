@@ -1,8 +1,10 @@
 import { Request, Response } from 'express';
 import { extractUniversalMetadata } from './universal-extractor';
 
-// Esta función contiene la implementación actualizada del endpoint /extract-metadata
-// que utiliza un extractor universal estandarizado
+/**
+ * Controlador para la extracción de metadatos de productos
+ * Utiliza el extractor universal estandarizado con estrategia en dos fases
+ */
 export async function handleExtractMetadataRequest(req: Request, res: Response) {
   const url = req.query.url as string;
   
@@ -20,13 +22,23 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
     
-    // Usar el nuevo extractor universal estandarizado
+    // Usar el extractor universal estandarizado con estrategia en dos fases
     console.log(`🌟 Utilizando extractor universal estandarizado con estrategia en dos fases`);
     const result = await extractUniversalMetadata(url);
     
-    console.log(`✅ Extracción completada con extractor universal: título=${!!result.title}, imagen=${!!result.imageUrl}, precio=${!!result.price}`);
+    console.log(`✅ Extracción completada: título=${!!result.title}, imagen=${!!result.imageUrl}, precio=${!!result.price}`);
     
-    return res.json(result);
+    return res.json({
+      title: result.title,
+      description: result.description,
+      imageUrl: result.imageUrl,
+      price: result.price,
+      isTitleValid: result.title ? result.title.length > 2 : false,
+      isImageValid: !!result.imageUrl,
+      validationMessage: !result.title || result.title.length <= 2 ? 
+        'No se pudo extraer un título válido' : 
+        'Extracción completada con éxito'
+    });
     
     // Función para crear un objeto de respuesta consistente siempre con la misma estructura
     const createResponseObject = async (data: any) => {
