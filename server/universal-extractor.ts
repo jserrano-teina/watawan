@@ -78,113 +78,49 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     console.log(`🔍 Iniciando extracción universal para: ${url}`);
     const startTime = Date.now();
     
-    // PLAN A: Extracción rápida (timeout de 2 segundos)
+    // PASO 1: Extracción de la imagen con métodos ligeros (timeout de 2 segundos)
     const PLAN_A_TIMEOUT = 2000;
     
+    console.log(`🖼️ Extrayendo imagen con métodos ligeros...`);
     const planAPromise = extractLightweight(url);
     const timeoutPromise = new Promise<Partial<ProductMetadata>>((resolve) => 
       setTimeout(() => {
-        console.log(`⏱️ Timeout de Plan A (${PLAN_A_TIMEOUT}ms) alcanzado`);
+        console.log(`⏱️ Timeout de extracción de imagen (${PLAN_A_TIMEOUT}ms) alcanzado`);
         resolve({});
       }, PLAN_A_TIMEOUT)
     );
     
-    const planAResult = await Promise.race([planAPromise, timeoutPromise]);
+    const imageResult = await Promise.race([planAPromise, timeoutPromise]);
     
-    // Verificar si Plan A logró extraer todos los datos necesarios
-    if (isDataComplete(planAResult)) {
-      const endTime = Date.now();
-      console.log(`✅ Plan A exitoso en ${endTime - startTime}ms, datos completos extraídos`);
-      return createResponseObject(planAResult);
-    }
-    
-    console.log(`⚠️ Plan A incompleto, falta: ${getMissingFields(planAResult).join(', ')}`);
-    
-    // Intentar extracciones específicas por dominio antes de pasar al Plan B
-    const urlObj = new URL(url);
-    const domain = urlObj.hostname.toLowerCase();
-    
-    // Para Nike, que tiene problemas con la redirección regional
-    if (domain.includes('nike.com')) {
-      // Extraer nombre del producto de la URL (air-max-90-zapatillas-s7pt20 -> "Air Max 90 Zapatillas")
-      const pathSegments = urlObj.pathname.split('/');
-      const productSlug = pathSegments[pathSegments.length - 1]; // Último segmento de la URL
-      const productCode = productSlug.split('-').pop(); // Eliminar código de producto (s7pt20)
+    // Si no se pudo extraer la imagen, intentar con Puppeteer
+    if (!imageResult.imageUrl) {
+      console.log(`⚠️ No se pudo extraer la imagen con métodos ligeros, probando con Puppeteer`);
+      const puppeteerResult = await extractWithPuppeteer(url);
       
-      if (productSlug && !planAResult.title) {
-        // Convertir "air-max-90-zapatillas" a "Air Max 90 Zapatillas"
-        const titleFromUrl = productSlug
-          .replace(/-[a-z0-9]+$/, '') // Eliminar código de producto al final
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizar palabras
-          .join(' ');
-        
-        planAResult.title = titleFromUrl;
-        console.log(`📝 Generado título para Nike desde URL: "${titleFromUrl}"`);
+      if (puppeteerResult.imageUrl) {
+        imageResult.imageUrl = puppeteerResult.imageUrl;
+        console.log(`✅ Imagen extraída con Puppeteer: ${imageResult.imageUrl.substring(0, 50)}...`);
       }
     }
     
-    // Para Zara, que utiliza IDs de producto numéricos
-    if (domain.includes('zara.com')) {
-      // Extraer nombre del producto de la URL (pantalón-de-traje-100-lino-p01564453.html)
-      const urlPath = urlObj.pathname;
-      
-      // Extraer la parte antes del código de producto
-      const productMatch = urlPath.match(/\/([^\/]+)-p\d+\.html/);
-      if (productMatch && productMatch[1] && !planAResult.title) {
-        // Convertir "pantalón-de-traje-100-lino" a "Pantalón De Traje 100 Lino"
-        const decodedSlug = decodeURIComponent(productMatch[1]);
-        const titleFromUrl = decodedSlug
-          .split('-')
-          .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizar palabras
-          .join(' ');
-        
-        planAResult.title = titleFromUrl;
-        console.log(`📝 Generado título para Zara desde URL: "${titleFromUrl}"`);
-      }
-    }
+    // PASO 2: SIEMPRE utilizar OpenAI Vision para extraer título y precio
+    console.log(`🧠 Utilizando OpenAI Vision para extraer título y precio (nueva estrategia)`);
+    const visionResult = await extractWithOpenAIVision(url);
     
-    // Para Amazon, extraer información del ASIN
-    if (domain.includes('amazon.')) {
-      // Buscar ASIN en la URL (formato /dp/B09TKMBW6Z/)
-      const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/);
-      if (asinMatch && asinMatch[1]) {
-        const asin = asinMatch[1];
-        if (!planAResult.title) {
-          planAResult.title = `Producto Amazon ${asin}`;
-          console.log(`📝 Generado título genérico para Amazon: "${planAResult.title}"`);
-        }
-      }
-    }
-    
-    // PLAN B: Extracción avanzada con navegador
-    console.log(`🚀 Iniciando Plan B (Puppeteer + OpenAI)`);
-    
-    // Intentar primero con Puppeteer solo
-    const puppeteerResult = await extractWithPuppeteer(url);
-    
-    // Combinar resultados de Plan A y Puppeteer
-    const combinedResult = {
-      ...planAResult,
-      ...puppeteerResult
+    // Combinar resultados, priorizando la imagen de los métodos anteriores
+    // pero usando SIEMPRE el título y precio de OpenAI Vision
+    const finalResult: Partial<ProductMetadata> = {
+      title: visionResult.title || '',
+      price: visionResult.price || '',
+      description: imageResult.description || '',
+      imageUrl: imageResult.imageUrl || ''
     };
     
-    // Si aún faltan datos, usar OpenAI Vision como último recurso
-    if (!isDataComplete(combinedResult)) {
-      console.log(`🤖 Datos todavía incompletos, activando OpenAI Vision`);
-      const visionResult = await extractWithOpenAIVision(url);
-      
-      // Fusionar todos los resultados, priorizando los métodos más específicos
-      const finalResult = {
-        ...visionResult,
-        ...puppeteerResult,
-        ...planAResult
-      };
-      
-      return createResponseObject(finalResult);
-    }
+    const endTime = Date.now();
+    console.log(`✅ Extracción universal completada en ${endTime - startTime}ms`);
+    console.log(`📊 Resultados: Título=${!!finalResult.title}, Precio=${!!finalResult.price}, Imagen=${!!finalResult.imageUrl}`);
     
-    return createResponseObject(combinedResult);
+    return createResponseObject(finalResult);
   } catch (error) {
     console.error(`❌ Error en extracción universal: ${error}`);
     return createEmptyResponseObject();

@@ -22,8 +22,8 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
     
-    // Usar el extractor universal estandarizado con estrategia en dos fases
-    console.log(`🌟 Utilizando extractor universal estandarizado con estrategia en dos fases`);
+    // Usar el extractor universal estandarizado con OpenAI Vision para título/precio
+    console.log(`🌟 Utilizando extractor universal con OpenAI Vision para título y precio`);
     const result = await extractUniversalMetadata(url);
     
     console.log(`✅ Extracción completada: título=${!!result.title}, imagen=${!!result.imageUrl}, precio=${!!result.price}`);
