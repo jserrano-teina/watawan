@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
-import { validateProductData } from './openai-utils';
+import { extractUniversalMetadata } from './universal-extractor';
 
 // Esta función contiene la implementación actualizada del endpoint /extract-metadata
-// que utiliza Puppeteer para mejorar la extracción de metadatos
+// que utiliza un extractor universal estandarizado
 export async function handleExtractMetadataRequest(req: Request, res: Response) {
   const url = req.query.url as string;
   
@@ -19,6 +19,14 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
                      (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
     
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
+    
+    // Usar el nuevo extractor universal estandarizado
+    console.log(`🌟 Utilizando extractor universal estandarizado con estrategia en dos fases`);
+    const result = await extractUniversalMetadata(url);
+    
+    console.log(`✅ Extracción completada con extractor universal: título=${!!result.title}, imagen=${!!result.imageUrl}, precio=${!!result.price}`);
+    
+    return res.json(result);
     
     // Función para crear un objeto de respuesta consistente siempre con la misma estructura
     const createResponseObject = async (data: any) => {
