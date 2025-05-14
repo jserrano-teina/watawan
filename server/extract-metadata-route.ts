@@ -351,7 +351,10 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       title: '',
       description: '',
       imageUrl: '',
-      price: ''
+      price: '', // Mantenemos vacío en caso de error
+      isTitleValid: false,
+      isImageValid: false,
+      validationMessage: 'Error al procesar la URL'
     });
   }
 }
