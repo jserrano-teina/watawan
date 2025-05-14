@@ -594,6 +594,54 @@ async function extractWithPuppeteer(url: string): Promise<Partial<ProductMetadat
   try {
     console.log(`🤖 Iniciando extracción con Puppeteer: ${url}`);
     
+    // Comprobar casos especiales antes de iniciar Puppeteer
+    const domain = new URL(url).hostname.toLowerCase();
+    
+    // Caso especial para PCComponentes
+    if (domain.includes('pccomponentes.com')) {
+      const pathname = new URL(url).pathname;
+      const productSlug = pathname.split('/').pop();
+      
+      if (productSlug) {
+        try {
+          // PCComponentes tiene un formato predecible para sus imágenes de producto
+          // Ejemplo: https://img.pccomponentes.com/articles/1037/10376262/1640-xiaomi-redmi-note-13-pro-plus-12-512gb-negro-libre.jpg
+          
+          // Intentar extraer el ID numérico del producto (si está en la URL)
+          const productMatch = productSlug.match(/(\d+)/);
+          if (productMatch) {
+            const productId = productMatch[1];
+            // Intentar diferentes formatos de URL de imagen
+            const possibleImageUrls = [
+              `https://img.pccomponentes.com/articles/1037/${productId}/1640-${productSlug}.jpg`,
+              `https://img.pccomponentes.com/articles/1036/${productId}/1640-${productSlug}.jpg`,
+              `https://img.pccomponentes.com/articles/1035/${productId}/1640-${productSlug}.jpg`,
+              `https://img.pccomponentes.com/articles/103/${productId}/1640-${productSlug}.jpg`
+            ];
+            
+            for (const imgUrl of possibleImageUrls) {
+              try {
+                // Verificar si la URL de imagen responde correctamente
+                const imgResponse = await fetch(imgUrl, { 
+                  method: 'HEAD',
+                  signal: AbortSignal.timeout(1000)
+                });
+                
+                if (imgResponse.ok) {
+                  console.log(`✅ Imagen específica para PCComponentes encontrada: ${imgUrl.substring(0, 60)}...`);
+                  return { imageUrl: imgUrl };
+                }
+              } catch (err) {
+                // Continuar con la siguiente URL
+              }
+            }
+          }
+        } catch (specialError) {
+          console.log(`⚠️ Error en caso especial para PCComponentes: ${specialError.message}`);
+        }
+      }
+    }
+    
     // Importar Puppeteer de forma dinámica
     const puppeteer = await import('puppeteer');
     
@@ -674,6 +722,51 @@ async function dismissPopups(page: Page): Promise<void> {
  */
 async function extractDataFromPage(page: Page): Promise<Partial<ProductMetadata>> {
   try {
+    const url = page.url();
+    const domain = new URL(url).hostname.toLowerCase();
+    
+    // Caso especial para PCComponentes (usando métodos específicos)
+    if (domain.includes('pccomponentes.com')) {
+      try {
+        // PCComponentes tiene la imagen en un meta tag específico o en jsonld
+        const imageUrl = await page.evaluate(() => {
+          // Método 1: Buscar meta og:image
+          const ogImage = document.querySelector('meta[property="og:image"]');
+          if (ogImage && ogImage.getAttribute('content')) {
+            return ogImage.getAttribute('content');
+          }
+          
+          // Método 2: Extraer del script JSON-LD
+          const jsonLdScripts = document.querySelectorAll('script[type="application/ld+json"]');
+          for (const script of Array.from(jsonLdScripts)) {
+            try {
+              const data = JSON.parse(script.textContent || '{}');
+              if (data && data.image) {
+                return typeof data.image === 'string' ? data.image : data.image.url || data.image[0];
+              }
+            } catch (e) {
+              // Continuar con el siguiente script
+            }
+          }
+          
+          // Método 3: Buscar imagen principal del producto
+          const productImage = document.querySelector('#mainImage, .productGallery-image img, [data-test="product-image"]');
+          if (productImage instanceof HTMLImageElement && productImage.src) {
+            return productImage.src;
+          }
+          
+          return null;
+        });
+        
+        if (imageUrl) {
+          console.log(`✅ Imagen extraída específicamente para PCComponentes: ${imageUrl.substring(0, 60)}...`);
+          return { imageUrl };
+        }
+      } catch (pcError) {
+        console.log(`⚠️ Error extrayendo imagen específica para PCComponentes: ${pcError.message}`);
+      }
+    }
+    
     // Extraer datos usando evaluación del DOM
     const result = await page.evaluate(() => {
       const data: Partial<ProductMetadata> = {};
@@ -706,17 +799,23 @@ async function extractDataFromPage(page: Page): Promise<Partial<ProductMetadata>
         '[data-zoom-image]',
         '[class*="product"] [class*="image"] img',
         '[class*="gallery"] img',
-        '[property="og:image"]'
+        '[property="og:image"]',
+        'meta[property="og:image"]'
       ];
       
       for (const selector of imageSelectors) {
-        const imgElement = document.querySelector(selector) as HTMLImageElement;
+        const imgElement = document.querySelector(selector);
         if (imgElement) {
-          // Intentar diferentes atributos
-          data.imageUrl = imgElement.src || 
-                         imgElement.getAttribute('data-src') || 
-                         imgElement.getAttribute('data-lazy-src') ||
-                         imgElement.getAttribute('data-zoom-image') || '';
+          // Para elementos meta, usar el contenido
+          if (imgElement.tagName === 'META') {
+            data.imageUrl = imgElement.getAttribute('content') || '';
+          } else if (imgElement instanceof HTMLImageElement) {
+            // Para imágenes, probar varios atributos
+            data.imageUrl = imgElement.src || 
+                           imgElement.getAttribute('data-src') || 
+                           imgElement.getAttribute('data-lazy-src') ||
+                           imgElement.getAttribute('data-zoom-image') || '';
+          }
           
           if (data.imageUrl) break;
         }
