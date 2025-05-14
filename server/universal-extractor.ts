@@ -124,6 +124,25 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
       }
     }
     
+    // Para Zara, que utiliza IDs de producto numéricos
+    if (domain.includes('zara.com')) {
+      // Extraer nombre del producto de la URL (pantalón-de-traje-100-lino-p01564453.html)
+      const urlPath = urlObj.pathname;
+      
+      // Extraer la parte antes del código de producto
+      const productMatch = urlPath.match(/\/([^\/]+)-p\d+\.html/);
+      if (productMatch && productMatch[1] && !planAResult.title) {
+        // Convertir "pantalón-de-traje-100-lino" a "Pantalón De Traje 100 Lino"
+        const titleFromUrl = productMatch[1]
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizar palabras
+          .join(' ');
+        
+        planAResult.title = titleFromUrl;
+        console.log(`📝 Generado título para Zara desde URL: "${titleFromUrl}"`);
+      }
+    }
+    
     // Para Amazon, extraer información del ASIN
     if (domain.includes('amazon.')) {
       // Buscar ASIN en la URL (formato /dp/B09TKMBW6Z/)

@@ -36,6 +36,8 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
                          result.title === "Amazon.es" ||
                          result.title === "Producto" ||
                          result.title === "Producto Amazon" ||
+                         result.title === "Hola," ||    // Título común de redirección de Zara
+                         result.title.includes("Update your location") || // Mensaje de localización de Nike
                          result.title.includes("http") ||
                          result.title.includes("www.");
                          
