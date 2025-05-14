@@ -108,37 +108,159 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     let visionResult: Partial<ProductMetadata> = { title: '', price: '' };
     
     try {
-      // Limitar el tiempo de espera para OpenAI Vision a 8 segundos
-      const timeoutPromise = new Promise<Partial<ProductMetadata>>((_, reject) => 
-        setTimeout(() => {
-          reject(new Error('Timeout de OpenAI Vision alcanzado'));
-        }, 8000)
-      );
+      // Verificar sitios conocidos para generar títulos específicos
+      const domain = new URL(url).hostname.toLowerCase();
       
-      const visionPromise = extractWithOpenAIVision(url);
-      const result = await Promise.race([visionPromise, timeoutPromise]);
-      visionResult = {
-        title: result.title || '',
-        price: result.price || ''
-      };
-    } catch (error) {
-      console.error(`⚠️ Error o timeout en OpenAI Vision: ${error}`);
-      // En caso de error, intentar obtener información de la URL
-      try {
-        const urlObj = new URL(url);
-        const pathName = urlObj.pathname;
-        // Obtener la última parte de la URL como posible título
-        const lastSegment = pathName.split('/').filter(Boolean).pop() || '';
-        if (lastSegment) {
-          const title = lastSegment
+      // Caso especial para GitHub
+      if (domain.includes('github.com')) {
+        const pathParts = new URL(url).pathname.split('/').filter(Boolean);
+        
+        if (pathParts.length === 0) {
+          // Es la página principal de GitHub
+          visionResult.title = "GitHub - Plataforma de desarrollo colaborativo";
+          visionResult.price = "Gratuito / Desde $4/mes";
+          console.log(`🏷️ Asignado título específico para GitHub: "${visionResult.title}"`);
+        } 
+        else if (pathParts.length >= 2) {
+          // Es un repositorio: github.com/usuario/repo
+          const [usuario, repo, ...rest] = pathParts;
+          visionResult.title = `GitHub - ${usuario}/${repo}`;
+          console.log(`🏷️ Asignado título específico para repositorio GitHub: "${visionResult.title}"`);
+        }
+      }
+      
+      // Caso especial para Zara
+      else if (domain.includes('zara.com')) {
+        // Extraer el nombre del producto del patrón de URL de Zara
+        const match = url.match(/\/([^\/]+)-p(\d+)\.html/);
+        if (match && match[1]) {
+          const productSlug = match[1];
+          const productId = match[2];
+          
+          // Decodificar y formatear el título
+          const decodedSlug = decodeURIComponent(productSlug);
+          const title = decodedSlug
             .replace(/-/g, ' ')
-            .replace(/\.(html|php|asp|jsp)$/, '')
             .split(' ')
             .map(word => word.charAt(0).toUpperCase() + word.slice(1))
             .join(' ');
           
-          visionResult.title = decodeURIComponent(title);
-          console.log(`📝 Generado título de respaldo desde URL: "${visionResult.title}"`);
+          visionResult.title = title;
+          visionResult.price = "Consultar precio actual";  // Zara puede cambiar precios según país
+          console.log(`🏷️ Asignado título específico para Zara: "${visionResult.title}"`);
+        }
+      }
+      
+      // Caso especial para Amazon
+      else if (domain.includes('amazon.')) {
+        // Extraer el ASIN del producto (identificador único de Amazon)
+        const dpMatch = url.match(/\/dp\/([A-Z0-9]{10})/i);
+        const gpMatch = url.match(/\/gp\/product\/([A-Z0-9]{10})/i);
+        const asin = dpMatch ? dpMatch[1] : gpMatch ? gpMatch[1] : null;
+        
+        if (asin) {
+          // Extraer el título del producto de la URL
+          const pathParts = url.split('/');
+          let productTitle = '';
+          
+          // Buscar la parte de la URL que contiene el título del producto
+          for (let i = 0; i < pathParts.length; i++) {
+            if (pathParts[i] === 'dp' || pathParts[i] === 'product') {
+              if (i > 0) {
+                productTitle = pathParts[i-1];
+                break;
+              }
+            }
+          }
+          
+          if (productTitle) {
+            // Formatear el título
+            const title = decodeURIComponent(productTitle)
+              .replace(/-/g, ' ')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            
+            visionResult.title = title;
+            visionResult.price = "Ver precio actual en Amazon";
+            console.log(`🏷️ Asignado título específico para Amazon: "${visionResult.title}"`);
+          } else {
+            // Si no se puede extraer el título de la URL, usar el ASIN
+            visionResult.title = `Producto Amazon - ${asin}`;
+            visionResult.price = "Ver precio actual en Amazon";
+            console.log(`🏷️ Asignado título genérico para Amazon con ASIN: "${visionResult.title}"`);
+          }
+        }
+      }
+      
+      // Intentar con OpenAI Vision solo si no tenemos título específico
+      if (!visionResult.title) {
+        console.log(`🔍 No se encontró título específico, intentando con OpenAI Vision...`);
+        
+        // Limitar el tiempo de espera para OpenAI Vision a 8 segundos
+        const timeoutPromise = new Promise<Partial<ProductMetadata>>((_, reject) => 
+          setTimeout(() => {
+            reject(new Error('Timeout de OpenAI Vision alcanzado'));
+          }, 8000)
+        );
+        
+        const visionPromise = extractWithOpenAIVision(url);
+        const result = await Promise.race([visionPromise, timeoutPromise]);
+        
+        if (result.title) {
+          visionResult.title = result.title;
+          console.log(`✅ Título extraído con OpenAI Vision: "${visionResult.title}"`);
+        }
+        
+        if (result.price) {
+          visionResult.price = result.price;
+          console.log(`💰 Precio extraído con OpenAI Vision: "${visionResult.price}"`);
+        }
+      }
+    } catch (error) {
+      console.error(`⚠️ Error o timeout en OpenAI Vision: ${error}`);
+    }
+    
+    // Si después de todo no tenemos título, generar uno desde la URL
+    if (!visionResult.title) {
+      try {
+        console.log(`📝 Generando título de respaldo desde URL...`);
+        const urlObj = new URL(url);
+        
+        // Si es la página principal de un sitio, usar el nombre del sitio
+        if (urlObj.pathname === "/" || urlObj.pathname === "") {
+          const domain = urlObj.hostname.replace('www.', '');
+          const domainParts = domain.split('.');
+          if (domainParts.length > 0) {
+            const siteName = domainParts[0].charAt(0).toUpperCase() + domainParts[0].slice(1);
+            visionResult.title = `${siteName} - Página oficial`;
+            console.log(`🏢 Generado título para sitio principal: "${visionResult.title}"`);
+          }
+        } else {
+          // Extraer de la ruta
+          const pathName = urlObj.pathname;
+          const pathParts = pathName.split('/').filter(Boolean);
+          
+          // Usar último segmento significativo (ignorar index.html, etc.)
+          let lastSegment = '';
+          for (let i = pathParts.length - 1; i >= 0; i--) {
+            if (!pathParts[i].match(/^(index|default|home)\.(html|php|asp|jsp)$/)) {
+              lastSegment = pathParts[i];
+              break;
+            }
+          }
+          
+          if (lastSegment) {
+            const title = lastSegment
+              .replace(/-|_/g, ' ')
+              .replace(/\.(html|php|asp|jsp)$/, '')
+              .split(' ')
+              .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+              .join(' ');
+            
+            visionResult.title = decodeURIComponent(title);
+            console.log(`📝 Generado título de respaldo desde URL: "${visionResult.title}"`);
+          }
         }
       } catch (urlError) {
         console.error(`❌ Error generando título de respaldo: ${urlError}`);
