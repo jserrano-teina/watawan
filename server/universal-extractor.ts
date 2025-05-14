@@ -100,6 +100,43 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     
     console.log(`⚠️ Plan A incompleto, falta: ${getMissingFields(planAResult).join(', ')}`);
     
+    // Intentar extracciones específicas por dominio antes de pasar al Plan B
+    const urlObj = new URL(url);
+    const domain = urlObj.hostname.toLowerCase();
+    
+    // Para Nike, que tiene problemas con la redirección regional
+    if (domain.includes('nike.com')) {
+      // Extraer nombre del producto de la URL (air-max-90-zapatillas-s7pt20 -> "Air Max 90 Zapatillas")
+      const pathSegments = urlObj.pathname.split('/');
+      const productSlug = pathSegments[pathSegments.length - 1]; // Último segmento de la URL
+      const productCode = productSlug.split('-').pop(); // Eliminar código de producto (s7pt20)
+      
+      if (productSlug && !planAResult.title) {
+        // Convertir "air-max-90-zapatillas" a "Air Max 90 Zapatillas"
+        const titleFromUrl = productSlug
+          .replace(/-[a-z0-9]+$/, '') // Eliminar código de producto al final
+          .split('-')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizar palabras
+          .join(' ');
+        
+        planAResult.title = titleFromUrl;
+        console.log(`📝 Generado título para Nike desde URL: "${titleFromUrl}"`);
+      }
+    }
+    
+    // Para Amazon, extraer información del ASIN
+    if (domain.includes('amazon.')) {
+      // Buscar ASIN en la URL (formato /dp/B09TKMBW6Z/)
+      const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/);
+      if (asinMatch && asinMatch[1]) {
+        const asin = asinMatch[1];
+        if (!planAResult.title) {
+          planAResult.title = `Producto Amazon ${asin}`;
+          console.log(`📝 Generado título genérico para Amazon: "${planAResult.title}"`);
+        }
+      }
+    }
+    
     // PLAN B: Extracción avanzada con navegador
     console.log(`🚀 Iniciando Plan B (Puppeteer + OpenAI)`);
     
@@ -660,9 +697,10 @@ async function extractWithOpenAIVision(url: string): Promise<Partial<ProductMeta
     // Importar Puppeteer dinámicamente
     const puppeteer = await import('puppeteer');
     
-    // Lanzar navegador
+    // Lanzar navegador con ruta explícita a chromium
     const browser = await puppeteer.default.launch({
       headless: true,
+      executablePath: '/nix/store/zi4f80l169xlmivz8vja8wlphq74qqk0-chromium-125.0.6422.141/bin/chromium',
       args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
     });
     
