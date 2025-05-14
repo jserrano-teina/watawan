@@ -105,7 +105,45 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     
     // PASO 2: SIEMPRE utilizar OpenAI Vision para extraer título y precio
     console.log(`🧠 Utilizando OpenAI Vision para extraer título y precio (nueva estrategia)`);
-    const visionResult = await extractWithOpenAIVision(url);
+    let visionResult: Partial<ProductMetadata> = { title: '', price: '' };
+    
+    try {
+      // Limitar el tiempo de espera para OpenAI Vision a 8 segundos
+      const timeoutPromise = new Promise<Partial<ProductMetadata>>((_, reject) => 
+        setTimeout(() => {
+          reject(new Error('Timeout de OpenAI Vision alcanzado'));
+        }, 8000)
+      );
+      
+      const visionPromise = extractWithOpenAIVision(url);
+      const result = await Promise.race([visionPromise, timeoutPromise]);
+      visionResult = {
+        title: result.title || '',
+        price: result.price || ''
+      };
+    } catch (error) {
+      console.error(`⚠️ Error o timeout en OpenAI Vision: ${error}`);
+      // En caso de error, intentar obtener información de la URL
+      try {
+        const urlObj = new URL(url);
+        const pathName = urlObj.pathname;
+        // Obtener la última parte de la URL como posible título
+        const lastSegment = pathName.split('/').filter(Boolean).pop() || '';
+        if (lastSegment) {
+          const title = lastSegment
+            .replace(/-/g, ' ')
+            .replace(/\.(html|php|asp|jsp)$/, '')
+            .split(' ')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(' ');
+          
+          visionResult.title = decodeURIComponent(title);
+          console.log(`📝 Generado título de respaldo desde URL: "${visionResult.title}"`);
+        }
+      } catch (urlError) {
+        console.error(`❌ Error generando título de respaldo: ${urlError}`);
+      }
+    }
     
     // Combinar resultados, priorizando la imagen de los métodos anteriores
     // pero usando SIEMPRE el título y precio de OpenAI Vision
