@@ -133,7 +133,8 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
       const productMatch = urlPath.match(/\/([^\/]+)-p\d+\.html/);
       if (productMatch && productMatch[1] && !planAResult.title) {
         // Convertir "pantalón-de-traje-100-lino" a "Pantalón De Traje 100 Lino"
-        const titleFromUrl = productMatch[1]
+        const decodedSlug = decodeURIComponent(productMatch[1]);
+        const titleFromUrl = decodedSlug
           .split('-')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizar palabras
           .join(' ');
