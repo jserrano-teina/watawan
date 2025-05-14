@@ -54,9 +54,10 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     });
   } catch (error) {
     console.error(`❌ Error general: ${error}`);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
     return res.status(500).json({ 
       error: 'Error al procesar la URL',
-      message: error.message,
+      message: errorMessage,
       title: '',
       description: '',
       imageUrl: '',
