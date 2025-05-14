@@ -287,7 +287,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
             return res.json(await createResponseObject({
               title: screenshotMetadata.title,
               imageUrl: screenshotMetadata.imageUrl || '',
-              price: '', // Siempre vacío según la especificación actual
+              price: screenshotMetadata.price || '', // Devolver el precio si existe
               description: ''
             }));
           } else {
