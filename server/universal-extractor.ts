@@ -423,10 +423,11 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     }
     
     // Combinar resultados, priorizando la imagen de los métodos anteriores
-    // pero usando SIEMPRE el título y precio de OpenAI Vision
+    // Para Nike, priorizar el precio del extractor especializado
     const finalResult: Partial<ProductMetadata> = {
       title: visionResult.title || '',
-      price: visionResult.price || '',
+      // Priorizar el precio del extractor específico (Nike, Amazon, etc.) antes que el de OpenAI Vision
+      price: priceResult.price || visionResult.price || '',
       description: imageResult.description || '',
       imageUrl: imageResult.imageUrl || ''
     };
