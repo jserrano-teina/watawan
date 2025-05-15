@@ -32,6 +32,15 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
   // Extraer el identificador de producto de la URL
   const urlObj = new URL(url);
   const pathSegments = urlObj.pathname.split('/').filter(segment => segment.length > 0);
+  
+  // Extraer código de producto (ej: CW2288-111)
+  let productCode = '';
+  const lastSegment = pathSegments[pathSegments.length - 1];
+  if (lastSegment && lastSegment.includes('-')) {
+    productCode = lastSegment;
+    console.log(`✅ Código de producto Nike encontrado: ${productCode}`);
+  }
+  
   const productId = pathSegments[pathSegments.length - 1];
   
   const result: NikeProductData = {
@@ -106,25 +115,41 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
                 // Extraer título
                 if (json.name && !result.title) {
                   result.title = json.name;
+                  console.log(`✅ Título de Nike extraído de JSON-LD: ${json.name}`);
                 }
                 
                 // Extraer imagen
                 if (json.image) {
                   result.imageUrl = Array.isArray(json.image) ? json.image[0] : json.image;
+                  console.log(`✅ Imagen de Nike extraída de JSON-LD: ${result.imageUrl}`);
                 }
                 
-                // Extraer precio
+                // Extraer precio y moneda desde los offers 
                 if (json.offers) {
-                  const offers = Array.isArray(json.offers) ? json.offers[0] : json.offers;
-                  if (offers.price) {
-                    result.price = offers.price.toString();
-                    result.currency = offers.priceCurrency || 'EUR';
+                  // Si hay múltiples ofertas, usar la primera
+                  if (Array.isArray(json.offers) && json.offers.length > 0) {
+                    const offer = json.offers[0];
+                    if (offer.price) {
+                      result.price = `${offer.price} ${offer.priceCurrency || '€'}`;
+                      result.currency = offer.priceCurrency || 'EUR';
+                      console.log(`✅ Precio de Nike extraído de JSON-LD: ${result.price}`);
+                    }
+                  } 
+                  // Si es un solo objeto de oferta
+                  else {
+                    const offers = json.offers;
+                    if (offers.price) {
+                      result.price = `${offers.price} ${offers.priceCurrency || '€'}`;
+                      result.currency = offers.priceCurrency || 'EUR';
+                      console.log(`✅ Precio de Nike extraído de JSON-LD: ${result.price}`);
+                    }
                   }
                 }
               }
             }
           } catch (e) {
             // Ignorar errores en JSON individual
+            console.log(`⚠️ Error al procesar JSON-LD individual: ${e}`);
           }
         });
       } catch (error) {
@@ -133,23 +158,49 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
       
       // MÉTODO 2: Extraer imagen usando selectores específicos de Nike
       if (!result.imageUrl) {
-        const imageSelectors = [
-          'picture img.css-1fxh9so',
-          '.product-card__hero-image img',
-          'img[data-testid="hero-image"]',
-          'img[data-testid="product-image"]',
-          '.product-card__image-container img',
-          '.pdp-image img',
-          '.image-component img',
-          'img[width][height][alt][src*="static.nike"]'
-        ];
+        // Buscamos directamente todas las URLs de imágenes que contienen "static.nike.com/a/images"
+        // ya que suelen tener un patrón reconocible
+        const nikeImagePattern = /https:\/\/static\.nike\.com\/a\/images\/[^"']+/g;
+        const htmlText = html.toString();
+        const matches = htmlText.match(nikeImagePattern);
         
-        for (const selector of imageSelectors) {
-          const img = $(selector).first();
-          if (img.length && img.attr('src')) {
-            result.imageUrl = img.attr('src') as string;
-            console.log(`✅ Imagen de Nike encontrada: ${result.imageUrl}`);
-            break;
+        if (matches && matches.length > 0) {
+          // Filtrar para obtener imágenes de mejor calidad (que contienen PDP en su URL)
+          const pdpImages = matches.filter(img => img.includes('t_PDP') && !img.includes('t_PDP_144'));
+          
+          if (pdpImages.length > 0) {
+            // Preferir imágenes de mayor resolución
+            const highResImages = pdpImages.filter(img => 
+              img.includes('t_PDP_1728') || 
+              img.includes('t_PDP_1280') || 
+              img.includes('t_PDP_864'));
+            
+            result.imageUrl = highResImages.length > 0 ? highResImages[0] : pdpImages[0];
+            console.log(`✅ Imagen de Nike encontrada por patrón: ${result.imageUrl}`);
+          } else {
+            result.imageUrl = matches[0];
+            console.log(`✅ Imagen de Nike encontrada (calidad estándar): ${result.imageUrl}`);
+          }
+        } else {
+          // Si no encontramos por patrón, intentamos con selectores
+          const imageSelectors = [
+            'picture img.css-1fxh9so',
+            '.product-card__hero-image img',
+            'img[data-testid="hero-image"]',
+            'img[data-testid="product-image"]',
+            '.product-card__image-container img',
+            '.pdp-image img',
+            '.image-component img',
+            'img[width][height][alt][src*="static.nike"]'
+          ];
+          
+          for (const selector of imageSelectors) {
+            const img = $(selector).first();
+            if (img.length && img.attr('src')) {
+              result.imageUrl = img.attr('src') as string;
+              console.log(`✅ Imagen de Nike encontrada por selector: ${result.imageUrl}`);
+              break;
+            }
           }
         }
       }
@@ -192,23 +243,40 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
   }
   
   // MÉTODO 4: Generar enlaces de imágenes alternativos basados en patrones conocidos de Nike
-  if (!result.imageUrl && productId) {
+  if (!result.imageUrl) {
     try {
-      // Patrones de URL de imágenes de Nike conocidos
-      const imagePatterns = [
-        `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/${productId}/`,
-        `https://static.nike.com/a/images/t_PDP_864_v1/f_auto,q_auto:eco/${productId}/`
-      ];
+      // Patrones de URL de imágenes de Nike conocidos basados en el código de producto
+      let imagePatterns: string[] = [];
+      
+      if (productCode) {
+        // Construir patrones basados en el código de producto (ej: CW2288-111)
+        const baseImageId = productCode.replace('-', '/');
+        imagePatterns = [
+          `https://static.nike.com/a/images/t_PDP_1728_v1/f_auto,q_auto:eco/${baseImageId}`,
+          `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/${baseImageId}`,
+          `https://static.nike.com/a/images/t_PDP_864_v1/f_auto,q_auto:eco/${baseImageId}`
+        ];
+      } else if (productId) {
+        // Si no tenemos código de producto, intentar con el ID genérico
+        imagePatterns = [
+          `https://static.nike.com/a/images/t_PDP_1280_v1/f_auto,q_auto:eco/${productId}`,
+          `https://static.nike.com/a/images/t_PDP_864_v1/f_auto,q_auto:eco/${productId}`
+        ];
+      }
       
       // Intentar verificar qué patrones funcionan
       for (const pattern of imagePatterns) {
         try {
+          console.log(`🔄 Probando patrón de imagen: ${pattern}`);
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2000);
+          const timeoutId = setTimeout(() => controller.abort(), 1500); // Timeout más corto para no perder rendimiento
           
           const response = await fetch(pattern, {
             method: 'HEAD',
-            signal: controller.signal
+            signal: controller.signal,
+            headers: {
+              'User-Agent': USER_AGENTS.modern
+            }
           });
           
           clearTimeout(timeoutId);
