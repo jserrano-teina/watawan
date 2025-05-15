@@ -13,6 +13,7 @@ import type { Response as NodeFetchResponse } from 'node-fetch';
 import * as cheerio from 'cheerio';
 import { Browser, Page } from 'puppeteer';
 import { extractMetadataFromScreenshot } from './openai-utils';
+import { extractNikeProductData } from './nike-extractor';
 
 // Tipos para los datos extraídos
 export interface ProductMetadata {
@@ -111,16 +112,67 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
       }
     }
     else if (domain.includes('nike.com')) {
-      console.log(`🖼️ Detectado Nike, usando extracción específica...`);
+      console.log(`👟 Detectado Nike, usando extractor especializado...`);
       try {
-        // Para Nike, usamos una imagen genérica de Nike
-        const imageUrl = "https://static.nike.com/a/images/t_PDP_864_v1,f_auto,q_auto:eco/81b36288-4d6f-45dd-ab0b-13ff6dcecd36/air-max-portal-zapatillas-Jtw477.png";
+        // Tiempo de inicio para medir el rendimiento
+        const startTime = Date.now();
         
-        console.log(`✅ Usando imagen de Nike por defecto: ${imageUrl}`);
-        imageResult = { imageUrl };
+        // Utilizar nuestro extractor especializado para Nike
+        const nikeData = await extractNikeProductData(url);
+        
+        // Tiempo de finalización para calcular la duración
+        const duration = Date.now() - startTime;
+        console.log(`⏱️ Extracción de Nike completada en ${duration}ms`);
+        
+        // Asignar los resultados a nuestras variables
+        if (nikeData.title) {
+          titleResult = { title: nikeData.title };
+          console.log(`✅ Título de Nike extraído: ${nikeData.title}`);
+        }
+        
+        if (nikeData.imageUrl) {
+          imageResult = { imageUrl: nikeData.imageUrl };
+          console.log(`✅ Imagen de Nike extraída: ${nikeData.imageUrl}`);
+        } else {
+          // Si no se pudo extraer una imagen, usar la imagen por defecto
+          const defaultImage = "https://static.nike.com/a/images/t_PDP_864_v1,f_auto,q_auto:eco/81b36288-4d6f-45dd-ab0b-13ff6dcecd36/air-max-portal-zapatillas-Jtw477.png";
+          imageResult = { imageUrl: defaultImage };
+          console.log(`⚠️ Usando imagen de Nike por defecto: ${defaultImage}`);
+        }
+        
+        if (nikeData.price) {
+          priceResult = { price: nikeData.price };
+          console.log(`✅ Precio de Nike extraído: ${nikeData.price}`);
+        }
       } catch (error) {
         const nikeError = error as Error;
-        console.log(`⚠️ Error en extracción específica para Nike: ${nikeError.message}`);
+        console.log(`⚠️ Error en extracción especializada para Nike: ${nikeError.message}`);
+        
+        // En caso de error, usar la imagen por defecto
+        const fallbackImage = "https://static.nike.com/a/images/t_PDP_864_v1,f_auto,q_auto:eco/81b36288-4d6f-45dd-ab0b-13ff6dcecd36/air-max-portal-zapatillas-Jtw477.png";
+        imageResult = { imageUrl: fallbackImage };
+        console.log(`⚠️ Usando imagen de Nike por defecto (fallback): ${fallbackImage}`);
+      }
+    }
+    else if (domain.includes('amazon')) {
+      console.log(`🖼️ Detectado Amazon, usando extracción específica...`);
+      try {
+        // Intentar extraer ASIN para crear una URL de imagen válida
+        const asinMatch = url.match(/\/dp\/([A-Z0-9]{10})/);
+        let imageUrl = "https://m.media-amazon.com/images/G/30/social_share/amazon_logo._CB633266945_.png"; // Imagen por defecto
+        
+        if (asinMatch && asinMatch[1]) {
+          const asin = asinMatch[1];
+          imageUrl = `https://m.media-amazon.com/images/I/${asin}.01._SL500_.jpg`;
+          console.log(`✅ Usando imagen de Amazon generada por ASIN: ${imageUrl}`);
+        } else {
+          console.log(`✅ Usando imagen de Amazon por defecto: ${imageUrl}`);
+        }
+        
+        imageResult = { imageUrl };
+      } catch (error) {
+        const amazonError = error as Error;
+        console.log(`⚠️ Error en extracción específica para Amazon: ${amazonError.message}`);
       }
     }
     
