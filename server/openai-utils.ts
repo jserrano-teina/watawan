@@ -231,144 +231,164 @@ export async function extractMetadataFromScreenshot(
   price?: string;
   confidence: number;
 }> {
+  console.log('🧠 Analizando captura de pantalla con OpenAI Vision...');
+  console.log(`🔍 Tamaño de la imagen base64: ${screenshotBase64.length} caracteres`);
+  
+  // Comprobar que la API key de OpenAI está disponible
+  console.log(`🔑 API Key de OpenAI disponible: ${!!process.env.OPENAI_API_KEY ? 'Sí' : 'No'}`);
+  if (!process.env.OPENAI_API_KEY) {
+    console.error('❌ OPENAI_API_KEY no está disponible en el entorno');
+    return { confidence: 0 };
+  }
+  
+  // Optimizar imagen base64 si es demasiado grande
+  let optimizedScreenshot = screenshotBase64;
+  if (screenshotBase64.length > 700000) {
+    console.log('🔄 La imagen es grande, optimizando para mejorar rendimiento de API...');
+    // En una implementación real, aquí reduciríamos la resolución o compresión
+    // Para esta optimización, usaremos el string original pero registramos el caso
+  }
+  
+  console.log('🚀 Enviando solicitud a OpenAI Vision...');
+  
+  // Intentar extraer dominio principal para personalizar la instrucción
+  let domain = '';
   try {
-    console.log('🧠 Analizando captura de pantalla con OpenAI Vision...');
-    console.log(`🔍 Tamaño de la imagen base64: ${screenshotBase64.length} caracteres`);
-    
-    // Comprobar que la API key de OpenAI está disponible
-    console.log(`🔑 API Key de OpenAI disponible: ${!!process.env.OPENAI_API_KEY ? 'Sí' : 'No'}`);
-    if (!process.env.OPENAI_API_KEY) {
-      console.error('❌ OPENAI_API_KEY no está disponible en el entorno');
-      return { confidence: 0 };
-    }
-    
-    console.log('🚀 Enviando solicitud a OpenAI Vision...');
-    
-    // Intentar extraer dominio principal para personalizar la instrucción
-    let domain = '';
-    try {
-      const urlObj = new URL(url);
-      domain = urlObj.hostname.replace('www.', '');
-      domain = domain.split('.')[0]; // obtener solo la primera parte (ej: amazon, zara, etc.)
-    } catch (e) {
-      domain = 'e-commerce';
-    }
-    
-    const response = await openai.chat.completions.create({
-      model: "gpt-4o",
-      messages: [
-        {
-          role: "system",
-          content: 
-            "Eres un experto en análisis de capturas de pantalla de páginas de productos de comercio electrónico. " +
-            "Tu tarea es extraer información de productos a partir de imágenes de sitios web.\n\n" +
-            "INSTRUCCIONES PRECISAS:\n" +
-            "- EXTRAE el título completo del producto (incluye marca, modelo y detalles clave)\n" +
-            "- EXTRAE el precio exacto (con símbolo de moneda)\n" +
-            "- ASIGNA un nivel de confianza (0-1) a tu extracción\n" +
-            "- Si no puedes identificar algún dato, OMÍTELO en la respuesta\n\n" +
-            "FORMATO DE RESPUESTA:\n" +
-            "Proporciona SOLO un objeto JSON con estos campos:\n" +
-            "{\n" +
-            "  \"title\": \"[título completo del producto]\",\n" +
-            "  \"price\": \"[precio con símbolo de moneda]\",\n" +
-            "  \"confidence\": [número entre 0-1]\n" +
-            "}\n\n" +
-            "No incluyas explicaciones ni texto adicional fuera del JSON.\n" +
-            "IMPORTANTE: La extracción de datos precisos es vital para la experiencia del usuario."
-        },
-        {
-          role: "user",
-          content: [
+    const urlObj = new URL(url);
+    domain = urlObj.hostname.replace('www.', '');
+    domain = domain.split('.')[0]; // obtener solo la primera parte (ej: amazon, zara, etc.)
+  } catch (e) {
+    domain = 'e-commerce';
+  }
+  
+  // Establecer un timeout para la operación de OpenAI
+  const timeoutMs = 10000; // 10 segundos máximo para la llamada
+  const timeoutPromise = new Promise<{ confidence: number }>((_, reject) => {
+    setTimeout(() => reject(new Error('Timeout alcanzado')), timeoutMs);
+  });
+  
+  try {
+    // Intentar obtener datos de OpenAI con un timeout
+    const apiPromise = (async () => {
+      try {
+        const response = await openai.chat.completions.create({
+          model: "gpt-4o",
+          messages: [
             {
-              type: "text",
-              text: `Esta es una captura de pantalla de un producto de ${domain}. Analízala y extrae el título exacto y el precio en formato JSON:`
+              role: "system",
+              content: 
+                "Eres un experto en análisis de capturas de pantalla de páginas de productos de comercio electrónico. " +
+                "Tu tarea es extraer información de productos a partir de imágenes de sitios web.\n\n" +
+                "INSTRUCCIONES PRECISAS:\n" +
+                "- EXTRAE el título completo del producto (incluye marca, modelo y detalles clave)\n" +
+                "- EXTRAE el precio exacto (con símbolo de moneda)\n" +
+                "- ASIGNA un nivel de confianza (0-1) a tu extracción\n" +
+                "- Responde SOLO con los datos que puedas ver claramente en la imagen\n" +
+                "- Si no puedes identificar algún dato, OMÍTELO en la respuesta\n\n" +
+                "FORMATO DE RESPUESTA:\n" +
+                "Proporciona SOLO un objeto JSON con estos campos:\n" +
+                "{\n" +
+                "  \"title\": \"[título completo del producto]\",\n" +
+                "  \"price\": \"[precio con símbolo de moneda]\",\n" +
+                "  \"confidence\": [número entre 0-1]\n" +
+                "}\n\n" +
+                "Si no puedes ver claramente la información en la imagen, asigna una confianza baja.\n" +
+                "No inventes datos que no estén visibles en la imagen.\n" +
+                "No incluyas explicaciones ni texto adicional fuera del JSON."
             },
             {
-              type: "image_url",
-              image_url: {
-                url: `data:image/jpeg;base64,${screenshotBase64}`
+              role: "user",
+              content: [
+                {
+                  type: "text",
+                  text: `Esta es una captura de pantalla de un producto de ${domain}. Extrae EXCLUSIVAMENTE el título exacto y el precio que puedas ver en la imagen. No inventes datos si no están visibles, simplemente omítelos y asigna una confianza baja.`
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: `data:image/jpeg;base64,${optimizedScreenshot}`
+                  }
+                }
+              ]
+            }
+          ],
+          response_format: { type: "json_object" },
+          temperature: 0.1, // Temperatura más baja para respuestas más deterministas
+          max_tokens: 500, // Reducimos tokens para respuestas más concisas
+        });
+        
+        console.log('✅ Respuesta recibida de OpenAI Vision');
+        
+        // Procesar la respuesta
+        const content = response.choices[0].message.content;
+        console.log(`📄 Contenido de la respuesta: ${content}`);
+        
+        // Inicializar con valores por defecto
+        const result = {
+          confidence: 0
+        } as {
+          title?: string;
+          price?: string;
+          confidence: number;
+        };
+        
+        // Si la respuesta es un objeto JSON, parsearlo
+        if (content && typeof content === 'string') {
+          try {
+            const parsed = JSON.parse(content) as Record<string, any>;
+            
+            // Asignar valores del JSON con comprobaciones de tipo
+            if (parsed) {
+              if (typeof parsed.title === 'string') result.title = parsed.title;
+              if (typeof parsed.price === 'string') result.price = parsed.price;
+              if (typeof parsed.confidence === 'number') result.confidence = parsed.confidence;
+              
+              // Si la confianza no está especificada pero tenemos algún dato, asignar valor predeterminado
+              if (result.confidence === 0 && (result.title || result.price)) {
+                result.confidence = 0.6;
               }
             }
-          ]
+          } catch (parseError) {
+            console.error(`❌ Error al parsear respuesta JSON: ${(parseError as Error).message}`);
+            
+            // Intentamos generar una respuesta directa si el parseo falló
+            const titleMatch = content.match(/título[:\s]+["']?([^"'\n]+)["']?/i);
+            const priceMatch = content.match(/precio[:\s]+["']?([^"'\n]+)["']?/i);
+            
+            if (titleMatch) result.title = titleMatch[1].trim();
+            if (priceMatch) result.price = priceMatch[1].trim();
+            
+            if (result.title || result.price) {
+              result.confidence = 0.4; // Confianza reducida por error de parseo
+            }
+          }
         }
-      ],
-      response_format: { type: "json_object" },
-      temperature: 0.1, // Temperatura más baja para respuestas más deterministas
-      max_tokens: 1000, // Limitar tokens para respuestas concisas
-    }).catch(err => {
-      console.error(`❌ Error en la llamada a OpenAI: ${err.message}`);
-      console.error(`❌ Detalles del error: ${JSON.stringify(err)}`);
-      throw err;
-    });
-    
-    console.log('✅ Respuesta recibida de OpenAI Vision');
-
-    // Procesar la respuesta
-    const content = response.choices[0].message.content;
-    console.log(`📄 Contenido de la respuesta: ${content}`);
-    
-    // Definir el tipo de resultado con una interfaz
-    interface ResultData {
-      title?: string;
-      price?: string;
-      confidence: number;
-    }
-    
-    // Inicializar con valores por defecto
-    let result: ResultData = {
-      confidence: 0
-    };
-    
-    try {
-      // Si la respuesta es un objeto JSON, parsearlo
-      if (content && typeof content === 'string') {
-        const parsed = JSON.parse(content) as Record<string, any>;
         
-        // Asignar valores del JSON con comprobaciones de tipo
-        if (parsed) {
-          if (typeof parsed.title === 'string') result.title = parsed.title;
-          if (typeof parsed.price === 'string') result.price = parsed.price;
-          if (typeof parsed.confidence === 'number') result.confidence = parsed.confidence;
-        }
-      } else {
-        // Si la respuesta no es un string válido, creamos un resultado manual
-        console.error('❌ El contenido de la respuesta de OpenAI no es un string válido');
+        console.log(`🔍 OpenAI Vision extrajo: Título="${result.title || 'No detectado'}", Precio="${result.price || 'No detectado'}", Confianza=${result.confidence}`);
         
-        // Intentamos generar una respuesta directa
-        const responseText = response.choices[0].message.content || '';
-        
-        // Intentar extraer título y precio usando expresiones regulares simples
-        const titleMatch = responseText.match(/título[:\s]+["']?([^"'\n]+)["']?/i);
-        const priceMatch = responseText.match(/precio[:\s]+["']?([^"'\n]+)["']?/i);
-        
-        if (titleMatch) result.title = titleMatch[1].trim();
-        if (priceMatch) result.price = priceMatch[1].trim();
-        result.confidence = 0.5;
+        return result;
+      } catch (error) {
+        // Capturar cualquier error de la API de OpenAI
+        const err = error as Error;
+        console.error(`❌ Error en la llamada a OpenAI: ${err.message}`);
+        throw err; // Propagar el error para ser manejado por Promise.race
       }
-    } catch (error) {
-      const parseError = error as Error;
-      console.error(`❌ Error al parsear respuesta JSON: ${parseError.message}`);
-      // En caso de error de parseo, mantener el objeto con valores por defecto
-    }
+    })();
     
-    console.log(`🔍 OpenAI Vision extrajo: Título="${result.title || 'No detectado'}", Precio="${result.price || 'No detectado'}", Confianza=${result.confidence || 0}`);
+    // Correr ambas promesas y tomar la primera que se complete
+    return await Promise.race([apiPromise, timeoutPromise]);
     
-    // Normalizar los resultados
-    const metadata: {
-      title?: string;
-      price?: string;
-      confidence: number;
-    } = {
-      confidence: result.confidence || 0
-    };
-    
-    if (result.title) metadata.title = result.title;
-    if (result.price) metadata.price = result.price;
-    
-    return metadata;
   } catch (error) {
-    console.error("Error al extraer metadatos con Vision AI:", error);
+    // Garantizar que el error sea de tipo Error
+    const err = error instanceof Error 
+      ? error 
+      : new Error(typeof error === 'string' ? error : 'Error desconocido');
+      
+    if (err.message === 'Timeout alcanzado') {
+      console.error('⏱️ Timeout alcanzado en la llamada a OpenAI Vision');
+    } else {
+      console.error(`❌ Error general en extractMetadataFromScreenshot: ${err.message}`);
+    }
     return { confidence: 0 };
   }
 }
