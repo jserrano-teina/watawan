@@ -80,15 +80,14 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     
     // PASO 1: Extracción de la imagen con métodos ligeros
     
-    // Caso especial para PCComponentes (imagen directa)
+    // Casos especiales por dominio (imágenes directas)
     const domain = new URL(url).hostname.toLowerCase();
     let imageResult: Partial<ProductMetadata> = {};
     
     if (domain.includes('pccomponentes.com')) {
       console.log(`🖼️ Detectado PCComponentes, usando extracción específica...`);
       try {
-        // Para PCComponentes, vamos a usar una imagen genérica de PCComponentes
-        // Esto garantiza que siempre tengamos una imagen, aunque sea solo el logo
+        // Para PCComponentes, usamos una imagen genérica de PCComponentes
         const imageUrl = "https://assets.pccomponentes.com/img/logo-pccomponentes-logistica-og.jpg";
         
         console.log(`✅ Usando imagen de PCComponentes por defecto: ${imageUrl}`);
@@ -96,6 +95,19 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
       } catch (error) {
         const pcError = error as Error;
         console.log(`⚠️ Error en extracción específica para PCComponentes: ${pcError.message}`);
+      }
+    }
+    else if (domain.includes('zara.com')) {
+      console.log(`🖼️ Detectado Zara, usando extracción específica...`);
+      try {
+        // Para Zara, usamos una imagen genérica de Zara
+        const imageUrl = "https://static.zara.net/photos///contents/mkt/spots/aw22-north-woman-new/subhome-xmedia-38-2//w/1920/IMAGE-landscape-default-fill-9d5a81d0-0aa6-423d-a928-d6a879f53268-default_0.jpg?ts=1661345253128";
+        
+        console.log(`✅ Usando imagen de Zara por defecto: ${imageUrl}`);
+        imageResult = { imageUrl };
+      } catch (error) {
+        const zaraError = error as Error;
+        console.log(`⚠️ Error en extracción específica para Zara: ${zaraError.message}`);
       }
     }
     
