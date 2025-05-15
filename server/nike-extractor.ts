@@ -70,7 +70,38 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 segundos máximo
     
-    const response = await fetch(url, {
+    // Primero intentar con la misma URL
+    let finalUrl = url;
+    
+    // Verificar si la URL es accesible o necesita ser redirigida
+    try {
+      const headResponse = await fetch(url, { 
+        method: 'HEAD',
+        headers: { 'User-Agent': USER_AGENTS.desktop },
+        redirect: 'manual'
+      });
+      
+      // Si recibimos un 301 o 302, intentar seguir la redirección
+      if (headResponse.status === 301 || headResponse.status === 302) {
+        const location = headResponse.headers.get('location');
+        if (location) {
+          // Construir URL absoluta si es relativa
+          if (location.startsWith('/')) {
+            const urlObj = new URL(url);
+            finalUrl = `${urlObj.protocol}//${urlObj.host}${location}`;
+          } else {
+            finalUrl = location;
+          }
+          console.log(`🔄 Siguiendo redirección a: ${finalUrl}`);
+        }
+      }
+    } catch (redirectError) {
+      // Ignorar errores en la prueba de redirección
+      console.log(`⚠️ Error al verificar redirecciones: ${redirectError}`);
+    }
+    
+    // Realizar la petición real
+    const response = await fetch(finalUrl, {
       headers: {
         'User-Agent': USER_AGENTS.desktop,
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
@@ -78,7 +109,8 @@ export async function extractNikeProductData(url: string): Promise<NikeProductDa
         'Cache-Control': 'no-cache',
         'Pragma': 'no-cache'
       },
-      signal: controller.signal
+      signal: controller.signal,
+      redirect: 'follow' // Seguir redirecciones automáticamente
     });
     
     clearTimeout(timeoutId);

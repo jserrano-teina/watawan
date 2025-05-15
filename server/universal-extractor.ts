@@ -79,11 +79,15 @@ export async function extractUniversalMetadata(url: string): Promise<ProductMeta
     console.log(`🔍 Iniciando extracción universal para: ${url}`);
     const startTime = Date.now();
     
-    // PASO 1: Extracción de la imagen con métodos ligeros
+    // PASO 1: Extracción de metadata con métodos ligeros
     
-    // Casos especiales por dominio (imágenes directas)
+    // Casos especiales por dominio
     const domain = new URL(url).hostname.toLowerCase();
+    
+    // Inicializar objetos para almacenar resultados parciales
     let imageResult: Partial<ProductMetadata> = {};
+    let titleResult: Partial<ProductMetadata> = {};
+    let priceResult: Partial<ProductMetadata> = {};
     
     if (domain.includes('pccomponentes.com')) {
       console.log(`🖼️ Detectado PCComponentes, usando extracción específica...`);
