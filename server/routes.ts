@@ -1011,7 +1011,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           title: data.title || '',
           description: data.description || '',
           imageUrl: data.imageUrl || '',
-          price: data.price || '' // Devolver el precio si existe
+          price: '' // Siempre vacío según la especificación
         };
       };
       
@@ -1105,7 +1105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Valores por defecto en caso de timeout
         metadata = { 
           imageUrl: "", 
-          price: "", // En caso de timeout usamos un valor vacío por defecto
+          price: "", // Siempre vacío según la nueva especificación
           title: "", 
           description: "" 
         };
