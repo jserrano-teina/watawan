@@ -313,7 +313,7 @@ export function cleanAmazonTitle(title: string, asin?: string | null): string {
 }
 
 // Función auxiliar para decodificar entidades HTML
-function decodeHTMLEntities(text: string): string {
+export function decodeHTMLEntities(text: string): string {
   const entities = [
     ['&amp;', '&'],
     ['&lt;', '<'],

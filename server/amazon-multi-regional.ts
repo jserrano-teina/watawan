@@ -4,7 +4,39 @@
  */
 
 import fetch, { Response as NodeFetchResponse } from 'node-fetch';
-import { cleanAmazonTitle, decodeHTMLEntities } from './amazon-extractor';
+import { cleanAmazonTitle } from './amazon-extractor';
+
+// Función auxiliar para decodificar entidades HTML
+function decodeHTMLEntities(text: string): string {
+  const entities = [
+    ['&amp;', '&'],
+    ['&lt;', '<'],
+    ['&gt;', '>'],
+    ['&quot;', '"'],
+    ['&apos;', "'"],
+    ['&#x27;', "'"],
+    ['&#x2F;', '/'],
+    ['&#39;', "'"],
+    ['&#47;', '/'],
+    ['&nbsp;', ' ']
+  ];
+  
+  let decodedText = text;
+  for (const [entity, replacement] of entities) {
+    decodedText = decodedText.replace(new RegExp(entity, 'g'), replacement);
+  }
+  
+  // Decode numeric entities
+  decodedText = decodedText.replace(/&#(\d+);/g, (_, numStr) => {
+    try {
+      return String.fromCharCode(parseInt(numStr, 10));
+    } catch (e) {
+      return _;
+    }
+  });
+  
+  return decodedText.trim();
+}
 
 // Función segura para obtener datos con múltiples reintentos
 async function safeFetch(url: string, options: any = {}): Promise<NodeFetchResponse | null> {
