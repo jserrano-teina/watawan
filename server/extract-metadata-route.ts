@@ -105,17 +105,45 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     // Para Amazon usamos nuestro extractor especializado
     if (isAmazon) {
       const { cleanAmazonTitle, extractAsin } = await import('./amazon-extractor');
-      console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado.`);
+      const { getMultiRegionalAmazonData } = await import('./amazon-multi-regional');
+      console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado mejorado.`);
       
       try {
-        // Obtener metadatos con nuestro extractor especializado
-        console.log(`📊 Iniciando extracción con amazon-extractor...`);
-        const amazonMetadata = await extractAmazonMetadata(url, req.headers['user-agent'] as string);
-        
         // Extraer ASIN para usarlo en caso necesario
         const asin = extractAsin(url);
         
-        // Verificar si obtuvimos datos
+        if (!asin) {
+          console.log(`⚠️ No se pudo extraer ASIN de la URL de Amazon. Intentando método estándar.`);
+          // Continuar con el método estándar si no podemos obtener el ASIN
+        } else {
+          // Intentar primero con el método multi-regional mejorado
+          console.log(`📊 Iniciando extracción multi-regional para ASIN: ${asin}...`);
+          const multiRegionalData = await getMultiRegionalAmazonData(asin);
+          
+          if (multiRegionalData && multiRegionalData.title && multiRegionalData.imageUrl) {
+            console.log(`✅ Extracción multi-regional exitosa:`);
+            console.log(`Título: ${multiRegionalData.title}`);
+            console.log(`Imagen: ${multiRegionalData.imageUrl}`);
+            
+            // Devolver los datos exitosos
+            const responseData = {
+              title: multiRegionalData.title,
+              description: '',
+              imageUrl: multiRegionalData.imageUrl,
+              price: '',
+              isTitleValid: multiRegionalData.isTitleValid ?? true,
+              isImageValid: multiRegionalData.isImageValid ?? true
+            };
+            
+            return res.json(responseData);
+          }
+        }
+        
+        // Si el método multi-regional falla, intentar con el método antiguo
+        console.log(`📊 Método multi-regional falló o no se pudo obtener ASIN. Iniciando extracción con amazon-extractor...`);
+        const amazonMetadata = await extractAmazonMetadata(url, req.headers['user-agent'] as string);
+        
+        // Verificar si obtuvimos datos con el método antiguo
         if (amazonMetadata && (amazonMetadata.title || amazonMetadata.imageUrl)) {
           console.log(`✅ Extracción especializada exitosa:`);
           console.log(`   - Título: ${amazonMetadata.title ? amazonMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
