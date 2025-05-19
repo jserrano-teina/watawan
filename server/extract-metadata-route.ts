@@ -98,12 +98,107 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     // Importar el módulo de extracción de Amazon
     const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
-    const isAmazon = isAmazonUrl(url);
     
-    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''}`);
+    // Importar extractores especializados para otras tiendas
+    const { isMiraviaUrl, isAliExpressUrl, extractMiraviaMetadata, extractAliExpressMetadata } = await import('./store-extractors');
+    
+    // Verificar el tipo de tienda
+    const isAmazon = isAmazonUrl(url);
+    const isMiravia = isMiraviaUrl(url);
+    const isAliExpress = isAliExpressUrl(url);
+    
+    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : isMiravia ? '(Miravia)' : isAliExpress ? '(AliExpress)' : ''}`);
+    
+    // Para Miravia usamos nuestro extractor especializado
+    if (isMiravia) {
+      console.log(`🛒 Detectada URL de Miravia. Usando extractor especializado.`);
+      
+      try {
+        // Obtener metadatos con el extractor de Miravia
+        console.log(`📊 Iniciando extracción con extractor de Miravia...`);
+        const miraviaMetadata = await extractMiraviaMetadata(url);
+        
+        // Verificar si obtuvimos datos válidos
+        if (miraviaMetadata && ((miraviaMetadata.title && miraviaMetadata.isTitleValid) || 
+                              (miraviaMetadata.imageUrl && miraviaMetadata.isImageValid))) {
+          console.log(`✅ Extracción especializada de Miravia exitosa:`);
+          console.log(`   - Título: ${miraviaMetadata.title ? miraviaMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${miraviaMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // Validar con OpenAI solo si ambos están presentes
+          if (miraviaMetadata.title && miraviaMetadata.imageUrl) {
+            const validationResult = await validateProductData(miraviaMetadata.title, miraviaMetadata.imageUrl);
+            return res.json({
+              title: miraviaMetadata.title,
+              description: '',
+              imageUrl: miraviaMetadata.imageUrl,
+              price: '',
+              isTitleValid: validationResult.isTitleValid,
+              isImageValid: validationResult.isImageValid
+            });
+          } else {
+            // Devolver los datos parciales que hayamos podido extraer
+            return res.json({
+              title: miraviaMetadata.title || '',
+              description: '',
+              imageUrl: miraviaMetadata.imageUrl || '',
+              price: '',
+              isTitleValid: miraviaMetadata.isTitleValid || false,
+              isImageValid: miraviaMetadata.isImageValid || false
+            });
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error extrayendo datos de Miravia: ${error}`);
+      }
+    }
+    
+    // Para AliExpress usamos nuestro extractor especializado
+    else if (isAliExpress) {
+      console.log(`🛒 Detectada URL de AliExpress. Usando extractor especializado.`);
+      
+      try {
+        // Obtener metadatos con el extractor de AliExpress
+        console.log(`📊 Iniciando extracción con extractor de AliExpress...`);
+        const aliExpressMetadata = await extractAliExpressMetadata(url);
+        
+        // Verificar si obtuvimos datos válidos
+        if (aliExpressMetadata && ((aliExpressMetadata.title && aliExpressMetadata.isTitleValid) || 
+                                 (aliExpressMetadata.imageUrl && aliExpressMetadata.isImageValid))) {
+          console.log(`✅ Extracción especializada de AliExpress exitosa:`);
+          console.log(`   - Título: ${aliExpressMetadata.title ? aliExpressMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${aliExpressMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // Validar con OpenAI solo si ambos están presentes
+          if (aliExpressMetadata.title && aliExpressMetadata.imageUrl) {
+            const validationResult = await validateProductData(aliExpressMetadata.title, aliExpressMetadata.imageUrl);
+            return res.json({
+              title: aliExpressMetadata.title,
+              description: '',
+              imageUrl: aliExpressMetadata.imageUrl,
+              price: '',
+              isTitleValid: validationResult.isTitleValid,
+              isImageValid: validationResult.isImageValid
+            });
+          } else {
+            // Devolver los datos parciales que hayamos podido extraer
+            return res.json({
+              title: aliExpressMetadata.title || '',
+              description: '',
+              imageUrl: aliExpressMetadata.imageUrl || '',
+              price: '',
+              isTitleValid: aliExpressMetadata.isTitleValid || false,
+              isImageValid: aliExpressMetadata.isImageValid || false
+            });
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error extrayendo datos de AliExpress: ${error}`);
+      }
+    }
     
     // Para Amazon usamos nuestro extractor especializado
-    if (isAmazon) {
+    else if (isAmazon) {
       const { cleanAmazonTitle, extractAsin } = await import('./amazon-extractor');
       const { getMultiRegionalAmazonData } = await import('./amazon-multi-regional');
       console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado mejorado.`);
