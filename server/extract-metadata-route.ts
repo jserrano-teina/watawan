@@ -96,11 +96,47 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       };
     };
     
-    // Importar el módulo de extracción de Amazon
+    // Importar los módulos de extracción de tiendas específicas
     const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
-    const isAmazon = isAmazonUrl(url);
+    const { isAliExpressUrl, extractAliExpressMetadata } = await import('./aliexpress-extractor');
     
-    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''}`);
+    const isAmazon = isAmazonUrl(url);
+    const isAliExpress = isAliExpressUrl(url);
+    
+    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''} ${isAliExpress ? '(AliExpress)' : ''}`);
+    
+    // Para AliExpress usamos nuestro nuevo extractor especializado
+    if (isAliExpress) {
+      console.log(`🛒 Detectada URL de AliExpress. Usando extractor especializado.`);
+      
+      try {
+        console.log(`📊 Iniciando extracción con aliexpress-extractor...`);
+        const aliExpressData = await extractAliExpressMetadata(url);
+        
+        // Verificar si obtuvimos datos
+        if (aliExpressData && (aliExpressData.title || aliExpressData.imageUrl)) {
+          console.log(`✅ Extracción de AliExpress exitosa:`);
+          console.log(`   - Título: ${aliExpressData.title ? aliExpressData.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${aliExpressData.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // Devolvemos los datos extraídos con indicadores de validez
+          return res.json({
+            title: aliExpressData.title || '',
+            description: aliExpressData.description || '',
+            imageUrl: aliExpressData.imageUrl || '',
+            price: '',
+            isTitleValid: aliExpressData.isTitleValid || false,
+            isImageValid: aliExpressData.isImageValid || false
+          });
+        } else {
+          console.log(`⚠️ No se pudieron extraer datos suficientes con el extractor de AliExpress.`);
+          // Continuar con el flujo normal si el extractor especializado falla
+        }
+      } catch (error) {
+        console.log(`❌ Error en el extractor de AliExpress: ${error instanceof Error ? error.message : String(error)}`);
+        // Continuar con el flujo normal si el extractor especializado falla
+      }
+    }
     
     // Para Amazon usamos nuestro extractor especializado
     if (isAmazon) {
