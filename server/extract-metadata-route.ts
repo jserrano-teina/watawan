@@ -96,81 +96,11 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       };
     };
     
-    // Importar los módulos de extracción de tiendas específicas
+    // Importar el módulo de extracción de Amazon
     const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
-    const { isAliExpressUrl, extractAliExpressMetadata } = await import('./aliexpress-extractor');
-    
     const isAmazon = isAmazonUrl(url);
-    const isAliExpress = isAliExpressUrl(url);
     
-    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''} ${isAliExpress ? '(AliExpress)' : ''}`);
-    
-    // Para AliExpress usamos nuestro extractor especializado super robusto
-    if (isAliExpress) {
-      console.log(`🛒 Detectada URL de AliExpress. Usando extractor especializado mejorado.`);
-      
-      try {
-        // Importar el extractor especializado para AliExpress
-        const { extractAliExpressData } = await import('./aliexpress-special');
-        
-        console.log(`📊 Iniciando extracción con aliexpress-special...`);
-        const aliExpressData = await extractAliExpressData(url);
-        
-        // Verificar si obtuvimos datos
-        if (aliExpressData && (aliExpressData.title || aliExpressData.imageUrl)) {
-          console.log(`✅ Extracción de AliExpress exitosa:`);
-          console.log(`   - Título: ${aliExpressData.title ? aliExpressData.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${aliExpressData.imageUrl ? 'Disponible' : 'No disponible'}`);
-          console.log(`   - Validez título: ${aliExpressData.isTitleValid ? 'Válido' : 'Inválido'}`);
-          console.log(`   - Validez imagen: ${aliExpressData.isImageValid ? 'Válida' : 'Inválida'}`);
-          
-          // Devolvemos los datos extraídos con indicadores de validez
-          return res.json({
-            title: aliExpressData.title || '',
-            description: aliExpressData.description || '',
-            imageUrl: aliExpressData.imageUrl || '',
-            price: '',
-            isTitleValid: aliExpressData.isTitleValid || false,
-            isImageValid: aliExpressData.isImageValid || false
-          });
-        } else {
-          console.log(`⚠️ No se pudieron extraer datos suficientes con el extractor especializado.`);
-          // Continuar con el flujo normal si el extractor especializado falla
-        }
-      } catch (error) {
-        console.log(`❌ Error en el extractor especializado: ${error instanceof Error ? error.message : String(error)}`);
-        // Continuar con el flujo normal si el extractor especializado falla
-      }
-      
-      // Intentar con el extractor original como respaldo
-      try {
-        console.log(`📊 Intentando con extractor original como respaldo...`);
-        const aliExpressData = await extractAliExpressMetadata(url);
-        
-        // Verificar si obtuvimos datos
-        if (aliExpressData && (aliExpressData.title || aliExpressData.imageUrl)) {
-          console.log(`✅ Extracción de AliExpress (respaldo) exitosa:`);
-          console.log(`   - Título: ${aliExpressData.title ? aliExpressData.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${aliExpressData.imageUrl ? 'Disponible' : 'No disponible'}`);
-          
-          // Devolvemos los datos extraídos con indicadores de validez
-          return res.json({
-            title: aliExpressData.title || '',
-            description: aliExpressData.description || '',
-            imageUrl: aliExpressData.imageUrl || '',
-            price: '',
-            isTitleValid: aliExpressData.isTitleValid || false,
-            isImageValid: aliExpressData.isImageValid || false
-          });
-        } else {
-          console.log(`⚠️ No se pudieron extraer datos suficientes con ningún extractor.`);
-          // Continuar con el flujo normal
-        }
-      } catch (error) {
-        console.log(`❌ Error en el extractor de respaldo: ${error instanceof Error ? error.message : String(error)}`);
-        // Continuar con el flujo normal
-      }
-    }
+    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''}`);
     
     // Para Amazon usamos nuestro extractor especializado
     if (isAmazon) {
