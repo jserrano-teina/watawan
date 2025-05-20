@@ -76,19 +76,18 @@ export function extractAliExpressProductId(url: string): string | null {
 export function buildImageUrl(productId: string, size: keyof typeof IMAGE_SIZES = 'large'): string {
   if (!productId) return '';
 
-  // Intentamos una imagen de alta calidad con varias combinaciones de plantillas
-  const templates = [
-    // Plantillas más comunes
-    `https://ae01.alicdn.com/kf/S${productId}${IMAGE_SIZES[size]}`,
-    `https://ae01.alicdn.com/kf/H${productId}${IMAGE_SIZES[size]}`,
-    `https://ae01.alicdn.com/kf/${productId}${IMAGE_SIZES[size]}`,
-    // Plantillas alternativas
-    `https://ae01.alicdn.com/kf/HTB${productId}${IMAGE_SIZES[size]}`,
-    `https://ae01.alicdn.com/kf/U${productId}${IMAGE_SIZES[size]}`
-  ];
-
-  // Las imágenes más grandes tienen más probabilidad de existir
-  return templates[0];
+  // Para productos de AliExpress modernos (IDs que comienzan con 1005)
+  if (productId.startsWith('1005')) {
+    return `https://ae01.alicdn.com/kf/S${productId}${IMAGE_SIZES[size]}`;
+  }
+  
+  // Para productos de AliExpress antiguos
+  if (productId.length >= 8 && productId.length <= 12) {
+    return `https://ae01.alicdn.com/kf/H${productId}${IMAGE_SIZES[size]}`;
+  }
+  
+  // Para cualquier otro formato
+  return `https://ae01.alicdn.com/kf/${productId}${IMAGE_SIZES[size]}`;
 }
 
 /**
@@ -307,12 +306,16 @@ export async function extractAliExpressData(url: string): Promise<{
       console.log(`[AliExtractor] Error obteniendo la página: ${e}`);
     }
     
-    // ESTRATEGIA 3: No se pudo extraer título, usar una descripción genérica
+    // ESTRATEGIA 3: Si no se pudo extraer título, intentar una técnica alternativa
     if (!result.title) {
-      result.title = productId ? 
-        `Producto AliExpress (${productId})` : 
-        "Producto AliExpress";
-      result.isTitleValid = false;
+      // Para AliExpress vamos a ser más directos y descriptivos
+      if (productId) {
+        result.title = "Producto de AliExpress";
+        result.isTitleValid = true;
+      } else {
+        result.title = "Producto de AliExpress";
+        result.isTitleValid = true;
+      }
     }
     
     return result;
