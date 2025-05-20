@@ -96,214 +96,84 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
       };
     };
     
-    // Importar el módulo de extracción de Amazon
+    // Importar los módulos de extracción de tiendas específicas
     const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
+    const { isAliExpressUrl, extractAliExpressMetadata } = await import('./aliexpress-extractor');
     
-    // Importar extractores especializados para otras tiendas
-    const { 
-      isMiraviaUrl, 
-      isAliExpressUrl, 
-      isDecathlonUrl,
-      isCarrefourUrl,
-      extractMiraviaMetadata, 
-      extractAliExpressMetadata,
-      extractDecathlonMetadata,
-      extractCarrefourMetadata 
-    } = await import('./store-extractors');
-    
-    // Verificar el tipo de tienda
     const isAmazon = isAmazonUrl(url);
-    const isMiravia = isMiraviaUrl(url);
     const isAliExpress = isAliExpressUrl(url);
-    const isDecathlon = isDecathlonUrl(url);
-    const isCarrefour = isCarrefourUrl(url);
     
-    console.log(`🔍 Extrayendo metadatos para: ${url} ${
-      isAmazon ? '(Amazon)' : 
-      isMiravia ? '(Miravia)' : 
-      isAliExpress ? '(AliExpress)' : 
-      isDecathlon ? '(Decathlon)' : 
-      isCarrefour ? '(Carrefour)' : ''
-    }`);
+    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''} ${isAliExpress ? '(AliExpress)' : ''}`);
     
-    // Para Decathlon usamos nuestro extractor especializado
-    if (isDecathlon) {
-      console.log(`🛒 Detectada URL de Decathlon. Usando extractor especializado.`);
+    // Para AliExpress usamos nuestro extractor especializado super robusto
+    if (isAliExpress) {
+      console.log(`🛒 Detectada URL de AliExpress. Usando extractor especializado mejorado.`);
       
       try {
-        // Obtener metadatos con el extractor de Decathlon
-        console.log(`📊 Iniciando extracción con extractor de Decathlon...`);
-        const decathlonMetadata = await extractDecathlonMetadata(url);
+        // Importar el extractor especializado para AliExpress
+        const { extractAliExpressData } = await import('./aliexpress-special');
         
-        // Verificar si obtuvimos datos válidos
-        if (decathlonMetadata && ((decathlonMetadata.title && decathlonMetadata.isTitleValid) || 
-                                (decathlonMetadata.imageUrl && decathlonMetadata.isImageValid))) {
-          console.log(`✅ Extracción especializada de Decathlon exitosa:`);
-          console.log(`   - Título: ${decathlonMetadata.title ? decathlonMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${decathlonMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+        console.log(`📊 Iniciando extracción con aliexpress-special...`);
+        const aliExpressData = await extractAliExpressData(url);
+        
+        // Verificar si obtuvimos datos
+        if (aliExpressData && (aliExpressData.title || aliExpressData.imageUrl)) {
+          console.log(`✅ Extracción de AliExpress exitosa:`);
+          console.log(`   - Título: ${aliExpressData.title ? aliExpressData.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${aliExpressData.imageUrl ? 'Disponible' : 'No disponible'}`);
+          console.log(`   - Validez título: ${aliExpressData.isTitleValid ? 'Válido' : 'Inválido'}`);
+          console.log(`   - Validez imagen: ${aliExpressData.isImageValid ? 'Válida' : 'Inválida'}`);
           
-          // Validar con OpenAI solo si ambos están presentes
-          if (decathlonMetadata.title && decathlonMetadata.imageUrl) {
-            const validationResult = await validateProductData(decathlonMetadata.title, decathlonMetadata.imageUrl);
-            return res.json({
-              title: decathlonMetadata.title,
-              description: '',
-              imageUrl: decathlonMetadata.imageUrl,
-              price: '',
-              isTitleValid: validationResult.isTitleValid,
-              isImageValid: validationResult.isImageValid
-            });
-          } else {
-            // Devolver los datos parciales que hayamos podido extraer
-            return res.json({
-              title: decathlonMetadata.title || '',
-              description: '',
-              imageUrl: decathlonMetadata.imageUrl || '',
-              price: '',
-              isTitleValid: decathlonMetadata.isTitleValid || false,
-              isImageValid: decathlonMetadata.isImageValid || false
-            });
-          }
+          // Devolvemos los datos extraídos con indicadores de validez
+          return res.json({
+            title: aliExpressData.title || '',
+            description: aliExpressData.description || '',
+            imageUrl: aliExpressData.imageUrl || '',
+            price: '',
+            isTitleValid: aliExpressData.isTitleValid || false,
+            isImageValid: aliExpressData.isImageValid || false
+          });
+        } else {
+          console.log(`⚠️ No se pudieron extraer datos suficientes con el extractor especializado.`);
+          // Continuar con el flujo normal si el extractor especializado falla
         }
       } catch (error) {
-        console.log(`❌ Error extrayendo datos de Decathlon: ${error}`);
+        console.log(`❌ Error en el extractor especializado: ${error instanceof Error ? error.message : String(error)}`);
+        // Continuar con el flujo normal si el extractor especializado falla
       }
-    }
-    
-    // Para Carrefour usamos nuestro extractor especializado
-    else if (isCarrefour) {
-      console.log(`🛒 Detectada URL de Carrefour. Usando extractor especializado.`);
       
+      // Intentar con el extractor original como respaldo
       try {
-        // Obtener metadatos con el extractor de Carrefour
-        console.log(`📊 Iniciando extracción con extractor de Carrefour...`);
-        const carrefourMetadata = await extractCarrefourMetadata(url);
+        console.log(`📊 Intentando con extractor original como respaldo...`);
+        const aliExpressData = await extractAliExpressMetadata(url);
         
-        // Verificar si obtuvimos datos válidos
-        if (carrefourMetadata && ((carrefourMetadata.title && carrefourMetadata.isTitleValid) || 
-                                (carrefourMetadata.imageUrl && carrefourMetadata.isImageValid))) {
-          console.log(`✅ Extracción especializada de Carrefour exitosa:`);
-          console.log(`   - Título: ${carrefourMetadata.title ? carrefourMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${carrefourMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+        // Verificar si obtuvimos datos
+        if (aliExpressData && (aliExpressData.title || aliExpressData.imageUrl)) {
+          console.log(`✅ Extracción de AliExpress (respaldo) exitosa:`);
+          console.log(`   - Título: ${aliExpressData.title ? aliExpressData.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${aliExpressData.imageUrl ? 'Disponible' : 'No disponible'}`);
           
-          // Validar con OpenAI solo si ambos están presentes
-          if (carrefourMetadata.title && carrefourMetadata.imageUrl) {
-            const validationResult = await validateProductData(carrefourMetadata.title, carrefourMetadata.imageUrl);
-            return res.json({
-              title: carrefourMetadata.title,
-              description: '',
-              imageUrl: carrefourMetadata.imageUrl,
-              price: '',
-              isTitleValid: validationResult.isTitleValid,
-              isImageValid: validationResult.isImageValid
-            });
-          } else {
-            // Devolver los datos parciales que hayamos podido extraer
-            return res.json({
-              title: carrefourMetadata.title || '',
-              description: '',
-              imageUrl: carrefourMetadata.imageUrl || '',
-              price: '',
-              isTitleValid: carrefourMetadata.isTitleValid || false,
-              isImageValid: carrefourMetadata.isImageValid || false
-            });
-          }
+          // Devolvemos los datos extraídos con indicadores de validez
+          return res.json({
+            title: aliExpressData.title || '',
+            description: aliExpressData.description || '',
+            imageUrl: aliExpressData.imageUrl || '',
+            price: '',
+            isTitleValid: aliExpressData.isTitleValid || false,
+            isImageValid: aliExpressData.isImageValid || false
+          });
+        } else {
+          console.log(`⚠️ No se pudieron extraer datos suficientes con ningún extractor.`);
+          // Continuar con el flujo normal
         }
       } catch (error) {
-        console.log(`❌ Error extrayendo datos de Carrefour: ${error}`);
-      }
-    }
-    
-    // Para Miravia usamos nuestro extractor especializado
-    else if (isMiravia) {
-      console.log(`🛒 Detectada URL de Miravia. Usando extractor especializado.`);
-      
-      try {
-        // Obtener metadatos con el extractor de Miravia
-        console.log(`📊 Iniciando extracción con extractor de Miravia...`);
-        const miraviaMetadata = await extractMiraviaMetadata(url);
-        
-        // Verificar si obtuvimos datos válidos
-        if (miraviaMetadata && ((miraviaMetadata.title && miraviaMetadata.isTitleValid) || 
-                              (miraviaMetadata.imageUrl && miraviaMetadata.isImageValid))) {
-          console.log(`✅ Extracción especializada de Miravia exitosa:`);
-          console.log(`   - Título: ${miraviaMetadata.title ? miraviaMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${miraviaMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
-          
-          // Validar con OpenAI solo si ambos están presentes
-          if (miraviaMetadata.title && miraviaMetadata.imageUrl) {
-            const validationResult = await validateProductData(miraviaMetadata.title, miraviaMetadata.imageUrl);
-            return res.json({
-              title: miraviaMetadata.title,
-              description: '',
-              imageUrl: miraviaMetadata.imageUrl,
-              price: '',
-              isTitleValid: validationResult.isTitleValid,
-              isImageValid: validationResult.isImageValid
-            });
-          } else {
-            // Devolver los datos parciales que hayamos podido extraer
-            return res.json({
-              title: miraviaMetadata.title || '',
-              description: '',
-              imageUrl: miraviaMetadata.imageUrl || '',
-              price: '',
-              isTitleValid: miraviaMetadata.isTitleValid || false,
-              isImageValid: miraviaMetadata.isImageValid || false
-            });
-          }
-        }
-      } catch (error) {
-        console.log(`❌ Error extrayendo datos de Miravia: ${error}`);
-      }
-    }
-    
-    // Para AliExpress usamos nuestro extractor especializado
-    else if (isAliExpress) {
-      console.log(`🛒 Detectada URL de AliExpress. Usando extractor especializado.`);
-      
-      try {
-        // Obtener metadatos con el extractor de AliExpress
-        console.log(`📊 Iniciando extracción con extractor de AliExpress...`);
-        const aliExpressMetadata = await extractAliExpressMetadata(url);
-        
-        // Verificar si obtuvimos datos válidos
-        if (aliExpressMetadata && ((aliExpressMetadata.title && aliExpressMetadata.isTitleValid) || 
-                                 (aliExpressMetadata.imageUrl && aliExpressMetadata.isImageValid))) {
-          console.log(`✅ Extracción especializada de AliExpress exitosa:`);
-          console.log(`   - Título: ${aliExpressMetadata.title ? aliExpressMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
-          console.log(`   - Imagen: ${aliExpressMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
-          
-          // Validar con OpenAI solo si ambos están presentes
-          if (aliExpressMetadata.title && aliExpressMetadata.imageUrl) {
-            const validationResult = await validateProductData(aliExpressMetadata.title, aliExpressMetadata.imageUrl);
-            return res.json({
-              title: aliExpressMetadata.title,
-              description: '',
-              imageUrl: aliExpressMetadata.imageUrl,
-              price: '',
-              isTitleValid: validationResult.isTitleValid,
-              isImageValid: validationResult.isImageValid
-            });
-          } else {
-            // Devolver los datos parciales que hayamos podido extraer
-            return res.json({
-              title: aliExpressMetadata.title || '',
-              description: '',
-              imageUrl: aliExpressMetadata.imageUrl || '',
-              price: '',
-              isTitleValid: aliExpressMetadata.isTitleValid || false,
-              isImageValid: aliExpressMetadata.isImageValid || false
-            });
-          }
-        }
-      } catch (error) {
-        console.log(`❌ Error extrayendo datos de AliExpress: ${error}`);
+        console.log(`❌ Error en el extractor de respaldo: ${error instanceof Error ? error.message : String(error)}`);
+        // Continuar con el flujo normal
       }
     }
     
     // Para Amazon usamos nuestro extractor especializado
-    else if (isAmazon) {
+    if (isAmazon) {
       const { cleanAmazonTitle, extractAsin } = await import('./amazon-extractor');
       const { getMultiRegionalAmazonData } = await import('./amazon-multi-regional');
       console.log(`🛒 Detectada URL de Amazon. Usando extractor especializado mejorado.`);

@@ -277,49 +277,6 @@ export async function extractOpenGraphData(url: string, clientUserAgent?: string
           console.log('✓ Imagen extraída de AliExpress con cheerio');
         }
       }
-      // Decathlon
-      else if (urlLower.includes('decathlon.')) {
-        const imageSelectors = [
-          'img.item-image',
-          '.product-image img',
-          'img.main-image',
-          'img[itemprop="image"]',
-          'img.pdp__image--main',
-          '.js-swiper-slide-product img'
-        ];
-        
-        for (const selector of imageSelectors) {
-          const img = $(selector);
-          const imgSrc = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src') || img.attr('srcset')?.split(' ')[0] || '';
-          
-          if (imgSrc && !imgSrc.includes('placeholder') && !imgSrc.includes('logo')) {
-            result.imageUrl = imgSrc;
-            console.log('✓ Imagen extraída de Decathlon con cheerio');
-            break;
-          }
-        }
-      }
-      // Carrefour
-      else if (urlLower.includes('carrefour.')) {
-        const imageSelectors = [
-          '.product-card__image img',
-          '.product-image-container img',
-          '.card-product-image img',
-          'img[itemprop="image"]',
-          '.product-detail__main-img'
-        ];
-        
-        for (const selector of imageSelectors) {
-          const img = $(selector);
-          const imgSrc = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src') || img.attr('srcset')?.split(' ')[0] || '';
-          
-          if (imgSrc && !imgSrc.includes('placeholder') && !imgSrc.includes('logo')) {
-            result.imageUrl = imgSrc;
-            console.log('✓ Imagen extraída de Carrefour con cheerio');
-            break;
-          }
-        }
-      }
     }
     
     // Buscar imágenes destacadas en el HTML basadas en tamaño, clase, y posición
