@@ -78,6 +78,507 @@ export function isCarrefourUrl(url: string): boolean {
   return /carrefour\.(es|com|fr)/i.test(url);
 }
 
+// Extractor específico para Carrefour
+export async function extractCarrefourMetadata(url: string): Promise<{
+  title?: string;
+  imageUrl?: string;
+  isTitleValid?: boolean;
+  isImageValid?: boolean;
+}> {
+  console.log(`[StoreExtractor] Iniciando extracción para Carrefour: ${url}`);
+  
+  try {
+    // Configurar cabeceras para evitar bloqueos
+    const headers = {
+      'User-Agent': getRandomUserAgent(),
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Referer': 'https://www.google.com/',
+      'DNT': '1'
+    };
+    
+    const response = await safeFetch(url, { headers, timeout: TIMEOUT });
+    
+    if (!response) {
+      console.log(`[StoreExtractor] No se pudo obtener respuesta de Carrefour`);
+      return { title: '', imageUrl: '', isTitleValid: false, isImageValid: false };
+    }
+    
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    // Extraer título
+    let title = '';
+    
+    // Patrones específicos para títulos en Carrefour
+    const titleSelectors = [
+      'h1.product-card__title', // Selector principal para título de producto
+      'h1.product-details-title',
+      'h1.product-header__name',
+      '.card-product-detail__title',
+      'meta[property="og:title"]', // Meta tag de Open Graph
+      'meta[name="twitter:title"]', // Meta tag de Twitter
+      'h1[itemprop="name"]',
+      'title' // Título de la página como último recurso
+    ];
+    
+    for (const selector of titleSelectors) {
+      if (!title) {
+        if (selector === 'meta[property="og:title"]' || selector === 'meta[name="twitter:title"]') {
+          title = $(selector).attr('content') || '';
+        } else if (selector === 'title') {
+          const pageTitle = $(selector).text();
+          // Limpiar del título la parte de "Carrefour" o el nombre del sitio
+          title = pageTitle.split('|')[0].trim();
+          if (!title || title.toLowerCase().includes('carrefour')) {
+            title = pageTitle.split('-')[0].trim();
+          }
+        } else {
+          title = $(selector).text().trim();
+        }
+        
+        if (title) {
+          console.log(`[StoreExtractor] Título extraído de Carrefour con selector ${selector}: ${title}`);
+          break;
+        }
+      }
+    }
+    
+    // Si aún no tenemos título, intentar con datos estructurados JSON-LD
+    if (!title) {
+      const jsonLd = $('script[type="application/ld+json"]').text();
+      if (jsonLd) {
+        try {
+          // A veces hay múltiples bloques JSON-LD, intentamos parsear cada uno
+          const jsonBlocks = jsonLd.split('</script><script type="application/ld+json">');
+          
+          for (const block of jsonBlocks) {
+            try {
+              const ldData = JSON.parse(block);
+              if (ldData && ldData.name) {
+                title = ldData.name;
+                console.log(`[StoreExtractor] Título extraído de Carrefour con JSON-LD: ${title}`);
+                break;
+              } else if (ldData && ldData["@graph"]) {
+                // Buscar en el grafo
+                const product = ldData["@graph"].find((item: any) => 
+                  item["@type"] === "Product" || item["@type"] === "ItemPage" || item["@type"] === "WebPage");
+                
+                if (product && product.name) {
+                  title = product.name;
+                  console.log(`[StoreExtractor] Título extraído de Carrefour con JSON-LD @graph: ${title}`);
+                  break;
+                }
+              }
+            } catch (e) {
+              // Continuar con el siguiente bloque si este falla
+            }
+          }
+        } catch (e) {
+          console.log(`[StoreExtractor] Error parseando JSON-LD: ${e}`);
+        }
+      }
+    }
+    
+    // Verificar que el título no es el dominio
+    if (title.toLowerCase().includes('carrefour') && title.length < 15) {
+      title = '';
+    }
+    
+    // Extraer imagen
+    let imageUrl = '';
+    
+    // Patrones específicos para imágenes en Carrefour
+    const imageSelectors = [
+      '.product-card__image img',
+      '.product-image-container img',
+      '.card-product-image img',
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]',
+      'img[itemprop="image"]',
+      '.product-detail__main-img'
+    ];
+    
+    for (const selector of imageSelectors) {
+      if (!imageUrl) {
+        if (selector === 'meta[property="og:image"]' || selector === 'meta[name="twitter:image"]') {
+          imageUrl = $(selector).attr('content') || '';
+        } else {
+          // Buscar en varios atributos donde podría estar la URL de la imagen
+          const img = $(selector);
+          imageUrl = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src') || img.attr('srcset')?.split(' ')[0] || '';
+        }
+        
+        if (imageUrl && !imageUrl.includes('placeholder') && !imageUrl.includes('logo')) {
+          console.log(`[StoreExtractor] Imagen extraída de Carrefour con selector ${selector}: ${imageUrl}`);
+          break;
+        }
+      }
+    }
+    
+    // Si aún no tenemos imagen, buscar en datos estructurados JSON-LD
+    if (!imageUrl) {
+      const jsonLd = $('script[type="application/ld+json"]').text();
+      if (jsonLd) {
+        try {
+          // A veces hay múltiples bloques JSON-LD, intentamos parsear cada uno
+          const jsonBlocks = jsonLd.split('</script><script type="application/ld+json">');
+          
+          for (const block of jsonBlocks) {
+            try {
+              const ldData = JSON.parse(block);
+              if (ldData && ldData.image) {
+                // La imagen puede ser una string o un objeto con url
+                if (typeof ldData.image === 'string') {
+                  imageUrl = ldData.image;
+                } else if (typeof ldData.image === 'object' && ldData.image.url) {
+                  imageUrl = ldData.image.url;
+                } else if (Array.isArray(ldData.image) && ldData.image.length > 0) {
+                  imageUrl = typeof ldData.image[0] === 'string' ? ldData.image[0] : ldData.image[0].url;
+                }
+                
+                if (imageUrl) {
+                  console.log(`[StoreExtractor] Imagen extraída de Carrefour con JSON-LD: ${imageUrl}`);
+                  break;
+                }
+              } else if (ldData && ldData["@graph"]) {
+                // Buscar en el grafo
+                const product = ldData["@graph"].find((item: any) => 
+                  item["@type"] === "Product" || item["@type"] === "ItemPage" || item["@type"] === "WebPage");
+                
+                if (product && product.image) {
+                  if (typeof product.image === 'string') {
+                    imageUrl = product.image;
+                  } else if (typeof product.image === 'object' && product.image.url) {
+                    imageUrl = product.image.url;
+                  } else if (Array.isArray(product.image) && product.image.length > 0) {
+                    imageUrl = typeof product.image[0] === 'string' ? product.image[0] : product.image[0].url;
+                  }
+                  
+                  if (imageUrl) {
+                    console.log(`[StoreExtractor] Imagen extraída de Carrefour con JSON-LD @graph: ${imageUrl}`);
+                    break;
+                  }
+                }
+              }
+            } catch (e) {
+              // Continuar con el siguiente bloque si este falla
+            }
+          }
+        } catch (e) {
+          console.log(`[StoreExtractor] Error parseando JSON-LD para imagen: ${e}`);
+        }
+      }
+    }
+    
+    // Buscar imágenes que contengan palabras clave específicas de Carrefour
+    if (!imageUrl) {
+      const allImages = $('img').toArray()
+        .map(img => {
+          const src = $(img).attr('src') || $(img).attr('data-src') || $(img).attr('data-lazy-src') || '';
+          const width = parseInt($(img).attr('width') || '0');
+          const height = parseInt($(img).attr('height') || '0');
+          return { src, width, height, area: width * height };
+        })
+        .filter(img => 
+          img.src && 
+          img.area > 10000 && // Filtrar imágenes pequeñas
+          !img.src.includes('placeholder') && 
+          !img.src.includes('logo') && 
+          (img.src.includes('product') || img.src.includes('img') || img.src.endsWith('.jpg') || img.src.endsWith('.png'))
+        )
+        .sort((a, b) => b.area - a.area); // Ordenar por tamaño, más grande primero
+      
+      if (allImages.length > 0) {
+        imageUrl = allImages[0].src;
+        console.log(`[StoreExtractor] Imagen extraída de Carrefour mediante búsqueda por tamaño: ${imageUrl}`);
+      }
+    }
+    
+    // Añadir protocolo si es necesario
+    if (imageUrl && imageUrl.startsWith('//')) {
+      imageUrl = 'https:' + imageUrl;
+    }
+    
+    // Si la URL es relativa, convertirla en absoluta
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      try {
+        const urlObj = new URL(url);
+        if (imageUrl.startsWith('/')) {
+          imageUrl = urlObj.origin + imageUrl;
+        } else {
+          imageUrl = urlObj.origin + '/' + imageUrl;
+        }
+      } catch (e) {
+        console.log(`[StoreExtractor] Error al convertir URL relativa: ${e}`);
+      }
+    }
+    
+    return {
+      title,
+      imageUrl,
+      isTitleValid: !!title && title.length > 5 && !title.toLowerCase().includes('carrefour.es'),
+      isImageValid: !!imageUrl && !imageUrl.includes('placeholder') && !imageUrl.includes('logo')
+    };
+  } catch (error) {
+    console.log(`[StoreExtractor] Error extrayendo metadatos de Carrefour: ${error}`);
+    return { title: '', imageUrl: '', isTitleValid: false, isImageValid: false };
+  }
+}
+
+// Extractor específico para Decathlon
+export async function extractDecathlonMetadata(url: string): Promise<{
+  title?: string;
+  imageUrl?: string;
+  isTitleValid?: boolean;
+  isImageValid?: boolean;
+}> {
+  console.log(`[StoreExtractor] Iniciando extracción para Decathlon: ${url}`);
+  
+  try {
+    // Configurar cabeceras para evitar bloqueos
+    const headers = {
+      'User-Agent': getRandomUserAgent(),
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+      'Accept-Language': 'es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7',
+      'Cache-Control': 'no-cache',
+      'Pragma': 'no-cache',
+      'Referer': 'https://www.google.com/',
+      'DNT': '1'
+    };
+    
+    const response = await safeFetch(url, { headers, timeout: TIMEOUT });
+    
+    if (!response) {
+      console.log(`[StoreExtractor] No se pudo obtener respuesta de Decathlon`);
+      return { title: '', imageUrl: '', isTitleValid: false, isImageValid: false };
+    }
+    
+    const html = await response.text();
+    const $ = cheerio.load(html);
+    
+    // Extraer título
+    let title = '';
+    
+    // Patrones específicos para títulos en Decathlon
+    const titleSelectors = [
+      'h1.title--product', // Selector principal para título de producto
+      'h1.pdp-title',
+      '.name-product',
+      '.product-detail-name',
+      'meta[property="og:title"]', // Meta tag de Open Graph
+      'meta[name="twitter:title"]', // Meta tag de Twitter
+      'h1[itemprop="name"]',
+      'title' // Título de la página como último recurso
+    ];
+    
+    for (const selector of titleSelectors) {
+      if (!title) {
+        if (selector === 'meta[property="og:title"]' || selector === 'meta[name="twitter:title"]') {
+          title = $(selector).attr('content') || '';
+        } else if (selector === 'title') {
+          const pageTitle = $(selector).text();
+          // Limpiar del título la parte de "Decathlon" o el nombre del sitio
+          title = pageTitle.split('|')[0].trim();
+          if (!title) {
+            title = pageTitle.split('-')[0].trim();
+          }
+        } else {
+          title = $(selector).text().trim();
+        }
+        
+        if (title) {
+          console.log(`[StoreExtractor] Título extraído de Decathlon con selector ${selector}: ${title}`);
+          break;
+        }
+      }
+    }
+    
+    // Si aún no tenemos título, intentar con datos estructurados JSON-LD
+    if (!title) {
+      const jsonLd = $('script[type="application/ld+json"]').text();
+      if (jsonLd) {
+        try {
+          // A veces hay múltiples bloques JSON-LD, intentamos parsear cada uno
+          const jsonBlocks = jsonLd.split('</script><script type="application/ld+json">');
+          
+          for (const block of jsonBlocks) {
+            try {
+              const ldData = JSON.parse(block);
+              if (ldData && ldData.name) {
+                title = ldData.name;
+                console.log(`[StoreExtractor] Título extraído de Decathlon con JSON-LD: ${title}`);
+                break;
+              } else if (ldData && ldData["@graph"]) {
+                // Buscar en el grafo
+                const product = ldData["@graph"].find((item: any) => 
+                  item["@type"] === "Product" || item["@type"] === "SportingGood" || item["@type"] === "Product");
+                
+                if (product && product.name) {
+                  title = product.name;
+                  console.log(`[StoreExtractor] Título extraído de Decathlon con JSON-LD @graph: ${title}`);
+                  break;
+                }
+              }
+            } catch (e) {
+              // Continuar con el siguiente bloque si este falla
+            }
+          }
+        } catch (e) {
+          console.log(`[StoreExtractor] Error parseando JSON-LD: ${e}`);
+        }
+      }
+    }
+    
+    // Verificar que el título no es el dominio
+    if (title.toLowerCase().includes('decathlon') && title.length < 15) {
+      title = '';
+    }
+    
+    // Extraer imagen
+    let imageUrl = '';
+    
+    // Patrones específicos para imágenes en Decathlon
+    const imageSelectors = [
+      'img.item-image',
+      '.product-image img',
+      'img.main-image',
+      'meta[property="og:image"]',
+      'meta[name="twitter:image"]',
+      'img[itemprop="image"]',
+      'img.pdp__image--main',
+      '.js-swiper-slide-product img'
+    ];
+    
+    for (const selector of imageSelectors) {
+      if (!imageUrl) {
+        if (selector === 'meta[property="og:image"]' || selector === 'meta[name="twitter:image"]') {
+          imageUrl = $(selector).attr('content') || '';
+        } else {
+          // Buscar en varios atributos donde podría estar la URL de la imagen
+          const img = $(selector);
+          imageUrl = img.attr('src') || img.attr('data-src') || img.attr('data-lazy-src') || img.attr('srcset')?.split(' ')[0] || '';
+        }
+        
+        if (imageUrl && !imageUrl.includes('placeholder') && !imageUrl.includes('logo')) {
+          console.log(`[StoreExtractor] Imagen extraída de Decathlon con selector ${selector}: ${imageUrl}`);
+          break;
+        }
+      }
+    }
+    
+    // Si aún no tenemos imagen, buscar en datos estructurados JSON-LD
+    if (!imageUrl) {
+      const jsonLd = $('script[type="application/ld+json"]').text();
+      if (jsonLd) {
+        try {
+          // A veces hay múltiples bloques JSON-LD, intentamos parsear cada uno
+          const jsonBlocks = jsonLd.split('</script><script type="application/ld+json">');
+          
+          for (const block of jsonBlocks) {
+            try {
+              const ldData = JSON.parse(block);
+              if (ldData && ldData.image) {
+                // La imagen puede ser una string o un objeto con url
+                if (typeof ldData.image === 'string') {
+                  imageUrl = ldData.image;
+                } else if (typeof ldData.image === 'object' && ldData.image.url) {
+                  imageUrl = ldData.image.url;
+                } else if (Array.isArray(ldData.image) && ldData.image.length > 0) {
+                  imageUrl = typeof ldData.image[0] === 'string' ? ldData.image[0] : ldData.image[0].url;
+                }
+                
+                if (imageUrl) {
+                  console.log(`[StoreExtractor] Imagen extraída de Decathlon con JSON-LD: ${imageUrl}`);
+                  break;
+                }
+              } else if (ldData && ldData["@graph"]) {
+                // Buscar en el grafo
+                const product = ldData["@graph"].find((item: any) => 
+                  item["@type"] === "Product" || item["@type"] === "SportingGood" || item["@type"] === "Product");
+                
+                if (product && product.image) {
+                  if (typeof product.image === 'string') {
+                    imageUrl = product.image;
+                  } else if (typeof product.image === 'object' && product.image.url) {
+                    imageUrl = product.image.url;
+                  } else if (Array.isArray(product.image) && product.image.length > 0) {
+                    imageUrl = typeof product.image[0] === 'string' ? product.image[0] : product.image[0].url;
+                  }
+                  
+                  if (imageUrl) {
+                    console.log(`[StoreExtractor] Imagen extraída de Decathlon con JSON-LD @graph: ${imageUrl}`);
+                    break;
+                  }
+                }
+              }
+            } catch (e) {
+              // Continuar con el siguiente bloque si este falla
+            }
+          }
+        } catch (e) {
+          console.log(`[StoreExtractor] Error parseando JSON-LD para imagen: ${e}`);
+        }
+      }
+    }
+    
+    // Buscar imágenes que contengan palabras clave específicas de Decathlon
+    if (!imageUrl) {
+      const allImages = $('img').toArray()
+        .map(img => {
+          const src = $(img).attr('src') || $(img).attr('data-src') || $(img).attr('data-lazy-src') || '';
+          const width = parseInt($(img).attr('width') || '0');
+          const height = parseInt($(img).attr('height') || '0');
+          return { src, width, height, area: width * height };
+        })
+        .filter(img => 
+          img.src && 
+          img.area > 10000 && // Filtrar imágenes pequeñas
+          !img.src.includes('placeholder') && 
+          !img.src.includes('logo') && 
+          (img.src.includes('product') || img.src.includes('img') || img.src.endsWith('.jpg') || img.src.endsWith('.png'))
+        )
+        .sort((a, b) => b.area - a.area); // Ordenar por tamaño, más grande primero
+      
+      if (allImages.length > 0) {
+        imageUrl = allImages[0].src;
+        console.log(`[StoreExtractor] Imagen extraída de Decathlon mediante búsqueda por tamaño: ${imageUrl}`);
+      }
+    }
+    
+    // Añadir protocolo si es necesario
+    if (imageUrl && imageUrl.startsWith('//')) {
+      imageUrl = 'https:' + imageUrl;
+    }
+    
+    // Si la URL es relativa, convertirla en absoluta
+    if (imageUrl && !imageUrl.startsWith('http')) {
+      try {
+        const urlObj = new URL(url);
+        if (imageUrl.startsWith('/')) {
+          imageUrl = urlObj.origin + imageUrl;
+        } else {
+          imageUrl = urlObj.origin + '/' + imageUrl;
+        }
+      } catch (e) {
+        console.log(`[StoreExtractor] Error al convertir URL relativa: ${e}`);
+      }
+    }
+    
+    return {
+      title,
+      imageUrl,
+      isTitleValid: !!title && title.length > 5 && !title.toLowerCase().includes('decathlon.es'),
+      isImageValid: !!imageUrl && !imageUrl.includes('placeholder') && !imageUrl.includes('logo')
+    };
+  } catch (error) {
+    console.log(`[StoreExtractor] Error extrayendo metadatos de Decathlon: ${error}`);
+    return { title: '', imageUrl: '', isTitleValid: false, isImageValid: false };
+  }
+}
+
 // Extractor específico para Miravia
 export async function extractMiraviaMetadata(url: string): Promise<{
   title?: string;

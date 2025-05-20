@@ -100,17 +100,122 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     const { isAmazonUrl, extractAmazonMetadata } = await import('./amazon-extractor');
     
     // Importar extractores especializados para otras tiendas
-    const { isMiraviaUrl, isAliExpressUrl, extractMiraviaMetadata, extractAliExpressMetadata } = await import('./store-extractors');
+    const { 
+      isMiraviaUrl, 
+      isAliExpressUrl, 
+      isDecathlonUrl,
+      isCarrefourUrl,
+      extractMiraviaMetadata, 
+      extractAliExpressMetadata,
+      extractDecathlonMetadata,
+      extractCarrefourMetadata 
+    } = await import('./store-extractors');
     
     // Verificar el tipo de tienda
     const isAmazon = isAmazonUrl(url);
     const isMiravia = isMiraviaUrl(url);
     const isAliExpress = isAliExpressUrl(url);
+    const isDecathlon = isDecathlonUrl(url);
+    const isCarrefour = isCarrefourUrl(url);
     
-    console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : isMiravia ? '(Miravia)' : isAliExpress ? '(AliExpress)' : ''}`);
+    console.log(`🔍 Extrayendo metadatos para: ${url} ${
+      isAmazon ? '(Amazon)' : 
+      isMiravia ? '(Miravia)' : 
+      isAliExpress ? '(AliExpress)' : 
+      isDecathlon ? '(Decathlon)' : 
+      isCarrefour ? '(Carrefour)' : ''
+    }`);
+    
+    // Para Decathlon usamos nuestro extractor especializado
+    if (isDecathlon) {
+      console.log(`🛒 Detectada URL de Decathlon. Usando extractor especializado.`);
+      
+      try {
+        // Obtener metadatos con el extractor de Decathlon
+        console.log(`📊 Iniciando extracción con extractor de Decathlon...`);
+        const decathlonMetadata = await extractDecathlonMetadata(url);
+        
+        // Verificar si obtuvimos datos válidos
+        if (decathlonMetadata && ((decathlonMetadata.title && decathlonMetadata.isTitleValid) || 
+                                (decathlonMetadata.imageUrl && decathlonMetadata.isImageValid))) {
+          console.log(`✅ Extracción especializada de Decathlon exitosa:`);
+          console.log(`   - Título: ${decathlonMetadata.title ? decathlonMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${decathlonMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // Validar con OpenAI solo si ambos están presentes
+          if (decathlonMetadata.title && decathlonMetadata.imageUrl) {
+            const validationResult = await validateProductData(decathlonMetadata.title, decathlonMetadata.imageUrl);
+            return res.json({
+              title: decathlonMetadata.title,
+              description: '',
+              imageUrl: decathlonMetadata.imageUrl,
+              price: '',
+              isTitleValid: validationResult.isTitleValid,
+              isImageValid: validationResult.isImageValid
+            });
+          } else {
+            // Devolver los datos parciales que hayamos podido extraer
+            return res.json({
+              title: decathlonMetadata.title || '',
+              description: '',
+              imageUrl: decathlonMetadata.imageUrl || '',
+              price: '',
+              isTitleValid: decathlonMetadata.isTitleValid || false,
+              isImageValid: decathlonMetadata.isImageValid || false
+            });
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error extrayendo datos de Decathlon: ${error}`);
+      }
+    }
+    
+    // Para Carrefour usamos nuestro extractor especializado
+    else if (isCarrefour) {
+      console.log(`🛒 Detectada URL de Carrefour. Usando extractor especializado.`);
+      
+      try {
+        // Obtener metadatos con el extractor de Carrefour
+        console.log(`📊 Iniciando extracción con extractor de Carrefour...`);
+        const carrefourMetadata = await extractCarrefourMetadata(url);
+        
+        // Verificar si obtuvimos datos válidos
+        if (carrefourMetadata && ((carrefourMetadata.title && carrefourMetadata.isTitleValid) || 
+                                (carrefourMetadata.imageUrl && carrefourMetadata.isImageValid))) {
+          console.log(`✅ Extracción especializada de Carrefour exitosa:`);
+          console.log(`   - Título: ${carrefourMetadata.title ? carrefourMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${carrefourMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          // Validar con OpenAI solo si ambos están presentes
+          if (carrefourMetadata.title && carrefourMetadata.imageUrl) {
+            const validationResult = await validateProductData(carrefourMetadata.title, carrefourMetadata.imageUrl);
+            return res.json({
+              title: carrefourMetadata.title,
+              description: '',
+              imageUrl: carrefourMetadata.imageUrl,
+              price: '',
+              isTitleValid: validationResult.isTitleValid,
+              isImageValid: validationResult.isImageValid
+            });
+          } else {
+            // Devolver los datos parciales que hayamos podido extraer
+            return res.json({
+              title: carrefourMetadata.title || '',
+              description: '',
+              imageUrl: carrefourMetadata.imageUrl || '',
+              price: '',
+              isTitleValid: carrefourMetadata.isTitleValid || false,
+              isImageValid: carrefourMetadata.isImageValid || false
+            });
+          }
+        }
+      } catch (error) {
+        console.log(`❌ Error extrayendo datos de Carrefour: ${error}`);
+      }
+    }
     
     // Para Miravia usamos nuestro extractor especializado
-    if (isMiravia) {
+    else if (isMiravia) {
       console.log(`🛒 Detectada URL de Miravia. Usando extractor especializado.`);
       
       try {
