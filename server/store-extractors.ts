@@ -1,6 +1,6 @@
 /**
  * Extractores especializados para tiendas problemáticas
- * Implementa soluciones específicas para tiendas como Miravia y AliExpress
+ * Implementa soluciones específicas para tiendas como Miravia, AliExpress, Decathlon y Carrefour
  */
 
 import fetch, { Response as NodeFetchResponse } from 'node-fetch';
@@ -66,6 +66,16 @@ export function isMiraviaUrl(url: string): boolean {
 // Función para verificar si una URL es de AliExpress
 export function isAliExpressUrl(url: string): boolean {
   return /aliexpress\.(com|es)/i.test(url);
+}
+
+// Función para verificar si una URL es de Decathlon
+export function isDecathlonUrl(url: string): boolean {
+  return /decathlon\.(es|com|fr)/i.test(url);
+}
+
+// Función para verificar si una URL es de Carrefour
+export function isCarrefourUrl(url: string): boolean {
+  return /carrefour\.(es|com|fr)/i.test(url);
 }
 
 // Extractor específico para Miravia
