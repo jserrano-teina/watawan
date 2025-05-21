@@ -20,41 +20,16 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
     
-    // Importar limpiador de títulos con formato de URL
-    const { validateAndCleanTitle } = await import('./url-title-cleaner');
-    
     // Función para crear un objeto de respuesta consistente siempre con la misma estructura
     const createResponseObject = async (data: any) => {
       // Si tenemos título o imagen, validamos con IA
       if (data.title || data.imageUrl) {
         try {
-          // NUEVA FUNCIONALIDAD: Verificar y limpiar títulos que parecen URLs o dominios
-          let processedTitle = data.title || '';
-          let isTitleInvalid = false;
-          
-          if (processedTitle) {
-            console.log(`🔍 Analizando título para detectar patrones de URL: "${processedTitle}"`);
-            const cleanResult = validateAndCleanTitle(processedTitle, url);
-            
-            if (!cleanResult.isValid) {
-              // El título parece una URL y no se pudo limpiar adecuadamente
-              console.log(`⚠️ El título parece una URL y no pudo ser limpiado: "${processedTitle}"`);
-              isTitleInvalid = true;
-              processedTitle = '';
-            } else if (cleanResult.title !== processedTitle) {
-              // El título fue limpiado exitosamente
-              console.log(`✅ Título limpiado de elementos de URL: "${processedTitle}" → "${cleanResult.title}"`);
-              processedTitle = cleanResult.title;
-            }
-          }
-          
-          // Actualizar el título en los datos
-          data.title = processedTitle;
-          
           console.log(`🧠 Validando calidad de datos con IA...`);
           console.log(`📊 Datos a validar - Título: "${data.title || 'No disponible'}", Imagen: ${data.imageUrl ? 'Disponible' : 'No disponible'}`);
           
           // IMPORTANTE: Forzar validación más estricta para casos específicos
+          let isTitleInvalid = false;
           if (data.title) {
             // Detectar títulos muy cortos o genéricos
             if (data.title.length <= 2 || 
@@ -64,8 +39,7 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
                 data.title === "Producto" ||
                 data.title === "Producto Amazon" ||
                 data.title.includes("http") ||
-                data.title.includes("www.") ||
-                /\.[a-z]{2,}$/i.test(data.title.trim())) { // Detectar títulos que terminan con dominio (.com, .es, etc)
+                data.title.includes("www.")) {
               isTitleInvalid = true;
               console.log(`⚠️ Detectado título inválido de forma explícita: "${data.title}"`);
             }
