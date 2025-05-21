@@ -376,6 +376,23 @@ function getMetadataFromUrl(url: string): MetadataResult {
     let title = hostname;
     let description = `Enlace de ${hostname}`;
     
+    // Manejo específico para URLs de H&M (hm.com)
+    if (hostname.includes('hm.com') && url.includes('productpage')) {
+      // Ejemplo: https://www2.hm.com/es_es/productpage.1295745001.html
+      const productId = url.match(/productpage\.(\d+)\.html/i)?.[1];
+      if (productId) {
+        title = `Producto H&M ${productId}`;
+        description = `Producto de H&M con referencia ${productId}`;
+        console.log(`✓ URL de H&M detectada, usando identificador de producto: ${productId}`);
+        return {
+          title,
+          description,
+          imageUrl: '',
+          price: ''
+        };
+      }
+    }
+    
     // Si hay partes en la ruta, intentar extraer un título significativo
     if (pathParts.length > 0) {
       const lastPart = pathParts[pathParts.length - 1];
@@ -384,9 +401,18 @@ function getMetadataFromUrl(url: string): MetadataResult {
       let extractedTitle = lastPart
         .replace(/\.\w+$/, '') // Eliminar extensión (.html, .php, etc)
         .replace(/-|_/g, ' '); // Convertir guiones y guiones bajos en espacios
-        
-      // Buscar patrones de IDs y códigos al final para eliminarlos
-      extractedTitle = extractedTitle.replace(/\b[a-z0-9]{5,}\b$/i, '');
+      
+      // Caso especial: si el título es "productpage", no es un buen título
+      if (extractedTitle.toLowerCase() === 'productpage') {
+        // Intentamos buscar un ID en la URL
+        const idMatch = lastPart.match(/[a-z]+\.(\d+)/i);
+        if (idMatch && idMatch[1]) {
+          extractedTitle = `Producto ${hostname.split('.')[0]} ${idMatch[1]}`;
+        }
+      } else {
+        // Buscar patrones de IDs y códigos al final para eliminarlos
+        extractedTitle = extractedTitle.replace(/\b[a-z0-9]{5,}\b$/i, '');
+      }
       
       // Convertir a formato de título (primera letra de cada palabra en mayúscula)
       if (extractedTitle.length > 0) {
