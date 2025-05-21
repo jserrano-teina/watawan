@@ -128,6 +128,39 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     
     console.log(`🔍 Extrayendo metadatos para: ${url} ${isAmazon ? '(Amazon)' : ''}`);
     
+    // Comprobar si es URL de H&M
+    const { isHMUrl, extractHMMetadata } = await import('./hm-extractor');
+    const isHM = isHMUrl(url);
+    
+    // Para H&M usamos un extractor específico
+    if (isHM) {
+      console.log(`🛒 Detectada URL de H&M. Usando extractor especializado.`);
+      
+      try {
+        // Extraer metadatos con extractor específico de H&M
+        console.log(`📊 Iniciando extracción con hm-extractor...`);
+        const hmMetadata = await extractHMMetadata(url);
+        
+        // Verificar si obtuvimos datos
+        if (hmMetadata && (hmMetadata.title || hmMetadata.imageUrl)) {
+          console.log(`✅ Extracción de H&M exitosa:`);
+          console.log(`   - Título: ${hmMetadata.title ? hmMetadata.title.substring(0, 30) + '...' : 'No disponible'}`);
+          console.log(`   - Imagen: ${hmMetadata.imageUrl ? 'Disponible' : 'No disponible'}`);
+          
+          return res.json({
+            title: hmMetadata.title || '',
+            description: hmMetadata.description || '',
+            imageUrl: hmMetadata.imageUrl || '',
+            price: hmMetadata.price || '',
+            isTitleValid: hmMetadata.isTitleValid ?? true,
+            isImageValid: hmMetadata.isImageValid ?? true
+          });
+        }
+      } catch (error) {
+        console.error(`❌ Error extrayendo datos de H&M: ${error}`);
+      }
+    }
+    
     // Para Amazon usamos nuestro extractor especializado
     if (isAmazon) {
       const { cleanAmazonTitle, extractAsin } = await import('./amazon-extractor');

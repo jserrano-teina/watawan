@@ -24,7 +24,9 @@ export function titleLooksLikeUrl(title: string): boolean {
     /^tienda\s+online$/i,           // "tienda online" y similares
     /^shop\s+online$/i,             // "shop online" y similares
     /^official\s+store$/i,          // "official store" y similares
-    /^tienda\s+oficial$/i           // "tienda oficial" y similares
+    /^tienda\s+oficial$/i,          // "tienda oficial" y similares
+    /^productpage$/i,               // Página de producto genérica (H&M)
+    /^productpage\.\d+$/i           // Formato de H&M con ID de producto
   ];
   
   return urlPatterns.some(pattern => pattern.test(title.trim()));
