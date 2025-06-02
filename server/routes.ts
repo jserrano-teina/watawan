@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, requireAuth } from "./auth";
+import { isValidUrl, sanitizeUrl } from "./url-validator";
 import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {

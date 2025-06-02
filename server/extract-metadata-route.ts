@@ -10,8 +10,25 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
     return res.status(400).json({ message: "URL parameter is required" });
   }
   
+  // Validar que la URL sea segura antes de procesarla
+  const { isValidUrl, sanitizeUrl } = await import('./url-validator');
+  
+  if (!isValidUrl(url)) {
+    return res.status(400).json({ 
+      message: "URL no válida o potencialmente insegura" 
+    });
+  }
+  
+  // Sanitizar la URL eliminando parámetros de tracking peligrosos
+  const sanitizedUrl = sanitizeUrl(url);
+  if (!sanitizedUrl) {
+    return res.status(400).json({ 
+      message: "No se pudo procesar la URL proporcionada" 
+    });
+  }
+  
   try {
-    console.log(`📋 Extrayendo metadatos de URL: ${url}`);
+    console.log(`📋 Extrayendo metadatos de URL: ${sanitizedUrl}`);
     
     // Registrar información del dispositivo para diagnóstico
     const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -19,6 +36,9 @@ export async function handleExtractMetadataRequest(req: Request, res: Response) 
                      (userAgent.includes('Tablet') ? 'tablet' : 'desktop');
     
     console.log(`📱 Dispositivo solicitante: ${deviceType} - User-Agent: ${userAgent.substring(0, 50)}...`);
+    
+    // Usar la URL sanitizada en lugar de la original
+    const processUrl = sanitizedUrl;
     
     // Importar limpiador de títulos con formato de URL
     const { validateAndCleanTitle } = await import('./url-title-cleaner');
