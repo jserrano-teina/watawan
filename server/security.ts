@@ -5,7 +5,6 @@
 
 import { Express, Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
-import helmet from "helmet";
 
 /**
  * Configura las medidas de seguridad básicas para la aplicación
@@ -14,26 +13,28 @@ export function setupSecurity(app: Express) {
   // Determinar si estamos en entorno de desarrollo
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
-  // Solo aplicar helmet en producción para evitar conflictos con Replit
-  if (!isDevelopment) {
-    app.use(helmet({
-      contentSecurityPolicy: {
-        directives: {
-          defaultSrc: ["'self'"],
-          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-          fontSrc: ["'self'", "https://fonts.gstatic.com"],
-          imgSrc: ["'self'", "data:", "https:", "blob:"],
-          scriptSrc: ["'self'"],
-          connectSrc: ["'self'"],
-          frameSrc: ["'none'"],
-          objectSrc: ["'none'"],
-          baseUri: ["'self'"],
-          formAction: ["'self'"],
-        },
-      },
-      crossOriginEmbedderPolicy: false,
-    }));
-  }
+  // Implementar headers de seguridad básicos manualmente (sin helmet)
+  app.use((req: Request, res: Response, next: NextFunction) => {
+    // Prevenir clickjacking
+    res.setHeader('X-Frame-Options', 'DENY');
+    
+    // Prevenir sniffing de MIME types
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    
+    // Activar protección XSS del navegador
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    
+    // Solo en producción, agregar headers más estrictos
+    if (!isDevelopment) {
+      // Forzar HTTPS en producción
+      res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+      
+      // Política de referrer más estricta
+      res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    }
+    
+    next();
+  });
 
   // Solo aplicar rate limiting en producción para evitar interferir con el desarrollo
   if (!isDevelopment) {
