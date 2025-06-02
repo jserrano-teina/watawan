@@ -1,19 +1,9 @@
 import { Request, Response } from 'express';
 import { validateProductData } from './openai-utils';
-import { validationResult } from 'express-validator';
 
 // Esta función contiene la implementación actualizada del endpoint /extract-metadata
 // que utiliza Puppeteer para mejorar la extracción de metadatos
 export async function handleExtractMetadataRequest(req: Request, res: Response) {
-  // Verificar errores de validación
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({
-      error: 'Parámetros inválidos',
-      details: errors.array()
-    });
-  }
-
   const url = req.query.url as string;
   
   if (!url) {
