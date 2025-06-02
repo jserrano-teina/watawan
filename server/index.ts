@@ -8,18 +8,14 @@ import path from "path";
 
 const app = express();
 
-// Configurar medidas de seguridad (headers, rate limiting, etc.)
-setupSecurity(app);
-
-// Configurar logging de seguridad para detectar intentos sospechosos
-app.use(securityLogger);
+// Temporalmente desactivar todas las medidas de seguridad nuevas para diagnosticar
+// setupSecurity(app);
+// app.use(securityLogger);
+// app.use(sanitizeInput);
 
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
-
-// Sanitizar datos de entrada
-app.use(sanitizeInput);
 
 // Parsear cookies
 app.use(cookieParser());
