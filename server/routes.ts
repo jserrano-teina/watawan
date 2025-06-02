@@ -11,6 +11,18 @@ import { nanoid } from "nanoid";
 import { z } from "zod";
 import { fromZodError } from "zod-validation-error";
 import { setupAuth, requireAuth } from "./auth";
+import { 
+  validateMetadataQuery, 
+  validateWishlistItem, 
+  validateUserProfile,
+  validateNumericId 
+} from './security/validation';
+import { 
+  metadataLimiter, 
+  authLimiter, 
+  uploadLimiter 
+} from './security/rate-limiting';
+import { handleValidationErrors } from './security/error-handler';
 import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -981,11 +993,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Endpoint para extraer metadatos de una URL sin crear un elemento
   // Usa una implementación mejorada con Puppeteer para obtener metadatos más precisos
-  router.get("/extract-metadata", async (req: Request, res) => {
-    // Importar la implementación desde un archivo separado para mayor claridad
-    const { handleExtractMetadataRequest } = await import('./extract-metadata-route');
-    return handleExtractMetadataRequest(req, res);
-  });
+  router.get("/extract-metadata", 
+    metadataLimiter,
+    validateMetadataQuery(),
+    handleValidationErrors,
+    async (req: Request, res) => {
+      // Importar la implementación desde un archivo separado para mayor claridad
+      const { handleExtractMetadataRequest } = await import('./extract-metadata-route');
+      return handleExtractMetadataRequest(req, res);
+    }
+  );
   
   // Esta es la implementación anterior del endpoint /extract-metadata, se mantiene comentada como referencia
   router.get("/extract-metadata-old", async (req: Request, res) => {
