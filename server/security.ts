@@ -14,25 +14,26 @@ export function setupSecurity(app: Express) {
   // Determinar si estamos en entorno de desarrollo
   const isDevelopment = process.env.NODE_ENV !== 'production';
   
-  // Headers de seguridad con Helmet - configuración adaptada para Replit
-  app.use(helmet({
-    contentSecurityPolicy: isDevelopment ? false : {
-      directives: {
-        defaultSrc: ["'self'"],
-        styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-        fontSrc: ["'self'", "https://fonts.gstatic.com"],
-        imgSrc: ["'self'", "data:", "https:", "blob:"],
-        scriptSrc: ["'self'", "'unsafe-eval'"], // Necesario para Vite en desarrollo
-        connectSrc: ["'self'", "ws:", "wss:"], // Necesario para WebSockets de Vite
-        frameSrc: ["'none'"],
-        objectSrc: ["'none'"],
-        baseUri: ["'self'"],
-        formAction: ["'self'"],
+  // Solo aplicar helmet en producción para evitar conflictos con Replit
+  if (!isDevelopment) {
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+          fontSrc: ["'self'", "https://fonts.gstatic.com"],
+          imgSrc: ["'self'", "data:", "https:", "blob:"],
+          scriptSrc: ["'self'"],
+          connectSrc: ["'self'"],
+          frameSrc: ["'none'"],
+          objectSrc: ["'none'"],
+          baseUri: ["'self'"],
+          formAction: ["'self'"],
+        },
       },
-    },
-    crossOriginEmbedderPolicy: false,
-    crossOriginResourcePolicy: false, // Deshabilitar para desarrollo
-  }));
+      crossOriginEmbedderPolicy: false,
+    }));
+  }
 
   // Solo aplicar rate limiting en producción para evitar interferir con el desarrollo
   if (!isDevelopment) {
