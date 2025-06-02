@@ -11,67 +11,74 @@ import helmet from "helmet";
  * Configura las medidas de seguridad básicas para la aplicación
  */
 export function setupSecurity(app: Express) {
-  // Headers de seguridad con Helmet
+  // Determinar si estamos en entorno de desarrollo
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  // Headers de seguridad con Helmet - configuración adaptada para Replit
   app.use(helmet({
-    contentSecurityPolicy: {
+    contentSecurityPolicy: isDevelopment ? false : {
       directives: {
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:", "blob:"],
-        scriptSrc: ["'self'"],
-        connectSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-eval'"], // Necesario para Vite en desarrollo
+        connectSrc: ["'self'", "ws:", "wss:"], // Necesario para WebSockets de Vite
         frameSrc: ["'none'"],
         objectSrc: ["'none'"],
         baseUri: ["'self'"],
         formAction: ["'self'"],
       },
     },
-    crossOriginEmbedderPolicy: false, // Necesario para algunas funcionalidades
+    crossOriginEmbedderPolicy: false,
+    crossOriginResourcePolicy: false, // Deshabilitar para desarrollo
   }));
 
-  // Rate limiting general
-  const generalLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 100, // Límite de requests por IP
-    message: {
-      error: "Demasiadas solicitudes desde esta IP, intenta de nuevo en 15 minutos."
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
+  // Solo aplicar rate limiting en producción para evitar interferir con el desarrollo
+  if (!isDevelopment) {
+    // Rate limiting general
+    const generalLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 100, // Límite de requests por IP
+      message: {
+        error: "Demasiadas solicitudes desde esta IP, intenta de nuevo en 15 minutos."
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
 
-  // Rate limiting estricto para autenticación
-  const authLimiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutos
-    max: 5, // Solo 5 intentos de login por IP
-    message: {
-      error: "Demasiados intentos de inicio de sesión, intenta de nuevo en 15 minutos."
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
+    // Rate limiting estricto para autenticación
+    const authLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutos
+      max: 5, // Solo 5 intentos de login por IP
+      message: {
+        error: "Demasiados intentos de inicio de sesión, intenta de nuevo en 15 minutos."
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
 
-  // Rate limiting para endpoints públicos
-  const publicLimiter = rateLimit({
-    windowMs: 5 * 60 * 1000, // 5 minutos
-    max: 50, // Límite más generoso para endpoints públicos
-    message: {
-      error: "Demasiadas solicitudes a endpoints públicos, intenta de nuevo en 5 minutos."
-    },
-    standardHeaders: true,
-    legacyHeaders: false,
-  });
+    // Rate limiting para endpoints públicos
+    const publicLimiter = rateLimit({
+      windowMs: 5 * 60 * 1000, // 5 minutos
+      max: 50, // Límite más generoso para endpoints públicos
+      message: {
+        error: "Demasiadas solicitudes a endpoints públicos, intenta de nuevo en 5 minutos."
+      },
+      standardHeaders: true,
+      legacyHeaders: false,
+    });
 
-  // Aplicar rate limiting general
-  app.use('/api/', generalLimiter);
-  
-  // Aplicar rate limiting específico para autenticación
-  app.use('/api/login', authLimiter);
-  app.use('/api/register', authLimiter);
-  
-  // Aplicar rate limiting para endpoints públicos de listas compartidas
-  app.use('/api/user/', publicLimiter);
+    // Aplicar rate limiting general
+    app.use('/api/', generalLimiter);
+    
+    // Aplicar rate limiting específico para autenticación
+    app.use('/api/login', authLimiter);
+    app.use('/api/register', authLimiter);
+    
+    // Aplicar rate limiting para endpoints públicos de listas compartidas
+    app.use('/api/user/', publicLimiter);
+  }
 }
 
 /**
