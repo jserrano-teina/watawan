@@ -1,11 +1,36 @@
 import express, { type Request, Response, NextFunction } from "express";
+import helmet from "helmet";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import { setupCsrf, verifyCsrf } from "./csrf";
+import { generalLimiter } from "./security/rate-limiting";
+import { globalErrorHandler, notFoundHandler } from "./security/error-handler";
 import path from "path";
 
 const app = express();
+
+// Configuración de seguridad con Helmet
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:", "http:"],
+      connectSrc: ["'self'"],
+      fontSrc: ["'self'"],
+      objectSrc: ["'none'"],
+      mediaSrc: ["'self'"],
+      frameSrc: ["'none'"],
+    },
+  },
+  crossOriginEmbedderPolicy: false
+}));
+
+// Rate limiting general
+app.use('/api', generalLimiter);
+
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
