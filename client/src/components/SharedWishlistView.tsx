@@ -43,15 +43,15 @@ const SharedWishlistView: React.FC<SharedWishlistViewProps> = ({
     
     // Detectamos el entorno de ejecución
     const hostname = window.location.hostname;
-    const isProduction = hostname.includes('.replit.app') || hostname.includes('watawan.app');
+    const isProduction = hostname.includes('.replit.app') || hostname.includes('watawan.com');
     
     let targetUrl = '/auth'; // Valor por defecto para desarrollo local
     
     if (isProduction) {
       // En producción, determinamos la URL base del sitio principal (no del frame)
-      if (hostname.includes('watawan.app')) {
-        // En el dominio de producción final
-        targetUrl = 'https://app.watawan.app/auth';
+      if (hostname.includes('watawan.com')) {
+        // En el dominio de producción final, dirigir a app.watawan.com
+        targetUrl = 'https://app.watawan.com/auth';
       } else {
         // En un entorno de Replit
         targetUrl = `${window.location.origin}/auth`;
