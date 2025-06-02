@@ -3,12 +3,24 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import cookieParser from "cookie-parser";
 import { setupCsrf, verifyCsrf } from "./csrf";
+import { setupSecurity, sanitizeInput, securityLogger } from "./security";
 import path from "path";
 
 const app = express();
+
+// Configurar medidas de seguridad (headers, rate limiting, etc.)
+setupSecurity(app);
+
+// Configurar logging de seguridad para detectar intentos sospechosos
+app.use(securityLogger);
+
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: false, limit: '2mb' }));
+
+// Sanitizar datos de entrada
+app.use(sanitizeInput);
+
 // Parsear cookies
 app.use(cookieParser());
 // Servir archivos estáticos desde el directorio public
