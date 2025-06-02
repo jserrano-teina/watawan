@@ -74,9 +74,28 @@ const baseWishItemSchema = createInsertSchema(wishItems).pick({
   price: true,
 });
 
+// Validador seguro para URLs
+const secureUrlValidator = z.string().refine((url) => {
+  try {
+    const parsed = new URL(url);
+    // Solo permitir protocolos seguros
+    if (!['http:', 'https:'].includes(parsed.protocol)) {
+      return false;
+    }
+    // Evitar URLs locales en producción
+    if (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1') {
+      return process.env.NODE_ENV === 'development';
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}, "La URL debe ser válida y usar protocolo HTTP o HTTPS");
+
 // Extender el esquema para agregar validaciones adicionales
 export const insertWishItemSchema = baseWishItemSchema.extend({
   title: z.string().max(100, "El título debe tener como máximo 100 caracteres"),
+  purchaseLink: secureUrlValidator,
 });
 
 // Reservation schema
@@ -105,6 +124,10 @@ export type User = {
   lastNotificationsView: Date | null;
   settings: Record<string, any> | null;
 };
+
+// Tipo público sin el campo password para respuestas API
+export type PublicUser = Omit<User, 'password'>;
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Wishlist = {

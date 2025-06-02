@@ -5,7 +5,7 @@ import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
-import { User as UserType } from "@shared/schema";
+import { User as UserType, PublicUser } from "@shared/schema";
 import { nanoid } from "nanoid";
 
 // Para poder extender el tipo Request con user
@@ -47,6 +47,14 @@ export async function comparePasswords(supplied: string, stored: string): Promis
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
+}
+
+/**
+ * Convierte un objeto User a PublicUser eliminando el campo password
+ */
+function toPublicUser(user: UserType): PublicUser {
+  const { password, ...publicUser } = user;
+  return publicUser;
 }
 
 /**
@@ -206,8 +214,7 @@ export function setupAuth(app: Express) {
         }
         
         // No enviar la contraseña al cliente
-        const { password, ...userWithoutPassword } = user;
-        res.json(userWithoutPassword);
+        res.json(toPublicUser(user));
       });
     })(req, res, next);
   });
@@ -227,8 +234,7 @@ export function setupAuth(app: Express) {
     }
     
     // No enviar la contraseña al cliente
-    const { password, ...userWithoutPassword } = req.user as UserType;
-    res.json(userWithoutPassword);
+    res.json(toPublicUser(req.user as UserType));
   });
 }
 
