@@ -8,10 +8,8 @@ import path from "path";
 
 const app = express();
 
-// Temporalmente desactivar todas las medidas de seguridad nuevas para diagnosticar
-// setupSecurity(app);
-// app.use(securityLogger);
-// app.use(sanitizeInput);
+// Aplicar solo sanitización de entrada - es segura y no interfiere con conexiones
+app.use(sanitizeInput);
 
 // Aumentar el límite de tamaño para los archivos JSON (avatares)
 app.use(express.json({ limit: '2mb' }));
