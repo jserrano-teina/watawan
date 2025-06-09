@@ -54,23 +54,23 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose, shareableLink 
     // Slug del nombre de usuario
     const userSlug = generateSlug(user.displayName);
     
-    // Detectar si estamos en entorno de desarrollo o producción
+    // Solo considerar desarrollo si estamos en localhost
     const hostname = window.location.hostname;
-    const isProduction = hostname === 'watawan.com' || hostname === 'app.watawan.com';
+    const isDevelopment = hostname === 'localhost' || hostname === '127.0.0.1';
     
-    // Solo en producción usamos el dominio watawan.com
-    if (isProduction) {
-      setFriendlyShareableUrl(`https://watawan.com/user/${userSlug}`);
-    } else {
-      // En desarrollo usamos la URL actual
+    if (isDevelopment) {
+      // En desarrollo local, usar la URL actual del host
       setFriendlyShareableUrl(`${window.location.origin}/user/${userSlug}`);
+    } else {
+      // En todos los demás casos (incluyendo replit.app), usar watawan.com
+      setFriendlyShareableUrl(`https://watawan.com/user/${userSlug}`);
     }
     
     // Debug para ver qué URL se está generando
-    console.log('Ambiente:', isProduction ? 'producción' : 'desarrollo');
-    console.log('URL generada:', isProduction ? 
-      `https://watawan.com/user/${userSlug}` : 
-      `${window.location.origin}/user/${userSlug}`
+    console.log('Ambiente:', isDevelopment ? 'desarrollo' : 'producción');
+    console.log('URL generada:', isDevelopment ? 
+      `${window.location.origin}/user/${userSlug}` : 
+      `https://watawan.com/user/${userSlug}`
     );
     
   }, [user]);

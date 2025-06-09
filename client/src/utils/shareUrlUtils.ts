@@ -21,18 +21,16 @@ export function generateSlug(text: string): string {
 export function buildFriendlyShareUrl(username: string): string {
   const userSlug = generateSlug(username);
   
-  // Detectar si estamos en entorno de desarrollo o producción
+  // Solo considerar desarrollo si estamos en localhost
   const isDevelopment = 
     window.location.hostname === 'localhost' || 
-    window.location.hostname === '127.0.0.1' ||
-    window.location.hostname.includes('.replit.app') ||
-    window.location.hostname.includes('.repl.co');
+    window.location.hostname === '127.0.0.1';
   
   if (isDevelopment) {
-    // En desarrollo, usar la URL actual del host
+    // En desarrollo local, usar la URL actual del host
     return `${window.location.origin}/user/${userSlug}`;
   } else {
-    // En producción, usar la URL watawan.com
+    // En todos los demás casos (incluyendo replit.app), usar watawan.com
     return `https://watawan.com/user/${userSlug}`;
   }
 }
