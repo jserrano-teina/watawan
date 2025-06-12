@@ -1,0 +1,38 @@
+{
+  "name": "watawan-mobile",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --port 3001 --host 0.0.0.0",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "capacitor:add": "npx cap add",
+    "capacitor:copy": "npx cap copy",
+    "capacitor:sync": "npx cap sync",
+    "capacitor:run": "npx cap run",
+    "build:mobile": "npm run build && npx cap sync",
+    "build:production": "./scripts/build-production.sh",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "deploy:android": "npm run build:production && npm run open:android",
+    "deploy:ios": "npm run build:production && npm run open:ios"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "wouter": "^3.0.0",
+    "@tanstack/react-query": "^5.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.2.2",
+    "vite": "^5.0.8",
+    "@capacitor/core": "^5.0.0",
+    "@capacitor/cli": "^5.0.0",
+    "@capacitor/android": "^5.0.0",
+    "@capacitor/ios": "^5.0.0"
+  }
+}
